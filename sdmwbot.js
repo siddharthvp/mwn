@@ -228,6 +228,20 @@ class MWBot {
      */
     request(params, customRequestOptions) {
 
+        // pre-process params:
+        // adapted from mw.Api().preprcoessParameters
+        for (var key in params) {
+            if (Array.isArray(params[key])) {
+                if (params[key].join('').indexOf('|') === -1) {
+                    params[key] = params[key].join('|');
+                } else {
+                    params[key] = '\x1f' + params[key].join('\x1f');
+                }
+            } else if (params[key] === false || params[key] === undefined) {
+                delete params[key];
+            }
+        }
+
         return new Promise((resolve, reject) => {
 
             this.globalRequestOptions.uri = this.options.apiUrl; // XXX: ??
@@ -462,7 +476,7 @@ class MWBot {
     /**
      * Reads the content / and meta-data of one (or many) wikipages
      *
-     * @param {string}  title    For multiple Pages use: PageA|PageB|PageC
+     * @param {string|string[]}  title    For multiple Pages use an array
      * @param {object}      [customRequestOptions]
      *
      * @returns {bluebird}
@@ -523,7 +537,7 @@ class MWBot {
      *
      * @param {string}  title
      * @param {string}  [reason]
-     * @param {object}      [customRequestOptions]
+     * @param {object}  [customRequestOptions]
      *
      * @returns {bluebird}
      */
