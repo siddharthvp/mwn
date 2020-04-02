@@ -78,7 +78,6 @@ class MWBot {
         this.defaultOptions = {
             verbose: false,
             silent: false,
-            defaultSummary: 'MWBot',
             concurrency: 1,
             apiUrl: false
         };
@@ -546,41 +545,20 @@ class MWBot {
      * Reads the content / and meta-data of one (or many) wikipages
      *
      * @param {string|string[]}  titles    For multiple Pages use an array
-     * @param {object}      [customRequestOptions]
+     * @param {object}      [options]
      *
      * @returns {Promise}
      */
-    read(titles, customRequestOptions) {
-        return this.request({
+    read(titles, options) {
+        return this.request(MWBot.merge({
             action: 'query',
             prop: 'revisions',
             rvprop: 'content',
             titles: titles,
-            redirects: 'yes'
-        }, customRequestOptions);
+            redirects: '1'
+        }, options));
     }
-
-    /**
-     * Updates existing wiki pages. Does not create new ones.
-     *
-     * @param {string}  title
-     * @param {string}  content
-     * @param {string}  [summary]
-     * @param {object}      [customRequestOptions]
-     *
-     * @returns {Promise}
-     */
-    update(title, content, summary, customRequestOptions) {
-        return this.request({
-            action: 'edit',
-            title: title,
-            text: content,
-            summary: summary || this.options.defaultSummary,
-            nocreate: true,
-            token: this.editToken
-        }, customRequestOptions);
-    }
-
+    
     /**
      * Deletes a new wiki page
      *
@@ -594,7 +572,7 @@ class MWBot {
         return this.request({
             action: 'delete',
             title: title,
-            reason: reason || this.options.defaultSummary,
+            reason: reason,
             token: this.editToken
         }, customRequestOptions);
     }
