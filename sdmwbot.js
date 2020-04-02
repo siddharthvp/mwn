@@ -501,7 +501,7 @@ class MWBot {
     }
 
     /**
-     * Creates a new wiki pages. Does not edit existing ones
+     * Creates a new pages. Does not edit existing ones
      *
      * @param {string}  title
      * @param {string}  content
@@ -542,7 +542,7 @@ class MWBot {
     }
 
     /**
-     * Reads the content / and meta-data of one (or many) wikipages
+     * Reads the content / and meta-data of one (or many) pages
      *
      * @param {string|string[]}  titles    For multiple Pages use an array
      * @param {object}      [options]
@@ -558,23 +558,59 @@ class MWBot {
             redirects: '1'
         }, options));
     }
-    
+
     /**
-     * Deletes a new wiki page
+     * Deletes a page
      *
      * @param {string}  title
-     * @param {string}  [reason]
-     * @param {object}  [customRequestOptions]
-     *
+     * @param {string}  [summary]
+     * @param {object}  [options]
      * @returns {Promise}
      */
-    delete(title, reason, customRequestOptions) {
-        return this.request({
+    delete(title, summary, options) {
+        return this.request(MWBot.merge({
             action: 'delete',
             title: title,
-            reason: reason,
+            reason: summary,
             token: this.editToken
-        }, customRequestOptions);
+        }, options));
+    }
+
+    /**
+     * Undeletes a page
+     *
+     * @param {string}  title
+     * @param {string}  [summary]
+     * @param {object}  [options]
+     * @returns {Promise}
+     */
+    undelete(title, summary, options) {
+        return this.request(MWBot.merge({
+            action: 'undelete',
+            title: title,
+            reason: summary,
+            token: this.editToken
+        }, options));
+    }
+
+    /**
+     * Moves a new page
+     *
+     * @param {string}  fromtitle
+     * @param {string}  totitle
+     * @param {string}  [summary]
+     * @param {object}  [options]
+     * @returns {Promise}
+     */
+    move(fromtitle, totitle, summary, options) {
+        return this.request(MWBot.merge({
+            action: 'move',
+            from: fromtitle,
+            to: totitle,
+            reason: summary,
+            movetalk: 1,
+            token: this.editToken
+        }, options));
     }
 
     /**
