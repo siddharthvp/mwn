@@ -2,15 +2,9 @@
 
 const fs            = require('fs');
 const path          = require('path');
-const Promise       = require('bluebird');
 const request       = require('request');
 const semlog        = require('semlog');
 const log           = semlog.log;
-
-Promise.config({
-    // Enable cancellation
-    cancellation: true,
-});
 
 /**
  * MWBot library
@@ -192,7 +186,7 @@ class MWBot {
      *
      * @param {object} requestOptions
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     rawRequest(requestOptions) {
 
@@ -224,7 +218,7 @@ class MWBot {
      * @param {object} params               Request Parameters
      * @param {object} customRequestOptions Custom request options
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     request(params, customRequestOptions) {
 
@@ -291,7 +285,7 @@ class MWBot {
      *
      * @param {object} [loginOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     login(loginOptions) {
 
@@ -356,7 +350,7 @@ class MWBot {
      * Gets an edit token
      * This is currently only compatible with MW >= 1.24
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     getEditToken() {
         return new Promise((resolve, reject) => {
@@ -390,7 +384,7 @@ class MWBot {
      * Gets a createaccount token
      * Requires MW 1.27+
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     getCreateaccountToken() {
         return new Promise((resolve, reject) => {
@@ -425,7 +419,7 @@ class MWBot {
      *
      * @param loginOptions
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     loginGetEditToken(loginOptions) {
         return this.login(loginOptions).then(() => {
@@ -439,7 +433,7 @@ class MWBot {
      *
      * @param loginOptions
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     loginGetCreateaccountToken(loginOptions) {
         return this.login(loginOptions).then(() => {
@@ -460,7 +454,7 @@ class MWBot {
      * @param {string}  [summary]
      * @param {object}  [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     create(title, content, summary, customRequestOptions) {
         return this.request({
@@ -479,7 +473,7 @@ class MWBot {
      * @param {string|string[]}  title    For multiple Pages use an array
      * @param {object}      [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     read(title, customRequestOptions) {
         return this.request({
@@ -499,7 +493,7 @@ class MWBot {
      * @param {string}  [summary]
      * @param {object}      [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     edit(title, content, summary, customRequestOptions) {
         return this.request({
@@ -519,7 +513,7 @@ class MWBot {
      * @param {string}  [summary]
      * @param {object}      [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     update(title, content, summary, customRequestOptions) {
         return this.request({
@@ -539,7 +533,7 @@ class MWBot {
      * @param {string}  [reason]
      * @param {object}  [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     delete(title, reason, customRequestOptions) {
         return this.request({
@@ -559,7 +553,7 @@ class MWBot {
      * @param {object}  [customParams]
      * @param {object}  [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     upload(title, pathToFile, comment, customParams, customRequestOptions) {
 
@@ -613,7 +607,7 @@ class MWBot {
      * @param {object}  [customParams]
      * @param {object}  [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     uploadOverwrite(title, pathToFile, comment, customParams, customRequestOptions) {
         let params = MWBot.merge({
@@ -624,178 +618,8 @@ class MWBot {
 
 
     //////////////////////////////////////////
-    // CONVENIENCE FUNCTIONS                //
+    // SUPPLEMENTARY FUNCTIONS              //
     //////////////////////////////////////////
-
-    /**
-     * Combines all standard CRUD operations into one concurrent batch operation
-     * The batch request will also print log messages about the current job status
-     * It includes some more detailed error handling
-     *
-     * If the concurrency is set to 1, it ensures a sequential order
-     * by switching from Promise.map to Promise.mapSeries
-     *
-     * @param {object|array}   jobs
-     * @param {string}  [summary]
-     * @param {number}  [concurrency]
-     * @param {object}  [customRequestOptions]
-     */
-    batch(jobs, summary, concurrency, customRequestOptions) {
-
-        return new Promise((resolve, reject) => {
-
-            summary = summary || this.options.defaultSummary;
-            concurrency = concurrency || this.options.concurrency;
-
-            let jobQueue = [];
-            let results = {};
-            let operation = 'map';
-
-            // If no concurrency is needed, use bluebird Promise.mapSeries instead of .map
-            // This ensures that tasks are executed in exactly the sequence as defined
-            if (!concurrency || concurrency === 1) {
-                operation = 'mapSeries';
-            }
-
-            // Jobs can be written in object or array notation
-            // If it is written in the more convenient object notation, convert it to array notation
-            if (Array.isArray(jobs)) {
-                jobQueue = jobs;
-            } else {
-                for (let operation in jobs) {
-                    let operationJobs = jobs[operation];
-                    if (Array.isArray(operationJobs)) {
-                        if (operation === 'upload' || operation === 'uploadOverwrite') {
-                            for (let filePath of operationJobs) {
-                                jobQueue.push([operation, path.basename(filePath), filePath, summary, false, customRequestOptions]);
-                            }
-                        } else {
-                            for (let pageName of operationJobs) {
-                                jobQueue.push([operation, pageName, summary, customRequestOptions]);
-                            }
-                        }
-                    } else {
-                        if (operation === 'upload' || operation === 'uploadOverwrite') {
-                            for (let fileName in operationJobs) {
-                                let filePath = operationJobs[fileName];
-                                jobQueue.push([operation, fileName, filePath, summary, false, customRequestOptions]);
-                            }
-                        } else {
-                            for (let pageName in operationJobs) {
-                                let content = operationJobs[pageName];
-                                jobQueue.push([operation, pageName, content, summary, customRequestOptions]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            let currentCounter = 0;
-            let totalCounter = jobQueue.length;
-
-            // Dynamically invoke either .map or .mapSeries on bluebird Promise
-            Promise[operation](jobQueue, (job) => {
-
-                let operation = job[0];
-                let pageName  = job[1];
-
-                if (!this[operation]) {
-                    return reject(new Error('Unsupported operation: ' + operation));
-                }
-
-                // Dynamically invoke the mwbot CRUD function with the parameters from the job array
-                return this[operation](pageName, job[2], job[3], job[4]).then((response) => {
-
-                    currentCounter += 1;
-
-                    let status = '[=] ';
-                    let reason = '';
-                    let debugMessages = [];
-
-                    if (operation === 'delete') {
-                        status = '[-] ';
-                    } else if (response.edit && response.edit.new === '') {
-                        status = '[+] ';
-                    } else if (response.edit && response.edit.newrevid) {
-                        status = '[C] ';
-                    } else if (response.query && response.query.pages && response.query.pages['-1']) {
-                        status = '[?] ';
-                        reason = 'missing';
-                    } else if (response.query && response.query.pages) {
-                        status = '[S] ';
-                    } else if (response.upload && response.upload.result === 'Success') {
-                        status = '[S] ';
-                    } else if (response.upload && response.upload.result === 'Warning') {
-                        status = '[/] ';
-                        if (response.upload.warnings && response.upload.warnings.duplicate) {
-                            reason = 'duplicate';
-                            debugMessages.push('[D] [MWBOT] Duplicate: ' + response.upload.warnings.duplicate.join(', '));
-                        }
-                        if (response.upload.warnings && response.upload.warnings.exists) {
-                            reason = 'exists';
-                            debugMessages.push('[D] [MWBOT] Exists: ' + response.upload.warnings.exists);
-                        }
-                    }
-
-                    MWBot.logStatus(status, currentCounter, totalCounter, operation, pageName, reason);
-
-                    for (let msg of debugMessages) {
-                        log(msg);
-                    }
-
-                    if (!results[operation]) {
-                        results[operation] = {};
-                    }
-                    results[operation][pageName] = response;
-
-                }).catch((err) => {
-                    currentCounter += 1;
-
-                    let status = '[E] ';
-                    let reason = '';
-
-                    if (err.response && err.response.error && err.response.error.code) {
-                        let code = err.response.error.code;
-                        if (code === 'articleexists') {
-                            status = '[/] ';
-                            reason = code;
-                        } else if (code === 'missingtitle') {
-                            status = '[?] ';
-                            reason = code;
-                        }
-                    }
-
-                    MWBot.logStatus(status, currentCounter, totalCounter, operation, pageName, reason);
-
-                    if (status === '[E] ') {
-                        log(err);
-                        if (err.response) {
-                            log(err.response);
-                        }
-                    } else if (this.options.verbose && err.response && err.response.error && err.response.error.info) {
-                        log('[D] ' + err.response.error.info);
-                    }
-
-                    if (!results[operation]) {
-                        results[operation] = {};
-                    }
-                    results[operation][pageName] = err;
-                });
-
-            }, {
-                concurrency: concurrency
-            }).then(() => {
-                return resolve(results);
-            }).catch((err) => {
-                // If an error happens, return the results nonetheless, as it contains all the errors
-                // embedded in its data structure
-                log('[E] [MWBOT] At least one exception occured during the batch job:');
-                log(err);
-                return reject(results);
-            });
-
-        });
-    }
 
     /**
      * Execute an ASK Query
@@ -804,7 +628,7 @@ class MWBot {
      * @param {string} [apiUrl]
      * @param {object} [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     askQuery(query, apiUrl, customRequestOptions) {
 
@@ -833,7 +657,7 @@ class MWBot {
      * @param {string} [endpointUrl]
      * @param {object} [customRequestOptions]
      *
-     * @returns {bluebird}
+     * @returns {Promise}
      */
     sparqlQuery(query, endpointUrl, customRequestOptions) {
 
@@ -904,23 +728,5 @@ class MWBot {
         log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
     }
 }
-
-/**
- * Provide bluebird.js Promise
- * @link http://bluebirdjs.com/docs/api/new-promise.html
- */
-MWBot.Promise = Promise;
-
-/**
- * Provide bluebird.js Promise.map for concurrent batch requests
- * @link http://bluebirdjs.com/docs/api/promise.map.html
- */
-MWBot.map = Promise.map;
-
-/**
- * Provide bluebird.js Promise.mapSeries for sequential batch requests
- * @link http://bluebirdjs.com/docs/api/promise.mapseries.html
- */
-MWBot.mapSeries = Promise.mapSeries;
 
 module.exports = MWBot;
