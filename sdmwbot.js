@@ -380,6 +380,19 @@ class MWBot {
     }
 
     /**
+     * Combines Login  with GetEditToken
+     *
+     * @param loginOptions
+     *
+     * @returns {Promise}
+     */
+    loginGetEditToken(loginOptions) {
+        return this.login(loginOptions).then(() => {
+            return this.getEditToken();
+        });
+    }
+
+    /**
      * Gets a createaccount token
      * Requires MW 1.27+
      *
@@ -410,19 +423,6 @@ class MWBot {
             }).catch((err) => {
                 return reject(err);
             });
-        });
-    }
-
-    /**
-     * Combines Login  with GetEditToken
-     *
-     * @param loginOptions
-     *
-     * @returns {Promise}
-     */
-    loginGetEditToken(loginOptions) {
-        return this.login(loginOptions).then(() => {
-            return this.getEditToken();
         });
     }
 
