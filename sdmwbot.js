@@ -218,7 +218,8 @@ class MWBot {
 
 
     /**
-     *Executes a request with the ability to use custom parameters and custom request options
+     * Executes a request with the ability to use custom parameters and custom
+     * request options
      *
      * @param {object} params               Request Parameters
      * @param {object} customRequestOptions Custom request options
@@ -229,7 +230,7 @@ class MWBot {
 
         return new Promise((resolve, reject) => {
 
-            this.globalRequestOptions.uri = this.options.apiUrl;
+            this.globalRequestOptions.uri = this.options.apiUrl; // XXX: ??
 
             let requestOptions = MWBot.merge(this.globalRequestOptions, customRequestOptions);
             requestOptions.form = MWBot.merge(requestOptions.form, params);
@@ -372,7 +373,7 @@ class MWBot {
     }
 
     /**
-     * Gets an edit token
+     * Gets a createaccount token
      * Requires MW 1.27+
      *
      * @returns {bluebird}
