@@ -7,11 +7,9 @@ const semlog        = require('semlog');
 const log           = semlog.log;
 
 /**
- * MWBot library
- *
- * @author Simon Heimler
+ * MWB library
  */
-class MWBot {
+class MWB {
 
 
     //////////////////////////////////////////
@@ -19,12 +17,12 @@ class MWBot {
     //////////////////////////////////////////
 
     /**
-     * Constructs a new MWBot instance
+     * Constructs a new MWB instance
      * It is advised to create one bot instance for every API to use
      * A bot instance has its own state (e.g. tokens) that is necessary for some operations
      *
-     * @param {{}} [customOptions]        Custom options
-     * @param {{}} [customRequestOptions] Custom request options
+     * @param {Object} [customOptions]        Custom options
+     * @param {Object} [customRequestOptions] Custom request options
      */
     constructor(customOptions, customRequestOptions) {
 
@@ -49,13 +47,6 @@ class MWBot {
          * @type {boolean}
          */
         this.editToken = false;
-
-        /**
-         * Bot instances createaccount token
-         *
-         * @type {boolean}
-         */
-        this.createaccountToken = false;
 
         /**
          * Internal statistics
@@ -95,7 +86,7 @@ class MWBot {
          *
          * @type {Object}
          */
-        this.options = MWBot.merge(this.defaultOptions, this.customOptions);
+        this.options = merge(this.defaultOptions, this.customOptions);
 
         /**
          * Default options for the NPM request library
@@ -105,7 +96,7 @@ class MWBot {
         this.defaultRequestOptions = {
             method: 'POST',
             headers: {
-                'User-Agent': 'sdmwbot'
+                'User-Agent': 'MWB'
             },
             qs: {
                 format: 'json'
@@ -131,7 +122,7 @@ class MWBot {
          *
          * @type {Object}
          */
-        this.globalRequestOptions = MWBot.merge(this.defaultRequestOptions, this.customRequestOptions);
+        this.globalRequestOptions = merge(this.defaultRequestOptions, this.customRequestOptions);
 
         // SEMLOG OPTIONS
         semlog.updateConfig(this.options.semlog || {});
@@ -148,8 +139,8 @@ class MWBot {
      * @param {Object} customOptions
      */
     setOptions(customOptions) {
-        this.options = MWBot.merge(this.options, customOptions);
-        this.customOptions = MWBot.merge(this.customOptions, customOptions);
+        this.options = merge(this.options, customOptions);
+        this.customOptions = merge(this.customOptions, customOptions);
     }
 
     /**
@@ -159,8 +150,8 @@ class MWBot {
      * @param {{}} customRequestOptions
      */
     setGlobalRequestOptions(customRequestOptions) {
-        this.globalRequestOptions = MWBot.merge(this.globalRequestOptions, customRequestOptions);
-        this.customRequestOptions = MWBot.merge(this.customRequestOptions, customRequestOptions);
+        this.globalRequestOptions = merge(this.globalRequestOptions, customRequestOptions);
+        this.customRequestOptions = merge(this.customRequestOptions, customRequestOptions);
     }
 
     /**
@@ -238,8 +229,8 @@ class MWBot {
 
             this.globalRequestOptions.uri = this.options.apiUrl; // XXX: ??
 
-            let requestOptions = MWBot.merge(this.globalRequestOptions, customRequestOptions);
-            requestOptions.form = MWBot.merge(requestOptions.form, params);
+            let requestOptions = merge(this.globalRequestOptions, customRequestOptions);
+            requestOptions.form = merge(requestOptions.form, params);
 
             this.rawRequest(requestOptions).then((response) => {
 
@@ -289,7 +280,7 @@ class MWBot {
 
         this.loginPromise = new Promise((resolve, reject) => {
 
-            this.options = MWBot.merge(this.options, loginOptions);
+            this.options = merge(this.options, loginOptions);
 
             if (!this.options.username || !this.options.password || !this.options.apiUrl) {
                 return reject(new Error('Incomplete login credentials!'));
@@ -311,7 +302,7 @@ class MWBot {
                     log('[E] [MWBOT] Login failed with invalid response: ' + loginString);
                     return reject(err) ;
                 } else {
-                    this.state = MWBot.merge(this.state, response.login);
+                    this.state = merge(this.state, response.login);
                     // Add token and re-submit login request
                     loginRequest.lgtoken = response.login.token;
                     return this.request(loginRequest);
@@ -320,7 +311,7 @@ class MWBot {
             }).then((response) => {
 
                 if (response.login && response.login.result === 'Success') {
-                    this.state = MWBot.merge(this.state, response.login);
+                    this.state = merge(this.state, response.login);
                     this.loggedIn = true;
                     log('[S] [MWBOT] Login successful: ' + loginString);
                     return resolve(this.state);
@@ -365,7 +356,7 @@ class MWBot {
             }).then((response) => {
                 if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
                     this.editToken = response.query.tokens.csrftoken;
-                    this.state = MWBot.merge(this.state, response.query.tokens);
+                    this.state = merge(this.state, response.query.tokens);
                     return resolve(this.state);
                 } else {
                     let err = new Error('Could not get edit token');
@@ -391,56 +382,8 @@ class MWBot {
         });
     }
 
-    /**
-     * Gets a createaccount token
-     * Requires MW 1.27+
-     *
-     * @returns {Promise}
-     */
-    getCreateaccountToken() {
-        return new Promise((resolve, reject) => {
-
-            if (this.createaccountToken) {
-                return resolve(this.state);
-            }
-
-            // MW 1.27+
-            this.request({
-                action: 'query',
-                meta: 'tokens',
-                type: 'createaccount'
-            }).then((response) => {
-                if (response.query && response.query.tokens && response.query.tokens.createaccounttoken) {
-                    this.createaccountToken = response.query.tokens.createaccounttoken;
-                    this.state = MWBot.merge(this.state, response.query.tokens);
-                    return resolve(this.state);
-                } else {
-                    let err = new Error('Could not get createaccount token');
-                    err.response = response;
-                    return reject(err) ;
-                }
-            }).catch((err) => {
-                return reject(err);
-            });
-        });
-    }
-
-
-    /**
-     * Combines Login  with GetCreateaccountToken
-     *
-     * @param loginOptions
-     *
-     * @returns {Promise}
-     */
-    loginGetCreateaccountToken(loginOptions) {
-        return this.login(loginOptions).then(() => {
-            return this.getCreateaccountToken();
-        });
-    }
-
     //////////////////////////////////////////
-    // PAGE OPERATIONS                      //
+    // HELPER FUNCTIONS                     //
     //////////////////////////////////////////
 
     /**
@@ -486,7 +429,7 @@ class MWBot {
             var editParams = typeof params === 'object' ? params : {
                 text: String(params)
             };
-            return bot.request(MWBot.merge({
+            return bot.request(merge({
                 action: 'edit',
                 title: title,
                 formatversion: '2',
@@ -511,7 +454,7 @@ class MWBot {
      * @returns {Promise}
      */
     create(title, content, summary, options) {
-        return this.request(MWBot.merge({
+        return this.request(merge({
             action: 'edit',
             title: title,
             text: content,
@@ -531,7 +474,7 @@ class MWBot {
      * @return {jQuery.Promise}
      */
     newSection(title, header, message, additionalParams) {
-        return this.request( MWBot.merge( {
+        return this.request( merge( {
             action: 'edit',
             section: 'new',
             title: String( title ),
@@ -550,7 +493,7 @@ class MWBot {
      * @returns {Promise}
      */
     read(titles, options) {
-        return this.request(MWBot.merge({
+        return this.request(merge({
             action: 'query',
             prop: 'revisions',
             rvprop: 'content',
@@ -574,7 +517,7 @@ class MWBot {
      * @returns {Promise}
      */
     delete(title, summary, options) {
-        return this.request(MWBot.merge({
+        return this.request(merge({
             action: 'delete',
             title: title,
             reason: summary,
@@ -591,7 +534,7 @@ class MWBot {
      * @returns {Promise}
      */
     undelete(title, summary, options) {
-        return this.request(MWBot.merge({
+        return this.request(merge({
             action: 'undelete',
             title: title,
             reason: summary,
@@ -609,7 +552,7 @@ class MWBot {
      * @returns {Promise}
      */
     move(fromtitle, totitle, summary, options) {
-        return this.request(MWBot.merge({
+        return this.request(merge({
             action: 'move',
             from: fromtitle,
             to: totitle,
@@ -630,7 +573,7 @@ class MWBot {
      * @return {string} return.then.data Parsed HTML of `wikitext`.
      */
     parseWikitext(content, additionalParams) {
-        return this.request(MWBot.merge( {
+        return this.request(merge( {
             text: String(content),
             formatversion: 2,
             action: 'parse',
@@ -652,7 +595,7 @@ class MWBot {
      * @return {string} return.then.data Parsed HTML of `wikitext`.
      */
     parseTitle(title, additionalParams) {
-        return this.request(MWBot.merge( {
+        return this.request(merge( {
             page: String(title),
             formatversion: 2,
             action: 'parse',
@@ -678,7 +621,7 @@ class MWBot {
             meta: 'tokens',
             type: 'rollback'
         }).then(function(data) {
-            return bot.request(MWBot.merge({
+            return bot.request(merge({
                 action: 'rollback',
                 title: String( page ),
                 user: user,
@@ -705,7 +648,7 @@ class MWBot {
         try {
             let file = fs.createReadStream(pathToFile);
 
-            let params = MWBot.merge({
+            let params = merge({
                 action: 'upload',
                 filename: title || path.basename(pathToFile),
                 file: file,
@@ -713,7 +656,7 @@ class MWBot {
                 token: this.editToken
             }, customParams);
 
-            let uploadRequestOptions = MWBot.merge(this.globalRequestOptions, {
+            let uploadRequestOptions = merge(this.globalRequestOptions, {
 
                 // https://www.npmjs.com/package/request#support-for-har-12
                 har: {
@@ -734,7 +677,7 @@ class MWBot {
                 });
             }
 
-            let requestOptions = MWBot.merge(uploadRequestOptions, customRequestOptions);
+            let requestOptions = merge(uploadRequestOptions, customRequestOptions);
 
             return this.request({}, requestOptions);
 
@@ -755,7 +698,7 @@ class MWBot {
      * @returns {Promise}
      */
     uploadOverwrite(title, pathToFile, comment, customParams, customRequestOptions) {
-        let params = MWBot.merge({
+        let params = merge({
             ignorewarnings: ''
         }, customParams);
         return this.upload(title, pathToFile, comment, params, customRequestOptions);
@@ -952,7 +895,7 @@ class MWBot {
 
         apiUrl = apiUrl || this.options.apiUrl;
 
-        let requestOptions = MWBot.merge({
+        let requestOptions = merge({
             method: 'GET',
             uri: apiUrl,
             json: true,
@@ -981,7 +924,7 @@ class MWBot {
 
         endpointUrl = endpointUrl || this.options.apiUrl;
 
-        let requestOptions = MWBot.merge({
+        let requestOptions = merge({
             method: 'GET',
             uri: endpointUrl,
             json: true,
@@ -998,22 +941,6 @@ class MWBot {
     // HELPER FUNCTIONS                     //
     //////////////////////////////////////////
 
-    /**
-     * Recursively merges two objects
-     * Takes care that the two objects are not mutated
-     *
-     * @param {object} parent   Parent Object
-     * @param {object} child    Child Object; overwrites parent properties
-     *
-     * @returns {object}        Merged Object
-     */
-    static merge(parent, child) {
-        parent = parent || {};
-        child = child || {};
-        // Use {} as first parameter, as this object is mutated by default
-        // We don't want that, so we're providing an empty object that is thrown away after the operation
-        return Object.assign({}, parent, child);
-    }
 
     /**
      * Prints status information about a completed request
@@ -1047,4 +974,20 @@ class MWBot {
     }
 }
 
-module.exports = MWBot;
+/**
+ * Recursively merges two objects
+ * Takes care that the two objects are not mutated
+ *
+ * @param {Object} parent   Parent Object
+ * @param {Object} child    Child Object; overwrites parent properties
+ * @returns {Object}        Merged Object
+ */
+var merge = function(parent, child) {
+   parent = parent || {};
+   child = child || {};
+   // Use {} as first parameter, as this object is mutated by default
+   // We don't want that, so we're providing an empty object that is thrown away after the operation
+   return Object.assign({}, parent, child);
+}
+
+module.exports = MWB;
