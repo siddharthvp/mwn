@@ -556,7 +556,13 @@ class MWBot {
             rvprop: 'content',
             titles: titles,
             redirects: '1'
-        }, options));
+        }, options)).then(json => {
+            if (Array.isArray(titles)) {
+                return json.query.pages;
+            } else {
+                return json.query.pages[0];
+            }
+        });
     }
 
     /**
@@ -611,6 +617,76 @@ class MWBot {
             movetalk: 1,
             token: this.editToken
         }, options));
+    }
+
+    /**
+     * Parse wikitext. Convenience method for 'action=parse'.
+     *
+     * @param {string} content Content to parse.
+     * @param {Object} additionalParams Parameters object to set custom settings, e.g.
+     *   redirects, sectionpreview.  prop should not be overridden.
+     * @return {Promise}
+     * @return {Function} return.then
+     * @return {string} return.then.data Parsed HTML of `wikitext`.
+     */
+    parseWikitext(content, additionalParams) {
+        return this.request(MWBot.merge( {
+            text: String(content),
+            formatversion: 2,
+            action: 'parse',
+            contentmodel: 'wikitext'
+        }, additionalParams ))
+        .then( function ( data ) {
+            return data.parse.text;
+        } );
+    }
+
+    /**
+     * Parse a given page. Convenience method for 'action=parse'.
+     *
+     * @param {string} title Title of the page to parse
+     * @param {Object} additionalParams Parameters object to set custom settings, e.g.
+     *   redirects, sectionpreview.  prop should not be overridden.
+     * @return {Promise}
+     * @return {Function} return.then
+     * @return {string} return.then.data Parsed HTML of `wikitext`.
+     */
+    parseTitle(title, additionalParams) {
+        return this.request(MWBot.merge( {
+            page: String(title),
+            formatversion: 2,
+            action: 'parse',
+            contentmodel: 'wikitext'
+        }, additionalParams ))
+        .then( function ( data ) {
+            return data.parse.text;
+        } );
+    }
+
+    /**
+     * Convenience method for `action=rollback`.
+     *
+     * @param {string} page
+     * @param {string} user
+     * @param {Object} [params] Additional parameters
+     * @return {Promise}
+     */
+    rollback(page, user, params) {
+        var bot = this;
+        return this.request({
+            action: 'query',
+            meta: 'tokens',
+            type: 'rollback'
+        }).then(function(data) {
+            return bot.request(MWBot.merge({
+                action: 'rollback',
+                title: String( page ),
+                user: user,
+                token: data.query.tokens.rollbacktoken
+            }, params));
+        }).then(function(data) {
+            return data.rollback;
+        });
     }
 
     /**
