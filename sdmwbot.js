@@ -6,7 +6,6 @@ const Promise       = require('bluebird');
 const request       = require('request');
 const semlog        = require('semlog');
 const log           = semlog.log;
-const packageJson   = require('../package.json');
 
 Promise.config({
     // Enable cancellation
@@ -114,7 +113,7 @@ class MWBot {
         this.defaultRequestOptions = {
             method: 'POST',
             headers: {
-                'User-Agent': 'mwbot/' + packageJson.version
+                'User-Agent': 'sdmwbot'
             },
             qs: {
                 format: 'json'
@@ -152,14 +151,6 @@ class MWBot {
     //////////////////////////////////////////
 
     /**
-     * Get mwbot version number
-     * Uses ES5 getter
-     */
-    get version() {
-        return packageJson.version;
-    }
-
-    /**
      * Set and overwrite mwbot options
      *
      * @param {Object} customOptions
@@ -182,7 +173,7 @@ class MWBot {
 
     /**
      * Sets the API URL for MediaWiki requests
-     * This can be uses instead of a login, if no actions are used that require one.
+     * This can be uses instead of a login, if no actions are used that require login.
      *
      * @param {String}  apiUrl  API Url to MediaWiki, e.g. 'https://www.semantic-mediawiki.org/w/api.php'
      */
@@ -208,9 +199,9 @@ class MWBot {
         this.counter.total += 1;
 
         return new Promise((resolve, reject) => {
-            this.counter.resolved +=1;
+            this.counter.resolved += 1;
             if (!requestOptions.uri) {
-                this.counter.rejected +=1;
+                this.counter.rejected += 1;
                 return reject(new Error('No URI provided!'));
             }
             request(requestOptions, (error, response, body) => {
