@@ -440,10 +440,66 @@ class MWBot {
         });
     }
 
+    //////////////////////////////////////////
+    // PAGE OPERATIONS                      //
+    //////////////////////////////////////////
 
-    //////////////////////////////////////////
-    // CRUD OPERATIONS                      //
-    //////////////////////////////////////////
+    /**
+    * @param {string} title Page title
+    * @param {Function} transform Callback that prepares the edit
+    * @param {Object} transform.revision Current revision
+    * @param {string} transform.revision.content Current revision content
+    * @param {string|Object|Promise} transform.return New content, object with edit
+    *  API parameters, or promise providing one of those.
+    * @return {Promise} Edit API response
+    */
+   // copied from mw.Api edit
+    edit(title, transform) {
+        var basetimestamp, curtimestamp, bot = this;
+        title = String(title);
+        return bot.request({
+            action: 'query',
+            prop: 'revisions',
+            rvprop: ['content', 'timestamp'],
+            titles: [title],
+            formatversion: '2',
+            curtimestamp: !0
+        }).then(function(data) {
+            var page, revision;
+            if (!data.query || !data.query.pages) {
+                return Promise.reject('unknown');
+            }
+            page = data.query.pages[0];
+            if (!page || page.invalid) {
+                return Promise.reject('invalidtitle');
+            }
+            if (page.missing) {
+                return Promise.reject('nocreate-missing');
+            }
+            revision = page.revisions[0];
+            basetimestamp = revision.timestamp;
+            curtimestamp = data.curtimestamp;
+            return transform({
+                timestamp: revision.timestamp,
+                content: revision.content
+            });
+        }).then(function(params) {
+            var editParams = typeof params === 'object' ? params : {
+                text: String(params)
+            };
+            return bot.request(MWBot.merge({
+                action: 'edit',
+                title: title,
+                formatversion: '2',
+                basetimestamp: basetimestamp,
+                starttimestamp: curtimestamp,
+                nocreate: !0,
+                token: bot.editToken
+            }, editParams));
+        }).then(function(data) {
+            return data.edit;
+        });
+    }
 
     /**
      * Creates a new wiki pages. Does not edit existing ones
@@ -451,56 +507,56 @@ class MWBot {
      * @param {string}  title
      * @param {string}  content
      * @param {string}  [summary]
-     * @param {object}  [customRequestOptions]
+     * @param {object}  [options]
      *
      * @returns {Promise}
      */
-    create(title, content, summary, customRequestOptions) {
-        return this.request({
+    create(title, content, summary, options) {
+        return this.request(MWBot.merge({
             action: 'edit',
             title: title,
             text: content,
-            summary: summary || this.options.defaultSummary,
+            summary: summary,
             createonly: true,
             token: this.editToken
-        }, customRequestOptions);
+        }, options));
+    }
+
+    /**
+     * Post a new section to the page.
+     *
+     * @param {string} title Target page
+     * @param {string} header
+     * @param {string} message wikitext message
+     * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
+     * @return {jQuery.Promise}
+     */
+    newSection(title, header, message, additionalParams) {
+        return this.request( MWBot.merge( {
+            action: 'edit',
+            section: 'new',
+            title: String( title ),
+            summary: header,
+            text: message,
+            token: this.editToken
+        }, additionalParams ) );
     }
 
     /**
      * Reads the content / and meta-data of one (or many) wikipages
      *
-     * @param {string|string[]}  title    For multiple Pages use an array
+     * @param {string|string[]}  titles    For multiple Pages use an array
      * @param {object}      [customRequestOptions]
      *
      * @returns {Promise}
      */
-    read(title, customRequestOptions) {
+    read(titles, customRequestOptions) {
         return this.request({
             action: 'query',
             prop: 'revisions',
             rvprop: 'content',
-            titles: title,
+            titles: titles,
             redirects: 'yes'
-        }, customRequestOptions);
-    }
-
-    /**
-     * Edits a new wiki pages. Creates a new page if it does not exist yet.
-     *
-     * @param {string}  title
-     * @param {string}  content
-     * @param {string}  [summary]
-     * @param {object}      [customRequestOptions]
-     *
-     * @returns {Promise}
-     */
-    edit(title, content, summary, customRequestOptions) {
-        return this.request({
-            action: 'edit',
-            title: title,
-            text: content,
-            summary: summary || this.options.defaultSummary,
-            token: this.editToken
         }, customRequestOptions);
     }
 
