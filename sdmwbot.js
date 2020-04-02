@@ -80,8 +80,7 @@ class MWBot {
             silent: false,
             defaultSummary: 'MWBot',
             concurrency: 1,
-            apiUrl: false,
-            sparqlEndpoint: 'https://query.wikidata.org/bigdata/namespace/wdq/sparql' // Wikidata
+            apiUrl: false
         };
 
         /**
@@ -654,14 +653,14 @@ class MWBot {
      * Defaults to use the wikidata endpoint
      *
      * @param {string} query
-     * @param {string} [endpointUrl]
+     * @param {string} [apiUrl]
      * @param {object} [customRequestOptions]
      *
      * @returns {Promise}
      */
     sparqlQuery(query, endpointUrl, customRequestOptions) {
 
-        endpointUrl = endpointUrl || this.options.sparqlEndpoint;
+        endpointUrl = endpointUrl || this.options.apiUrl;
 
         let requestOptions = MWBot.merge({
             method: 'GET',
