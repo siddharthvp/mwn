@@ -1,3 +1,12 @@
+/**
+ *
+ * MWB bot framework for NodeJS
+ *
+ * Large parts of the code are adapted from MWBot <https://github.com/Fannon/mwbot>
+ * which is released under the MIT license. Copyright (c) 2015-2018 Simon Heimler.
+ *
+ */
+
 'use strict';
 
 const fs            = require('fs');
@@ -6,9 +15,6 @@ const request       = require('request');
 const semlog        = require('semlog');
 const log           = semlog.log;
 
-/**
- * MWB library
- */
 class MWB {
 
 
@@ -67,9 +73,9 @@ class MWB {
          * @type {object}
          */
         this.defaultOptions = {
-            verbose: false,
+            // verbose: false,
             silent: false,
-            concurrency: 1,
+            // concurrency: 1,
             apiUrl: false
         };
 
@@ -113,7 +119,7 @@ class MWB {
         /**
          * Custom request options
          *
-         * @type {{}}
+         * @type {Object}
          */
         this.customRequestOptions = customRequestOptions || {};
 
@@ -147,7 +153,7 @@ class MWB {
      * Sets and overwrites the raw request options, used by the "request" library
      * See https://www.npmjs.com/package/request
      *
-     * @param {{}} customRequestOptions
+     * @param {Object} customRequestOptions
      */
     setGlobalRequestOptions(customRequestOptions) {
         this.globalRequestOptions = merge(this.globalRequestOptions, customRequestOptions);
@@ -212,7 +218,7 @@ class MWB {
     request(params, customRequestOptions) {
 
         // pre-process params:
-        // adapted from mw.Api().preprcoessParameters
+        // adapted from https://doc.wikimedia.org/mediawiki-core/master/js/source/index2.html#mw-Api-method-preprocessParameters
         for (var key in params) {
             if (Array.isArray(params[key])) {
                 if (params[key].join('').indexOf('|') === -1) {
@@ -313,7 +319,9 @@ class MWB {
                 if (response.login && response.login.result === 'Success') {
                     this.state = merge(this.state, response.login);
                     this.loggedIn = true;
-                    log('[S] [MWBOT] Login successful: ' + loginString);
+                    if (!this.options.silent) {
+                        log('[S] [MWBOT] Login successful: ' + loginString);
+                    }
                     return resolve(this.state);
                 } else {
                     let reason = 'Unknown reason';
@@ -742,6 +750,9 @@ class MWB {
 		var responses = [];
 		var callApi = function(query, count) {
 			return this.request(query).then(function(response) {
+                if (!this.options.silent) {
+                    log(`[+] Got part ${count} of continuous API query`);
+                }
 				responses.push(response);
 				if (response.continue && count < limit) {
 					return callApi(Object.assign({}, query, response.continue), count + 1);
@@ -764,6 +775,8 @@ class MWB {
 	 * the multi-input field is split into batches of 50 (500 for bots) and individual queries
 	 * are sent sequentially for each batch. A promise is returned finally resolved with the
 	 * array of responses of each API call.
+     *
+     * XXX: limits of 50 or 500 could be wiki-specific.
 	 *
 	 * @param {Object} query - the query object, the multi-input field should be an array
 	 * @param {string} [batchFieldName=titles] - the name of the multi-input field
@@ -811,8 +824,8 @@ class MWB {
 	 * usually be of page names (strings).
 	 * @param {Function} worker - function to execute upon each item in the list. Must
 	 * return a promise.
-	 * @param {number} [batchSize=50] - number of concurrent operations to take place.
-	 * Set this to 1 for sequential operations. Default 50. Set this according to how
+	 * @param {number} [batchSize=5] - number of concurrent operations to take place.
+	 * Set this to 1 for sequential operations. Default 5. Set this according to how
 	 * expensive the API calls made by worker are.
 	 * @returns {Promise} - resolved when all API calls have finished.
 	 */
@@ -825,7 +838,9 @@ class MWB {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
 			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
-			console.log(statusText); // XXX
+            if (!this.options.silent) {
+                console.log(statusText);
+            }
 		}
 		var numBatches = Math.ceil(list.length / batchSize);
 
@@ -839,7 +854,7 @@ class MWB {
 						finalBatchPromises[i] = worker(list[idx], idx);
 						finalBatchPromises[i].then(incrementSuccesses, incrementFailures).finally(updateStatusText);
 					}
-					// XXX: Promise.allSettled isn't working with mwbot
+					// XXX: Promise.allSettled requires NodeJS 12.9+
 					Promise.all(finalBatchPromises).then(resolve);
 					return;
 				}
@@ -876,8 +891,10 @@ class MWB {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
 			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
-			console.log(statusText); // XXX
-		}
+            if (!this.options.silent) {
+                console.log(statusText);
+            }
+        }
 
 		return new Promise(function(resolve) {
 			var trigger = function(idx) {
@@ -933,7 +950,6 @@ class MWB {
 
     /**
      * Executes a SPARQL Query
-     * Defaults to use the wikidata endpoint
      *
      * @param {string} query
      * @param {string} [apiUrl]
@@ -976,10 +992,6 @@ class MWB {
     static logStatus(status, currentCounter, totalCounter, operation, pageName, reason) {
 
         operation = operation || '';
-
-        if (operation === 'uploadOverwrite') {
-            operation = 'upload!';
-        }
 
         if (operation) {
             operation = ' [' + operation.toUpperCase() + ']';
