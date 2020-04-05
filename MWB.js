@@ -22,11 +22,12 @@
 
 'use strict';
 
-const fs            = require('fs');
-const path          = require('path');
-const request       = require('request');
-const semlog        = require('semlog');
-const log           = semlog.log;
+const fs = require('fs');
+const path = require('path');
+const request = require('request');
+const semlog = require('semlog');
+
+const log = semlog.log;
 
 class MWB {
 
@@ -310,12 +311,13 @@ class MWB {
 					err.response = response;
 					log('[E] [MWBOT] Login failed with invalid response: ' + loginString);
 					return reject(err) ;
-				} else {
-					this.state = merge(this.state, response.login);
-					// Add token and re-submit login request
-					loginRequest.lgtoken = response.login.token;
-					return this.request(loginRequest);
 				}
+
+				this.state = merge(this.state, response.login);
+
+				// Add token and re-submit login request
+				loginRequest.lgtoken = response.login.token;
+				return this.request(loginRequest);
 
 			}).then((response) => {
 
@@ -326,16 +328,16 @@ class MWB {
 						log('[S] [MWBOT] Login successful: ' + loginString);
 					}
 					return resolve(this.state);
-				} else {
-					let reason = 'Unknown reason';
-					if (response.login && response.login.result) {
-						reason = response.login.result;
-					}
-					let err = new Error('Could not login: ' + reason);
-					err.response = response;
-					log('[E] [MWBOT] Login failed: ' + loginString);
-					return reject(err) ;
 				}
+
+				let reason = 'Unknown reason';
+				if (response.login && response.login.result) {
+					reason = response.login.result;
+				}
+				let err = new Error('Could not login: ' + reason);
+				err.response = response;
+				log('[E] [MWBOT] Login failed: ' + loginString);
+				return reject(err) ;
 
 			}).catch((err) => {
 				reject(err);
@@ -384,7 +386,6 @@ class MWB {
 	 * Combines Login  with GetEditToken
 	 *
 	 * @param loginOptions
-	 *
 	 * @returns {Promise}
 	 */
 	loginGetEditToken(loginOptions) {
@@ -461,7 +462,6 @@ class MWB {
 	 * @param {string}  content
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
-	 *
 	 * @returns {Promise}
 	 */
 	save(title, content, summary, options) {
@@ -557,7 +557,8 @@ class MWB {
 	}
 
 	/**
-	 * Undeletes a page
+	 * Undeletes a page.
+	 * Note: all deleted revisions of the page will be restored.
 	 *
 	 * @param {string}  title
 	 * @param {string}  [summary]
@@ -764,25 +765,29 @@ class MWB {
 	}
 
 	/**
-	 * Function for using API action=query with more than 50/500 items in multi-input fields.
+	 * Function for using API action=query with more than 50/500 items in multi-
+	 * input fields.
 	 *
-	 * Several fields in the query API take multiple inputs but with a limit of 50 (or
-	 * 500 for users with highapilimits).
-	 * Example: the fields titles, pageids and revids in any query, ususers in list=users, etc.
+	 * Several fields in the query API take multiple inputs but with a limit of
+	 * 50 (or 500 for users with highapilimits).
+	 * Example: the fields titles, pageids and revids in any query, ususers in
+	 * list=users, etc.
 	 *
-	 * This function allows you to send a query as if this limit didn't exist. The array given to
-	 * the multi-input field is split into batches of 50 (500 for bots) and individual queries
-	 * are sent sequentially for each batch. A promise is returned finally resolved with the
-	 * array of responses of each API call.
+	 * This function allows you to send a query as if this limit didn't exist.
+	 * The array given to the multi-input field is split into batches of 50
+	 * (500 for bots) and individual queries are sent sequentially for each batch.
+	 * A promise is returned finally resolved with the array of responses of each
+	 * API call.
 	 *
 	 * XXX: limits of 50 or 500 could be wiki-specific.
 	 *
-	 * @param {Object} query - the query object, the multi-input field should be an array
+	 * @param {Object} query - the query object, the multi-input field should
+	 * be an array
 	 * @param {string} [batchFieldName=titles] - the name of the multi-input field
-	 * @param {boolean} [hasApiHighLimit=false] - set true to use api high limits available
-	 * with bot or sysop accounts
-	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have settled,
-	 * with the array of responses.
+	 * @param {boolean} [hasApiHighLimit=false] - set true to use api high limits
+	 * available with bot or sysop accounts
+	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have
+	 * settled, with the array of responses.
 	 */
 	massQuery(query, batchFieldName, hasApiHighLimit) {
 		batchFieldName = batchFieldName || 'titles';
@@ -815,9 +820,8 @@ class MWB {
 	}
 
 	/**
-	 * Execute an asynchronous function on a large number of pages (or other arbitrary items).
-	 * Similar to Morebits.batchOperation in [[MediaWiki:Gadget-morebits.js]], but designed for
-	 * working with promises.
+	 * Execute an asynchronous function on a large number of pages (or other arbitrary
+	 * items). Designed for working with promises.
 	 *
 	 * @param {Array} list - list of items to execute actions upon. The array would
 	 * usually be of page names (strings).
@@ -972,10 +976,8 @@ class MWB {
 		return this.rawRequest(requestOptions);
 	}
 
-	//////////////////////////////////////////
-	// HELPER FUNCTIONS                     //
-	//////////////////////////////////////////
 
+	/****************** UTILITIES *****************/
 
 	/**
 	 * Prints status information about a completed request
