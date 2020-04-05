@@ -31,741 +31,726 @@ const log           = semlog.log;
 class MWB {
 
 
-    //////////////////////////////////////////
-    // CONSTRUCTOR                          //
-    //////////////////////////////////////////
-
-    /**
-     * Constructs a new MWB instance
-     * It is advised to create one bot instance for every API to use
-     * A bot instance has its own state (e.g. tokens) that is necessary for some operations
-     *
-     * @param {Object} [customOptions]        Custom options
-     * @param {Object} [customRequestOptions] Custom request options
-     */
-    constructor(customOptions, customRequestOptions) {
-
-        /**
-         * Bot instance Login State
-         * Is received from the MW Login API and contains token, userid, etc.
-         *
-         * @type {object}
-         */
-        this.state = {};
-
-        /**
-         * Bot instance is logged in or not
-         *
-         * @type {boolean}
-         */
-        this.loggedIn = false;
-
-        /**
-         * Bot instances edit token
-         *
-         * @type {boolean}
-         */
-        this.editToken = false;
-
-        /**
-         * Internal statistics
-         *
-         * @type {object}
-         */
-        this.counter = {
-            total: 0,
-            resolved: 0,
-            fulfilled: 0,
-            rejected: 0
-        };
-
-        /**
-         * Default options.
-         * Should be immutable
-         *
-         * @type {object}
-         */
-        this.defaultOptions = {
-            // verbose: false,
-            silent: false,
-            // concurrency: 1,
-            apiUrl: false
-        };
-
-        /**
-         * Custom options as the user provided them originally.
-         *
-         * @type {object}
-         */
-        this.customOptions = customOptions || {};
-
-        /**
-         * Actual, current options of the bot instance
-         * They're a mix of the default options, the custom options and later changes
-         *
-         * @type {Object}
-         */
-        this.options = merge(this.defaultOptions, this.customOptions);
-
-        /**
-         * Default options for the NPM request library
-         *
-         * @type {Object}
-         */
-        this.defaultRequestOptions = {
-            method: 'POST',
-            headers: {
-                'User-Agent': 'MWB'
-            },
-            qs: {
-                format: 'json'
-            },
-            form: {
-
-            },
-            timeout: 120000, // 120 seconds
-            jar: true,
-            time: true,
-            json: true
-        };
-
-        /**
-         * Custom request options
-         *
-         * @type {Object}
-         */
-        this.customRequestOptions = customRequestOptions || {};
-
-        /**
-         * The actual, current options for the NPM request library
-         *
-         * @type {Object}
-         */
-        this.globalRequestOptions = merge(this.defaultRequestOptions, this.customRequestOptions);
-
-        // SEMLOG OPTIONS
-        semlog.updateConfig(this.options.semlog || {});
-    }
-
-
-    //////////////////////////////////////////
-    // GETTER & SETTER                      //
-    //////////////////////////////////////////
-
-    /**
-     * Set and overwrite mwbot options
-     *
-     * @param {Object} customOptions
-     */
-    setOptions(customOptions) {
-        this.options = merge(this.options, customOptions);
-        this.customOptions = merge(this.customOptions, customOptions);
-    }
-
-    /**
-     * Sets and overwrites the raw request options, used by the "request" library
-     * See https://www.npmjs.com/package/request
-     *
-     * @param {Object} customRequestOptions
-     */
-    setGlobalRequestOptions(customRequestOptions) {
-        this.globalRequestOptions = merge(this.globalRequestOptions, customRequestOptions);
-        this.customRequestOptions = merge(this.customRequestOptions, customRequestOptions);
-    }
-
-    /**
-     * Sets the API URL for MediaWiki requests
-     * This can be uses instead of a login, if no actions are used that require login.
-     *
-     * @param {String}  apiUrl  API Url to MediaWiki, e.g. 'https://www.semantic-mediawiki.org/w/api.php'
-     */
-    setApiUrl(apiUrl) {
-        this.options.apiUrl = apiUrl;
-    }
-
-
-    //////////////////////////////////////////
-    // CORE REQUESTS                        //
-    //////////////////////////////////////////
-
-    /**
-     * Executes a promisified raw request
-     * Uses the npm request library
-     *
-     * @param {object} requestOptions
-     *
-     * @returns {Promise}
-     */
-    rawRequest(requestOptions) {
-
-        this.counter.total += 1;
-
-        return new Promise((resolve, reject) => {
-            this.counter.resolved += 1;
-            if (!requestOptions.uri) {
-                this.counter.rejected += 1;
-                return reject(new Error('No URI provided!'));
-            }
-            request(requestOptions, (error, response, body) => {
-                if (error) {
-                    this.counter.rejected +=1;
-                    return reject(error);
-                } else {
-                    this.counter.fulfilled +=1;
-                    return resolve(body);
-                }
-            });
-        });
-    }
-
-
-    /**
-     * Executes a request with the ability to use custom parameters and custom
-     * request options
-     *
-     * @param {object} params               Request Parameters
-     * @param {object} customRequestOptions Custom request options
-     *
-     * @returns {Promise}
-     */
-    request(params, customRequestOptions) {
-
-        // pre-process params:
-        // adapted from https://doc.wikimedia.org/mediawiki-core/master/js/source/index2.html#mw-Api-method-preprocessParameters
-        for (var key in params) {
-            if (Array.isArray(params[key])) {
-                if (params[key].join('').indexOf('|') === -1) {
-                    params[key] = params[key].join('|');
-                } else {
-                    params[key] = '\x1f' + params[key].join('\x1f');
-                }
-            } else if (params[key] === false || params[key] === undefined) {
-                delete params[key];
-            }
-        }
-
-        return new Promise((resolve, reject) => {
-
-            this.globalRequestOptions.uri = this.options.apiUrl; // XXX: ??
-
-            let requestOptions = merge(this.globalRequestOptions, customRequestOptions);
-            requestOptions.form = merge(requestOptions.form, params);
-
-            this.rawRequest(requestOptions).then((response) => {
-
-                if (typeof response !== 'object') {
-                    let err = new Error('invalidjson: No valid JSON response');
-                    err.code = 'invalidjson';
-                    err.info = 'No valid JSON response';
-                    err.response = response;
-                    return reject(err) ;
-                }
-
-                if (response.error) { // See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
-                    let err = new Error(response.error.code + ': ' + response.error.info);
-                    // Enhance error object with additional information
-                    err.errorResponse = true;
-                    err.code = response.error.code;
-                    err.info = response.error.info;
-                    err.response = response;
-                    err.request = requestOptions;
-                    return reject(err) ;
-                }
-
-                return resolve(response);
-
-            }).catch((err) => {
-                reject(err);
-            });
-
-        });
-    }
-
-
-    //////////////////////////////////////////
-    // CORE FUNCTIONS                       //
-    //////////////////////////////////////////
-
-    /**
-     * Executes a Login
-     *
-     * @see https://www.mediawiki.org/wiki/API:Login
-     *
-     * @param {object} [loginOptions]
-     *
-     * @returns {Promise}
-     */
-    login(loginOptions) {
-
-        this.loginPromise = new Promise((resolve, reject) => {
-
-            this.options = merge(this.options, loginOptions);
-
-            if (!this.options.username || !this.options.password || !this.options.apiUrl) {
-                return reject(new Error('Incomplete login credentials!'));
-            }
-
-            let loginRequest = {
-                action: 'login',
-                lgname: this.options.username,
-                lgpassword: this.options.password
-            };
-
-            let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
-
-            this.request(loginRequest).then((response) => {
-
-                if (!response.login || !response.login.result) {
-                    let err = new Error('Invalid response from API');
-                    err.response = response;
-                    log('[E] [MWBOT] Login failed with invalid response: ' + loginString);
-                    return reject(err) ;
-                } else {
-                    this.state = merge(this.state, response.login);
-                    // Add token and re-submit login request
-                    loginRequest.lgtoken = response.login.token;
-                    return this.request(loginRequest);
-                }
-
-            }).then((response) => {
-
-                if (response.login && response.login.result === 'Success') {
-                    this.state = merge(this.state, response.login);
-                    this.loggedIn = true;
-                    if (!this.options.silent) {
-                        log('[S] [MWBOT] Login successful: ' + loginString);
-                    }
-                    return resolve(this.state);
-                } else {
-                    let reason = 'Unknown reason';
-                    if (response.login && response.login.result) {
-                        reason = response.login.result;
-                    }
-                    let err = new Error('Could not login: ' + reason);
-                    err.response = response;
-                    log('[E] [MWBOT] Login failed: ' + loginString);
-                    return reject(err) ;
-                }
-
-            }).catch((err) => {
-                reject(err);
-            });
-
-        });
-
-        return this.loginPromise;
-    }
-
-    /**
-     * Gets an edit token
-     * This is currently only compatible with MW >= 1.24
-     *
-     * @returns {Promise}
-     */
-    getEditToken() {
-        return new Promise((resolve, reject) => {
-
-            if (this.editToken) {
-                return resolve(this.state);
-            }
-
-            // MW >= 1.24
-            this.request({
-                action: 'query',
-                meta: 'tokens',
-                type: 'csrf'
-            }).then((response) => {
-                if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
-                    this.editToken = response.query.tokens.csrftoken;
-                    this.state = merge(this.state, response.query.tokens);
-                    return resolve(this.state);
-                } else {
-                    let err = new Error('Could not get edit token');
-                    err.response = response;
-                    return reject(err) ;
-                }
-            }).catch((err) => {
-                return reject(err);
-            });
-        });
-    }
-
-    /**
-     * Combines Login  with GetEditToken
-     *
-     * @param loginOptions
-     *
-     * @returns {Promise}
-     */
-    loginGetEditToken(loginOptions) {
-        return this.login(loginOptions).then(() => {
-            return this.getEditToken();
-        });
-    }
-
-    //////////////////////////////////////////
-    // HELPER FUNCTIONS                     //
-    //////////////////////////////////////////
-
-    /**
-    * @param {string} title Page title
-    * @param {Function} transform Callback that prepares the edit
-    * @param {Object} transform.revision Current revision
-    * @param {string} transform.revision.content Current revision content
-    * @param {string|Object|Promise} transform.return New content, object with edit
-    *  API parameters, or promise providing one of those.
-    * @return {Promise} Edit API response
-    */
-   // copied from mw.Api edit
-    edit(title, transform) {
-        var basetimestamp, curtimestamp, bot = this;
-        title = String(title);
-        return bot.request({
-            action: 'query',
-            prop: 'revisions',
-            rvprop: ['content', 'timestamp'],
-            titles: [title],
-            formatversion: '2',
-            curtimestamp: !0
-        }).then(function(data) {
-            var page, revision;
-            if (!data.query || !data.query.pages) {
-                return Promise.reject('unknown');
-            }
-            page = data.query.pages[0];
-            if (!page || page.invalid) {
-                return Promise.reject('invalidtitle');
-            }
-            if (page.missing) {
-                return Promise.reject('nocreate-missing');
-            }
-            revision = page.revisions[0];
-            basetimestamp = revision.timestamp;
-            curtimestamp = data.curtimestamp;
-            return transform({
-                timestamp: revision.timestamp,
-                content: revision.content
-            });
-        }).then(function(params) {
-            var editParams = typeof params === 'object' ? params : {
-                text: String(params)
-            };
-            return bot.request(merge({
-                action: 'edit',
-                title: title,
-                formatversion: '2',
-                basetimestamp: basetimestamp,
-                starttimestamp: curtimestamp,
-                nocreate: !0,
-                token: bot.editToken
-            }, editParams));
-        }).then(function(data) {
-            return data.edit;
-        });
-    }
-
-    /**
-     * Edit a page without loading it first. Straightforward version of `edit`.
-     * No edit conflict detection.
-     *
-     * @param {string}  title
-     * @param {string}  content
-     * @param {string}  [summary]
-     * @param {object}  [options]
-     *
-     * @returns {Promise}
-     */
-    save(title, content, summary, options) {
-        return this.request(merge({
-            action: 'edit',
-            title: title,
-            text: content,
-            summary: summary,
-            token: this.editToken
-        }, options));
-    }
-
-    /**
-     * Creates a new pages. Does not edit existing ones
-     *
-     * @param {string}  title
-     * @param {string}  content
-     * @param {string}  [summary]
-     * @param {object}  [options]
-     *
-     * @returns {Promise}
-     */
-    create(title, content, summary, options) {
-        return this.request(merge({
-            action: 'edit',
-            title: title,
-            text: content,
-            summary: summary,
-            createonly: true,
-            token: this.editToken
-        }, options));
-    }
-
-    /**
-     * Post a new section to the page.
-     *
-     * @param {string} title Target page
-     * @param {string} header
-     * @param {string} message wikitext message
-     * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
-     * @return {jQuery.Promise}
-     */
-    newSection(title, header, message, additionalParams) {
-        return this.request( merge( {
-            action: 'edit',
-            section: 'new',
-            title: String( title ),
-            summary: header,
-            text: message,
-            token: this.editToken
-        }, additionalParams ) );
-    }
-
-    /**
-     * Reads the content / and meta-data of one (or many) pages
-     *
-     * @param {string|string[]}  titles    For multiple Pages use an array
-     * @param {object}      [options]
-     *
-     * @returns {Promise}
-     */
-    read(titles, options) {
-        return this.request(merge({
-            action: 'query',
-            prop: 'revisions',
-            rvprop: 'content',
-            titles: titles,
-            redirects: '1'
-        }, options)).then(json => {
-            if (Array.isArray(titles)) {
-                return json.query.pages;
-            } else {
-                return json.query.pages[0];
-            }
-        });
-    }
-
-    /**
-     * Deletes a page
-     *
-     * @param {string}  title
-     * @param {string}  [summary]
-     * @param {object}  [options]
-     * @returns {Promise}
-     */
-    delete(title, summary, options) {
-        return this.request(merge({
-            action: 'delete',
-            title: title,
-            reason: summary,
-            token: this.editToken
-        }, options));
-    }
-
-    /**
-     * Undeletes a page
-     *
-     * @param {string}  title
-     * @param {string}  [summary]
-     * @param {object}  [options]
-     * @returns {Promise}
-     */
-    undelete(title, summary, options) {
-        return this.request(merge({
-            action: 'undelete',
-            title: title,
-            reason: summary,
-            token: this.editToken
-        }, options));
-    }
-
-    /**
-     * Moves a new page
-     *
-     * @param {string}  fromtitle
-     * @param {string}  totitle
-     * @param {string}  [summary]
-     * @param {object}  [options]
-     * @returns {Promise}
-     */
-    move(fromtitle, totitle, summary, options) {
-        return this.request(merge({
-            action: 'move',
-            from: fromtitle,
-            to: totitle,
-            reason: summary,
-            movetalk: 1,
-            token: this.editToken
-        }, options));
-    }
-
-    /**
-     * Parse wikitext. Convenience method for 'action=parse'.
-     *
-     * @param {string} content Content to parse.
-     * @param {Object} additionalParams Parameters object to set custom settings, e.g.
-     *   redirects, sectionpreview.  prop should not be overridden.
-     * @return {Promise}
-     * @return {Function} return.then
-     * @return {string} return.then.data Parsed HTML of `wikitext`.
-     */
-    parseWikitext(content, additionalParams) {
-        return this.request(merge( {
-            text: String(content),
-            formatversion: 2,
-            action: 'parse',
-            contentmodel: 'wikitext'
-        }, additionalParams ))
-        .then( function ( data ) {
-            return data.parse.text;
-        } );
-    }
-
-    /**
-     * Parse a given page. Convenience method for 'action=parse'.
-     *
-     * @param {string} title Title of the page to parse
-     * @param {Object} additionalParams Parameters object to set custom settings, e.g.
-     *   redirects, sectionpreview.  prop should not be overridden.
-     * @return {Promise}
-     * @return {Function} return.then
-     * @return {string} return.then.data Parsed HTML of `wikitext`.
-     */
-    parseTitle(title, additionalParams) {
-        return this.request(merge( {
-            page: String(title),
-            formatversion: 2,
-            action: 'parse',
-            contentmodel: 'wikitext'
-        }, additionalParams ))
-        .then( function ( data ) {
-            return data.parse.text;
-        } );
-    }
-
-    /**
-     * Convenience method for `action=rollback`.
-     *
-     * @param {string} page
-     * @param {string} user
-     * @param {Object} [params] Additional parameters
-     * @return {Promise}
-     */
-    rollback(page, user, params) {
-        var bot = this;
-        return this.request({
-            action: 'query',
-            meta: 'tokens',
-            type: 'rollback'
-        }).then(function(data) {
-            return bot.request(merge({
-                action: 'rollback',
-                title: String( page ),
-                user: user,
-                token: data.query.tokens.rollbacktoken
-            }, params));
-        }).then(function(data) {
-            return data.rollback;
-        });
-    }
-
-    /**
-     * Uploads a file
-     *
-     * @param {string}  [title]
-     * @param {string}  pathToFile
-     * @param {string}  [comment]
-     * @param {object}  [customParams]
-     * @param {object}  [customRequestOptions]
-     *
-     * @returns {Promise}
-     */
-    upload(title, pathToFile, comment, customParams, customRequestOptions) {
-
-        try {
-            let file = fs.createReadStream(pathToFile);
-
-            let params = merge({
-                action: 'upload',
-                filename: title || path.basename(pathToFile),
-                file: file,
-                comment: comment || '',
-                token: this.editToken
-            }, customParams);
-
-            let uploadRequestOptions = merge(this.globalRequestOptions, {
-
-                // https://www.npmjs.com/package/request#support-for-har-12
-                har: {
-                    method: 'POST',
-                    postData: {
-                        mimeType: 'multipart/form-data',
-                        params: []
-                    }
-                }
-            });
-
-            // Convert params to HAR 1.2 notation
-            for (let paramName in params) {
-                let param = params[paramName];
-                uploadRequestOptions.har.postData.params.push({
-                    name: paramName,
-                    value: param
-                });
-            }
-
-            let requestOptions = merge(uploadRequestOptions, customRequestOptions);
-
-            return this.request({}, requestOptions);
-
-        } catch (e) {
-            return Promise.reject(e);
-        }
-    }
-
-    /**
-     * Uploads a file and overwrites existing ones
-     *
-     * @param {string}  [title]
-     * @param {string}  pathToFile
-     * @param {string}  [comment]
-     * @param {object}  [customParams]
-     * @param {object}  [customRequestOptions]
-     *
-     * @returns {Promise}
-     */
-    uploadOverwrite(title, pathToFile, comment, customParams, customRequestOptions) {
-        let params = merge({
-            ignorewarnings: ''
-        }, customParams);
-        return this.upload(title, pathToFile, comment, params, customRequestOptions);
-    }
-
-
-    //////////////////////////////////////////
-    // BULK PROCESSING FUNCTIONS            //
-    //////////////////////////////////////////
-
-    /**
+	/***************** CONSTRUCTOR ********************/
+
+	/**
+	 * Constructs a new MWB instance
+	 * It is advised to create one bot instance for every API to use
+	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations
+	 *
+	 * @param {Object} [customOptions]        Custom options
+	 * @param {Object} [customRequestOptions] Custom request options
+	 */
+	constructor(customOptions, customRequestOptions) {
+
+		/**
+		 * Bot instance Login State
+		 * Is received from the MW Login API and contains token, userid, etc.
+		 *
+		 * @type {object}
+		 */
+		this.state = {};
+
+		/**
+		 * Bot instance is logged in or not
+		 *
+		 * @type {boolean}
+		 */
+		this.loggedIn = false;
+
+		/**
+		 * Bot instances edit token
+		 *
+		 * @type {boolean}
+		 */
+		this.editToken = false;
+
+		/**
+		 * Internal statistics
+		 *
+		 * @type {object}
+		 */
+		this.counter = {
+			total: 0,
+			resolved: 0,
+			fulfilled: 0,
+			rejected: 0
+		};
+
+		/**
+		 * Default options.
+		 * Should be immutable
+		 *
+		 * @type {object}
+		 */
+		this.defaultOptions = {
+			// verbose: false,
+			silent: false,
+			// concurrency: 1,
+			apiUrl: false
+		};
+
+		/**
+		 * Custom options as the user provided them originally.
+		 *
+		 * @type {object}
+		 */
+		this.customOptions = customOptions || {};
+
+		/**
+		 * Actual, current options of the bot instance
+		 * They're a mix of the default options, the custom options and later changes
+		 *
+		 * @type {Object}
+		 */
+		this.options = merge(this.defaultOptions, this.customOptions);
+
+		/**
+		 * Default options for the NPM request library
+		 *
+		 * @type {Object}
+		 */
+		this.defaultRequestOptions = {
+			method: 'POST',
+			headers: {
+				'User-Agent': 'MWB'
+			},
+			qs: {
+				format: 'json'
+			},
+			form: {
+
+			},
+			timeout: 120000, // 120 seconds
+			jar: true,
+			time: true,
+			json: true
+		};
+
+		/**
+		 * Custom request options
+		 *
+		 * @type {Object}
+		 */
+		this.customRequestOptions = customRequestOptions || {};
+
+		/**
+		 * The actual, current options for the NPM request library
+		 *
+		 * @type {Object}
+		 */
+		this.globalRequestOptions = merge(this.defaultRequestOptions, this.customRequestOptions);
+
+		// SEMLOG OPTIONS
+		semlog.updateConfig(this.options.semlog || {});
+	}
+
+	/**
+	 * Set and overwrite mwbot options
+	 *
+	 * @param {Object} customOptions
+	 */
+	setOptions(customOptions) {
+		this.options = merge(this.options, customOptions);
+		this.customOptions = merge(this.customOptions, customOptions);
+	}
+
+	/**
+	 * Sets and overwrites the raw request options, used by the "request" library
+	 * See https://www.npmjs.com/package/request
+	 *
+	 * @param {Object} customRequestOptions
+	 */
+	setGlobalRequestOptions(customRequestOptions) {
+		this.globalRequestOptions = merge(this.globalRequestOptions, customRequestOptions);
+		this.customRequestOptions = merge(this.customRequestOptions, customRequestOptions);
+	}
+
+	/**
+	 * Sets the API URL for MediaWiki requests
+	 * This can be uses instead of a login, if no actions are used that require login.
+	 *
+	 * @param {String}  apiUrl  API Url to MediaWiki, e.g. 'https://www.semantic-mediawiki.org/w/api.php'
+	 */
+	setApiUrl(apiUrl) {
+		this.options.apiUrl = apiUrl;
+	}
+
+	/************ CORE REQUESTS ***************/
+
+	/**
+	 * Executes a promisified raw request
+	 * Uses the npm request library
+	 *
+	 * @param {object} requestOptions
+	 *
+	 * @returns {Promise}
+	 */
+	rawRequest(requestOptions) {
+
+		this.counter.total += 1;
+
+		return new Promise((resolve, reject) => {
+			this.counter.resolved += 1;
+			if (!requestOptions.uri) {
+				this.counter.rejected += 1;
+				return reject(new Error('No URI provided!'));
+			}
+			request(requestOptions, (error, response, body) => {
+				if (error) {
+					this.counter.rejected +=1;
+					return reject(error);
+				} else {
+					this.counter.fulfilled +=1;
+					return resolve(body);
+				}
+			});
+		});
+	}
+
+
+	/**
+	 * Executes a request with the ability to use custom parameters and custom
+	 * request options
+	 *
+	 * @param {object} params               Request Parameters
+	 * @param {object} customRequestOptions Custom request options
+	 *
+	 * @returns {Promise}
+	 */
+	request(params, customRequestOptions) {
+
+		// pre-process params:
+		// adapted from https://doc.wikimedia.org/mediawiki-core/master/js/source/index2.html#mw-Api-method-preprocessParameters
+		for (var key in params) {
+			if (Array.isArray(params[key])) {
+				if (params[key].join('').indexOf('|') === -1) {
+					params[key] = params[key].join('|');
+				} else {
+					params[key] = '\x1f' + params[key].join('\x1f');
+				}
+			} else if (params[key] === false || params[key] === undefined) {
+				delete params[key];
+			}
+		}
+
+		return new Promise((resolve, reject) => {
+
+			this.globalRequestOptions.uri = this.options.apiUrl; // XXX: ??
+
+			let requestOptions = merge(this.globalRequestOptions, customRequestOptions);
+			requestOptions.form = merge(requestOptions.form, params);
+
+			this.rawRequest(requestOptions).then((response) => {
+
+				if (typeof response !== 'object') {
+					let err = new Error('invalidjson: No valid JSON response');
+					err.code = 'invalidjson';
+					err.info = 'No valid JSON response';
+					err.response = response;
+					return reject(err) ;
+				}
+
+				if (response.error) { // See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
+					let err = new Error(response.error.code + ': ' + response.error.info);
+					// Enhance error object with additional information
+					err.errorResponse = true;
+					err.code = response.error.code;
+					err.info = response.error.info;
+					err.response = response;
+					err.request = requestOptions;
+					return reject(err) ;
+				}
+
+				return resolve(response);
+
+			}).catch((err) => {
+				reject(err);
+			});
+
+		});
+	}
+
+
+	/************** CORE FUNCTIONS *******************/
+
+
+	/**
+	 * Executes a Login
+	 *
+	 * @see https://www.mediawiki.org/wiki/API:Login
+	 *
+	 * @param {object} [loginOptions]
+	 *
+	 * @returns {Promise}
+	 */
+	login(loginOptions) {
+
+		this.loginPromise = new Promise((resolve, reject) => {
+
+			this.options = merge(this.options, loginOptions);
+
+			if (!this.options.username || !this.options.password || !this.options.apiUrl) {
+				return reject(new Error('Incomplete login credentials!'));
+			}
+
+			let loginRequest = {
+				action: 'login',
+				lgname: this.options.username,
+				lgpassword: this.options.password
+			};
+
+			let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
+
+			this.request(loginRequest).then((response) => {
+
+				if (!response.login || !response.login.result) {
+					let err = new Error('Invalid response from API');
+					err.response = response;
+					log('[E] [MWBOT] Login failed with invalid response: ' + loginString);
+					return reject(err) ;
+				} else {
+					this.state = merge(this.state, response.login);
+					// Add token and re-submit login request
+					loginRequest.lgtoken = response.login.token;
+					return this.request(loginRequest);
+				}
+
+			}).then((response) => {
+
+				if (response.login && response.login.result === 'Success') {
+					this.state = merge(this.state, response.login);
+					this.loggedIn = true;
+					if (!this.options.silent) {
+						log('[S] [MWBOT] Login successful: ' + loginString);
+					}
+					return resolve(this.state);
+				} else {
+					let reason = 'Unknown reason';
+					if (response.login && response.login.result) {
+						reason = response.login.result;
+					}
+					let err = new Error('Could not login: ' + reason);
+					err.response = response;
+					log('[E] [MWBOT] Login failed: ' + loginString);
+					return reject(err) ;
+				}
+
+			}).catch((err) => {
+				reject(err);
+			});
+
+		});
+
+		return this.loginPromise;
+	}
+
+	/**
+	 * Gets an edit token
+	 * This is currently only compatible with MW >= 1.24
+	 *
+	 * @returns {Promise}
+	 */
+	getEditToken() {
+		return new Promise((resolve, reject) => {
+
+			if (this.editToken) {
+				return resolve(this.state);
+			}
+
+			// MW >= 1.24
+			this.request({
+				action: 'query',
+				meta: 'tokens',
+				type: 'csrf'
+			}).then((response) => {
+				if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
+					this.editToken = response.query.tokens.csrftoken;
+					this.state = merge(this.state, response.query.tokens);
+					return resolve(this.state);
+				} else {
+					let err = new Error('Could not get edit token');
+					err.response = response;
+					return reject(err) ;
+				}
+			}).catch((err) => {
+				return reject(err);
+			});
+		});
+	}
+
+	/**
+	 * Combines Login  with GetEditToken
+	 *
+	 * @param loginOptions
+	 *
+	 * @returns {Promise}
+	 */
+	loginGetEditToken(loginOptions) {
+		return this.login(loginOptions).then(() => {
+			return this.getEditToken();
+		});
+	}
+
+	/***************** HELPER FUNCTIONS ******************/
+
+
+	/**
+	* @param {string} title Page title
+	* @param {Function} transform Callback that prepares the edit
+	* @param {Object} transform.revision Current revision
+	* @param {string} transform.revision.content Current revision content
+	* @param {string|Object|Promise} transform.return New content, object with edit
+	*  API parameters, or promise providing one of those.
+	* @return {Promise} Edit API response
+	*/
+	// copied from mw.Api edit
+	edit(title, transform) {
+		var basetimestamp, curtimestamp, bot = this;
+		title = String(title);
+		return bot.request({
+			action: 'query',
+			prop: 'revisions',
+			rvprop: ['content', 'timestamp'],
+			titles: [title],
+			formatversion: '2',
+			curtimestamp: !0
+		}).then(function(data) {
+			var page, revision;
+			if (!data.query || !data.query.pages) {
+				return Promise.reject('unknown');
+			}
+			page = data.query.pages[0];
+			if (!page || page.invalid) {
+				return Promise.reject('invalidtitle');
+			}
+			if (page.missing) {
+				return Promise.reject('nocreate-missing');
+			}
+			revision = page.revisions[0];
+			basetimestamp = revision.timestamp;
+			curtimestamp = data.curtimestamp;
+			return transform({
+				timestamp: revision.timestamp,
+				content: revision.content
+			});
+		}).then(function(params) {
+			var editParams = typeof params === 'object' ? params : {
+				text: String(params)
+			};
+			return bot.request(merge({
+				action: 'edit',
+				title: title,
+				formatversion: '2',
+				basetimestamp: basetimestamp,
+				starttimestamp: curtimestamp,
+				nocreate: !0,
+				token: bot.editToken
+			}, editParams));
+		}).then(function(data) {
+			return data.edit;
+		});
+	}
+
+	/**
+	 * Edit a page without loading it first. Straightforward version of `edit`.
+	 * No edit conflict detection.
+	 *
+	 * @param {string}  title
+	 * @param {string}  content
+	 * @param {string}  [summary]
+	 * @param {object}  [options]
+	 *
+	 * @returns {Promise}
+	 */
+	save(title, content, summary, options) {
+		return this.request(merge({
+			action: 'edit',
+			title: title,
+			text: content,
+			summary: summary,
+			token: this.editToken
+		}, options));
+	}
+
+	/**
+	 * Creates a new pages. Does not edit existing ones
+	 *
+	 * @param {string}  title
+	 * @param {string}  content
+	 * @param {string}  [summary]
+	 * @param {object}  [options]
+	 *
+	 * @returns {Promise}
+	 */
+	create(title, content, summary, options) {
+		return this.request(merge({
+			action: 'edit',
+			title: title,
+			text: content,
+			summary: summary,
+			createonly: true,
+			token: this.editToken
+		}, options));
+	}
+
+	/**
+	 * Post a new section to the page.
+	 *
+	 * @param {string} title Target page
+	 * @param {string} header
+	 * @param {string} message wikitext message
+	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
+	 * @return {jQuery.Promise}
+	 */
+	newSection(title, header, message, additionalParams) {
+		return this.request( merge( {
+			action: 'edit',
+			section: 'new',
+			title: String( title ),
+			summary: header,
+			text: message,
+			token: this.editToken
+		}, additionalParams ) );
+	}
+
+	/**
+	 * Reads the content / and meta-data of one (or many) pages
+	 *
+	 * @param {string|string[]}  titles    For multiple Pages use an array
+	 * @param {object}      [options]
+	 *
+	 * @returns {Promise}
+	 */
+	read(titles, options) {
+		return this.request(merge({
+			action: 'query',
+			prop: 'revisions',
+			rvprop: 'content',
+			titles: titles,
+			redirects: '1'
+		}, options)).then(json => {
+			if (Array.isArray(titles)) {
+				return json.query.pages;
+			} else {
+				return json.query.pages[0];
+			}
+		});
+	}
+
+	/**
+	 * Deletes a page
+	 *
+	 * @param {string}  title
+	 * @param {string}  [summary]
+	 * @param {object}  [options]
+	 * @returns {Promise}
+	 */
+	delete(title, summary, options) {
+		return this.request(merge({
+			action: 'delete',
+			title: title,
+			reason: summary,
+			token: this.editToken
+		}, options));
+	}
+
+	/**
+	 * Undeletes a page
+	 *
+	 * @param {string}  title
+	 * @param {string}  [summary]
+	 * @param {object}  [options]
+	 * @returns {Promise}
+	 */
+	undelete(title, summary, options) {
+		return this.request(merge({
+			action: 'undelete',
+			title: title,
+			reason: summary,
+			token: this.editToken
+		}, options));
+	}
+
+	/**
+	 * Moves a new page
+	 *
+	 * @param {string}  fromtitle
+	 * @param {string}  totitle
+	 * @param {string}  [summary]
+	 * @param {object}  [options]
+	 * @returns {Promise}
+	 */
+	move(fromtitle, totitle, summary, options) {
+		return this.request(merge({
+			action: 'move',
+			from: fromtitle,
+			to: totitle,
+			reason: summary,
+			movetalk: 1,
+			token: this.editToken
+		}, options));
+	}
+
+	/**
+	 * Parse wikitext. Convenience method for 'action=parse'.
+	 *
+	 * @param {string} content Content to parse.
+	 * @param {Object} additionalParams Parameters object to set custom settings, e.g.
+	 *   redirects, sectionpreview.  prop should not be overridden.
+	 * @return {Promise}
+	 * @return {Function} return.then
+	 * @return {string} return.then.data Parsed HTML of `wikitext`.
+	 */
+	parseWikitext(content, additionalParams) {
+		return this.request(merge({
+			text: String(content),
+			formatversion: 2,
+			action: 'parse',
+			contentmodel: 'wikitext'
+		}, additionalParams)).then(function (data) {
+			return data.parse.text;
+		});
+	}
+
+	/**
+	 * Parse a given page. Convenience method for 'action=parse'.
+	 *
+	 * @param {string} title Title of the page to parse
+	 * @param {Object} additionalParams Parameters object to set custom settings, e.g.
+	 *   redirects, sectionpreview.  prop should not be overridden.
+	 * @return {Promise}
+	 * @return {Function} return.then
+	 * @return {string} return.then.data Parsed HTML of `wikitext`.
+	 */
+	parseTitle(title, additionalParams) {
+		return this.request(merge({
+			page: String(title),
+			formatversion: 2,
+			action: 'parse',
+			contentmodel: 'wikitext'
+		}, additionalParams)).then( function ( data ) {
+			return data.parse.text;
+		});
+	}
+
+	/**
+	 * Convenience method for `action=rollback`.
+	 *
+	 * @param {string} page
+	 * @param {string} user
+	 * @param {Object} [params] Additional parameters
+	 * @return {Promise}
+	 */
+	rollback(page, user, params) {
+		var bot = this;
+		return this.request({
+			action: 'query',
+			meta: 'tokens',
+			type: 'rollback'
+		}).then(function(data) {
+			return bot.request(merge({
+				action: 'rollback',
+				title: String( page ),
+				user: user,
+				token: data.query.tokens.rollbacktoken
+			}, params));
+		}).then(function(data) {
+			return data.rollback;
+		});
+	}
+
+	/**
+	 * Uploads a file
+	 *
+	 * @param {string}  [title]
+	 * @param {string}  pathToFile
+	 * @param {string}  [comment]
+	 * @param {object}  [customParams]
+	 * @param {object}  [customRequestOptions]
+	 *
+	 * @returns {Promise}
+	 */
+	upload(title, pathToFile, comment, customParams, customRequestOptions) {
+
+		try {
+			let file = fs.createReadStream(pathToFile);
+
+			let params = merge({
+				action: 'upload',
+				filename: title || path.basename(pathToFile),
+				file: file,
+				comment: comment || '',
+				token: this.editToken
+			}, customParams);
+
+			let uploadRequestOptions = merge(this.globalRequestOptions, {
+
+				// https://www.npmjs.com/package/request#support-for-har-12
+				har: {
+					method: 'POST',
+					postData: {
+						mimeType: 'multipart/form-data',
+						params: []
+					}
+				}
+			});
+
+			// Convert params to HAR 1.2 notation
+			for (let paramName in params) {
+				let param = params[paramName];
+				uploadRequestOptions.har.postData.params.push({
+					name: paramName,
+					value: param
+				});
+			}
+
+			let requestOptions = merge(uploadRequestOptions, customRequestOptions);
+
+			return this.request({}, requestOptions);
+
+		} catch (e) {
+			return Promise.reject(e);
+		}
+	}
+
+	/**
+	 * Uploads a file and overwrites existing ones
+	 *
+	 * @param {string}  [title]
+	 * @param {string}  pathToFile
+	 * @param {string}  [comment]
+	 * @param {object}  [customParams]
+	 * @param {object}  [customRequestOptions]
+	 *
+	 * @returns {Promise}
+	 */
+	uploadOverwrite(title, pathToFile, comment, customParams, customRequestOptions) {
+		let params = merge({
+			ignorewarnings: ''
+		}, customParams);
+		return this.upload(title, pathToFile, comment, params, customRequestOptions);
+	}
+
+
+	/************* BULK PROCESSING FUNCTIONS ************/
+
+
+	/**
 	 * Send an API query that automatically continues till the limit is reached.
 	 *
 	 * @param {Object} query - The API query
 	 * @param {number} [limit=10] - limit on the maximum number of API calls to go through
 	 * @returns {Promise<Object[]>} - resolved with an array of responses of individual calls.
 	 */
-    continuousQuery(query, limit) {
-        limit = limit || 10;
+	continuousQuery(query, limit) {
+		limit = limit || 10;
 		var responses = [];
 		var callApi = function(query, count) {
 			return this.request(query).then(function(response) {
-                if (!this.options.silent) {
-                    log(`[+] Got part ${count} of continuous API query`);
-                }
+				if (!this.options.silent) {
+					log(`[+] Got part ${count} of continuous API query`);
+				}
 				responses.push(response);
 				if (response.continue && count < limit) {
 					return callApi(Object.assign({}, query, response.continue), count + 1);
@@ -775,7 +760,7 @@ class MWB {
 			});
 		};
 		return callApi(query, 1);
-    }
+	}
 
 	/**
 	 * Function for using API action=query with more than 50/500 items in multi-input fields.
@@ -788,8 +773,8 @@ class MWB {
 	 * the multi-input field is split into batches of 50 (500 for bots) and individual queries
 	 * are sent sequentially for each batch. A promise is returned finally resolved with the
 	 * array of responses of each API call.
-     *
-     * XXX: limits of 50 or 500 could be wiki-specific.
+	 *
+	 * XXX: limits of 50 or 500 could be wiki-specific.
 	 *
 	 * @param {Object} query - the query object, the multi-input field should be an array
 	 * @param {string} [batchFieldName=titles] - the name of the multi-input field
@@ -798,7 +783,7 @@ class MWB {
 	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have settled,
 	 * with the array of responses.
 	 */
-    massQuery(query, batchFieldName, hasApiHighLimit) {
+	massQuery(query, batchFieldName, hasApiHighLimit) {
 		batchFieldName = batchFieldName || 'titles';
 		var batchValues = query[batchFieldName];
 		var limit = hasApiHighLimit ? 500 : 50;
@@ -826,9 +811,9 @@ class MWB {
 			};
 			sendQuery(0);
 		});
-    }
+	}
 
-    /**
+	/**
 	 * Execute an asynchronous function on a large number of pages (or other arbitrary items).
 	 * Similar to Morebits.batchOperation in [[MediaWiki:Gadget-morebits.js]], but designed for
 	 * working with promises.
@@ -851,10 +836,10 @@ class MWB {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
 			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
-            if (!this.options.silent) {
-                console.log(statusText);
-            }
-		}
+			if (!this.options.silent) {
+				console.log(statusText);
+			}
+		};
 		var numBatches = Math.ceil(list.length / batchSize);
 
 		return new Promise(function(resolve) {
@@ -884,9 +869,9 @@ class MWB {
 			};
 			sendBatch(0);
 		});
-    }
+	}
 
-    /**
+	/**
 	 * Execute an asynchronous function on a number of pages (or other arbitrary items)
 	 * sequentially, with a time delay between actions.
 	 * Using this with delay=0 is same as using ApiBatchOperation with batchSize=1
@@ -904,10 +889,10 @@ class MWB {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
 			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
-            if (!this.options.silent) {
-                console.log(statusText);
-            }
-        }
+			if (!this.options.silent) {
+				console.log(statusText);
+			}
+		};
 
 		return new Promise(function(resolve) {
 			var trigger = function(idx) {
@@ -929,95 +914,94 @@ class MWB {
 	}
 
 
-    //////////////////////////////////////////
-    // SUPPLEMENTARY FUNCTIONS              //
-    //////////////////////////////////////////
-
-    /**
-     * Execute an ASK Query
-     *
-     * @param {string} query
-     * @param {string} [apiUrl]
-     * @param {object} [customRequestOptions]
-     *
-     * @returns {Promise}
-     */
-    askQuery(query, apiUrl, customRequestOptions) {
-
-        apiUrl = apiUrl || this.options.apiUrl;
-
-        let requestOptions = merge({
-            method: 'GET',
-            uri: apiUrl,
-            json: true,
-            qs: {
-                action: 'ask',
-                format: 'json',
-                query: query
-            }
-        }, customRequestOptions);
-
-        return this.rawRequest(requestOptions);
-    }
+	/********** SUPPLEMENTARY FUNCTIONS **************/
 
 
-    /**
-     * Executes a SPARQL Query
-     *
-     * @param {string} query
-     * @param {string} [apiUrl]
-     * @param {object} [customRequestOptions]
-     *
-     * @returns {Promise}
-     */
-    sparqlQuery(query, endpointUrl, customRequestOptions) {
+	/**
+	 * Execute an ASK Query
+	 *
+	 * @param {string} query
+	 * @param {string} [apiUrl]
+	 * @param {object} [customRequestOptions]
+	 *
+	 * @returns {Promise}
+	 */
+	askQuery(query, apiUrl, customRequestOptions) {
 
-        endpointUrl = endpointUrl || this.options.apiUrl;
+		apiUrl = apiUrl || this.options.apiUrl;
 
-        let requestOptions = merge({
-            method: 'GET',
-            uri: endpointUrl,
-            json: true,
-            qs: {
-                format: 'json',
-                query: query
-            }
-        }, customRequestOptions);
+		let requestOptions = merge({
+			method: 'GET',
+			uri: apiUrl,
+			json: true,
+			qs: {
+				action: 'ask',
+				format: 'json',
+				query: query
+			}
+		}, customRequestOptions);
 
-        return this.rawRequest(requestOptions);
-    }
-
-    //////////////////////////////////////////
-    // HELPER FUNCTIONS                     //
-    //////////////////////////////////////////
+		return this.rawRequest(requestOptions);
+	}
 
 
-    /**
-     * Prints status information about a completed request
-     *
-     * @param status
-     * @param currentCounter
-     * @param totalCounter
-     * @param operation
-     * @param pageName
-     * @param reason
-     */
-    static logStatus(status, currentCounter, totalCounter, operation, pageName, reason) {
+	/**
+	 * Executes a SPARQL Query
+	 *
+	 * @param {string} query
+	 * @param {string} [apiUrl]
+	 * @param {object} [customRequestOptions]
+	 *
+	 * @returns {Promise}
+	 */
+	sparqlQuery(query, endpointUrl, customRequestOptions) {
 
-        operation = operation || '';
+		endpointUrl = endpointUrl || this.options.apiUrl;
 
-        if (operation) {
-            operation = ' [' + operation.toUpperCase() + ']';
-            operation = (operation + '            ').substring(0, 12); // Right space padding: http://stackoverflow.com/a/24398129
-        }
+		let requestOptions = merge({
+			method: 'GET',
+			uri: endpointUrl,
+			json: true,
+			qs: {
+				format: 'json',
+				query: query
+			}
+		}, customRequestOptions);
 
-        reason = reason || '';
-        if (reason) {
-            reason = ' (' + reason + ')';
-        }
+		return this.rawRequest(requestOptions);
+	}
 
-        log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
-    }
+	//////////////////////////////////////////
+	// HELPER FUNCTIONS                     //
+	//////////////////////////////////////////
+
+
+	/**
+	 * Prints status information about a completed request
+	 *
+	 * @param status
+	 * @param currentCounter
+	 * @param totalCounter
+	 * @param operation
+	 * @param pageName
+	 * @param reason
+	 */
+	static logStatus(status, currentCounter, totalCounter, operation, pageName, reason) {
+
+		operation = operation || '';
+
+		if (operation) {
+			operation = ' [' + operation.toUpperCase() + ']';
+			operation = (operation + '            ').substring(0, 12); // Right space padding: http://stackoverflow.com/a/24398129
+		}
+
+		reason = reason || '';
+		if (reason) {
+			reason = ' (' + reason + ')';
+		}
+
+		log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
+	}
 }
 
 /**
@@ -1029,11 +1013,11 @@ class MWB {
  * @returns {Object}        Merged Object
  */
 var merge = function(parent, child) {
-   parent = parent || {};
-   child = child || {};
-   // Use {} as first parameter, as this object is mutated by default
-   // We don't want that, so we're providing an empty object that is thrown away after the operation
-   return Object.assign({}, parent, child);
-}
+	parent = parent || {};
+	child = child || {};
+	// Use {} as first parameter, as this object is mutated by default
+	// We don't want that, so we're providing an empty object that is thrown away after the operation
+	return Object.assign({}, parent, child);
+};
 
 module.exports = MWB;
