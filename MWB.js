@@ -444,6 +444,27 @@ class MWB {
     }
 
     /**
+     * Edit a page without loading it first. Straightforward version of `edit`.
+     * No edit conflict detection.
+     *
+     * @param {string}  title
+     * @param {string}  content
+     * @param {string}  [summary]
+     * @param {object}  [options]
+     *
+     * @returns {Promise}
+     */
+    save(title, content, summary, options) {
+        return this.request(merge({
+            action: 'edit',
+            title: title,
+            text: content,
+            summary: summary,
+            token: this.editToken
+        }, options));
+    }
+
+    /**
      * Creates a new pages. Does not edit existing ones
      *
      * @param {string}  title
