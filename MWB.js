@@ -116,7 +116,8 @@ class MWB {
 				'User-Agent': 'MWB'
 			},
 			qs: {
-				format: 'json'
+				format: 'json',
+				formatversion: '2'
 			},
 			form: {
 
@@ -470,7 +471,7 @@ class MWB {
 			text: content,
 			summary: summary,
 			token: this.editToken
-		}, options));
+		}, options)).then(data => data.edit);
 	}
 
 	/**
@@ -491,7 +492,7 @@ class MWB {
 			summary: summary,
 			createonly: true,
 			token: this.editToken
-		}, options));
+		}, options)).then(data => data.edit);
 	}
 
 	/**
@@ -511,7 +512,7 @@ class MWB {
 			summary: header,
 			text: message,
 			token: this.editToken
-		}, additionalParams ) );
+		}, additionalParams ) ).then(data => data.edit);
 	}
 
 	/**
@@ -529,11 +530,11 @@ class MWB {
 			rvprop: 'content',
 			titles: titles,
 			redirects: '1'
-		}, options)).then(json => {
+		}, options)).then(data => {
 			if (Array.isArray(titles)) {
-				return json.query.pages;
+				return data.query.pages;
 			} else {
-				return json.query.pages[0];
+				return data.query.pages[0];
 			}
 		});
 	}
@@ -552,7 +553,7 @@ class MWB {
 			title: title,
 			reason: summary,
 			token: this.editToken
-		}, options));
+		}, options)).then(data => data.delete);
 	}
 
 	/**
@@ -569,7 +570,7 @@ class MWB {
 			title: title,
 			reason: summary,
 			token: this.editToken
-		}, options));
+		}, options)).then(data => data.undelete);
 	}
 
 	/**
@@ -589,7 +590,7 @@ class MWB {
 			reason: summary,
 			movetalk: 1,
 			token: this.editToken
-		}, options));
+		}, options)).then(data => data.move);
 	}
 
 	/**
