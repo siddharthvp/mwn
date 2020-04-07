@@ -1,14 +1,14 @@
 {
-  "name": "mwb",
+  "name": "mwn",
   "version": "0.1.0",
   "description": "MediaWiki bot framework for NodeJS",
-  "main": "MWB.js",
+  "main": "mwn.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "github.com/siddharthvp/MWB"
+    "url": "github.com/siddharthvp/mwn"
   },
   "keywords": [
     "wikipedia-bot"

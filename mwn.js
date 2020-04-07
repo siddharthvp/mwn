@@ -1,9 +1,8 @@
 /**
  *
- *  MWB: a MediaWiki bot framework for NodeJS
+ *  mwn: a MediaWiki bot framework for NodeJS
  *
- *  Parts of the code are adapted from MWBot <https://github.com/Fannon/mwbot>
- *  which is released under the MIT license. Copyright (c) 2015-2018 Simon Heimler.
+ * 	Copyright (C) 2020 Siddharth VP
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +19,17 @@
  *
  */
 
+/**
+ * Attributions:
+ * Parts of the code are adapted from MWBot <https://github.com/Fannon/mwbot/src/index.js>
+ * released under the MIT license. Copyright (c) 2015-2018 Simon Heimler.
+ *
+ * Some parts are copied from the mediawiki.api module in mediawiki core
+ *  <https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.api>
+ * released under GNU GPL v2.
+ *
+ */
+
 'use strict';
 
 const fs = require('fs');
@@ -29,13 +39,13 @@ const semlog = require('semlog');
 
 const log = semlog.log;
 
-class MWB {
+class mwn {
 
 
 	/***************** CONSTRUCTOR ********************/
 
 	/**
-	 * Constructs a new MWB instance
+	 * Constructs a new mwn instance
 	 * It is advised to create one bot instance for every API to use
 	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations
 	 *
@@ -114,7 +124,7 @@ class MWB {
 		this.defaultRequestOptions = {
 			method: 'POST',
 			headers: {
-				'User-Agent': 'MWB'
+				'User-Agent': 'mwn'
 			},
 			qs: {
 				format: 'json',
@@ -148,7 +158,7 @@ class MWB {
 	}
 
 	/**
-	 * Set and overwrite mwbot options
+	 * Set and overwrite mwn options
 	 *
 	 * @param {Object} customOptions
 	 */
@@ -223,7 +233,7 @@ class MWB {
 	request(params, customRequestOptions) {
 
 		// pre-process params:
-		// adapted from https://doc.wikimedia.org/mediawiki-core/master/js/source/index2.html#mw-Api-method-preprocessParameters
+		// copied from mw.Api().preprocessParameters
 		for (var key in params) {
 			if (Array.isArray(params[key])) {
 				if (params[key].join('').indexOf('|') === -1) {
@@ -309,7 +319,7 @@ class MWB {
 				if (!response.login || !response.login.result) {
 					let err = new Error('Invalid response from API');
 					err.response = response;
-					log('[E] [MWBOT] Login failed with invalid response: ' + loginString);
+					log('[E] [mwn] Login failed with invalid response: ' + loginString);
 					return reject(err) ;
 				}
 
@@ -325,7 +335,7 @@ class MWB {
 					this.state = merge(this.state, response.login);
 					this.loggedIn = true;
 					if (!this.options.silent) {
-						log('[S] [MWBOT] Login successful: ' + loginString);
+						log('[S] [mwn] Login successful: ' + loginString);
 					}
 					return resolve(this.state);
 				}
@@ -336,7 +346,7 @@ class MWB {
 				}
 				let err = new Error('Could not login: ' + reason);
 				err.response = response;
-				log('[E] [MWBOT] Login failed: ' + loginString);
+				log('[E] [mwn] Login failed: ' + loginString);
 				return reject(err) ;
 
 			}).catch((err) => {
@@ -406,7 +416,7 @@ class MWB {
 	*  API parameters, or promise providing one of those.
 	* @return {Promise} Edit API response
 	*/
-	// copied from mw.Api edit
+	// copied from mw.Api().edit, with promises used instead of jQuery
 	edit(title, transform) {
 		var basetimestamp, curtimestamp, bot = this;
 		title = String(title);
@@ -1023,4 +1033,4 @@ var merge = function(parent, child) {
 	return Object.assign({}, parent, child);
 };
 
-module.exports = MWB;
+module.exports = mwn;
