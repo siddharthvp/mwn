@@ -70,11 +70,13 @@ class mwn {
 		this.loggedIn = false;
 
 		/**
-		 * Bot instances edit token
+		 * Bot instances edit token. Initially set as an invalid token string
+		 * so that the badtoken handling logic is invokded if the token is
+		 * not set before a query is sent.
 		 *
-		 * @type {boolean}
+		 * @type {string}
 		 */
-		this.editToken = false;
+		this.editToken = '%notoken%';
 
 		/**
 		 * Internal statistics
