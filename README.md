@@ -1,18 +1,23 @@
-# MWB
+# mwn
 
 WIP:
 
-MWB is a modern MediaWiki bot framework in NodeJS, orginally based on [mwbot](https://github.com/Fannon/mwbot).
+mwn is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
 ### Setup
 
-Until MWB is released on npm, enter the `node_modules` directory of your project and run `git clone https://github.com/siddharthvp/MWB.git`.
+Until mwn is released on npm, enter the `node_modules` directory of your project and run:
+```sh
+git clone https://github.com/siddharthvp/mwn.git
+cd mwn
+npm install		# install dependencies
+```
 
-#### MWB uses JSON with formatversion 2 by default; formatversion 2 is an [improved JSON output format](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) introduced in MediaWiki in 2015.
+#### mwn uses JSON with formatversion 2 by default; formatversion 2 is an [improved JSON output format](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) introduced in MediaWiki in 2015.
 
 
 #### Node version
-MWB is written with Node.js 13 in hand. While everything may still work in older versions of Node, you can consider upgrading to Node.js 13. If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), you can install the latest node.js in your home directory, using:
+mwn is written with Node.js 13 in hand. While everything may still work in older versions of Node, you can consider upgrading to Node.js 13. If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), you can install the latest node.js in your home directory, using:
 ```sh
 npm install npm@latest     # update npm first to the latest version
 npm install n
@@ -27,14 +32,44 @@ Check that your `.profile` or `.bashrc` file includes the line `PATH="$HOME/bin:
 To be able to login to the wiki, you have to set up a bot password using the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page.
 
 If you're migrating from mwbot, note that:
-- `edit` in mwbot is different from `edit` in MWB. You want to use `save` instead.
+- `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
 - If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
 
 ### Documentation
 
 Create a new bot instance:
 ```js
-const bot = new MWB();
+const bot = new mwn();
+```
+
+Log in to the bot:
+```js
+bot.login({
+	apiUrl: 'https://en.wikipedia.org/w/api.php',
+	username: 'YourBotUsername',
+	password: 'YourBotPassword'
+});
+```
+
+Fetch an edit token:
+```js
+bot.getEditToken();
+```
+Edit token, once obtained is stored in the bot state so that it can be reused any number of times. This token is also used for most operations such as moving and deleting, not just for editing.
+
+For convenience, you can log in and get the edit token together as:
+```js
+bot.loginGetEditToken();
+```
+
+If your bot doesn't need to log in, you can simply set the API url using:
+```js
+bot.setApiUrl('https://en.wikipedia.org/w/api.php');
+```
+
+Set your user agent (required for [WMF wikis](https://meta.wikimedia.org/wiki/User-Agent_policy)):
+```js
+bot.setUserAgent('mwCoolToolName v1.0 ([[w:en:User:Example]])/mwn');
 ```
 
 Edit a page:
@@ -125,7 +160,23 @@ Upload a file from your PC to the wiki:
 bot.upload('File title', '/path/to/file', 'comment', customParams);
 ```
 
+#### Direct calls
+
+#### request(query)
+Directly query the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options. You can create and test your queries in the [API sandbox](https://www.mediawiki.org/wiki/Special:ApiSandbox).
+Example: get all images used on the article Foo
+```js
+bot.request({
+	"action": "query",
+	"prop": "images",
+	"titles": "Foo"
+}).then(data => {
+	return data.query.pages[0].images.map(im => im.title);
+});
+```
+
 #### Bulk processing methods
+##### continousQuery
 Send an API query, and continue re-sending it with the continue parameters received in the response, until there are no more results (or till `maxCalls` limit is reached). The return value is a promise resolved with the array of responses to individual API calls.
 ```js
 bot.continousQuery(apiQueryObject, maxCalls=10)
@@ -144,3 +195,43 @@ bot.continuousQuery({
 	}, []);
 });
 ```
+
+##### massQuery(query, nameOfBatchField, hasApiHighLimit)
+MediaWiki sets a limit of 500 (50 for non-bots) on the number of pages that can be queried in a single API call. To query more than that, the `massQuery` function can be used, which splits the page list into batches of 500 and sends individual queries and returns a promise resolved with the array of all individual API call responses.
+
+Example: get the protection status of a large number of pages:
+```js
+bot.massQuery({
+	"action": "query",
+	"format": "json",
+	"prop": "info",
+	"titles": ['Page1', 'Page2', ... , 'Page1300'],  // array of page names
+	"inprop": "protection"
+});
+```
+##### batchOperation(pageList, workerFunction, concurrency)
+Perform asynchronous tasks (involving API usage) over a number of pages (or other arbitrary items). `batchOperation` uses a default concurrency of 5. Customise this according to how expensive the API operation is. Higher concurrency limits could lead to more frequent API errors.
+
+The `workerFunction` must return a promise.
+```js
+bot.batchOperation(pageList, (page, idx) => {
+	// do something with each page
+	// the index of the page in pageList is available as the 2nd argument
+
+	// return a promise in the end
+}, 5); // set the concurrency as the third parameter.
+```
+
+##### seriesBatchOperation(pageList, workerFunction, sleepDuration)
+Perform asynchronous tasks (involving API usage) over a number of pages one after the other, with a sleep duration between each task (default 5 seconds)
+
+The `workerFunction` must return a promise.
+```js
+bot.seriesBatchOperation(pageList, (page, idx) => {
+	// do something with each page
+	// the index of the page in pageList is available as the 2nd argument
+
+	// return a promise in the end
+}, 5000); // set the sleep duration in milliseconds as the third parameter
+```
+Note that `seriesBatchOperation` with delay=0 is same as `batchOperation` with concurrency=1.

@@ -188,6 +188,15 @@ class mwn {
 		this.options.apiUrl = apiUrl;
 	}
 
+	/**
+	 * Set your API user agent. See https://meta.wikimedia.org/wiki/User-Agent_policy
+	 * Required for WMF wikis.
+	 * @param {string} userAgent
+	 */
+	setUserAgent(userAgent) {
+		this.globalRequestOptions.headers['User-Agent'] = userAgent;
+	}
+
 	/************ CORE REQUESTS ***************/
 
 	/**
@@ -755,8 +764,7 @@ class mwn {
 	 * @param {number} [limit=10] - limit on the maximum number of API calls to go through
 	 * @returns {Promise<Object[]>} - resolved with an array of responses of individual calls.
 	 */
-	continuousQuery(query, limit) {
-		limit = limit || 10;
+	continuousQuery(query, limit=10) {
 		var responses = [];
 		var callApi = function(query, count) {
 			return this.request(query).then(function(response) {
@@ -778,29 +786,27 @@ class mwn {
 	 * Function for using API action=query with more than 50/500 items in multi-
 	 * input fields.
 	 *
-	 * Several fields in the query API take multiple inputs but with a limit of
-	 * 50 (or 500 for users with highapilimits).
+	 * Multi-value fields in the query API take multiple inputs as an array
+	 * (internally converted to a pipe-delimted string) but with a limit of 500
+	 * (or 50 for users without apihighlimits).
 	 * Example: the fields titles, pageids and revids in any query, ususers in
-	 * list=users, etc.
+	 * list=users.
 	 *
 	 * This function allows you to send a query as if this limit didn't exist.
-	 * The array given to the multi-input field is split into batches of 50
-	 * (500 for bots) and individual queries are sent sequentially for each batch.
+	 * The array given to the multi-input field is split into batches and individual
+	 * queries are sent sequentially for each batch.
 	 * A promise is returned finally resolved with the array of responses of each
 	 * API call.
-	 *
-	 * XXX: limits of 50 or 500 could be wiki-specific.
 	 *
 	 * @param {Object} query - the query object, the multi-input field should
 	 * be an array
 	 * @param {string} [batchFieldName=titles] - the name of the multi-input field
-	 * @param {boolean} [hasApiHighLimit=false] - set true to use api high limits
-	 * available with bot or sysop accounts
+	 * @param {boolean} [hasApiHighLimit=true] - set false if your account doesn't
+	 * have apihighlimits usually restricted to bots and sysops.
 	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have
 	 * settled, with the array of responses.
 	 */
-	massQuery(query, batchFieldName, hasApiHighLimit) {
-		batchFieldName = batchFieldName || 'titles';
+	massQuery(query, batchFieldName='titles', hasApiHighLimit=true) {
 		var batchValues = query[batchFieldName];
 		var limit = hasApiHighLimit ? 500 : 50;
 		var numBatches = Math.ceil(batchValues.length / limit);
@@ -842,8 +848,7 @@ class mwn {
 	 * expensive the API calls made by worker are.
 	 * @returns {Promise} - resolved when all API calls have finished.
 	 */
-	batchOperation(list, worker, batchSize) {
-		batchSize = batchSize || 50;
+	batchOperation(list, worker, batchSize=5) {
 		var successes = 0, failures = 0;
 		var incrementSuccesses = function() { successes++; };
 		var incrementFailures = function() { failures++; };
@@ -895,8 +900,7 @@ class mwn {
 	 * @param {number} [delay=5000] - number of milliseconds of delay
 	 * @returns {Promise} - resolved when all API calls have finished
 	 */
-	seriesBatchOperation(list, worker, delay) {
-		delay = delay || 5000;
+	seriesBatchOperation(list, worker, delay=5000) {
 		var successes = 0, failures = 0;
 		var incrementSuccesses = function() { successes++; };
 		var incrementFailures = function() { failures++; };
