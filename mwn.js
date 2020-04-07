@@ -273,6 +273,12 @@ class mwn {
 				}
 
 				if (response.error) { // See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
+					if (response.error.code === 'badtoken') {
+						return this.getEditToken().then(() => {
+							requestOptions.form.token = this.editToken;
+							return this.request({}, requestOptions);
+						});
+					}
 					let err = new Error(response.error.code + ': ' + response.error.info);
 					// Enhance error object with additional information
 					err.errorResponse = true;
@@ -368,19 +374,15 @@ class mwn {
 	}
 
 	/**
-	 * Gets an edit token
-	 * This is currently only compatible with MW >= 1.24
+	 * Gets an edit token (also used for most other actions
+	 * such as moving and deleting)
+	 * This is only compatible with MW >= 1.24
 	 *
 	 * @returns {Promise}
 	 */
 	getEditToken() {
 		return new Promise((resolve, reject) => {
 
-			if (this.editToken) {
-				return resolve(this.state);
-			}
-
-			// MW >= 1.24
 			this.request({
 				action: 'query',
 				meta: 'tokens',
@@ -389,7 +391,7 @@ class mwn {
 				if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
 					this.editToken = response.query.tokens.csrftoken;
 					this.state = merge(this.state, response.query.tokens);
-					return resolve(this.state);
+					return resolve(this.editToken);
 				} else {
 					let err = new Error('Could not get edit token');
 					err.response = response;
