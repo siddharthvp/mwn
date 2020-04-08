@@ -100,7 +100,9 @@ class mwn {
 			// verbose: false,
 			silent: false,
 			// concurrency: 1,
-			apiUrl: false
+			apiUrl: false,
+			maxlagPause: 5000,
+			maxlagMaxRetries: 3
 		};
 
 		/**
@@ -130,7 +132,8 @@ class mwn {
 			},
 			qs: {
 				format: 'json',
-				formatversion: '2'
+				formatversion: '2',
+				maxlag: 5
 			},
 			form: {
 
@@ -259,7 +262,11 @@ class mwn {
 
 		return new Promise((resolve, reject) => {
 
-			this.globalRequestOptions.uri = this.options.apiUrl; // XXX: ??
+			this.globalRequestOptions.uri = this.options.apiUrl;
+
+			// retryNumber isn't actually used by the API, but this is included here
+			// for tracking our maxlag retry count.
+			this.globalRequestOptions.retryNumber = 0;
 
 			let requestOptions = merge(this.globalRequestOptions, customRequestOptions);
 			requestOptions.form = merge(requestOptions.form, params);
@@ -275,12 +282,23 @@ class mwn {
 				}
 
 				if (response.error) { // See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
+
 					if (response.error.code === 'badtoken') {
 						return this.getEditToken().then(() => {
 							requestOptions.form.token = this.editToken;
 							return this.request({}, requestOptions);
 						});
 					}
+
+					// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
+					if (response.error.code === 'maxlag' && requestOptions.retryNumber < this.options.maxlagMaxRetries) {
+						log(`[W] Encountered maxlag error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
+						return sleep(this.options.maxlagPause).then(() => {
+							requestOptions.retryNumber++;
+							return this.request({}, requestOptions);
+						});
+					}
+
 					let err = new Error(response.error.code + ': ' + response.error.info);
 					// Enhance error object with additional information
 					err.errorResponse = true;
@@ -288,7 +306,7 @@ class mwn {
 					err.info = response.error.info;
 					err.response = response;
 					err.request = requestOptions;
-					return reject(err) ;
+					return reject(err);
 				}
 
 				return resolve(response);
@@ -1039,6 +1057,16 @@ var merge = function(parent, child) {
 	// Use {} as first parameter, as this object is mutated by default
 	// We don't want that, so we're providing an empty object that is thrown away after the operation
 	return Object.assign({}, parent, child);
+};
+
+/**
+ * Promisified version of setTimeout
+ * @param {number} duration - of sleep in milliseconds
+ */
+var sleep = function(duration) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, duration);
+	});
 };
 
 module.exports = mwn;
