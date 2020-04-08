@@ -25,7 +25,7 @@
  * released under the MIT license. Copyright (c) 2015-2018 Simon Heimler.
  *
  * Some parts are copied from the mediawiki.api module in mediawiki core
- *  <https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.api>
+ * <https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.api>
  * released under GNU GPL v2.
  *
  */
@@ -865,16 +865,16 @@ class mwn {
 	 * usually be of page names (strings).
 	 * @param {Function} worker - function to execute upon each item in the list. Must
 	 * return a promise.
-	 * @param {number} [batchSize=5] - number of concurrent operations to take place.
+	 * @param {number} [concurrency=5] - number of concurrent operations to take place.
 	 * Set this to 1 for sequential operations. Default 5. Set this according to how
 	 * expensive the API calls made by worker are.
 	 * @returns {Promise} - resolved when all API calls have finished.
 	 */
-	batchOperation(list, worker, batchSize=5) {
+	batchOperation(list, worker, concurrency=5) {
 		var successes = 0, failures = 0;
-		var incrementSuccesses = function() { successes++; };
-		var incrementFailures = function() { failures++; };
-		var updateStatusText = function() {
+		var incrementSuccesses = () => { successes++; };
+		var incrementFailures = () => { failures++; };
+		var updateStatusText = () => {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
 			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
@@ -882,32 +882,52 @@ class mwn {
 				console.log(statusText);
 			}
 		};
-		var numBatches = Math.ceil(list.length / batchSize);
+		var numBatches = Math.ceil(list.length / concurrency);
 
 		return new Promise(function(resolve) {
 			var sendBatch = function(batchIdx) {
-				if (batchIdx === numBatches - 1) { // last batch
-					var numItemsInLastBatch = list.length - batchIdx * batchSize;
+
+				// Last batch
+				if (batchIdx === numBatches - 1) {
+					var numItemsInLastBatch = list.length - batchIdx * concurrency;
 					var finalBatchPromises = new Array(numItemsInLastBatch);
+
+					// Hack: Promise.allSettled requires NodeJS 12.9+
+					// so we create a new array finalBatchSettledPromises containing promises
+					// which are resolved irrespective of whether the corresponding
+					// finalBatchPromises are resolved or rejected.
+					var finalBatchSettledPromises = new Array(numItemsInLastBatch);
+
+					var savedIdx = 0;
 					for (let i = 0; i < numItemsInLastBatch; i++) {
-						let idx = batchIdx * batchSize + i;
+						let idx = batchIdx * concurrency + i;
 						finalBatchPromises[i] = worker(list[idx], idx);
-						finalBatchPromises[i].then(incrementSuccesses, incrementFailures).finally(updateStatusText);
-					}
-					// XXX: Promise.allSettled requires NodeJS 12.9+
-					Promise.all(finalBatchPromises).then(resolve);
-					return;
-				}
-				for (let i = 0; i < batchSize; i++) {
-					let idx = batchIdx * batchSize + i;
-					var promise = worker(list[idx], idx);
-					promise.then(incrementSuccesses, incrementFailures).finally(updateStatusText);
-					if (i === batchSize - 1) { // last item in batch: trigger the next batch's API calls
-						promise.finally(function() {
-							sendBatch(batchIdx + 1);
+						finalBatchSettledPromises[i] = new Promise((resolve) => {
+							return finalBatchPromises[i].then(resolve, resolve);
+						});
+						finalBatchPromises[i].then(incrementSuccesses, incrementFailures).finally(function() {
+							updateStatusText();
+							finalBatchSettledPromises[savedIdx++] = Promise.resolve();
 						});
 					}
+					Promise.all(finalBatchSettledPromises).then(resolve);
+					return;
 				}
+
+				for (let i = 0; i < concurrency; i++) {
+					let idx = batchIdx * concurrency + i;
+
+					worker(list[idx], idx)
+						.then(incrementSuccesses, incrementFailures)
+						.finally(() => {
+							updateStatusText();
+							// last item in batch: trigger the next batch's API calls
+							if (i === concurrency - 1) {
+								sendBatch(batchIdx + 1);
+							}
+						});
+				}
+
 			};
 			sendBatch(0);
 		});
@@ -924,9 +944,9 @@ class mwn {
 	 */
 	seriesBatchOperation(list, worker, delay=5000) {
 		var successes = 0, failures = 0;
-		var incrementSuccesses = function() { successes++; };
-		var incrementFailures = function() { failures++; };
-		var updateStatusText = function() {
+		var incrementSuccesses = () => { successes++; };
+		var incrementFailures = () => { failures++; };
+		var updateStatusText = () => {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
 			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
@@ -941,7 +961,7 @@ class mwn {
 					resolve();
 					return;
 				}
-				return worker(list[idx])
+				return worker(list[idx], idx)
 					.then(incrementSuccesses, incrementFailures)
 					.finally(function() {
 						updateStatusText();
