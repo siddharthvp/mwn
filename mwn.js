@@ -957,11 +957,11 @@ class mwn {
 
 		return new Promise(function(resolve) {
 			var trigger = function(idx) {
-				if (!list[idx]) {
+				if (list[idx] === undefined) {
 					resolve();
 					return;
 				}
-				return worker(list[idx], idx)
+				worker(list[idx], idx)
 					.then(incrementSuccesses, incrementFailures)
 					.finally(function() {
 						updateStatusText();
