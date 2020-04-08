@@ -51,17 +51,38 @@ bot.login({
 });
 ```
 
+Set default parameters to be sent to be included in every API request:
+```js
+bot.setDefaultParams({
+	assert: 'bot',
+	maxlag: 4 // mwn default is 5
+});
+```
+
+Set bot options. The default values for each is specified below:
+```js
+bot.setOptions({
+	silent: false, // suppress messages (except error messages)
+	maxlagPause: 5000, // pause for 5000 milliseconds (5 seconds) on maxlag error.
+	maxlagMaxRetries: 3, // attempt to retry a request failing due to maxlag upto 3 times
+	apiUrl: null // set the API URL, can also be set by a bot.setApiUrl
+});
+```
+
+**Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxlagMaxRetries` will take place (default 3).
+
 Fetch an edit token:
 ```js
 bot.getEditToken();
 ```
 Edit token, once obtained is stored in the bot state so that it can be reused any number of times. This token is also used for most operations such as moving and deleting, not just for editing.
 
+If an action fails due to an expired or missing token, the action will be automatically retried after fetching a new token.
+
 For convenience, you can log in and get the edit token together as:
 ```js
 bot.loginGetEditToken();
 ```
-
 If your bot doesn't need to log in, you can simply set the API url using:
 ```js
 bot.setApiUrl('https://en.wikipedia.org/w/api.php');
@@ -69,10 +90,10 @@ bot.setApiUrl('https://en.wikipedia.org/w/api.php');
 
 Set your user agent (required for [WMF wikis](https://meta.wikimedia.org/wiki/User-Agent_policy)):
 ```js
-bot.setUserAgent('mwCoolToolName v1.0 ([[w:en:User:Example]])/mwn');
+bot.setUserAgent('myCoolToolName v1.0 ([[w:en:User:Example]])/mwn');
 ```
 
-Edit a page:
+Edit a page. Edit conflicts are raised as errors.
 ```js
 bot.edit('Page title', rev => {
 	// rev.content gives the revision text
@@ -155,7 +176,7 @@ Rollback a user:
 bot.rollback('Page title', 'user', additionalOptions);
 ```
 
-Upload a file from your PC to the wiki:
+Upload a file from your system to the wiki:
 ```js
 bot.upload('File title', '/path/to/file', 'comment', customParams);
 ```
@@ -176,7 +197,8 @@ bot.request({
 ```
 
 #### Bulk processing methods
-##### continousQuery
+
+##### continousQuery(query, maxCallsLimit)
 Send an API query, and continue re-sending it with the continue parameters received in the response, until there are no more results (or till `maxCalls` limit is reached). The return value is a promise resolved with the array of responses to individual API calls.
 ```js
 bot.continousQuery(apiQueryObject, maxCalls=10)
@@ -207,8 +229,13 @@ bot.massQuery({
 	"prop": "info",
 	"titles": ['Page1', 'Page2', ... , 'Page1300'],  // array of page names
 	"inprop": "protection"
+}) // 2nd parameter is taken as 'titles' by default
+.then(jsons => {
+	// jsons is the array of individual JSON responses.
 });
 ```
+The 3rd parameter `hasApiHighLimit` is set `true` by default. If you get the API error 'too-many-titles' (or similar), your account doesn't have the required user right, so set the parameter as `false`.
+
 ##### batchOperation(pageList, workerFunction, concurrency)
 Perform asynchronous tasks (involving API usage) over a number of pages (or other arbitrary items). `batchOperation` uses a default concurrency of 5. Customise this according to how expensive the API operation is. Higher concurrency limits could lead to more frequent API errors.
 
