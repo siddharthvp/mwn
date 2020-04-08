@@ -71,7 +71,7 @@ class mwn {
 
 		/**
 		 * Bot instances edit token. Initially set as an invalid token string
-		 * so that the badtoken handling logic is invokded if the token is
+		 * so that the badtoken handling logic is invoked if the token is
 		 * not set before a query is sent.
 		 *
 		 * @type {string}
@@ -97,28 +97,19 @@ class mwn {
 		 * @type {object}
 		 */
 		this.defaultOptions = {
-			// verbose: false,
 			silent: false,
-			// concurrency: 1,
-			apiUrl: false,
+			apiUrl: null,
 			maxlagPause: 5000,
 			maxlagMaxRetries: 3
 		};
 
 		/**
-		 * Custom options as the user provided them originally.
-		 *
-		 * @type {object}
-		 */
-		this.customOptions = customOptions || {};
-
-		/**
 		 * Actual, current options of the bot instance
-		 * They're a mix of the default options, the custom options and later changes
+		 * Mix of the default options, the custom options and later changes
 		 *
 		 * @type {Object}
 		 */
-		this.options = merge(this.defaultOptions, this.customOptions);
+		this.options = merge(this.defaultOptions, customOptions);
 
 		/**
 		 * Default options for the NPM request library
@@ -131,12 +122,11 @@ class mwn {
 				'User-Agent': 'mwn'
 			},
 			qs: {
+			},
+			form: {
 				format: 'json',
 				formatversion: '2',
 				maxlag: 5
-			},
-			form: {
-
 			},
 			timeout: 120000, // 120 seconds
 			jar: true,
@@ -145,18 +135,11 @@ class mwn {
 		};
 
 		/**
-		 * Custom request options
-		 *
-		 * @type {Object}
-		 */
-		this.customRequestOptions = customRequestOptions || {};
-
-		/**
 		 * The actual, current options for the NPM request library
 		 *
 		 * @type {Object}
 		 */
-		this.globalRequestOptions = merge(this.defaultRequestOptions, this.customRequestOptions);
+		this.requestOptions = this.setRequestOptions(customRequestOptions || {});
 
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
@@ -169,7 +152,16 @@ class mwn {
 	 */
 	setOptions(customOptions) {
 		this.options = merge(this.options, customOptions);
-		this.customOptions = merge(this.customOptions, customOptions);
+	}
+
+	/**
+	 * Sets the API URL for MediaWiki requests
+	 * This can be uses instead of a login, if no actions are used that require login.
+	 *
+	 * @param {String} apiUrl - API url to MediaWiki, e.g. https://en.wikipedia.org/w/api.php
+	 */
+	setApiUrl(apiUrl) {
+		this.options.apiUrl = apiUrl;
 	}
 
 	/**
@@ -178,28 +170,44 @@ class mwn {
 	 *
 	 * @param {Object} customRequestOptions
 	 */
-	setGlobalRequestOptions(customRequestOptions) {
-		this.globalRequestOptions = merge(this.globalRequestOptions, customRequestOptions);
-		this.customRequestOptions = merge(this.customRequestOptions, customRequestOptions);
+	setRequestOptions(customRequestOptions) {
+		if (!this.requestOptions) {
+			this.requestOptions = this.defaultRequestOptions;
+		}
+		// Do a recursive merge, going one level deep
+		// This ensures that unaltered properties of qs, form, headers and like fields
+		// in the original object aren't removed.
+		Object.entries(customRequestOptions).forEach(([key, val]) => {
+			if (typeof val === 'object') {
+				this.requestOptions[key] = merge(this.requestOptions[key], val);
+				// this can't be written as Object.assign(this.requestOptions[key], val)
+				// as this.requestOptions[key] could be undefined
+			} else {
+				this.requestOptions[key] = val;
+			}
+		});
+		return this.requestOptions;
 	}
 
 	/**
-	 * Sets the API URL for MediaWiki requests
-	 * This can be uses instead of a login, if no actions are used that require login.
-	 *
-	 * @param {String}  apiUrl  API Url to MediaWiki, e.g. 'https://www.semantic-mediawiki.org/w/api.php'
+	 * Set the default parameters to be sent in API calls.
+	 * @param {Object} params - default parameters
 	 */
-	setApiUrl(apiUrl) {
-		this.options.apiUrl = apiUrl;
+	setDefaultParams(params) {
+		this.requestOptions.qs = merge(this.requestOptions.qs, params);
 	}
 
 	/**
 	 * Set your API user agent. See https://meta.wikimedia.org/wiki/User-Agent_policy
 	 * Required for WMF wikis.
+	 *
 	 * @param {string} userAgent
 	 */
 	setUserAgent(userAgent) {
-		this.globalRequestOptions.headers['User-Agent'] = userAgent;
+		if (!this.requestOptions.headers) {
+			this.requestOptions.headers = {};
+		}
+		this.requestOptions.headers['User-Agent'] = userAgent;
 	}
 
 	/************ CORE REQUESTS ***************/
@@ -246,30 +254,32 @@ class mwn {
 	 */
 	request(params, customRequestOptions) {
 
+		let requestOptions = merge({
+			uri: this.options.apiUrl,
+
+			// retryNumber isn't actually used by the API, but this is
+			// included here for tracking our maxlag retry count.
+			retryNumber: 0
+
+		}, this.requestOptions, customRequestOptions);
+
+		requestOptions.form = merge(requestOptions.form, params);
+
 		// pre-process params:
-		// copied from mw.Api().preprocessParameters
-		for (var key in params) {
-			if (Array.isArray(params[key])) {
-				if (params[key].join('').indexOf('|') === -1) {
-					params[key] = params[key].join('|');
+		// copied from mw.Api().preprocessParameters & refactored to ES6
+		Object.entries(requestOptions.form).forEach(([key, val]) => {
+			if (Array.isArray(val)) {
+				if (!val.join('').includes('|')) {
+					requestOptions.form[key] = val.join('|');
 				} else {
-					params[key] = '\x1f' + params[key].join('\x1f');
+					requestOptions.form[key] = '\x1f' + val.join('\x1f');
 				}
-			} else if (params[key] === false || params[key] === undefined) {
-				delete params[key];
+			} else if (val === false || val === undefined) {
+				delete requestOptions.form[key];
 			}
-		}
+		});
 
 		return new Promise((resolve, reject) => {
-
-			this.globalRequestOptions.uri = this.options.apiUrl;
-
-			// retryNumber isn't actually used by the API, but this is included here
-			// for tracking our maxlag retry count.
-			this.globalRequestOptions.retryNumber = 0;
-
-			let requestOptions = merge(this.globalRequestOptions, customRequestOptions);
-			requestOptions.form = merge(requestOptions.form, params);
 
 			this.rawRequest(requestOptions).then((response) => {
 
@@ -281,7 +291,8 @@ class mwn {
 					return reject(err) ;
 				}
 
-				if (response.error) { // See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
+				// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
+				if (response.error) {
 
 					if (response.error.code === 'badtoken') {
 						return this.getEditToken().then(() => {
@@ -327,7 +338,8 @@ class mwn {
 	 *
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 *
-	 * @param {object} [loginOptions]
+	 * @param {object} [loginOptions] - object containing the apiUrl, username,
+	 * and password
 	 *
 	 * @returns {Promise}
 	 */
@@ -348,6 +360,10 @@ class mwn {
 			};
 
 			let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
+
+			// unset the assert parameter (in case it's given by the user as a default option),
+			// as it will invariably fail until login is performed.
+			loginRequest.assert = undefined;
 
 			this.request(loginRequest).then((response) => {
 
@@ -543,7 +559,7 @@ class mwn {
 	 * @param {string} header
 	 * @param {string} message wikitext message
 	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
-	 * @return {jQuery.Promise}
+	 * @return {Promise}
 	 */
 	newSection(title, header, message, additionalParams) {
 		return this.request( merge( {
@@ -727,7 +743,7 @@ class mwn {
 				token: this.editToken
 			}, customParams);
 
-			let uploadRequestOptions = merge(this.globalRequestOptions, {
+			let uploadRequestOptions = merge(this.requestOptions, {
 
 				// https://www.npmjs.com/package/request#support-for-har-12
 				har: {
@@ -877,9 +893,9 @@ class mwn {
 		var updateStatusText = () => {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
-			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
+			var statusText = `[+] Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
 			if (!this.options.silent) {
-				console.log(statusText);
+				log(statusText);
 			}
 		};
 		var numBatches = Math.ceil(list.length / concurrency);
@@ -949,9 +965,9 @@ class mwn {
 		var updateStatusText = () => {
 			var percentageFinished = Math.round((successes + failures) / list.length * 100);
 			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
-			var statusText = `Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
+			var statusText = `[+] Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
 			if (!this.options.silent) {
-				console.log(statusText);
+				log(statusText);
 			}
 		};
 
@@ -980,6 +996,7 @@ class mwn {
 
 	/**
 	 * Execute an ASK Query
+	 * On a wiki that supports them, like semantic-mediawiki
 	 *
 	 * @param {string} query
 	 * @param {string} [apiUrl]
@@ -1008,9 +1025,10 @@ class mwn {
 
 	/**
 	 * Executes a SPARQL Query
+	 * On a wiki that supports them, like wikidata
 	 *
 	 * @param {string} query
-	 * @param {string} [apiUrl]
+	 * @param {string} [endpointUrl]
 	 * @param {object} [customRequestOptions]
 	 *
 	 * @returns {Promise}
@@ -1064,19 +1082,16 @@ class mwn {
 }
 
 /**
- * Recursively merges two objects
- * Takes care that the two objects are not mutated
+ * Simple wrapper around Object.assign to merge objects. null and undefined
+ * arguments in argument list will be ignored.
  *
- * @param {Object} parent   Parent Object
- * @param {Object} child    Child Object; overwrites parent properties
- * @returns {Object}        Merged Object
+ * @param {...Object} objects - if the same property exists on multiple
+ * objects, the value on the rightmost one will be kept in the output.
+ * @returns {Object} - Merged object
  */
-var merge = function(parent, child) {
-	parent = parent || {};
-	child = child || {};
-	// Use {} as first parameter, as this object is mutated by default
-	// We don't want that, so we're providing an empty object that is thrown away after the operation
-	return Object.assign({}, parent, child);
+var merge = function(...objects) {
+	// {} used as first parameter as this object is mutated by default
+	return Object.assign({}, ...objects);
 };
 
 /**
