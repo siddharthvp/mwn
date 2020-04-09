@@ -234,7 +234,9 @@ bot.massQuery({
 	// jsons is the array of individual JSON responses.
 });
 ```
-The 3rd parameter `hasApiHighLimit` is set `true` by default. If you get the API error 'too-many-titles' (or similar), your account doesn't have the required user right, so set the parameter as `false`.
+The 3rd parameter `hasApiHighLimit` is set `true` by default. If you get the API error 'toomanyvalues' (or similar), your account doesn't have the required user right, so set the parameter as `false`.
+
+Any errors in the individual API calls will not cause the entire massQuery to fail, but the data at the array index corresponding to that API call will be error object.
 
 ##### batchOperation(pageList, workerFunction, concurrency)
 Perform asynchronous tasks (involving API usage) over a number of pages (or other arbitrary items). `batchOperation` uses a default concurrency of 5. Customise this according to how expensive the API operation is. Higher concurrency limits could lead to more frequent API errors.

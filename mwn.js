@@ -817,14 +817,14 @@ class mwn {
 	 */
 	continuousQuery(query, limit=10) {
 		var responses = [];
-		var callApi = function(query, count) {
-			return this.request(query).then(function(response) {
+		var callApi = (query, count) => {
+			return this.request(query).then(response => {
 				if (!this.options.silent) {
 					log(`[+] Got part ${count} of continuous API query`);
 				}
 				responses.push(response);
 				if (response.continue && count < limit) {
-					return callApi(Object.assign({}, query, response.continue), count + 1);
+					return callApi(merge(query, response.continue), count + 1);
 				} else {
 					return responses;
 				}
@@ -869,16 +869,17 @@ class mwn {
 			batches[Math.floor(i/limit)][i % limit] = batchValues[i];
 		}
 		var responses = new Array(numBatches);
-		return new Promise(function(resolve) {
-			var sendQuery = function(idx) {
+		return new Promise((resolve) => {
+			var sendQuery = (idx) => {
 				if (idx === numBatches) {
-					resolve(responses);
-					return;
+					return resolve(responses);
 				}
 				query[batchFieldName] = batches[idx];
-				this.request(query).then(function(response) {
+				this.request(query).then(response => {
 					responses[idx] = response;
-				}).finally(function() {
+				}, err => {
+					responses[idx] = err;
+				}).finally(() => {
 					sendQuery(idx + 1);
 				});
 			};
