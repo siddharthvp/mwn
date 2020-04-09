@@ -451,6 +451,19 @@ class mwn {
 		});
 	}
 
+	/**
+	 * Get the wiki's server time
+	 * @returns {string}
+	 */
+	getServerTime() {
+		return this.request({
+			action: 'query',
+			curtimestamp: 1
+		}).then(data => {
+			return data.curtimestamp;
+		});
+	}
+
 	/***************** HELPER FUNCTIONS ******************/
 
 
