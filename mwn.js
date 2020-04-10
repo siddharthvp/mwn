@@ -468,7 +468,7 @@ class mwn {
 
 
 	/**
-	* @param {string} title Page title
+	* @param {string|number|Title} title Page title or page ID or Title object
 	* @param {Function} transform Callback that prepares the edit
 	* @param {Object} transform.revision Current revision
 	* @param {string} transform.revision.content Current revision content
@@ -478,16 +478,17 @@ class mwn {
 	*/
 	// copied from mw.Api().edit, with promises used instead of jQuery
 	edit(title, transform) {
-		var basetimestamp, curtimestamp, bot = this;
-		title = String(title);
-		return bot.request({
+
+		var basetimestamp, curtimestamp;
+
+		return this.request(merge({
 			action: 'query',
 			prop: 'revisions',
 			rvprop: ['content', 'timestamp'],
-			titles: [title],
 			formatversion: '2',
 			curtimestamp: !0
-		}).then(function(data) {
+		}, makeTitles(title))).then(data => {
+
 			var page, revision;
 			if (!data.query || !data.query.pages) {
 				return Promise.reject('unknown');
@@ -502,24 +503,26 @@ class mwn {
 			revision = page.revisions[0];
 			basetimestamp = revision.timestamp;
 			curtimestamp = data.curtimestamp;
+
 			return transform({
 				timestamp: revision.timestamp,
 				content: revision.content
 			});
-		}).then(function(params) {
+
+		}).then(params => {
 			var editParams = typeof params === 'object' ? params : {
 				text: String(params)
 			};
-			return bot.request(merge({
+			return this.request(merge({
 				action: 'edit',
-				title: title,
 				formatversion: '2',
 				basetimestamp: basetimestamp,
 				starttimestamp: curtimestamp,
 				nocreate: !0,
-				token: bot.editToken
-			}, editParams));
-		}).then(function(data) {
+				token: this.editToken
+			}, makeTitle(title), editParams));
+
+		}).then(data => {
 			return data.edit;
 		});
 	}
@@ -528,7 +531,7 @@ class mwn {
 	 * Edit a page without loading it first. Straightforward version of `edit`.
 	 * No edit conflict detection.
 	 *
-	 * @param {string}  title
+	 * @param {string|number}  title - title or pageid (as number)
 	 * @param {string}  content
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
@@ -537,17 +540,16 @@ class mwn {
 	save(title, content, summary, options) {
 		return this.request(merge({
 			action: 'edit',
-			title: title,
 			text: content,
 			summary: summary,
 			token: this.editToken
-		}, options)).then(data => data.edit);
+		}, makeTitle(title), options)).then(data => data.edit);
 	}
 
 	/**
 	 * Creates a new pages. Does not edit existing ones
 	 *
-	 * @param {string}  title
+	 * @param {string|number}  title - title or pageid (as number)
 	 * @param {string}  content
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
@@ -557,38 +559,36 @@ class mwn {
 	create(title, content, summary, options) {
 		return this.request(merge({
 			action: 'edit',
-			title: title,
 			text: content,
 			summary: summary,
 			createonly: true,
 			token: this.editToken
-		}, options)).then(data => data.edit);
+		}, makeTitle(title), options)).then(data => data.edit);
 	}
 
 	/**
 	 * Post a new section to the page.
 	 *
-	 * @param {string} title Target page
+	 * @param {string|number} title - title or pageid (as number)
 	 * @param {string} header
 	 * @param {string} message wikitext message
 	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
 	 * @return {Promise}
 	 */
 	newSection(title, header, message, additionalParams) {
-		return this.request( merge( {
+		return this.request(merge({
 			action: 'edit',
 			section: 'new',
-			title: String( title ),
 			summary: header,
 			text: message,
 			token: this.editToken
-		}, additionalParams ) ).then(data => data.edit);
+		}, makeTitle(title), additionalParams)).then(data => data.edit);
 	}
 
 	/**
 	 * Reads the content / and meta-data of one (or many) pages
 	 *
-	 * @param {string|string[]}  titles    For multiple Pages use an array
+	 * @param {string|string[]|number|number[]}  titles    For multiple Pages use an array
 	 * @param {object}      [options]
 	 *
 	 * @returns {Promise}
@@ -598,9 +598,8 @@ class mwn {
 			action: 'query',
 			prop: 'revisions',
 			rvprop: 'content',
-			titles: titles,
 			redirects: '1'
-		}, options)).then(data => {
+		}, makeTitles(titles), options)).then(data => {
 			if (Array.isArray(titles)) {
 				return data.query.pages;
 			} else {
@@ -612,7 +611,7 @@ class mwn {
 	/**
 	 * Deletes a page
 	 *
-	 * @param {string}  title
+	 * @param {string|number}  title - title or pageid (as number)
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
 	 * @returns {Promise}
@@ -620,17 +619,16 @@ class mwn {
 	delete(title, summary, options) {
 		return this.request(merge({
 			action: 'delete',
-			title: title,
 			reason: summary,
 			token: this.editToken
-		}, options)).then(data => data.delete);
+		}, makeTitle(title), options)).then(data => data.delete);
 	}
 
 	/**
 	 * Undeletes a page.
 	 * Note: all deleted revisions of the page will be restored.
 	 *
-	 * @param {string}  title
+	 * @param {string|number}  title - title or pageid (as number)
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
 	 * @returns {Promise}
@@ -638,10 +636,9 @@ class mwn {
 	undelete(title, summary, options) {
 		return this.request(merge({
 			action: 'undelete',
-			title: title,
 			reason: summary,
 			token: this.editToken
-		}, options)).then(data => data.undelete);
+		}, makeTitle(title), options)).then(data => data.undelete);
 	}
 
 	/**
@@ -709,25 +706,23 @@ class mwn {
 	/**
 	 * Convenience method for `action=rollback`.
 	 *
-	 * @param {string} page
+	 * @param {string|number} page - page title or page id as number or Title object
 	 * @param {string} user
 	 * @param {Object} [params] Additional parameters
 	 * @return {Promise}
 	 */
 	rollback(page, user, params) {
-		var bot = this;
 		return this.request({
 			action: 'query',
 			meta: 'tokens',
 			type: 'rollback'
-		}).then(function(data) {
-			return bot.request(merge({
+		}).then(data => {
+			return this.request(merge({
 				action: 'rollback',
-				title: String( page ),
 				user: user,
 				token: data.query.tokens.rollbacktoken
-			}, params));
-		}).then(function(data) {
+			}, makeTitle(page), params));
+		}).then(data => {
 			return data.rollback;
 		});
 	}
@@ -735,16 +730,14 @@ class mwn {
 	/**
 	 * Purge one or more pages (max 500 for bots, 50 for others)
 	 *
-	 * @param {String[]|String} titles
+	 * @param {String[]|String|number[]|number} titles - page titles or page ids
 	 * @param {Object} options
 	 * @returns {Promise}
 	 */
 	purge(titles, options) {
-		titles = Array.isArray(titles) ? titles.join('|') : titles;
 		return this.request(merge({
 			action: 'purge',
-			titles: titles
-		}, options)).then(data => data.purge);
+		}, makeTitles(titles), options)).then(data => data.purge);
 	}
 
 	/**
@@ -1131,6 +1124,24 @@ var sleep = function(duration) {
 	return new Promise((resolve) => {
 		setTimeout(resolve, duration);
 	});
+};
+
+var makeTitles = function(pages) {
+	pages = Array.isArray(pages) ? pages : [ pages ];
+	if (typeof pages[0] === 'number') {
+		return { pageids: pages.join('|') };
+	} else {
+		// .join casts array elements to strings and then joins
+		return { titles: pages.join('|') };
+	}
+};
+
+var makeTitle = function(page) {
+	if (typeof page === 'number') {
+		return { pageid: page };
+	} else {
+		return { title: String(page) };
+	}
 };
 
 module.exports = mwn;
