@@ -733,6 +733,21 @@ class mwn {
 	}
 
 	/**
+	 * Purge one or more pages (max 500 for bots, 50 for others)
+	 *
+	 * @param {String[]|String} titles
+	 * @param {Object} options
+	 * @returns {Promise}
+	 */
+	purge(titles, options) {
+		titles = Array.isArray(titles) ? titles.join('|') : titles;
+		return this.request(merge({
+			action: 'purge',
+			titles: titles
+		}, options)).then(data => data.purge);
+	}
+
+	/**
 	 * Uploads a file
 	 *
 	 * @param {string}  [title]
