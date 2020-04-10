@@ -39,13 +39,13 @@ const semlog = require('semlog');
 
 const log = semlog.log;
 
-class mwn {
+class Bot {
 
 
 	/***************** CONSTRUCTOR ********************/
 
 	/**
-	 * Constructs a new mwn instance
+	 * Constructs a new bot instance
 	 * It is advised to create one bot instance for every API to use
 	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations
 	 *
@@ -1144,4 +1144,4 @@ var makeTitle = function(page) {
 	}
 };
 
-module.exports = mwn;
+module.exports = Bot;
