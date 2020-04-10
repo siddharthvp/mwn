@@ -940,6 +940,9 @@ class Bot {
 					for (let i = 0; i < numItemsInLastBatch; i++) {
 						let idx = batchIdx * concurrency + i;
 						finalBatchPromises[i] = worker(list[idx], idx);
+						if (!(finalBatchPromises[i] instanceof Promise)) {
+							throw new Error('batchOperation worker function must return a promise');
+						}
 						finalBatchSettledPromises[i] = new Promise((resolve) => {
 							return finalBatchPromises[i].then(resolve, resolve);
 						});
@@ -948,15 +951,20 @@ class Bot {
 							finalBatchSettledPromises[savedIdx++] = Promise.resolve();
 						});
 					}
-					Promise.all(finalBatchSettledPromises).then(resolve);
+					Promise.all(finalBatchSettledPromises).then(() => {
+						resolve({ successes, failures });
+					});
 					return;
 				}
 
 				for (let i = 0; i < concurrency; i++) {
 					let idx = batchIdx * concurrency + i;
 
-					worker(list[idx], idx)
-						.then(incrementSuccesses, incrementFailures)
+					var promise = worker(list[idx], idx);
+					if (!(promise instanceof Promise)) {
+						throw new Error('batchOperation worker function must return a promise');
+					}
+					promise.then(incrementSuccesses, incrementFailures)
 						.finally(() => {
 							updateStatusText();
 							// last item in batch: trigger the next batch's API calls
@@ -996,11 +1004,13 @@ class Bot {
 		return new Promise(function(resolve) {
 			var trigger = function(idx) {
 				if (list[idx] === undefined) {
-					resolve();
-					return;
+					return resolve({ successes, failures });
 				}
-				worker(list[idx], idx)
-					.then(incrementSuccesses, incrementFailures)
+				var promise = worker(list[idx], idx);
+				if (!(promise instanceof Promise)) {
+					throw new Error('seriesBatchOperation worker function must return a promise');
+				}
+				promise.then(incrementSuccesses, incrementFailures)
 					.finally(function() {
 						updateStatusText();
 						setTimeout(function() {
