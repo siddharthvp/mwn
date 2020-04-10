@@ -1,8 +1,6 @@
 # mwn
 
-WIP:
-
-mwn is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
+**mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
 ### Setup
 

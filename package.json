@@ -2,7 +2,7 @@
   "name": "mwn",
   "version": "0.2.0",
   "description": "MediaWiki bot framework for NodeJS",
-  "main": "index.js",
+  "main": "./src/index.js",
   "scripts": {
     "test": "mocha tests/mwn.test.js && node tests/mwn.title.test.js"
   },
