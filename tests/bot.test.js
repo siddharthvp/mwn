@@ -2,7 +2,7 @@
 
 /* global describe, it */
 
-const mwn = require('../mwn');
+const mwn = require('../src/index');
 const log = require('semlog').log;
 const crypto = require('crypto');
 
@@ -10,19 +10,35 @@ const chai = require('chai');
 const expect = chai.expect;
 const assert = require('assert');
 
-const loginCredentials = require('./mocking/loginCredentials.js');
+const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
-describe('mwn Request', async function() {
+let bot = new mwn.bot({
+	silent: true,
+	hasApiHighLimit: false,
+	apiUrl: loginCredentials.apiUrl,
+	username: loginCredentials.username,
+	password: loginCredentials.password
+});
+
+describe('mwn', async function() {
 
 	'use strict';
-
+	this.timeout(5000);
 
 	//////////////////////////////////////////
 	// SUCCESSFUL                           //
 	//////////////////////////////////////////
 
+	it('successfully logs in and gets token', function(done) {
+		this.timeout(7000);
+		bot.loginGetEditToken().then(() => {
+			expect(bot.editToken).to.be.a('string');
+			assert(bot.editToken.endsWith('+\\'));
+			done();
+		});
+	});
+
 	it('successfully executes a raw HTTP request', function(done) {
-		let bot = new mwn();
 
 		bot.rawRequest({
 			method: 'GET',
@@ -36,20 +52,127 @@ describe('mwn Request', async function() {
 			expect(response[0]).to.be.instanceof(Object);
 			expect(response[0].postId).to.equal(1);
 			done();
-		}).catch((err) => {
-			log(err);
+		}).catch(log);
+	});
+
+	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
+
+	it('successfully creates a page with create()', function(done) {
+		bot.create(randPage, '=Some more Wikitext= \n[[Category:Test Page]]','Test creation using mwn')
+			.then((response) => {
+				expect(response.result).to.equal('Success');
+				done();
+			}).catch(log);
+	});
+
+	it('successfully edits a page with custom request()', function(done) {
+		bot.request({
+			action: 'edit',
+			title: randPage,
+			text: '=Some Wikitext 2=',
+			summary: 'Test edit using mwn',
+			token: bot.editToken
+		}).then((response) => {
+			expect(response.edit.result).to.equal('Success');
+			done();
+		}).catch(log);
+	});
+
+	it('successfully reads a page with read()', function(done) {
+		bot.read('Main Page').then((response) => {
+			expect(response).to.be.instanceOf(Object);
+			expect(response).to.include.all.keys('revisions', 'pageid', 'title');
+			expect(response.revisions[0].content).to.be.a('string');
+			done();
 		});
 	});
 
-	let bot = new mwn({
-		silent: true
+	it('successfully reads multiple pages with read()', function(done) {
+		bot.read(['Main Page', 'MediaWiki:Sidebar'], {
+			rvprop: 'content|timestamp|user'
+		}).then((response) => {
+			expect(response).to.be.instanceOf(Array);
+			expect(response.length).to.equal(2);
+			expect(response[1]).to.include.all.keys('pageid', 'ns', 'revisions');
+			expect(response[0].revisions).to.be.instanceOf(Array);
+			expect(response[0].revisions[0]).to.include.all.keys('content');
+			done();
+		});
 	});
 
-	it('successfully logs in and gets token', function(done) {
+	it('successfully reads multiple pages using pageid with read()', function(done) {
+		bot.read([11791 /* Main Page */, 25 /* MediaWiki:Sidebar */], {
+			rvprop: 'content|timestamp|user'
+		}).then((response) => {
+			expect(response).to.be.instanceOf(Array);
+			expect(response.length).to.equal(2);
+			expect(response[1]).to.include.all.keys('pageid', 'ns', 'revisions');
+			expect(response[0].revisions).to.be.instanceOf(Array);
+			expect(response[0].revisions[0]).to.include.all.keys('content');
+			done();
+		});
+	});
+
+	it.only('successfully reads apilimit+ pages with read', function(done) {
 		this.timeout(10000);
-		bot.loginGetEditToken(loginCredentials.valid).then(function() {
-			expect(bot.editToken).to.be.a('string');
-			assert(bot.editToken.endsWith('+\\'));
+		var arr = [];
+		for (let i=1; i<=60; i++) {
+			arr.push(`page${i}`);
+		}
+		bot.read(arr).then((response) => {
+			expect(response).to.be.instanceOf(Array);
+			expect(response.length).to.equal(60);
+			assert(response[45].missing === true ||
+				typeof response[45].revisions[0].content === 'string');
+			done();
+		});
+	});
+
+	it('successfully edits a page with save()', function(done) {
+		bot.save(randPage, '=Some 234 more Wikitext=', 'Some summary').then(() => {
+			return bot.save(randPage, '=Some 534 more Wikitext=');
+		}).then((response) => {
+			expect(response.result).to.equal('Success');
+			done();
+		});
+	});
+
+	it('successfully creates a new section with newSection()', function(done) {
+		bot.newSection(randPage, 'Test section', 'Test content').then((response) => {
+			expect(response.result).to.equal('Success');
+			done();
+		});
+	});
+
+	it('successfully edits a page with edit()', function(done) {
+		bot.edit(randPage, function(rev) {
+			expect(rev.content).to.be.a('string');
+			expect(rev.timestamp).to.be.a('string');
+			return {
+				text: rev.content + '\n\n\n' + rev.content,
+				summary: 'test edit with mwn edit()',
+				minor: 1
+			};
+		}).then(function(result) {
+			expect(result.result).to.equal('Success');
+			done();
+		});
+	});
+
+	var randPageMoved = randPage + '-moved';
+
+	it('successfully moves a page without leaving redirect', function(done) {
+		bot.move(randPage, randPageMoved, 'Test move using mwn', {noredirect: 1}).then((response) => {
+			expect(response).to.be.an('object');
+			expect(response).to.include.all.keys('from', 'to', 'redirectcreated');
+			expect(response.redirectcreated).to.equal(false);
+			done();
+		});
+	});
+
+	it('successfully deletes a page with delete()', function(done) {
+		bot.delete(randPageMoved, 'Test mwn').then((response) => {
+			expect(response.logid).to.be.a('number');
 			done();
 		});
 	});
@@ -62,112 +185,18 @@ describe('mwn Request', async function() {
 		});
 	});
 
-	it('successfully edits a page with custom request()', function(done) {
-		bot.request({
-			action: 'edit',
-			title: 'SD0001test',
-			text: '=Some Wikitext 2=',
-			summary: 'Test Edit',
-			token: bot.editToken
-		}).then((response) => {
-			expect(response.edit.result).to.equal('Success');
-			done();
-		}).catch((err) => {
-			log(err);
-		});
-	});
-
-	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
-
-	it('successfully creates a page with create()', function(done) {
-		bot.create(randPage, '=Some more Wikitext= [[Category:Test Page]]','Test Create')
-			.then((response) => {
-				expect(response.result).to.equal('Success');
+	it('successfully parses wikitext', function(done) {
+		bot.parseWikitext('[[link]]s.')
+			.then(parsedtext => {
+				expect(parsedtext).to.be.a('string');
+				assert(parsedtext.startsWith(`<div class="mw-parser-output"><p><a href="/wiki/Link" title="Link">links</a>.`));
 				done();
-			}).catch((err) => {
-				log(err);
 			});
 	});
 
-	it('successfully reads a page with read()', function(done) {
-		bot.read('Main Page').then((response) => {
-			expect(response).to.be.instanceOf(Object);
-			expect(response).to.include.all.keys('revisions', 'pageid', 'title');
-			expect(response.revisions[0].content).to.be.a('string');
-			done();
-		}).catch((err) => {
-			log(err);
-		});
-	});
-
-	it('successfully reads multiple pages with read()', function(done) {
-		bot.read(['Main Page', 'MediaWiki:Sidebar']).then((response) => {
-			expect(response).to.be.instanceOf(Array);
-			expect(response.length).to.equal(2);
-			expect(response[1]).to.include.all.keys('pageid', 'ns', 'revisions');
-			expect(response[0].revisions).to.be.instanceOf(Array);
-			expect(response[0].revisions[0]).to.include.all.keys('content');
-			done();
-		}).catch((err) => {
-			log(err);
-		});
-	});
-
-	// it('successfully reads a page read() with stacked promises', function(done) {
-	// 	this.timeout(3000);
-	// 	let bot = new mwn();
-	// 	bot.login(loginCredentials.valid).then(() => {
-	// 		bot.read('Test Page', {timeout: 8000}).then((response) => {
-	// 			expect(response).to.have.any.keys('query');
-	// 			expect(response.query).to.have.any.keys('pages');
-	// 			done();
-	// 		}).catch((err) => {
-	// 			log(err);
-	// 		});
-	// 	}).catch((err) => {
-	// 		log(err);
-	// 	});
-	// });
-
-	// it('successfully updates a page with update()', function(done) {
-	// 	bot.save(randPage, '=Some more Wikitext__1=', 'Test mwn').then(() => {
-	// 		return bot.update(randPage, '=Some more Wikitext__2=');
-	// 	}).then((response) => {
-	// 		expect(response.result).to.equal('Success');
-	// 		// expect(bot.counter.fulfilled).to.equal(5);  // ??
-	// 		done();
-	// 	}).catch((err) => {
-	// 		log(err);
-	// 	});
-	// });
-
-
-	it('successfully edits a page with save()', function(done) {
-		this.timeout(3000);
-		bot.save(randPage, '=Some 234 more Wikitext=', 'Some summary').then(() => {
-			return bot.save(randPage, '=Some 534 more Wikitext=');
-		}).then((response) => {
-			expect(response.result).to.equal('Success');
-			done();
-		});
-	});
-
-	var randPageMoved = randPage + '-moved';
-
-	it('successfully moves a page without leaving redirect', function(done) {
-		this.timeout(3000);
-		bot.move(randPage, randPageMoved, 'Test move using mwn', {noredirect: 1}).then((response) => {
-			expect(response).to.be.an('object');
-			expect(response).to.include.all.keys('from', 'to', 'redirectcreated');
-			expect(response.redirectcreated).to.equal(false);
-			done();
-		});
-	});
-
-	it('successfully deletes a page with delete()', function(done) {
-		this.timeout(3000);
-		bot.delete(randPageMoved, 'Test mwn').then((response) => {
-			expect(response.logid).to.be.a('number');
+	it('successfully parses a page', function(done) {
+		bot.parseTitle('MediaWiki:Sidebar').then(parsed => {
+			expect(parsed).to.be.a('string');
 			done();
 		});
 	});
@@ -185,8 +214,6 @@ describe('mwn Request', async function() {
 	});
 
 	// it('successfully uploads without providing a filename with upload()', function(done) {
-	// 	this.timeout(3000);
-	// 	let bot = new mwn();
 	// 	bot.loginGetEditToken(loginCredentials.valid).then(() => {
 	// 		return bot.upload(false, __dirname + '/mocking/example1.png');
 	// 	}).then((response) => {
@@ -198,7 +225,6 @@ describe('mwn Request', async function() {
 	// });
 
 	it.skip('successfully skips an upload of an image duplicate with upload()', function(done) {
-		this.timeout(3000);
 		bot.upload('SD0001test-43543.png', __dirname + '/mocking/example1.png', 'Test Reasons').then((response) => {
 			expect(response.upload.result).to.equal('Warning');
 			done();
@@ -220,15 +246,21 @@ describe('mwn Request', async function() {
 	});
 
 	it('cannot edit a page without providing API URL / Login', function(done) {
-		new mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
+		new mwn.bot().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('No URI');
 			done();
 		});
 	});
 
+	it('fails to parse a non-existing page', function(done) {
+		bot.parseTitle('fswer4536tgrr').catch(err => {
+			assert(err.code === 'missingtitle');
+			done();
+		});
+	});
+
 	it('rejects to upload a non-existing file with upload()', function(done) {
-		this.timeout(3000);
 		bot.upload(false, __dirname + '/mocking/NonExistingImage.png').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('ENOENT');

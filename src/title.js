@@ -3,7 +3,8 @@
  * This class is a substantial copy of mw.Title in the MediaWiki on-site
  * JS interface.
  *
- * Adapted from <https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.Title/> (GNU GPL v2)
+ * Adapted from <https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.Title/>
+ * (GNU GPL v2)
  *
  */
 
@@ -241,14 +242,14 @@ class Title {
  * Private members
  */
 
-var checkData = function() {
+Title.checkData = function() {
 	if (!Title.nameIdMap || !Title.idNameMap || !Title.legaltitlechars) {
 		throw new Error('namespace data unavailable: run title.getNamespaceData() first');
 	}
 };
 
 var parse = function(title, defaultNamespace) {
-	checkData();
+	Title.checkData();
 
 	var namespace, m, id, i, fragment;
 

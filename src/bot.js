@@ -97,9 +97,23 @@ class Bot {
 		 * @type {object}
 		 */
 		this.defaultOptions = {
+			// suppress messages, except for error messages
 			silent: false,
+
+			// site API url, example https://en.wikipedia.org/w/api.php
 			apiUrl: null,
+
+			// bot login username and password, setup using Special:BotPasswords
+			username: null,
+			password: null,
+
+			// does your account have apihighlimits right? Yes for bots and sysops
+			hasApiHighLimit: true,
+
+			// milliseconds to pause before retrying after a maxlag error
 			maxlagPause: 5000,
+
+			// max number of times to retry the same request on maxlag error.
 			maxlagMaxRetries: 3
 		};
 
@@ -194,7 +208,7 @@ class Bot {
 	 * @param {Object} params - default parameters
 	 */
 	setDefaultParams(params) {
-		this.requestOptions.qs = merge(this.requestOptions.qs, params);
+		this.requestOptions.form = merge(this.requestOptions.form, params);
 	}
 
 	/**
@@ -279,54 +293,49 @@ class Bot {
 			}
 		});
 
-		return new Promise((resolve, reject) => {
+		return this.rawRequest(requestOptions).then((response) => {
 
-			this.rawRequest(requestOptions).then((response) => {
+			if (typeof response !== 'object') {
+				let err = new Error('invalidjson: No valid JSON response');
+				err.code = 'invalidjson';
+				err.info = 'No valid JSON response';
+				err.response = response;
+				return Promise.reject(err) ;
+			}
 
-				if (typeof response !== 'object') {
-					let err = new Error('invalidjson: No valid JSON response');
-					err.code = 'invalidjson';
-					err.info = 'No valid JSON response';
-					err.response = response;
-					return reject(err) ;
+			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
+			if (response.error) {
+
+				if (response.error.code === 'badtoken') {
+					return this.getEditToken().then(() => {
+						requestOptions.form.token = this.editToken;
+						return this.request({}, requestOptions);
+					});
 				}
 
-				// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
-				if (response.error) {
-
-					if (response.error.code === 'badtoken') {
-						return this.getEditToken().then(() => {
-							requestOptions.form.token = this.editToken;
-							return this.request({}, requestOptions);
-						});
-					}
-
-					// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-					if (response.error.code === 'maxlag' && requestOptions.retryNumber < this.options.maxlagMaxRetries) {
-						log(`[W] Encountered maxlag error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
-						return sleep(this.options.maxlagPause).then(() => {
-							requestOptions.retryNumber++;
-							return this.request({}, requestOptions);
-						});
-					}
-
-					let err = new Error(response.error.code + ': ' + response.error.info);
-					// Enhance error object with additional information
-					err.errorResponse = true;
-					err.code = response.error.code;
-					err.info = response.error.info;
-					err.response = response;
-					err.request = requestOptions;
-					return reject(err);
+				// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
+				if (response.error.code === 'maxlag' && requestOptions.retryNumber < this.options.maxlagMaxRetries) {
+					log(`[W] Encountered maxlag error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
+					return sleep(this.options.maxlagPause).then(() => {
+						requestOptions.retryNumber++;
+						return this.request({}, requestOptions);
+					});
 				}
 
-				return resolve(response);
+				let err = new Error(response.error.code + ': ' + response.error.info);
+				// Enhance error object with additional information
+				err.errorResponse = true;
+				err.code = response.error.code;
+				err.info = response.error.info;
+				err.response = response;
+				err.request = requestOptions;
+				return Promise.reject(err);
+			}
 
-			}).catch((err) => {
-				reject(err);
-			});
+			return response;
 
 		});
+
 	}
 
 
@@ -417,25 +426,20 @@ class Bot {
 	 * @returns {Promise}
 	 */
 	getEditToken() {
-		return new Promise((resolve, reject) => {
-
-			this.request({
-				action: 'query',
-				meta: 'tokens',
-				type: 'csrf'
-			}).then((response) => {
-				if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
-					this.editToken = response.query.tokens.csrftoken;
-					this.state = merge(this.state, response.query.tokens);
-					return resolve(this.editToken);
-				} else {
-					let err = new Error('Could not get edit token');
-					err.response = response;
-					return reject(err) ;
-				}
-			}).catch((err) => {
-				return reject(err);
-			});
+		return this.request({
+			action: 'query',
+			meta: 'tokens',
+			type: 'csrf'
+		}).then((response) => {
+			if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
+				this.editToken = response.query.tokens.csrftoken;
+				this.state = merge(this.state, response.query.tokens);
+				return this.editToken;
+			} else {
+				let err = new Error('Could not get edit token');
+				err.response = response;
+				return Promise.reject(err) ;
+			}
 		});
 	}
 
@@ -549,7 +553,7 @@ class Bot {
 	/**
 	 * Creates a new pages. Does not edit existing ones
 	 *
-	 * @param {string|number}  title - title or pageid (as number)
+	 * @param {string}  title
 	 * @param {string}  content
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
@@ -559,11 +563,12 @@ class Bot {
 	create(title, content, summary, options) {
 		return this.request(merge({
 			action: 'edit',
+			title: String(title),
 			text: content,
 			summary: summary,
 			createonly: true,
 			token: this.editToken
-		}, makeTitle(title), options)).then(data => data.edit);
+		}, options)).then(data => data.edit);
 	}
 
 	/**
@@ -588,23 +593,23 @@ class Bot {
 	/**
 	 * Reads the content / and meta-data of one (or many) pages
 	 *
-	 * @param {string|string[]|number|number[]}  titles    For multiple Pages use an array
-	 * @param {object}      [options]
+	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
+	 * @param {object} [options]
 	 *
 	 * @returns {Promise}
 	 */
 	read(titles, options) {
-		return this.request(merge({
+		return this.massQuery(merge({
 			action: 'query',
 			prop: 'revisions',
 			rvprop: 'content',
 			redirects: '1'
-		}, makeTitles(titles), options)).then(data => {
-			if (Array.isArray(titles)) {
-				return data.query.pages;
-			} else {
-				return data.query.pages[0];
-			}
+		}, makeTitles(titles), options),
+		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
+			var data = jsons.reduce((data, json) => {
+				return data.concat(json.query.pages);
+			}, []);
+			return data.length === 1 ? data[0] : data;
 		});
 	}
 
@@ -628,7 +633,7 @@ class Bot {
 	 * Undeletes a page.
 	 * Note: all deleted revisions of the page will be restored.
 	 *
-	 * @param {string|number}  title - title or pageid (as number)
+	 * @param {string}  title
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
 	 * @returns {Promise}
@@ -636,9 +641,10 @@ class Bot {
 	undelete(title, summary, options) {
 		return this.request(merge({
 			action: 'undelete',
+			title: String(title),
 			reason: summary,
 			token: this.editToken
-		}, makeTitle(title), options)).then(data => data.undelete);
+		}, options)).then(data => data.undelete);
 	}
 
 	/**
@@ -677,7 +683,7 @@ class Bot {
 			formatversion: 2,
 			action: 'parse',
 			contentmodel: 'wikitext'
-		}, additionalParams)).then(function (data) {
+		}, additionalParams)).then(function(data) {
 			return data.parse.text;
 		});
 	}
@@ -812,7 +818,6 @@ class Bot {
 		return this.upload(title, pathToFile, comment, params, customRequestOptions);
 	}
 
-
 	/************* BULK PROCESSING FUNCTIONS ************/
 
 
@@ -857,22 +862,27 @@ class Bot {
 	 * A promise is returned finally resolved with the array of responses of each
 	 * API call.
 	 *
+	 * This assumes that the user has the apihighlimits user right, available to bots
+	 * and sysops by default. If your account does not have the right, you MUST set
+	 * `hasApiHighLimit` false using bot.setOptions() or in the bot constructor, failing
+	 * which you'll get `toomanyvalues` API error.
+	 *
 	 * @param {Object} query - the query object, the multi-input field should
 	 * be an array
 	 * @param {string} [batchFieldName=titles] - the name of the multi-input field
-	 * @param {boolean} [hasApiHighLimit=true] - set false if your account doesn't
-	 * have apihighlimits usually restricted to bots and sysops.
+	 *
 	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have
 	 * settled, with the array of responses.
 	 */
-	massQuery(query, batchFieldName='titles', hasApiHighLimit=true) {
+	massQuery(query, batchFieldName='titles') {
 		var batchValues = query[batchFieldName];
-		var limit = hasApiHighLimit ? 500 : 50;
+		var limit = this.options.hasApiHighLimit ? 500 : 50;
 		var numBatches = Math.ceil(batchValues.length / limit);
 		var batches = new Array(numBatches);
-		for (let i = 0; i < numBatches; i++) {
+		for (let i = 0; i < numBatches - 1; i++) {
 			batches[i] = new Array(limit);
 		}
+		batches[numBatches - 1] = new Array(batchValues.length % limit);
 		for (let i = 0; i < batchValues.length; i++) {
 			batches[Math.floor(i/limit)][i % limit] = batchValues[i];
 		}
@@ -886,6 +896,9 @@ class Bot {
 				this.request(query).then(response => {
 					responses[idx] = response;
 				}, err => {
+					if (err.code === 'toomanyvalues') {
+						throw new Error(`[mwn] Your account doesn't have apihighlimit right.` + ` Set the option hasApiHighLimit as false`);
+					}
 					responses[idx] = err;
 				}).finally(() => {
 					sendQuery(idx + 1);
@@ -1139,10 +1152,10 @@ var sleep = function(duration) {
 var makeTitles = function(pages) {
 	pages = Array.isArray(pages) ? pages : [ pages ];
 	if (typeof pages[0] === 'number') {
-		return { pageids: pages.join('|') };
+		return { pageids: pages };
 	} else {
 		// .join casts array elements to strings and then joins
-		return { titles: pages.join('|') };
+		return { titles: pages };
 	}
 };
 

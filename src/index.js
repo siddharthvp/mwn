@@ -4,8 +4,8 @@
  */
 
 const mwn = {
-	bot: require('./mwn.bot'),
-	title: require('./mwn.title')
+	bot: require('./bot'),
+	title: require('./title')
 };
 
 module.exports = mwn;

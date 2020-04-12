@@ -4,7 +4,7 @@
   "description": "MediaWiki bot framework for NodeJS",
   "main": "./src/index.js",
   "scripts": {
-    "test": "mocha tests/mwn.test.js && node tests/mwn.title.test.js"
+    "test": "mocha tests/bot.test.js && node tests/title.test.js"
   },
   "repository": {
     "type": "git",
