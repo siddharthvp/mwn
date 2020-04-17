@@ -31,7 +31,7 @@ describe('mwn', async function() {
 
 	it('successfully logs in and gets token', function(done) {
 		this.timeout(7000);
-		bot.loginGetEditToken().then(() => {
+		bot.loginGetToken().then(() => {
 			expect(bot.editToken).to.be.a('string');
 			assert(bot.editToken.endsWith('+\\'));
 			done();
@@ -113,7 +113,7 @@ describe('mwn', async function() {
 		});
 	});
 
-	it.only('successfully reads apilimit+ pages with read', function(done) {
+	it('successfully reads apilimit+ pages with read', function(done) {
 		this.timeout(10000);
 		var arr = [];
 		for (let i=1; i<=60; i++) {
@@ -214,7 +214,7 @@ describe('mwn', async function() {
 	});
 
 	// it('successfully uploads without providing a filename with upload()', function(done) {
-	// 	bot.loginGetEditToken(loginCredentials.valid).then(() => {
+	// 	bot.loginGetToken(loginCredentials.valid).then(() => {
 	// 		return bot.upload(false, __dirname + '/mocking/example1.png');
 	// 	}).then((response) => {
 	// 		expect(response.upload.result).to.equal('Warning');

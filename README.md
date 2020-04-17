@@ -69,17 +69,17 @@ bot.setOptions({
 
 **Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxlagMaxRetries` will take place (default 3).
 
-Fetch an edit token:
+Fetch an CSRF token required for most write operations.
 ```js
-bot.getEditToken();
+bot.getCsrfToken();
 ```
-Edit token, once obtained is stored in the bot state so that it can be reused any number of times. This token is also used for most operations such as moving and deleting, not just for editing.
+The token, once obtained is stored in the bot state so that it can be reused any number of times. 
 
 If an action fails due to an expired or missing token, the action will be automatically retried after fetching a new token.
 
 For convenience, you can log in and get the edit token together as:
 ```js
-bot.loginGetEditToken();
+bot.loginGetToken();
 ```
 If your bot doesn't need to log in, you can simply set the API url using:
 ```js

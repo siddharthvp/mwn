@@ -76,7 +76,7 @@ class Bot {
 		 *
 		 * @type {string}
 		 */
-		this.editToken = '%notoken%';
+		this.csrfToken = '%notoken%';
 
 		/**
 		 * Internal statistics
@@ -307,8 +307,8 @@ class Bot {
 			if (response.error) {
 
 				if (response.error.code === 'badtoken') {
-					return this.getEditToken().then(() => {
-						requestOptions.form.token = this.editToken;
+					return this.getCsrfToken().then(() => {
+						requestOptions.form.token = this.csrfToken;
 						return this.request({}, requestOptions);
 					});
 				}
@@ -354,69 +354,77 @@ class Bot {
 	 */
 	login(loginOptions) {
 
-		this.loginPromise = new Promise((resolve, reject) => {
+		this.options = merge(this.options, loginOptions);
 
-			this.options = merge(this.options, loginOptions);
+		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
+			return Promise.reject(new Error('Incomplete login credentials!'));
+		}
 
-			if (!this.options.username || !this.options.password || !this.options.apiUrl) {
-				return reject(new Error('Incomplete login credentials!'));
-			}
+		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
 
-			let loginRequest = {
-				action: 'login',
-				lgname: this.options.username,
-				lgpassword: this.options.password
-			};
-
-			let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
+		// Fetch login token
+		return this.request({
+			action: 'query',
+			meta: 'tokens',
+			type: 'login',
 
 			// unset the assert parameter (in case it's given by the user as a default option),
 			// as it will invariably fail until login is performed.
-			loginRequest.assert = undefined;
+			assert: undefined
 
-			this.request(loginRequest).then((response) => {
+		}).then((response) => {
 
-				if (!response.login || !response.login.result) {
-					let err = new Error('Invalid response from API');
-					err.response = response;
-					log('[E] [mwn] Login failed with invalid response: ' + loginString);
-					return reject(err) ;
-				}
-
-				this.state = merge(this.state, response.login);
-
-				// Add token and re-submit login request
-				loginRequest.lgtoken = response.login.token;
-				return this.request(loginRequest);
-
-			}).then((response) => {
-
-				if (response.login && response.login.result === 'Success') {
-					this.state = merge(this.state, response.login);
-					this.loggedIn = true;
-					if (!this.options.silent) {
-						log('[S] [mwn] Login successful: ' + loginString);
-					}
-					return resolve(this.state);
-				}
-
-				let reason = 'Unknown reason';
-				if (response.login && response.login.result) {
-					reason = response.login.result;
-				}
-				let err = new Error('Could not login: ' + reason);
+			if (!response.query || !response.query.tokens || !response.query.tokens.logintoken) {
+				let err = new Error('Failed to get login token');
 				err.response = response;
-				log('[E] [mwn] Login failed: ' + loginString);
-				return reject(err) ;
+				log('[E] [mwn] Login failed with invalid response: ' + loginString);
+				return Promise.reject(err) ;
+			}
 
-			}).catch((err) => {
-				reject(err);
+			this.state = merge(this.state, response.query.tokens);
+
+			return this.request({
+				action: 'login',
+				lgname: this.options.username,
+				lgpassword: this.options.password,
+				lgtoken: response.query.tokens.logintoken,
+				assert: undefined // as above, assert won't work till the user is logged in
 			});
+
+		}).then((response) => {
+			if (response.login && response.login.result === 'Success') {
+				this.state = merge(this.state, response.login);
+				this.loggedIn = true;
+				if (!this.options.silent) {
+					log('[S] [mwn] Login successful: ' + loginString);
+				}
+				return this.state;
+			}
+
+			let reason = 'Unknown reason';
+			if (response.login && response.login.result) {
+				reason = response.login.result;
+			}
+			let err = new Error('Could not login: ' + reason);
+			err.response = response;
+			log('[E] [mwn] Login failed: ' + loginString);
+			return Promise.reject(err) ;
 
 		});
 
-		return this.loginPromise;
 	}
+
+	/**
+	 * Log out of the account
+	 * @returns {Promise} - resolved with an empty object if successful
+	 */
+	logout() {
+		return this.request({
+			action: 'logout',
+			token: this.csrfToken
+		}); // returns an empty response if successful
+	}
+
 
 	/**
 	 * Gets an edit token (also used for most other actions
@@ -425,16 +433,16 @@ class Bot {
 	 *
 	 * @returns {Promise}
 	 */
-	getEditToken() {
+	getCsrfToken() {
 		return this.request({
 			action: 'query',
 			meta: 'tokens',
 			type: 'csrf'
 		}).then((response) => {
 			if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
-				this.editToken = response.query.tokens.csrftoken;
+				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
-				return this.editToken;
+				return this.csrfToken;
 			} else {
 				let err = new Error('Could not get edit token');
 				err.response = response;
@@ -444,14 +452,14 @@ class Bot {
 	}
 
 	/**
-	 * Combines Login  with GetEditToken
+	 * Combines Login  with getCsrfToken
 	 *
 	 * @param loginOptions
 	 * @returns {Promise}
 	 */
-	loginGetEditToken(loginOptions) {
+	loginGetToken(loginOptions) {
 		return this.login(loginOptions).then(() => {
-			return this.getEditToken();
+			return this.getCsrfToken();
 		});
 	}
 
@@ -523,7 +531,7 @@ class Bot {
 				basetimestamp: basetimestamp,
 				starttimestamp: curtimestamp,
 				nocreate: !0,
-				token: this.editToken
+				token: this.csrfToken
 			}, makeTitle(title), editParams));
 
 		}).then(data => {
@@ -546,7 +554,7 @@ class Bot {
 			action: 'edit',
 			text: content,
 			summary: summary,
-			token: this.editToken
+			token: this.csrfToken
 		}, makeTitle(title), options)).then(data => data.edit);
 	}
 
@@ -567,7 +575,7 @@ class Bot {
 			text: content,
 			summary: summary,
 			createonly: true,
-			token: this.editToken
+			token: this.csrfToken
 		}, options)).then(data => data.edit);
 	}
 
@@ -586,7 +594,7 @@ class Bot {
 			section: 'new',
 			summary: header,
 			text: message,
-			token: this.editToken
+			token: this.csrfToken
 		}, makeTitle(title), additionalParams)).then(data => data.edit);
 	}
 
@@ -625,7 +633,7 @@ class Bot {
 		return this.request(merge({
 			action: 'delete',
 			reason: summary,
-			token: this.editToken
+			token: this.csrfToken
 		}, makeTitle(title), options)).then(data => data.delete);
 	}
 
@@ -643,7 +651,7 @@ class Bot {
 			action: 'undelete',
 			title: String(title),
 			reason: summary,
-			token: this.editToken
+			token: this.csrfToken
 		}, options)).then(data => data.undelete);
 	}
 
@@ -663,7 +671,7 @@ class Bot {
 			to: totitle,
 			reason: summary,
 			movetalk: 1,
-			token: this.editToken
+			token: this.csrfToken
 		}, options)).then(data => data.move);
 	}
 
@@ -767,7 +775,7 @@ class Bot {
 				filename: title || path.basename(pathToFile),
 				file: file,
 				comment: comment || '',
-				token: this.editToken
+				token: this.csrfToken
 			}, customParams);
 
 			let uploadRequestOptions = merge(this.requestOptions, {
