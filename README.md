@@ -2,6 +2,8 @@
 
 **mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
+Development status: **Unstable**
+
 ### Setup
 
 Until mwn is released on npm, enter the `node_modules` directory of your project and run:
@@ -73,7 +75,7 @@ Fetch an CSRF token required for most write operations.
 ```js
 bot.getCsrfToken();
 ```
-The token, once obtained is stored in the bot state so that it can be reused any number of times. 
+The token, once obtained is stored in the bot state so that it can be reused any number of times.
 
 If an action fails due to an expired or missing token, the action will be automatically retried after fetching a new token.
 
@@ -196,15 +198,15 @@ bot.request({
 
 #### Bulk processing methods
 
-##### continousQuery(query, maxCallsLimit)
+##### continuedQuery(query, maxCallsLimit)
 Send an API query, and continue re-sending it with the continue parameters received in the response, until there are no more results (or till `maxCalls` limit is reached). The return value is a promise resolved with the array of responses to individual API calls.
 ```js
 bot.continousQuery(apiQueryObject, maxCalls=10)
 ```
 
-Example: get a list of all active users on the wiki using `continuousQuery` (using [API:Allusers](https://www.mediawiki.org/wiki/API:Allusers)):
+Example: get a list of all active users on the wiki using `continuedQuery` (using [API:Allusers](https://www.mediawiki.org/wiki/API:Allusers)):
 ```js
-bot.continuousQuery({
+bot.continuedQuery({
 	"action": "query",
 	"list": "allusers",
 	"auactiveusers": 1,

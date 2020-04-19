@@ -39,33 +39,36 @@ class Title {
 				if (error) {
 					return reject(error);
 				}
-				// Analog of mw.config.get('wgFormattedNamespaces')
-				Title.idNameMap = {};
-
-				// Analag of mw.config.get('wgNamespaceIds')
-				Title.nameIdMap = {};
-
-				Object.values(json.query.namespaces).forEach(ns => {
-					Title.idNameMap[ns.id] = ns.name;
-					Title.nameIdMap[Title.namespaceNorm(ns.name)] = ns.id;
-					Title.nameIdMap[Title.namespaceNorm(ns.canonical)] = ns.id;
-				});
-				json.query.namespacealiases.forEach(ns => {
-					Title.nameIdMap[Title.namespaceNorm(ns.alias)] = ns.id;
-				});
-
-				// Analog of mw.config.get('wgLegalTitleChars')
-				Title.legaltitlechars = json.query.general.legaltitlechars;
-
-				// Analog of mw.config.get('wgCaseSensitiveNamespaces')
-				Title.caseSensitiveNamespaces = Object.values(json.query.namespaces)
-					.filter(ns => ns.case === 'case-sensitive')
-					.map(ns => ns.id);
-
+				Title.processNamespaceData(json);
 				resolve();
 			});
 
 		});
+	}
+
+	static processNamespaceData(json) {
+		// Analog of mw.config.get('wgFormattedNamespaces')
+		Title.idNameMap = {};
+
+		// Analag of mw.config.get('wgNamespaceIds')
+		Title.nameIdMap = {};
+
+		Object.values(json.query.namespaces).forEach(ns => {
+			Title.idNameMap[ns.id] = ns.name;
+			Title.nameIdMap[Title.namespaceNorm(ns.name)] = ns.id;
+			Title.nameIdMap[Title.namespaceNorm(ns.canonical)] = ns.id;
+		});
+		json.query.namespacealiases.forEach(ns => {
+			Title.nameIdMap[Title.namespaceNorm(ns.alias)] = ns.id;
+		});
+
+		// Analog of mw.config.get('wgLegalTitleChars')
+		Title.legaltitlechars = json.query.general.legaltitlechars;
+
+		// Analog of mw.config.get('wgCaseSensitiveNamespaces')
+		Title.caseSensitiveNamespaces = Object.values(json.query.namespaces)
+			.filter(ns => ns.case === 'case-sensitive')
+			.map(ns => ns.id);
 	}
 
 	static namespaceNorm(ns) {

@@ -39,6 +39,8 @@ const semlog = require('semlog');
 
 const log = semlog.log;
 
+const Title = require('./title');
+
 class Bot {
 
 
@@ -154,6 +156,11 @@ class Bot {
 		 * @type {Object}
 		 */
 		this.requestOptions = this.setRequestOptions(customRequestOptions || {});
+
+		/**
+		 * Title class associated with the bot instance.
+		 */
+		this.title = Title;
 
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
@@ -362,11 +369,12 @@ class Bot {
 
 		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
 
-		// Fetch login token
+		// Fetch login token, also at the same time, fetch info about namespaces for Title
 		return this.request({
 			action: 'query',
-			meta: 'tokens',
+			meta: 'tokens|siteinfo',
 			type: 'login',
+			siprop: 'general|namespaces|namespacealiases',
 
 			// unset the assert parameter (in case it's given by the user as a default option),
 			// as it will invariably fail until login is performed.
@@ -380,8 +388,9 @@ class Bot {
 				log('[E] [mwn] Login failed with invalid response: ' + loginString);
 				return Promise.reject(err) ;
 			}
-
 			this.state = merge(this.state, response.query.tokens);
+
+			Title.processNamespaceData(response);
 
 			return this.request({
 				action: 'login',
@@ -826,6 +835,48 @@ class Bot {
 		return this.upload(title, pathToFile, comment, params, customRequestOptions);
 	}
 
+	/**
+	 * Get pages with names beginning with a given prefix
+	 * @param {string} prefix
+	 * @param {Object} otherParams
+	 *
+	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
+	 */
+	getPagesByPrefix(prefix, otherParams) {
+		var title = Title.newFromText(prefix);
+		if (!title) {
+			throw new Error('invalid prefix for getPagesByPrefix');
+		}
+		return this.request(merge({
+			"action": "query",
+			"list": "allpages",
+			"apprefix": title.title,
+			"apnamespace": title.namespace,
+			"aplimit": "max"
+		}, otherParams)).then((data) => {
+			return data.query.allpages.map(pg => pg.title);
+		});
+	}
+
+	/**
+	 * Get pages in a category
+	 * @param {string} category - name of category, with or without namespace prefix
+	 * @param {Object} [otherParams]
+	 * @returns {Promise<string[]>}
+	 */
+	getPagesInCategory(category, otherParams) {
+		var title = Title.newFromText(category);
+		if (title.namespace === 0) {
+			title.namespace = 14;
+		}
+		return this.request(merge({
+			"action": "query",
+			"list": "categorymembers",
+			"cmtitle": title.toText(),
+			"cmlimit": "max"
+		}, otherParams));
+	}
+
 	/************* BULK PROCESSING FUNCTIONS ************/
 
 
@@ -836,7 +887,7 @@ class Bot {
 	 * @param {number} [limit=10] - limit on the maximum number of API calls to go through
 	 * @returns {Promise<Object[]>} - resolved with an array of responses of individual calls.
 	 */
-	continuousQuery(query, limit=10) {
+	continuedQuery(query, limit=10) {
 		var responses = [];
 		var callApi = (query, count) => {
 			return this.request(query).then(response => {
@@ -905,7 +956,8 @@ class Bot {
 					responses[idx] = response;
 				}, err => {
 					if (err.code === 'toomanyvalues') {
-						throw new Error(`[mwn] Your account doesn't have apihighlimit right.` + ` Set the option hasApiHighLimit as false`);
+						throw new Error(`[mwn] Your account doesn't have apihighlimit right.` +
+						` Set the option hasApiHighLimit as false`);
 					}
 					responses[idx] = err;
 				}).finally(() => {

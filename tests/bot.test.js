@@ -12,7 +12,7 @@ const assert = require('assert');
 
 const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
-let bot = new mwn.bot({
+let bot = new mwn({
 	silent: true,
 	hasApiHighLimit: false,
 	apiUrl: loginCredentials.apiUrl,
@@ -29,11 +29,14 @@ describe('mwn', async function() {
 	// SUCCESSFUL                           //
 	//////////////////////////////////////////
 
-	it('successfully logs in and gets token', function(done) {
+	it.only('successfully logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
-			expect(bot.editToken).to.be.a('string');
-			assert(bot.editToken.endsWith('+\\'));
+			expect(bot.csrfToken).to.be.a('string');
+			assert(bot.csrfToken.endsWith('+\\'));
+			expect(bot.title.nameIdMap).to.be.a('object');
+			expect(bot.title.legaltitlechars).to.be.a('string');
+			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
 			done();
 		});
 	});
@@ -71,7 +74,7 @@ describe('mwn', async function() {
 			title: randPage,
 			text: '=Some Wikitext 2=',
 			summary: 'Test edit using mwn',
-			token: bot.editToken
+			token: bot.csrfToken
 		}).then((response) => {
 			expect(response.edit.result).to.equal('Success');
 			done();
@@ -232,6 +235,19 @@ describe('mwn', async function() {
 	});
 
 
+	it.only('title methods work', function() {
+		var title = new bot.title('prOJEcT:Xyz');
+		expect(title.toText()).to.equal('Wikipedia:Xyz');
+	});
+
+	it.only('getPagesByPrefix', function(done) {
+		bot.getPagesByPrefix('SD0001test').then(pages => {
+			expect(pages).to.be.instanceOf(Array);
+			expect(pages[0]).to.be.a('string');
+			done();
+		});
+	});
+
 	//////////////////////////////////////////
 	// UNSUCCESSFUL                         //
 	//////////////////////////////////////////
@@ -246,7 +262,7 @@ describe('mwn', async function() {
 	});
 
 	it('cannot edit a page without providing API URL / Login', function(done) {
-		new mwn.bot().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
+		new mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('No URI');
 			done();

@@ -3,9 +3,6 @@
  *
  */
 
-const mwn = {
-	bot: require('./bot'),
-	title: require('./title')
-};
+const mwn = require('./bot');
 
 module.exports = mwn;

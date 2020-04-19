@@ -10,7 +10,7 @@ const assert = require('assert');
 
 const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
-let bot = new mwn.bot({
+let bot = new mwn({
 	hasApiHighLimit: false,
 });
 
@@ -25,8 +25,8 @@ describe('login', async function() {
 			username: loginCredentials.username,
 			password: loginCredentials.password
 		}).then(() => {
-			expect(bot.editToken).to.be.a('string');
-			assert(bot.editToken.endsWith('+\\'));
+			expect(bot.csrfToken).to.be.a('string');
+			assert(bot.csrfToken.endsWith('+\\'));
 			done();
 		});
 	});
@@ -44,8 +44,8 @@ describe('login', async function() {
 			username: loginCredentials.username,
 			password: loginCredentials.password
 		}).then(() => {
-			expect(bot.editToken).to.be.a('string');
-			assert(bot.editToken.endsWith('+\\'));
+			expect(bot.csrfToken).to.be.a('string');
+			assert(bot.csrfToken.endsWith('+\\'));
 			done();
 		});
 	});
