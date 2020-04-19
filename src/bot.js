@@ -40,6 +40,7 @@ const semlog = require('semlog');
 const log = semlog.log;
 
 const Title = require('./title');
+const Page = require('./page');
 const Wikitext_links = require('./wikitext_links');
 const Wikitext_templates = require('./wikitext_templates');
 
@@ -163,6 +164,11 @@ class Bot {
 		 * Title class associated with the bot instance.
 		 */
 		this.title = Title;
+
+		/**
+		 * Page class associated with bot instance
+		 */
+		this.page = Page(this);
 
 		/**
 		 * Wikitext_links class associated with the bot instance
