@@ -29,7 +29,7 @@ describe('mwn', async function() {
 	// SUCCESSFUL                           //
 	//////////////////////////////////////////
 
-	it.only('successfully logs in and gets token & namespaceInfo', function(done) {
+	it('successfully logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
 			expect(bot.csrfToken).to.be.a('string');
@@ -328,6 +328,12 @@ describe('mwn', async function() {
 			expect(e.message).to.include('ENOENT');
 			done();
 		});
+	});
+
+	//// Log out finally to clear the session ////
+
+	it('successfully logs out', function(done) {
+		bot.logout().then(() => done());
 	});
 
 });

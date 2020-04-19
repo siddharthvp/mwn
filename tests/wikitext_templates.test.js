@@ -328,4 +328,9 @@ describe('wikitext_templates', async function() {
 		assert.equal(parsed[0].wikitext, "{{foo|{{{{{{ipsum|}}}|bar}}}|baz}}", "Correct wikitext");
 	});
 
+	it('successfully logs out', function(done) {
+		bot.logout().then(() => done());
+	});
+
+
 });

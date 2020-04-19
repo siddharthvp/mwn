@@ -50,4 +50,8 @@ describe('login', async function() {
 		});
 	});
 
+	it('successfully logs out', function(done) {
+		bot.logout().then(() => done());
+	});
+
 });

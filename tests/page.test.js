@@ -61,4 +61,9 @@ describe('Page', async function() {
 		});
 	});
 
+	it('successfully logs out', function(done) {
+		bot.logout().then(() => done());
+	});
+
+
 });
