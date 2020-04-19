@@ -40,6 +40,7 @@ const semlog = require('semlog');
 const log = semlog.log;
 
 const Title = require('./title');
+const Wikitext_links = require('./wikitext_links');
 
 class Bot {
 
@@ -161,6 +162,11 @@ class Bot {
 		 * Title class associated with the bot instance.
 		 */
 		this.title = Title;
+
+		/**
+		 * Wikitext_links class associated with the bot instance
+		 */
+		this.wikitext_links = Wikitext_links(this);
 
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
