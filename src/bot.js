@@ -43,6 +43,7 @@ const Title = require('./title');
 const Page = require('./page');
 const Wikitext = require('./wikitext');
 const User = require('./user');
+const Category = require('./category');
 
 class Bot {
 
@@ -179,6 +180,11 @@ class Bot {
 		 * User class associated with the bot instance
 		 */
 		this.user = User(this);
+
+		/**
+		 * Category class associated with the bot instance
+		 */
+		this.category = Category(this);
 
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
