@@ -248,48 +248,6 @@ describe('mwn', async function() {
 		});
 	});
 
-	it('wikitext links', function() {
-		var ll = new bot.wikitext_links(`
-			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
-			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
-			An [[image:image|thumb]].
-		`);
-
-		var result = {
-			links: [
-				{ target: 'Plain link', displaytext: 'plain link' },
-				{ target: 'Piped', displaytext: 'link' },
-				{ target: 'Category:Link category', displaytext: 'Category:Link category' },
-				{ target: 'File:Linked file', displaytext: 'disptext' },
-				{ target: 'Category:Link category', displaytext: 'disptext' },
-				{ target: 'File:File link without disp text', displaytext: 'File:File link without disp text' },
-				{ target: 'User:Userpage link with colon', displaytext: 'User:Userpage link with colon' }
-			],
-			files: [
-				{ target: 'File:Beans.jpg', props: 'thumb|200px' },
-				{ target: 'File:Image', props: 'thumb' }
-			],
-			categories: [
-				{ target: 'Category:X1', sortkey: '*' },
-				{ target: 'Category:Category without sortkey', sortkey: '' },
-			]
-		};
-
-		ll.parse();
-		expect(ll.links).to.be.instanceOf(Array);
-		expect(ll.links.length).to.equal(7);
-
-		ll.links.forEach((link, idx) => {
-			assert(link.target.toText() === result.links[idx].target);
-			assert(link.displaytext === result.links[idx].displaytext);
-		});
-		ll.files.forEach((link, idx) => {
-			assert(link.target.toText() === result.files[idx].target);
-			assert(link.props === result.files[idx].props);
-		});
-		ll.categories.forEach((link, idx) => {
-			assert(link.target.toText() === result.categories[idx].target);
-			assert(link.sortkey === result.categories[idx].sortkey);
 		});
 
 	});

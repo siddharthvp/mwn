@@ -1,12 +1,84 @@
-/**
- * Adapted from <https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js>
- * by Evad37 and SD0001, released under CC-BY-SA 3.0 and GFDL
- */
+module.exports = function(bot) {
 
-var wikitext_templates = function(bot) {
+	class Wikitext {
 
-	/** Template
-	 *
+		constructor(wikitext) {
+			this.text = wikitext;
+		}
+
+		/** Parse links, file usages and categories from the wikitext */
+		parse_links() {
+			this.links = [];
+			this.files = [];
+			this.categories = [];
+
+			var n = this.text.length;
+			var startIdx, endIdx;
+			for (let i=0; i<n; i++) {
+				if (this.text[i] === '[' && this.text[i+1] === '[') {
+					startIdx = i + 2;
+				} else if (this.text[i] === ']' && this.text[i+1] === ']') {
+					endIdx = i;
+					processLink(this, this.text.slice(startIdx, endIdx));
+					startIdx = null;
+				}
+			}
+		}
+
+		/**
+		 * Parses templates from wikitext.
+	 	 * Returns an array of Template objects
+		 * var templates = parseTemplates("Hello {{foo |Bar|baz=qux |2=loremipsum|3=}} world");
+		 *  console.log(templates[0]); // gives:
+			{
+				name: "foo",
+				wikitext:"{{foo |Bar|baz=qux | 2 = loremipsum  |3=}}",
+				parameters: [ { name: 1, value: 'Bar', wikitext: '|Bar' },
+					{ name: 'baz', value: 'qux', wikitext: '|baz=qux ' },
+					{ name: '2', value: 'loremipsum', wikitext: '| 2 = loremipsum  ' },
+					{ name: '3', value: '', wikitext: '|3=' }
+				]
+			}
+		 * @param {Boolean} recursive Set to `true` to also parse templates that occur
+		 * within other templates, rather than just top-level templates.
+	     * @return Template[]
+		 */
+		parse_templates(recursive) {
+			return this.templates = parseTemplates(this.text, recursive);
+		}
+
+	}
+
+	var processLink = function(self, linktext) {
+		var [target, displaytext] = linktext.split('|');
+		var noSortkey = false;
+		if (!displaytext) {
+			displaytext = target[0] === ':' ? target.slice(1) : target;
+			noSortkey = true;
+		}
+		var title = bot.title.newFromText(target);
+		if (!title) {
+			return;
+		}
+		if (target[0] !== ':') {
+			if (title.namespace === 6) {
+				self.files.push({
+					target: title,
+					props: linktext.slice(linktext.indexOf('|') + 1)
+				});
+				return;
+			} else if (title.namespace === 14) {
+				self.categories.push({
+					target: title,
+					sortkey: noSortkey ? '' : displaytext
+				});
+				return;
+			}
+		}
+		self.links.push({target: title, displaytext: displaytext});
+	};
+
+	/**
 	 * @class
 	 * Represents the wikitext of template transclusion. Used by #parseTemplates.
 	 * @prop {String} name Name of the template
@@ -17,80 +89,38 @@ var wikitext_templates = function(bot) {
 			value: {String} Wikitext passed to the parameter (whitespace trimmed),
 			wikitext: {String} Full wikitext (including leading pipe, parameter name/equals sign (if applicable), value, and any whitespace)
 		}
-	* @constructor
-	* @param {String} wikitext Wikitext of a template transclusion, starting with '{{' and ending with '}}'.
 	*/
-	var Template = function (wikitext) {
-		this.wikitext = wikitext;
-		this.parameters = [];
-	};
-	Template.constructor = Template;
-	Template.prototype.addParam = function (name, val, wikitext) {
-		this.parameters.push({
-			'name': name,
-			'value': val,
-			'wikitext': '|' + wikitext
-		});
-	};
-	/**
-	 * Get a parameter data by parameter name
-	 */
-	Template.prototype.getParam = function (paramName) {
-		return this.parameters.find(function (p) {
-			return p.name == paramName;
-		});
-	};
-	Template.prototype.setName = function (name) {
-		this.name = name.trim();
-		// this.nameTitle = bot.title.newFromText(name);
-		// if (this.nameTitle.namespace === 0 && name.trim()[0] !== ':') {
-		// 	this.nameTitle.namespace = 10;
-		// }
-	};
+	class Template {
 
-	/**
-	 * parseTemplates
-	 *
-	 * Parses templates from wikitext.
-	 * Returns an array containing the template details:
-	 *  var templates = parseTemplates("Hello {{foo |Bar|baz=qux |2=loremipsum|3=}} world");
-	 *  console.log(templates[0]); // --> object
-		{
-			name: "foo",
-			wikitext:"{{foo |Bar|baz=qux | 2 = loremipsum  |3=}}",
-			parameters: [
-				{
-					name: 1,
-					value: 'Bar',
-					wikitext: '|Bar'
-				},
-				{
-					name: 'baz',
-					value: 'qux',
-					wikitext: '|baz=qux '
-				},
-				{
-					name: '2',
-					value: 'loremipsum',
-					wikitext: '| 2 = loremipsum  '
-				},
-				{
-					name: '3',
-					value: '',
-					wikitext: '|3='
-				}
-			],
-			getParam: function(paramName) {
-				return this.parameters.find(function(p) { return p.name == paramName; });
-			}
+		/**
+		 * @param {String} wikitext Wikitext of a template transclusion,
+		 * starting with '{{' and ending with '}}'.
+		 */
+		constructor(wikitext) {
+			this.wikitext = wikitext;
+			this.parameters = [];
 		}
-	*
-	*
-	* @param {String} wikitext
-	* @param {Boolean} recursive Set to `true` to also parse templates that occur within other templates,
-	*  rather than just top-level templates.
-	* @return object[]
-	*/
+		addParam(name, val, wikitext) {
+			this.parameters.push({
+				'name': name,
+				'value': val,
+				'wikitext': '|' + wikitext
+			});
+		}
+		getParam(paramName) {
+			return this.parameters.find(function (p) {
+				return p.name == paramName;
+			});
+		}
+		setName(name) {
+			this.name = name.trim();
+			// this.nameTitle = bot.title.newFromText(name);
+			// if (this.nameTitle.namespace === 0 && name.trim()[0] !== ':') {
+			// 	this.nameTitle.namespace = 10;
+			// }
+		}
+	}
+
 	var parseTemplates = function (wikitext, recursive) {
 
 		var strReplaceAt = function (string, index, char) {
@@ -130,8 +160,8 @@ var wikitext_templates = function(bot) {
 
 				var pName, pNum, pVal;
 				if (isUnnamedParam) {
-					// Get the next number not already used by either an unnamed parameter, or by a
-					// named parameter like `|1=val`
+					// Get the next number not already used by either an unnamed parameter,
+					// or by a named parameter like `|1=val`
 					while (template.getParam(unnamedIdx)) {
 						unnamedIdx++;
 					}
@@ -225,16 +255,7 @@ var wikitext_templates = function(bot) {
 
 	};
 
-	return class {
-		constructor(wikitext) {
-			this.text = wikitext;
-			this.templates = null;
-		}
-		parse(recursive) {
-			return this.templates = parseTemplates(this.text, recursive);
-		}
-	};
+	return Wikitext;
 
 };
 
-module.exports = wikitext_templates;

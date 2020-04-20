@@ -41,8 +41,7 @@ const log = semlog.log;
 
 const Title = require('./title');
 const Page = require('./page');
-const Wikitext_links = require('./wikitext_links');
-const Wikitext_templates = require('./wikitext_templates');
+const Wikitext = require('./wikitext');
 
 class Bot {
 
@@ -171,14 +170,9 @@ class Bot {
 		this.page = Page(this);
 
 		/**
-		 * Wikitext_links class associated with the bot instance
+		 * Wikitext class associated with the bot instance
 		 */
-		this.wikitext_links = Wikitext_links(this);
-
-		/**
-		 * Wikitext templates parser
-		 */
-		this.wikitext_templates = Wikitext_templates(this);
+		this.wikitext = Wikitext(this);
 
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
