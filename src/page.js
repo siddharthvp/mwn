@@ -1,7 +1,8 @@
 module.exports = function(bot) {
 
-	// XXX: TO BE COMPLETED:
-	return class Page extends bot.title {
+	class Page extends bot.title {
+
+		/**** Get operations *****/
 
 		text() {
 			return bot.request({
@@ -56,13 +57,50 @@ module.exports = function(bot) {
 			}).then(data => data.parse.externallinks);
 		}
 
-		wikitext_links() {
-
+		subpages(options) {
+			return this.request(Object.assign({
+				"action": "query",
+				"list": "allpages",
+				"apprefix": this.title + '/',
+				"apnamespace": this.namespace,
+				"aplimit": "max"
+			}, options)).then((data) => {
+				return data.query.allpages.map(pg => pg.title);
+			});
 		}
-		wikitext_templates() {
 
+
+
+		/**** Post operations *****/
+		// Defined in bot.js
+
+		edit(transform) {
+			return bot.edit(this.toString(), transform);
 		}
 
-	};
+		newSection(header, message, additionalParams) {
+			return bot.newSection(this.toString(), header, message, additionalParams);
+		}
+
+		move(target, summary, options) {
+			return bot.move(this.toString(), target, summary, options);
+		}
+
+		delete(summary, options) {
+			return bot.delete(this.toString(), summary, options);
+		}
+
+		undelete(summary, options) {
+			return bot.undelete(this.toString(), summary, options);
+		}
+
+		purge(options) {
+			return bot.purge(this.toString(), options);
+		}
+
+
+	}
+
+	return Page;
 
 };

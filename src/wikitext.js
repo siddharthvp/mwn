@@ -47,6 +47,10 @@ module.exports = function(bot) {
 			return this.templates = parseTemplates(this.text, recursive);
 		}
 
+		api_parse(options) {
+			return bot.parseWikitext(this.text, options);
+		}
+
 	}
 
 	var processLink = function(self, linktext) {
@@ -114,10 +118,7 @@ module.exports = function(bot) {
 		}
 		setName(name) {
 			this.name = name.trim();
-			// this.nameTitle = bot.title.newFromText(name);
-			// if (this.nameTitle.namespace === 0 && name.trim()[0] !== ':') {
-			// 	this.nameTitle.namespace = 10;
-			// }
+			// this.nameTitle = bot.title.newFromText(name, 10);
 		}
 	}
 
