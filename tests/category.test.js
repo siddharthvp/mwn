@@ -1,6 +1,6 @@
 'use strict';
 
-/* global describe, it */
+/* global describe, it, before, after */
 
 const mwn = require('../src/index');
 
@@ -11,7 +11,7 @@ const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
 let bot = new mwn({
 	silent: true,
-	hasApiHighLimit: false,
+	hasApiHighLimit: true,
 	apiUrl: loginCredentials.apiUrl,
 	username: loginCredentials.username,
 	password: loginCredentials.password
@@ -19,7 +19,7 @@ let bot = new mwn({
 
 describe('Category', async function() {
 
-	it('successfully logs in and gets token & namespaceInfo', function(done) {
+	before('logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
 			expect(bot.csrfToken).to.be.a('string');
@@ -31,16 +31,21 @@ describe('Category', async function() {
 		});
 	});
 
+	after('logs out', function(done) {
+		this.timeout(4000);
+		bot.logout().then(() => done());
+	});
+
 
 	it('category constructor', function() {
 		var cat = new bot.category('Category:Xyz');
-		expect(cat.title === 'Xyz' && cat.namespace === 14);
+		expect(cat.title === 'Xyz' && cat.namespace === 14).to.be.ok;
 		var badCatConstruction = function() {
 			new bot.category('Template:Abc');
 		};
 		expect(badCatConstruction).to.throw('not a category page');
 		var catWithoutNs = new bot.category('Fridawulfa');
-		expect(catWithoutNs.namespace === 14);
+		expect(catWithoutNs.namespace).to.equal(14);
 	});
 
 	it('successfully logs out', function(done) {

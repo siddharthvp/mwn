@@ -1,6 +1,6 @@
 'use strict';
 
-/* global describe, it */
+/* global describe, it, before, after */
 
 const mwn = require('../src/index');
 const log = require('semlog').log;
@@ -14,7 +14,7 @@ const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
 let bot = new mwn({
 	silent: true,
-	hasApiHighLimit: false,
+	hasApiHighLimit: true,
 	apiUrl: loginCredentials.apiUrl,
 	username: loginCredentials.username,
 	password: loginCredentials.password
@@ -29,7 +29,7 @@ describe('mwn', async function() {
 	// SUCCESSFUL                           //
 	//////////////////////////////////////////
 
-	it('successfully logs in and gets token & namespaceInfo', function(done) {
+	before('logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
 			expect(bot.csrfToken).to.be.a('string');
@@ -39,6 +39,10 @@ describe('mwn', async function() {
 			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
 			done();
 		});
+	});
+
+	after('logs out', function(done) {
+		bot.logout().then(() => done());
 	});
 
 	it('successfully executes a raw HTTP request', function(done) {
@@ -323,12 +327,6 @@ describe('mwn', async function() {
 			expect(e.message).to.include('ENOENT');
 			done();
 		});
-	});
-
-	//// Log out finally to clear the session ////
-
-	it('successfully logs out', function(done) {
-		bot.logout().then(() => done());
 	});
 
 });

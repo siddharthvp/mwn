@@ -6,7 +6,7 @@
 
 'use strict';
 
-/* global describe, it */
+/* global describe, it, before, after */
 
 const mwn = require('../src/index');
 
@@ -17,7 +17,7 @@ const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
 let bot = new mwn({
 	silent: true,
-	hasApiHighLimit: false,
+	hasApiHighLimit: true,
 	apiUrl: loginCredentials.apiUrl,
 	username: loginCredentials.username,
 	password: loginCredentials.password
@@ -25,7 +25,7 @@ let bot = new mwn({
 
 describe('wikitext', async function() {
 
-	it('successfully logs in and gets token & namespaceInfo', function(done) {
+	before('logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
 			expect(bot.csrfToken).to.be.a('string');
@@ -35,6 +35,11 @@ describe('wikitext', async function() {
 			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
 			done();
 		});
+	});
+
+	after('logs out', function(done) {
+		this.timeout(4000);
+		bot.logout().then(() => done());
 	});
 
 	it('wikitext parse_links', function() {
@@ -373,10 +378,5 @@ describe('wikitext', async function() {
 		assert.equal(parsed[0].parameters[1].wikitext, "|baz", "Correct second parameter wikitext");
 		assert.equal(parsed[0].wikitext, "{{foo|{{{{{{ipsum|}}}|bar}}}|baz}}", "Correct wikitext");
 	});
-
-	it('successfully logs out', function(done) {
-		bot.logout().then(() => done());
-	});
-
 
 });

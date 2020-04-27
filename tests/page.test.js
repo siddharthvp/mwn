@@ -1,6 +1,6 @@
 'use strict';
 
-/* global describe, it */
+/* global describe, it, before, after */
 
 const mwn = require('../src/index');
 
@@ -11,7 +11,7 @@ const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
 let bot = new mwn({
 	silent: true,
-	hasApiHighLimit: false,
+	hasApiHighLimit: true,
 	apiUrl: loginCredentials.apiUrl,
 	username: loginCredentials.username,
 	password: loginCredentials.password
@@ -21,7 +21,7 @@ describe('Page', async function() {
 
 	var page;
 
-	it('successfully logs in and gets token & namespaceInfo', function(done) {
+	before('logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
 			expect(bot.csrfToken).to.be.a('string');
@@ -37,6 +37,10 @@ describe('Page', async function() {
 		});
 	});
 
+	after('logs out', function(done) {
+		this.timeout(4000);
+		bot.logout().then(() => done());
+	});
 
 	it('page inherits title', function() {
 		expect(page.toText()).to.equal('Wikipedia:Requests/Permissions');
@@ -60,10 +64,5 @@ describe('Page', async function() {
 			done();
 		});
 	});
-
-	it('successfully logs out', function(done) {
-		bot.logout().then(() => done());
-	});
-
 
 });
