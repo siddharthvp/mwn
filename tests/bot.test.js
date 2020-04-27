@@ -204,6 +204,43 @@ describe('mwn', async function() {
 		});
 	});
 
+	it('batch operation', function(done) {
+		bot.batchOperation('abfwefdvfvdfbojcsjcs'.split(''), (item, idx) => {
+			return new Promise((resolve, reject) => {
+				setTimeout(function() {
+					if (idx % 4 === 0) {
+						reject();
+					} else {
+						resolve();
+					}
+				}, idx * 10);
+			});
+		}, 7).then((res) => {
+			expect(res.successes).to.equal(15);
+			expect(res.failures).to.equal(5);
+			done();
+		});
+	});
+
+	it('series batch operation', function(done) {
+		this.timeout(4000);
+		bot.seriesBatchOperation('abfwefdvfvdfbojcsjcs'.split(''), (item, idx) => {
+			return new Promise((resolve, reject) => {
+				setTimeout(function() {
+					if (idx % 4 === 0) {
+						reject();
+					} else {
+						resolve();
+					}
+				}, idx * 10);
+			});
+		}, 3).then((res) => {
+			expect(res.successes).to.equal(15);
+			expect(res.failures).to.equal(5);
+			done();
+		});
+	});
+
 	// doesn't work
 	it.skip('successfully uploads and overwrites an image with uploadOverwrite()', function(done) {
 		this.timeout(10000);

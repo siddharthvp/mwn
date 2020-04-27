@@ -36,6 +36,7 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request');
 const semlog = require('semlog');
+const ispromise = require('is-promise');
 
 const log = semlog.log;
 
@@ -1037,7 +1038,7 @@ class Bot {
 					for (let i = 0; i < numItemsInLastBatch; i++) {
 						let idx = batchIdx * concurrency + i;
 						finalBatchPromises[i] = worker(list[idx], idx);
-						if (!(finalBatchPromises[i] instanceof Promise)) {
+						if (!ispromise(finalBatchPromises[i])) {
 							throw new Error('batchOperation worker function must return a promise');
 						}
 						finalBatchSettledPromises[i] = new Promise((resolve) => {
@@ -1058,7 +1059,7 @@ class Bot {
 					let idx = batchIdx * concurrency + i;
 
 					var promise = worker(list[idx], idx);
-					if (!(promise instanceof Promise)) {
+					if (!ispromise(promise)) {
 						throw new Error('batchOperation worker function must return a promise');
 					}
 					promise.then(incrementSuccesses, incrementFailures)
@@ -1104,7 +1105,7 @@ class Bot {
 					return resolve({ successes, failures });
 				}
 				var promise = worker(list[idx], idx);
-				if (!(promise instanceof Promise)) {
+				if (!ispromise(promise)) {
 					throw new Error('seriesBatchOperation worker function must return a promise');
 				}
 				promise.then(incrementSuccesses, incrementFailures)

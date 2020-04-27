@@ -16,6 +16,7 @@
   "author": "Siddharth VP",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "is-promise": "^4.0.0",
     "request": "^2.88.2",
     "semlog": "^0.6.10"
   },
