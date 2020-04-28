@@ -32,6 +32,7 @@ describe('mwn', async function() {
 	before('logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
+			log('[S] Logged in');
 			expect(bot.csrfToken).to.be.a('string');
 			assert(bot.csrfToken.endsWith('+\\'));
 			expect(bot.title.nameIdMap).to.be.a('object');
@@ -83,6 +84,34 @@ describe('mwn', async function() {
 			expect(response.edit.result).to.equal('Success');
 			done();
 		}).catch(log);
+	});
+
+	it('correctly gets site info', function(done) {
+
+		// unset them to check if they'll correct reset
+		bot.title.nameIdMap = null;
+		bot.title.idNameMap = null;
+		bot.title.legaltitlechars = null;
+
+		expect(function() {
+			new bot.title('werwerw');
+		}).to.throw('namespace data unavailable: run getSiteInfo() or login() first on the mwn object');
+
+		bot.getSiteInfo().then(function() {
+			expect(bot.title.nameIdMap).to.be.a('object');
+			expect(bot.title.legaltitlechars).to.be.a('string');
+			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
+			done();
+		});
+	});
+
+	it('gets the server time', function(done) {
+		bot.getServerTime().then(time => {
+			expect(time).to.be.a('string');
+			var dateobj = new Date(time);
+			expect(dateobj.getTime()).to.not.be.NaN;
+			done();
+		});
 	});
 
 	it('successfully reads a page with read()', function(done) {

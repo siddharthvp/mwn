@@ -8,45 +8,16 @@
  *
  */
 
-const request = require('request');
-
 var NS_MAIN = 0;
 var NS_TALK = 1;
 var NS_SPECIAL = -1;
 
 class Title {
 
-	static getNamespaceData(apiUrl) {
-		return new Promise((resolve, reject) => {
-			request({
-				method: 'GET',
-				uri: apiUrl,
-				headers: {
-					'User-Agent': 'mwn'
-				},
-				qs: {
-					"action": "query",
-					"format": "json",
-					"meta": "siteinfo",
-					"formatversion": "2",
-					"siprop": "general|namespacealiases|namespaces"
-				},
-				timeout: 120000,
-				jar: true,
-				time: true,
-				json: true
-			}, function(error, response, json) {
-				if (error) {
-					return reject(error);
-				}
-				Title.processNamespaceData(json);
-				resolve();
-			});
-
-		});
-	}
-
 	static processNamespaceData(json) {
+
+		var namespaceNorm = ns => (ns || '').toLowerCase().replace(/ /g, '_');
+
 		// Analog of mw.config.get('wgFormattedNamespaces')
 		Title.idNameMap = {};
 
@@ -55,11 +26,11 @@ class Title {
 
 		Object.values(json.query.namespaces).forEach(ns => {
 			Title.idNameMap[ns.id] = ns.name;
-			Title.nameIdMap[Title.namespaceNorm(ns.name)] = ns.id;
-			Title.nameIdMap[Title.namespaceNorm(ns.canonical)] = ns.id;
+			Title.nameIdMap[namespaceNorm(ns.name)] = ns.id;
+			Title.nameIdMap[namespaceNorm(ns.canonical)] = ns.id;
 		});
 		json.query.namespacealiases.forEach(ns => {
-			Title.nameIdMap[Title.namespaceNorm(ns.alias)] = ns.id;
+			Title.nameIdMap[namespaceNorm(ns.alias)] = ns.id;
 		});
 
 		// Analog of mw.config.get('wgLegalTitleChars')
@@ -71,8 +42,10 @@ class Title {
 			.map(ns => ns.id);
 	}
 
-	static namespaceNorm(ns) {
-		return (ns || '').toLowerCase().replace(/ /g, '_');
+	static checkData() {
+		if (!Title.nameIdMap || !Title.idNameMap || !Title.legaltitlechars) {
+			throw new Error('namespace data unavailable: run getSiteInfo() or login() first on the mwn object');
+		}
 	}
 
 	constructor( title, namespace ) {
@@ -244,12 +217,6 @@ class Title {
 /**
  * Private members
  */
-
-Title.checkData = function() {
-	if (!Title.nameIdMap || !Title.idNameMap || !Title.legaltitlechars) {
-		throw new Error('namespace data unavailable: run title.getNamespaceData() first');
-	}
-};
 
 var parse = function(title, defaultNamespace) {
 	Title.checkData();

@@ -163,7 +163,7 @@ class Bot {
 		this.requestOptions = this.setRequestOptions(customRequestOptions || {});
 
 		/**
-		 * Title class associated with the bot instance.
+		 * Title class associated with the bot instance
 		 */
 		this.title = Title;
 
@@ -401,8 +401,8 @@ class Bot {
 			type: 'login',
 			siprop: 'general|namespaces|namespacealiases',
 
-			// unset the assert parameter (in case it's given by the user as a default option),
-			// as it will invariably fail until login is performed.
+			// unset the assert parameter (in case it's given by the user as a default
+			// option), as it will invariably fail until login is performed.
 			assert: undefined
 
 		}).then((response) => {
@@ -459,6 +459,21 @@ class Bot {
 		}); // returns an empty response if successful
 	}
 
+	/**
+	 * Gets namespace-related information for use in title nested class.
+	 * This need not be used if login() is being used. This is for cases
+	 * where mwn needs to be used without logging in.
+	 * @returns {Promise}
+	 */
+	getSiteInfo() {
+		return this.request({
+			action: 'query',
+			meta: 'siteinfo',
+			siprop: 'general|namespaces|namespacealiases'
+		}).then(result => {
+			Title.processNamespaceData(result);
+		});
+	}
 
 	/**
 	 * Gets an edit token (also used for most other actions
