@@ -1022,13 +1022,22 @@ class Bot {
 	 * @returns {Promise} - resolved when all API calls have finished.
 	 */
 	batchOperation(list, worker, concurrency=5) {
-		var successes = 0, failures = 0;
-		var incrementSuccesses = () => { successes++; };
-		var incrementFailures = () => { failures++; };
+		var counts = {
+			successes: 0,
+			failures: 0
+		};
+		var failures = [];
+		var incrementSuccesses = () => {
+			counts.successes++;
+		};
+		var incrementFailures = (idx) => {
+			counts.failures++;
+			failures.push(list[idx]);
+		};
 		var updateStatusText = () => {
-			var percentageFinished = Math.round((successes + failures) / list.length * 100);
-			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
-			var statusText = `[+] Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
+			var percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
+			var percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
+			var statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
 			if (!this.options.silent) {
 				log(statusText);
 			}
@@ -1040,6 +1049,7 @@ class Bot {
 
 				// Last batch
 				if (batchIdx === numBatches - 1) {
+
 					var numItemsInLastBatch = list.length - batchIdx * concurrency;
 					var finalBatchPromises = new Array(numItemsInLastBatch);
 
@@ -1049,7 +1059,6 @@ class Bot {
 					// finalBatchPromises are resolved or rejected.
 					var finalBatchSettledPromises = new Array(numItemsInLastBatch);
 
-					var savedIdx = 0;
 					for (let i = 0; i < numItemsInLastBatch; i++) {
 						let idx = batchIdx * concurrency + i;
 						finalBatchPromises[i] = worker(list[idx], idx);
@@ -1059,13 +1068,14 @@ class Bot {
 						finalBatchSettledPromises[i] = new Promise((resolve) => {
 							return finalBatchPromises[i].then(resolve, resolve);
 						});
-						finalBatchPromises[i].then(incrementSuccesses, incrementFailures).finally(function() {
-							updateStatusText();
-							finalBatchSettledPromises[savedIdx++] = Promise.resolve();
-						});
+						finalBatchPromises[i].then(incrementSuccesses, incrementFailures.bind(null, idx))
+							.finally(function() {
+								updateStatusText();
+								finalBatchSettledPromises[i] = Promise.resolve();
+							});
 					}
 					Promise.all(finalBatchSettledPromises).then(() => {
-						resolve({ successes, failures });
+						resolve({ counts, failures });
 					});
 					return;
 				}
@@ -1077,14 +1087,13 @@ class Bot {
 					if (!ispromise(promise)) {
 						throw new Error('batchOperation worker function must return a promise');
 					}
-					promise.then(incrementSuccesses, incrementFailures)
-						.finally(() => {
-							updateStatusText();
-							// last item in batch: trigger the next batch's API calls
-							if (i === concurrency - 1) {
-								sendBatch(batchIdx + 1);
-							}
-						});
+					promise.then(incrementSuccesses, incrementFailures.bind(null, idx)).finally(() => {
+						updateStatusText();
+						// last item in batch: trigger the next batch's API calls
+						if (i === concurrency - 1) {
+							sendBatch(batchIdx + 1);
+						}
+					});
 				}
 
 			};
@@ -1102,13 +1111,22 @@ class Bot {
 	 * @returns {Promise} - resolved when all API calls have finished
 	 */
 	seriesBatchOperation(list, worker, delay=5000) {
-		var successes = 0, failures = 0;
-		var incrementSuccesses = () => { successes++; };
-		var incrementFailures = () => { failures++; };
+		var counts = {
+			successes: 0,
+			failures: 0
+		};
+		var failures = [];
+		var incrementSuccesses = () => {
+			counts.successes++;
+		};
+		var incrementFailures = (idx) => {
+			counts.failures++;
+			failures.push(list[idx]);
+		};
 		var updateStatusText = () => {
-			var percentageFinished = Math.round((successes + failures) / list.length * 100);
-			var percentageSuccesses = Math.round(successes / (successes + failures) * 100);
-			var statusText = `[+] Finished ${successes + failures}/${list.length} (${percentageFinished}%) tasks, of which ${successes} (${percentageSuccesses}%) were successful, and ${failures} failed.`;
+			var percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
+			var percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
+			var statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
 			if (!this.options.silent) {
 				log(statusText);
 			}
@@ -1116,14 +1134,14 @@ class Bot {
 
 		return new Promise(function(resolve) {
 			var trigger = function(idx) {
-				if (list[idx] === undefined) {
-					return resolve({ successes, failures });
+				if (list[idx] === undefined) { // reached the end
+					return resolve({ counts, failures });
 				}
 				var promise = worker(list[idx], idx);
 				if (!ispromise(promise)) {
 					throw new Error('seriesBatchOperation worker function must return a promise');
 				}
-				promise.then(incrementSuccesses, incrementFailures)
+				promise.then(incrementSuccesses, incrementFailures.bind(null, idx))
 					.finally(function() {
 						updateStatusText();
 						setTimeout(function() {
