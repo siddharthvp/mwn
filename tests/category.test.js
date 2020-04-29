@@ -2,7 +2,7 @@
 
 /* global describe, it, before, after */
 
-const mwn = require('../src/index');
+const mwn = require('../src/bot');
 
 const expect = require('chai').expect;
 const assert = require('assert');
@@ -47,10 +47,5 @@ describe('Category', async function() {
 		var catWithoutNs = new bot.category('Fridawulfa');
 		expect(catWithoutNs.namespace).to.equal(14);
 	});
-
-	it('successfully logs out', function(done) {
-		bot.logout().then(() => done());
-	});
-
 
 });

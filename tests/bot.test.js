@@ -2,7 +2,7 @@
 
 /* global describe, it, before, after */
 
-const mwn = require('../src/index');
+const mwn = require('../src/bot');
 const log = require('semlog').log;
 const crypto = require('crypto');
 
@@ -63,28 +63,6 @@ describe('mwn', async function() {
 		}).catch(log);
 	});
 
-	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
-
-	it('successfully creates a page with create()', function(done) {
-		bot.create(randPage, '=Some more Wikitext= \n[[Category:Test Page]]','Test creation using mwn')
-			.then((response) => {
-				expect(response.result).to.equal('Success');
-				done();
-			}).catch(log);
-	});
-
-	it('successfully edits a page with custom request()', function(done) {
-		bot.request({
-			action: 'edit',
-			title: randPage,
-			text: '=Some Wikitext 2=',
-			summary: 'Test edit using mwn',
-			token: bot.csrfToken
-		}).then((response) => {
-			expect(response.edit.result).to.equal('Success');
-			done();
-		}).catch(log);
-	});
 
 	it('correctly gets site info', function(done) {
 
@@ -113,6 +91,9 @@ describe('mwn', async function() {
 			done();
 		});
 	});
+
+
+
 
 	it('successfully reads a page with read()', function(done) {
 		bot.read('Main Page').then((response) => {
@@ -160,55 +141,6 @@ describe('mwn', async function() {
 			expect(response.length).to.equal(60);
 			assert(response[45].missing === true ||
 				typeof response[45].revisions[0].content === 'string');
-			done();
-		});
-	});
-
-	it('successfully edits a page with save()', function(done) {
-		bot.save(randPage, '=Some 234 more Wikitext=', 'Some summary').then(() => {
-			return bot.save(randPage, '=Some 534 more Wikitext=');
-		}).then((response) => {
-			expect(response.result).to.equal('Success');
-			done();
-		});
-	});
-
-	it('successfully creates a new section with newSection()', function(done) {
-		bot.newSection(randPage, 'Test section', 'Test content').then((response) => {
-			expect(response.result).to.equal('Success');
-			done();
-		});
-	});
-
-	it('successfully edits a page with edit()', function(done) {
-		bot.edit(randPage, function(rev) {
-			expect(rev.content).to.be.a('string');
-			expect(rev.timestamp).to.be.a('string');
-			return {
-				text: rev.content + '\n\n\n' + rev.content,
-				summary: 'test edit with mwn edit()',
-				minor: 1
-			};
-		}).then(function(result) {
-			expect(result.result).to.equal('Success');
-			done();
-		});
-	});
-
-	var randPageMoved = randPage + '-moved';
-
-	it('successfully moves a page without leaving redirect', function(done) {
-		bot.move(randPage, randPageMoved, 'Test move using mwn', {noredirect: 1}).then((response) => {
-			expect(response).to.be.an('object');
-			expect(response).to.include.all.keys('from', 'to', 'redirectcreated');
-			expect(response.redirectcreated).to.equal(false);
-			done();
-		});
-	});
-
-	it('successfully deletes a page with delete()', function(done) {
-		bot.delete(randPageMoved, 'Test mwn').then((response) => {
-			expect(response.logid).to.be.a('number');
 			done();
 		});
 	});
@@ -274,36 +206,6 @@ describe('mwn', async function() {
 		});
 	});
 
-	// doesn't work
-	it.skip('successfully uploads and overwrites an image with uploadOverwrite()', function(done) {
-		this.timeout(10000);
-		bot.uploadOverwrite('SD0001test-43543.png', __dirname + '/mocking/example2.png', 'Test Upload using mwn')
-			.then((response) => {
-				expect(response.upload.result).to.equal('Success');
-				done();
-			}).catch((e) => {
-				log(e);
-			});
-	});
-
-	// it('successfully uploads without providing a filename with upload()', function(done) {
-	// 	bot.loginGetToken(loginCredentials.valid).then(() => {
-	// 		return bot.upload(false, __dirname + '/mocking/example1.png');
-	// 	}).then((response) => {
-	// 		expect(response.upload.result).to.equal('Warning');
-	// 		done();
-	// 	}).catch((e) => {
-	// 		log(e);
-	// 	});
-	// });
-
-	it.skip('successfully skips an upload of an image duplicate with upload()', function(done) {
-		bot.upload('SD0001test-43543.png', __dirname + '/mocking/example1.png', 'Test Reasons').then((response) => {
-			expect(response.upload.result).to.equal('Warning');
-			done();
-		});
-	});
-
 
 	it('title methods work', function() {
 		var title = new bot.title('prOJEcT:Xyz');
@@ -318,9 +220,6 @@ describe('mwn', async function() {
 		});
 	});
 
-		});
-
-	});
 
 	//////////////////////////////////////////
 	// UNSUCCESSFUL                         //
@@ -354,6 +253,114 @@ describe('mwn', async function() {
 		bot.upload(false, __dirname + '/mocking/NonExistingImage.png').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('ENOENT');
+			done();
+		});
+	});
+
+});
+
+
+describe.skip('methods which modify the wiki', async function() {
+	this.timeout(7000);
+
+	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
+
+	it('successfully creates a page with create()', function(done) {
+		bot.create(randPage, '=Some more Wikitext= \n[[Category:Test Page]]','Test creation using mwn')
+			.then((response) => {
+				expect(response.result).to.equal('Success');
+				done();
+			}).catch(log);
+	});
+
+	it('successfully edits a page with custom request()', function(done) {
+		bot.request({
+			action: 'edit',
+			title: randPage,
+			text: '=Some Wikitext 2=',
+			summary: 'Test edit using mwn',
+			token: bot.csrfToken
+		}).then((response) => {
+			expect(response.edit.result).to.equal('Success');
+			done();
+		}).catch(log);
+	});
+
+	it('successfully edits a page with save()', function(done) {
+		bot.save(randPage, '=Some 234 more Wikitext=', 'Some summary').then(() => {
+			return bot.save(randPage, '=Some 534 more Wikitext=');
+		}).then((response) => {
+			expect(response.result).to.equal('Success');
+			done();
+		});
+	});
+
+	it('successfully creates a new section with newSection()', function(done) {
+		bot.newSection(randPage, 'Test section', 'Test content').then((response) => {
+			expect(response.result).to.equal('Success');
+			done();
+		});
+	});
+
+	it('successfully edits a page with edit()', function(done) {
+		bot.edit(randPage, function(rev) {
+			expect(rev.content).to.be.a('string');
+			expect(rev.timestamp).to.be.a('string');
+			return {
+				text: rev.content + '\n\n\n' + rev.content,
+				summary: 'test edit with mwn edit()',
+				minor: 1
+			};
+		}).then(function(result) {
+			expect(result.result).to.equal('Success');
+			done();
+		});
+	});
+
+	var randPageMoved = randPage + '-moved';
+
+	it('successfully moves a page without leaving redirect', function(done) {
+		bot.move(randPage, randPageMoved, 'Test move using mwn', {noredirect: 1}).then((response) => {
+			expect(response).to.be.an('object');
+			expect(response).to.include.all.keys('from', 'to', 'redirectcreated');
+			expect(response.redirectcreated).to.equal(false);
+			done();
+		});
+	});
+
+	it('successfully deletes a page with delete()', function(done) {
+		bot.delete(randPageMoved, 'Test mwn').then((response) => {
+			expect(response.logid).to.be.a('number');
+			done();
+		});
+	});
+
+	// doesn't work
+	it.skip('successfully uploads and overwrites an image with uploadOverwrite()', function(done) {
+		this.timeout(10000);
+		bot.uploadOverwrite('SD0001test-43543.png', __dirname + '/mocking/example2.png', 'Test Upload using mwn')
+			.then((response) => {
+				expect(response.upload.result).to.equal('Success');
+				done();
+			}).catch((e) => {
+				log(e);
+			});
+	});
+
+	// it('successfully uploads without providing a filename with upload()', function(done) {
+	// 	bot.loginGetToken(loginCredentials.valid).then(() => {
+	// 		return bot.upload(false, __dirname + '/mocking/example1.png');
+	// 	}).then((response) => {
+	// 		expect(response.upload.result).to.equal('Warning');
+	// 		done();
+	// 	}).catch((e) => {
+	// 		log(e);
+	// 	});
+	// });
+
+	it.skip('successfully skips an upload of an image duplicate with upload()', function(done) {
+		bot.upload('SD0001test-43543.png', __dirname + '/mocking/example1.png', 'Test Reasons').then((response) => {
+			expect(response.upload.result).to.equal('Warning');
 			done();
 		});
 	});

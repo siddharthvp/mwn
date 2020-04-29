@@ -2,7 +2,7 @@
 
 /* global describe, it */
 
-const mwn = require('../src/index');
+const mwn = require('../src/bot');
 
 const chai = require('chai');
 const expect = chai.expect;
