@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global describe, it, before, after */
-
 const mwn = require('../src/bot');
 
 const expect = require('chai').expect;

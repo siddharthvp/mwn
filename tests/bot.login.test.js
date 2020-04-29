@@ -1,7 +1,5 @@
 'use strict';
 
-/* global describe, it */
-
 const mwn = require('../src/bot');
 
 const chai = require('chai');

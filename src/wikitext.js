@@ -82,6 +82,8 @@ module.exports = function(bot) {
 		self.links.push({target: title, displaytext: displaytext});
 	};
 
+	// Copied from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
+	// by Evad37 (cc-by-sa-3.0/GFDL)
 	/**
 	 * @class
 	 * Represents the wikitext of template transclusion. Used by #parseTemplates.
@@ -122,6 +124,9 @@ module.exports = function(bot) {
 		}
 	}
 
+	// Copied from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
+	// adapted by Evad37 from the original by written by me at
+	// https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js (cc-by-sa-3.0/GFDL)
 	var parseTemplates = function (wikitext, recursive) {
 
 		var strReplaceAt = function (string, index, char) {

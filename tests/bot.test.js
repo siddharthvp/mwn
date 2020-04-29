@@ -1,7 +1,5 @@
 'use strict';
 
-/* global describe, it, before, after */
-
 const mwn = require('../src/bot');
 const log = require('semlog').log;
 const crypto = require('crypto');

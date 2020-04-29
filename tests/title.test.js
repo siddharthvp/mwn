@@ -3,8 +3,6 @@
  *
  */
 
-/* globals describe, it */
-
 const Title = require('../src/title');
 
 const assert = require('assert');
