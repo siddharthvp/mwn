@@ -1019,9 +1019,11 @@ class Bot {
 	 * @param {number} [concurrency=5] - number of concurrent operations to take place.
 	 * Set this to 1 for sequential operations. Default 5. Set this according to how
 	 * expensive the API calls made by worker are.
-	 * @returns {Promise} - resolved when all API calls have finished.
+	 * @param {number} [retries=0] - max number of times failing actions should be retried.
+	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
+	 * { failures: [ ...list of failed items... ] }
 	 */
-	batchOperation(list, worker, concurrency=5) {
+	batchOperation(list, worker, concurrency=5, retries=0) {
 		var counts = {
 			successes: 0,
 			failures: 0
@@ -1044,8 +1046,8 @@ class Bot {
 		};
 		var numBatches = Math.ceil(list.length / concurrency);
 
-		return new Promise(function(resolve) {
-			var sendBatch = function(batchIdx) {
+		return new Promise((resolve) => {
+			var sendBatch = (batchIdx) => {
 
 				// Last batch
 				if (batchIdx === numBatches - 1) {
@@ -1075,7 +1077,11 @@ class Bot {
 							});
 					}
 					Promise.all(finalBatchSettledPromises).then(() => {
-						resolve({ counts, failures });
+						if (counts.failures !== 0 && retries > 0) {
+							resolve(this.batchOperation(failures, worker, concurrency, retries - 1));
+						} else {
+							resolve({ failures });
+						}
 					});
 					return;
 				}
@@ -1108,9 +1114,11 @@ class Bot {
 	 * @param {Array} list
 	 * @param {Function} worker - must return a promise
 	 * @param {number} [delay=5000] - number of milliseconds of delay
-	 * @returns {Promise} - resolved when all API calls have finished
+	 * @param {number} [retries=0] - max number of times failing actions should be retried.
+	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
+	 * { failures: [ ...list of failed items... ] }
 	 */
-	seriesBatchOperation(list, worker, delay=5000) {
+	seriesBatchOperation(list, worker, delay=5000, retries=0) {
 		var counts = {
 			successes: 0,
 			failures: 0
@@ -1132,10 +1140,14 @@ class Bot {
 			}
 		};
 
-		return new Promise(function(resolve) {
-			var trigger = function(idx) {
+		return new Promise((resolve) => {
+			var trigger = (idx) => {
 				if (list[idx] === undefined) { // reached the end
-					return resolve({ counts, failures });
+					if (counts.failures !== 0 && retries > 0) {
+						return resolve(this.seriesBatchOperation(failures, worker, delay, retries - 1));
+					} else {
+						return resolve({ counts, failures });
+					}
 				}
 				var promise = worker(list[idx], idx);
 				if (!ispromise(promise)) {
