@@ -338,9 +338,14 @@ class Bot {
 			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
 			if (response.error) {
 
+				// This will not work if the token type to be used is defined by an
+				// extension, and not a part of mediawiki core
 				if (response.error.code === 'badtoken') {
-					return this.getCsrfToken().then(() => {
-						requestOptions.form.token = this.csrfToken;
+					return Promise.all(
+						[this.getTokenType(requestOptions.form.action), this.getTokens()]
+					).then(([tokentype]) => {
+						var token = this.state[ (tokentype || 'csrf') + 'token' ];
+						requestOptions.form.token = token;
 						return this.request({}, requestOptions);
 					});
 				}
@@ -476,24 +481,20 @@ class Bot {
 	}
 
 	/**
-	 * Gets an edit token (also used for most other actions
-	 * such as moving and deleting)
-	 * This is only compatible with MW >= 1.24
-	 *
-	 * @returns {Promise}
+	 * Get tokens and saves them in this.state
+	 * @returns {Promise<void>}
 	 */
-	getCsrfToken() {
+	getTokens() {
 		return this.request({
 			action: 'query',
 			meta: 'tokens',
-			type: 'csrf'
+			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
 		}).then((response) => {
-			if (response.query && response.query.tokens && response.query.tokens.csrftoken) {
+			if (response.query && response.query.tokens) {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
-				return this.csrfToken;
 			} else {
-				let err = new Error('Could not get edit token');
+				let err = new Error('Could not get token');
 				err.response = response;
 				return Promise.reject(err) ;
 			}
@@ -501,10 +502,34 @@ class Bot {
 	}
 
 	/**
+	 * Gets an edit token (also used for most other actions
+	 * such as moving and deleting)
+	 * This is only compatible with MW >= 1.24
+	 * @returns {Promise<string>}
+	 */
+	getCsrfToken() {
+		return this.getTokens().then(() => this.csrfToken);
+	}
+
+	/**
+	 * Get type of token to be used with an API action
+	 * @param {string} action - API action parameter
+	 * @returns {Promise<string>}
+	 */
+	getTokenType(action) {
+		return this.request({
+			action: 'paraminfo',
+			modules: action
+		}).then(response => {
+			return response.paraminfo.modules[0].parameters.find(p => p.name === 'token').tokentype;
+		});
+	}
+
+	/**
 	 * Combines Login  with getCsrfToken
 	 *
 	 * @param loginOptions
-	 * @returns {Promise}
+	 * @returns {Promise<string>}
 	 */
 	loginGetToken(loginOptions) {
 		return this.login(loginOptions).then(() => {
