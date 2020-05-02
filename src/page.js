@@ -4,6 +4,10 @@ module.exports = function(bot) {
 
 		/**** Get operations *****/
 
+		/**
+		 * Get page wikitext
+		 * @returns {Promise<string>}
+		 * */
 		text() {
 			return bot.request({
 				"action": "parse",
@@ -11,6 +15,12 @@ module.exports = function(bot) {
 				"prop": "wikitext"
 			}).then(data => data.parse.wikitext);
 		}
+
+		/**
+		 * Get page categories
+		 * @returns {Promise<Object[]>} Resolved with array of objects like
+		 * { sortkey: '...', category: '...', hidden: true }
+		 */
 		categories() {
 			return bot.request({
 				"action": "parse",
@@ -18,6 +28,12 @@ module.exports = function(bot) {
 				"prop": "categories"
 			}).then(data => data.parse.categories);
 		}
+
+		/**
+		 * Get templates transcluded on the page
+		 * @returns {Promise<Object[]>} Resolved with array of objects like
+		 * { ns: 10, title: 'Template:Cite web', exists: true }
+		 */
 		templates() {
 			return bot.request({
 				"action": "parse",
@@ -25,6 +41,12 @@ module.exports = function(bot) {
 				"prop": "templates"
 			}).then(data => data.parse.templates);
 		}
+
+		/**
+		 * Get links on the page
+		 * @returns {Promise<Object[]>} Resolved with array of objects like
+		 * { ns: 0, title: 'Main Page', exists: true }
+		 */
 		links() {
 			return bot.request({
 				"action": "parse",
@@ -32,16 +54,24 @@ module.exports = function(bot) {
 				"prop": "links"
 			}).then(data => data.parse.links);
 		}
-		backlinks() {
-			// XXX: FIX UP continuedQuery first
-			// return bot.continuedQuery({
-			// 	"action": "query",
-			// 	"prop": "linkshere",
-			// 	"titles": this.toString(),
-			// 	"lhprop": "title",
-			// 	"lhlimit": "max"
-			// }).then(data => data.query.pages[0].linkshere.map(pg => pg.title));
-		}
+
+
+		// backlinks() {
+		// XXX: FIX UP continuedQuery first
+		// return bot.continuedQuery({
+		// 	"action": "query",
+		// 	"prop": "linkshere",
+		// 	"titles": this.toString(),
+		// 	"lhprop": "title",
+		// 	"lhlimit": "max"
+		// }).then(data => data.query.pages[0].linkshere.map(pg => pg.title));
+		//}
+
+
+		/**
+		 * Returns list of images on the page
+		 * @returns {Promise<String[]>} - array elements don't include File: prefix
+		 */
 		images() {
 			return bot.request({
 				"action": "parse",
@@ -49,6 +79,11 @@ module.exports = function(bot) {
 				"prop": "images"
 			}).then(data => data.parse.images);
 		}
+
+		/**
+		 * Returns list of external links on the page
+		 * @returns {Promise<String[]>}
+		 */
 		externallinks() {
 			return bot.request({
 				"action": "parse",
@@ -57,6 +92,10 @@ module.exports = function(bot) {
 			}).then(data => data.parse.externallinks);
 		}
 
+		/**
+		 * Returns list of subpages of the page
+		 * @returns {Promise<String[]>}
+		 */
 		subpages(options) {
 			return this.request(Object.assign({
 				"action": "query",

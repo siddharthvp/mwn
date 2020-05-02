@@ -755,9 +755,7 @@ class Bot {
 	 * @param {string} content Content to parse.
 	 * @param {Object} additionalParams Parameters object to set custom settings, e.g.
 	 *   redirects, sectionpreview.  prop should not be overridden.
-	 * @return {Promise}
-	 * @return {Function} return.then
-	 * @return {string} return.then.data Parsed HTML of `wikitext`.
+	 * @return {Promise<string>}
 	 */
 	parseWikitext(content, additionalParams) {
 		return this.request(merge({
@@ -776,9 +774,7 @@ class Bot {
 	 * @param {string} title Title of the page to parse
 	 * @param {Object} additionalParams Parameters object to set custom settings, e.g.
 	 *   redirects, sectionpreview.  prop should not be overridden.
-	 * @return {Promise}
-	 * @return {Function} return.then
-	 * @return {string} return.then.data Parsed HTML of `wikitext`.
+	 * @return {Promise<string>}
 	 */
 	parseTitle(title, additionalParams) {
 		return this.request(merge({
@@ -930,10 +926,7 @@ class Bot {
 	 * @returns {Promise<string[]>}
 	 */
 	getPagesInCategory(category, otherParams) {
-		var title = Title.newFromText(category);
-		if (title.namespace === 0) {
-			title.namespace = 14;
-		}
+		var title = Title.newFromText(category, 14);
 		return this.request(merge({
 			"action": "query",
 			"list": "categorymembers",

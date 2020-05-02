@@ -2,6 +2,10 @@ module.exports = function(bot) {
 
 	class Category extends bot.page {
 
+		/**
+		 * @constructor
+		 * @param {string} name - name of the category
+		 */
 		constructor(name) {
 			super(name, 14);
 			if (this.namespace !== 14) {
@@ -9,6 +13,13 @@ module.exports = function(bot) {
 			}
 		}
 
+		// TODO: Add recursive modes
+
+		/**
+		 * Get all members in the category - this includes subcategories, pages and files
+		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+		 * { pageid: 324234, ns: 0, title: 'Main Page' }
+		 */
 		members() {
 			return bot.request({
 				"action": "query",
@@ -17,6 +28,11 @@ module.exports = function(bot) {
 			}).then(data => data.query.categorymembers);
 		}
 
+		/**
+		 * Get all pages in the category - does not include subcategories or files
+		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+		 * { pageid: 324234, ns: 0, title: 'Main Page' }
+		 */
 		pages() {
 			return bot.request({
 				"action": "query",
@@ -26,6 +42,11 @@ module.exports = function(bot) {
 			}).then(data => data.query.categorymembers);
 		}
 
+		/**
+		 * Get all subcategories of the category
+		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+		 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
+		 */
 		subcats() {
 			return bot.request({
 				"action": "query",
@@ -35,6 +56,11 @@ module.exports = function(bot) {
 			}).then(data => data.query.categorymembers);
 		}
 
+		/**
+		 * Get all files in the category
+		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+		 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
+		 */
 		files() {
 			return bot.request({
 				"action": "query",

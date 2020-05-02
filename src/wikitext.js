@@ -2,6 +2,10 @@ module.exports = function(bot) {
 
 	class Wikitext {
 
+		/**
+		 * @constructor
+		 * @param {string} wikitext
+		 */
 		constructor(wikitext) {
 			this.text = wikitext;
 		}
@@ -47,6 +51,12 @@ module.exports = function(bot) {
 			return this.templates = parseTemplates(this.text, recursive);
 		}
 
+		/**
+		 * Parse the text using the API.
+		 * @see https://www.mediawiki.org/wiki/API:Parsing_wikitext
+		 * @param {Object} options - additional API options
+		 * @returns {Promise}
+		 */
 		api_parse(options) {
 			return bot.parseWikitext(this.text, options);
 		}

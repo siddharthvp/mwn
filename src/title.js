@@ -156,7 +156,7 @@ class Title {
 	/**
 	 * Get the title for the associated talk page
 	 *
-	 * @return {mw.Title|null} The title for the associated talk page, null if not available
+	 * @return {Title|null} The title for the associated talk page, null if not available
 	 */
 	getTalkPage() {
 		if ( !this.canHaveTalkPage() ) {
@@ -170,7 +170,8 @@ class Title {
 	/**
 	 * Get the title for the subject page of a talk page
 	 *
-	 * @return {mw.Title|null} The title for the subject page of a talk page, null if not available
+	 * @return {Title|null} The title for the subject page of a talk page, null
+	 * if not available
 	 */
 	getSubjectPage() {
 		return this.isTalkPage() ?
@@ -392,7 +393,7 @@ var byteLength = function( str ) {
  * @static
  * @param {string} title
  * @param {number} [namespace=NS_MAIN] Default namespace
- * @return {mw.Title|null} A valid Title object or null if the title is invalid
+ * @return {Title|null} A valid Title object or null if the title is invalid
  */
 Title.newFromText = function ( title, namespace ) {
 	var t, parsed = parse( title, namespace );
@@ -419,7 +420,7 @@ Title.newFromText = function ( title, namespace ) {
  * @static
  * @param {number} namespace Namespace to use for the title
  * @param {string} title
- * @return {mw.Title|null} A valid Title object or null if the title is invalid
+ * @return {Title|null} A valid Title object or null if the title is invalid
  */
 Title.makeTitle = function ( namespace, title ) {
 	return Title.newFromText( getNamespacePrefix( namespace ) + title );
