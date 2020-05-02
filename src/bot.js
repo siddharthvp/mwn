@@ -32,12 +32,13 @@
 
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const request = require('request');
-const semlog = require('semlog');
-const ispromise = require('is-promise');
+const axios = require('axios');
+const tough = require('tough-cookie');
+const axiosCookieJarSupport = require('axios-cookiejar-support').default;
+axiosCookieJarSupport(axios);
 
+const ispromise = require('is-promise');
+const semlog = require('semlog');
 const log = semlog.log;
 
 const Title = require('./title');
@@ -133,26 +134,40 @@ class Bot {
 		this.options = merge(this.defaultOptions, customOptions);
 
 		/**
-		 * Default options for the NPM request library
+		 * Cookie jar for the bot instance - holds session and login cookies
+		 *
+		 * @type {tough.CookieJar}
+		 */
+		this.cookieJar = new tough.CookieJar();
+
+		/**
+		 * Default options for the axios library
 		 *
 		 * @type {Object}
 		 */
 		this.defaultRequestOptions = {
-			method: 'POST',
+			method: 'post',
 			headers: {
 				'User-Agent': 'mwn'
 			},
-			qs: {
+			params: {
 			},
-			form: {
+			data: {
 				format: 'json',
 				formatversion: '2',
 				maxlag: 5
 			},
+			transformRequest: [
+				function(data) {
+					return Object.entries(data).map(([key, val]) => {
+						return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+					}).join('&');
+				}
+			],
 			timeout: 120000, // 120 seconds
-			jar: true,
-			time: true,
-			json: true
+			jar: this.cookieJar,
+			withCredentials: true,
+			responseType: 'json'
 		};
 
 		/**
@@ -240,7 +255,7 @@ class Bot {
 	 * @param {Object} params - default parameters
 	 */
 	setDefaultParams(params) {
-		this.requestOptions.form = merge(this.requestOptions.form, params);
+		this.requestOptions.data = merge(this.requestOptions.data, params);
 	}
 
 	/**
@@ -270,22 +285,33 @@ class Bot {
 
 		this.counter.total += 1;
 
-		return new Promise((resolve, reject) => {
-			this.counter.resolved += 1;
-			if (!requestOptions.uri) {
-				this.counter.rejected += 1;
-				return reject(new Error('No URI provided!'));
-			}
-			request(requestOptions, (error, response, body) => {
-				if (error) {
-					this.counter.rejected +=1;
-					return reject(error);
-				} else {
-					this.counter.fulfilled +=1;
-					return resolve(body);
-				}
-			});
+		this.counter.resolved += 1;
+		if (!requestOptions.url) {
+			this.counter.rejected += 1;
+			return Promise.reject(new Error('No API URL provided!'));
+		}
+		return axios(requestOptions).then(response => {
+			return response.data;
+		}, error => {
+			return Promise.reject(error);
 		});
+
+		// return new Promise((resolve, reject) => {
+		// 	this.counter.resolved += 1;
+		// 	if (!requestOptions.uri) {
+		// 		this.counter.rejected += 1;
+		// 		return reject(new Error('No URI provided!'));
+		// 	}
+		// 	request(requestOptions, (error, response, body) => {
+		// 		if (error) {
+		// 			this.counter.rejected +=1;
+		// 			return reject(error);
+		// 		} else {
+		// 			this.counter.fulfilled +=1;
+		// 			return resolve(body);
+		// 		}
+		// 	});
+		// });
 	}
 
 
@@ -301,7 +327,7 @@ class Bot {
 	request(params, customRequestOptions) {
 
 		let requestOptions = merge({
-			uri: this.options.apiUrl,
+			url: this.options.apiUrl,
 
 			// retryNumber isn't actually used by the API, but this is
 			// included here for tracking our maxlag retry count.
@@ -309,24 +335,23 @@ class Bot {
 
 		}, this.requestOptions, customRequestOptions);
 
-		requestOptions.form = merge(requestOptions.form, params);
+		requestOptions.data = merge(requestOptions.data, params);
 
 		// pre-process params:
 		// copied from mw.Api().preprocessParameters & refactored to ES6
-		Object.entries(requestOptions.form).forEach(([key, val]) => {
+		Object.entries(requestOptions.data).forEach(([key, val]) => {
 			if (Array.isArray(val)) {
 				if (!val.join('').includes('|')) {
-					requestOptions.form[key] = val.join('|');
+					requestOptions.data[key] = val.join('|');
 				} else {
-					requestOptions.form[key] = '\x1f' + val.join('\x1f');
+					requestOptions.data[key] = '\x1f' + val.join('\x1f');
 				}
 			} else if (val === false || val === undefined) {
-				delete requestOptions.form[key];
+				delete requestOptions.data[key];
 			}
 		});
 
 		return this.rawRequest(requestOptions).then((response) => {
-
 			if (typeof response !== 'object') {
 				let err = new Error('invalidjson: No valid JSON response');
 				err.code = 'invalidjson';
@@ -342,10 +367,10 @@ class Bot {
 				// extension, and not a part of mediawiki core
 				if (response.error.code === 'badtoken') {
 					return Promise.all(
-						[this.getTokenType(requestOptions.form.action), this.getTokens()]
+						[this.getTokenType(requestOptions.data.action), this.getTokens()]
 					).then(([tokentype]) => {
 						var token = this.state[ (tokentype || 'csrf') + 'token' ];
-						requestOptions.form.token = token;
+						requestOptions.data.token = token;
 						return this.request({}, requestOptions);
 					});
 				}
@@ -825,78 +850,6 @@ class Bot {
 	}
 
 	/**
-	 * Uploads a file
-	 *
-	 * @param {string}  [title]
-	 * @param {string}  pathToFile
-	 * @param {string}  [comment]
-	 * @param {object}  [customParams]
-	 * @param {object}  [customRequestOptions]
-	 *
-	 * @returns {Promise}
-	 */
-	upload(title, pathToFile, comment, customParams, customRequestOptions) {
-
-		try {
-			let file = fs.createReadStream(pathToFile);
-
-			let params = merge({
-				action: 'upload',
-				filename: title || path.basename(pathToFile),
-				file: file,
-				comment: comment || '',
-				token: this.csrfToken
-			}, customParams);
-
-			let uploadRequestOptions = merge(this.requestOptions, {
-
-				// https://www.npmjs.com/package/request#support-for-har-12
-				har: {
-					method: 'POST',
-					postData: {
-						mimeType: 'multipart/form-data',
-						params: []
-					}
-				}
-			});
-
-			// Convert params to HAR 1.2 notation
-			for (let paramName in params) {
-				let param = params[paramName];
-				uploadRequestOptions.har.postData.params.push({
-					name: paramName,
-					value: param
-				});
-			}
-
-			let requestOptions = merge(uploadRequestOptions, customRequestOptions);
-
-			return this.request({}, requestOptions);
-
-		} catch (e) {
-			return Promise.reject(e);
-		}
-	}
-
-	/**
-	 * Uploads a file and overwrites existing ones
-	 *
-	 * @param {string}  [title]
-	 * @param {string}  pathToFile
-	 * @param {string}  [comment]
-	 * @param {object}  [customParams]
-	 * @param {object}  [customRequestOptions]
-	 *
-	 * @returns {Promise}
-	 */
-	uploadOverwrite(title, pathToFile, comment, customParams, customRequestOptions) {
-		let params = merge({
-			ignorewarnings: ''
-		}, customParams);
-		return this.upload(title, pathToFile, comment, params, customRequestOptions);
-	}
-
-	/**
 	 * Get pages with names beginning with a given prefix
 	 * @param {string} prefix
 	 * @param {Object} otherParams
@@ -1202,10 +1155,10 @@ class Bot {
 		apiUrl = apiUrl || this.options.apiUrl;
 
 		let requestOptions = merge({
-			method: 'GET',
-			uri: apiUrl,
-			json: true,
-			qs: {
+			method: 'get',
+			url: apiUrl,
+			responseType: 'json',
+			params: {
 				action: 'ask',
 				format: 'json',
 				query: query
@@ -1231,10 +1184,10 @@ class Bot {
 		endpointUrl = endpointUrl || this.options.apiUrl;
 
 		let requestOptions = merge({
-			method: 'GET',
-			uri: endpointUrl,
-			json: true,
-			qs: {
+			method: 'get',
+			url: endpointUrl,
+			responseType: 'json',
+			params: {
 				format: 'json',
 				query: query
 			}
