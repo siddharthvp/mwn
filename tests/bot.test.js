@@ -254,32 +254,86 @@ describe('mwn', async function() {
 			});
 		});
 
+		describe('image uploads', function() {
 
-		describe.skip('image uploads', function() {
+			var randFileName = 'mwn-' + Math.random() + '.png';
 
-			it('successfully uploads without providing a filename with upload()', function(done) {
-				bot.upload(false, __dirname + '/mocking/example1.png').then((response) => {
-					expect(response.upload.result).to.equal('Warning');
+			it('successfully upload image from URL', function(done) {
+				var url = 'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png';
+				bot.uploadFromUrl(url, randFileName, 'Test upload using mwn').then(data => {
+					console.log(data);
+					expect(data.result).to.equal('Success');
+					bot.delete(randFileName, 'Delete after testing (mwn)');
 					done();
 				});
 			});
 
-			it('successfully uploads and overwrites an image with uploadOverwrite()', function(done) {
-				this.timeout(10000);
-				bot.uploadOverwrite('SD0001test-43543.png', __dirname + '/mocking/example2.png', 'Test Upload using mwn')
-					.then((response) => {
-						expect(response.upload.result).to.equal('Success');
-						done();
-					});
-			});
+			// it('successfully uploads without providing a filename with upload()', function(done) {
+			// 	bot.upload(__dirname + '/mocking/example1.png', randFileName).then(response => {
+			// 		expect(response.result).to.equal('Warning');
+			// 		done();
+			// 	});
+			// });
 
-			it('successfully skips an upload of an image duplicate with upload()', function(done) {
-				bot.upload('SD0001test-43543.png', __dirname + '/mocking/example1.png', 'Test Reasons').then((response) => {
-					expect(response.upload.result).to.equal('Warning');
-					done();
-				});
-			});
+			// it('successfully uploads and overwrites an image with uploadOverwrite()', function(done) {
+			// 	this.timeout(10000);
+			// 	bot.uploadOverwrite('SD0001test-43543.png', __dirname + '/mocking/example2.png', 'Test Upload using mwn')
+			// 		.then((response) => {
+			// 			expect(response.upload.result).to.equal('Success');
+			// 			done();
+			// 		});
+			// });
 
+			// it('successfully skips an upload of an image duplicate with upload()', function(done) {
+			// 	bot.upload('SD0001test-43543.png', __dirname + '/mocking/example1.png', 'Test Reasons').then((response) => {
+			// 		expect(response.upload.result).to.equal('Warning');
+			// 		done();
+			// 	});
+			// });
+
+		});
+
+	});
+
+	describe('downloads', function() {
+
+		const fs = require('fs');
+		var fileTitle = 'File:Example demo image.png';
+
+		it('downloads an image from title without local name specified', function(done) {
+			bot.download(fileTitle).then(function() {
+				var expectedTitle = 'Example demo image.png';
+				expect(fs.readdirSync('.')).to.include(expectedTitle);
+				fs.unlinkSync(expectedTitle);
+				done();
+			});
+		});
+
+		it('downloads an image from title with local name specified', function(done) {
+			bot.download(fileTitle, 'download-test.png').then(function() {
+				var expectedTitle = 'download-test.png';
+				expect(fs.readdirSync('.')).to.include(expectedTitle);
+				fs.unlinkSync(expectedTitle);
+				done();
+			});
+		});
+
+		it('downloads an image from URL', function(done) {
+			// get url:
+			bot.request({
+				action: 'query',
+				titles: fileTitle,
+				prop: 'imageinfo',
+				iiprop: 'url'
+			}).then(data => {
+				var url = data.query.pages[0].imageinfo[0].url;
+				return bot.downloadFromUrl(url);
+			}).then(() => {
+				var expectedTitle = 'Example_demo_image.png';
+				expect(fs.readdirSync('.')).to.include(expectedTitle);
+				fs.unlinkSync(expectedTitle);
+				done();
+			});
 		});
 
 	});

@@ -37,6 +37,8 @@ const tough = require('tough-cookie');
 const axiosCookieJarSupport = require('axios-cookiejar-support').default;
 axiosCookieJarSupport(axios);
 
+const fs = require('fs');
+const path = require('path');
 const ispromise = require('is-promise');
 const semlog = require('semlog');
 const log = semlog.log;
@@ -226,8 +228,8 @@ class Bot {
 	}
 
 	/**
-	 * Sets and overwrites the raw request options, used by the "request" library
-	 * See https://www.npmjs.com/package/request
+	 * Sets and overwrites the raw request options, used by the axios library
+	 * See https://www.npmjs.com/package/axios
 	 *
 	 * @param {Object} customRequestOptions
 	 */
@@ -235,19 +237,7 @@ class Bot {
 		if (!this.requestOptions) {
 			this.requestOptions = this.defaultRequestOptions;
 		}
-		// Do a recursive merge, going one level deep
-		// This ensures that unaltered properties of qs, form, headers and like fields
-		// in the original object aren't removed.
-		Object.entries(customRequestOptions).forEach(([key, val]) => {
-			if (typeof val === 'object') {
-				this.requestOptions[key] = merge(this.requestOptions[key], val);
-				// this can't be written as Object.assign(this.requestOptions[key], val)
-				// as this.requestOptions[key] could be undefined
-			} else {
-				this.requestOptions[key] = val;
-			}
-		});
-		return this.requestOptions;
+		return mergeRequestOptions(this.requestOptions, customRequestOptions);
 	}
 
 	/**
@@ -261,7 +251,6 @@ class Bot {
 	/**
 	 * Set your API user agent. See https://meta.wikimedia.org/wiki/User-Agent_policy
 	 * Required for WMF wikis.
-	 *
 	 * @param {string} userAgent
 	 */
 	setUserAgent(userAgent) {
@@ -291,27 +280,13 @@ class Bot {
 			return Promise.reject(new Error('No API URL provided!'));
 		}
 		return axios(requestOptions).then(response => {
+			this.counter.fulfilled +=1;
 			return response.data;
 		}, error => {
+			this.counter.rejected +=1;
 			return Promise.reject(error);
 		});
 
-		// return new Promise((resolve, reject) => {
-		// 	this.counter.resolved += 1;
-		// 	if (!requestOptions.uri) {
-		// 		this.counter.rejected += 1;
-		// 		return reject(new Error('No URI provided!'));
-		// 	}
-		// 	request(requestOptions, (error, response, body) => {
-		// 		if (error) {
-		// 			this.counter.rejected +=1;
-		// 			return reject(error);
-		// 		} else {
-		// 			this.counter.fulfilled +=1;
-		// 			return resolve(body);
-		// 		}
-		// 	});
-		// });
 	}
 
 
@@ -333,12 +308,15 @@ class Bot {
 			// included here for tracking our maxlag retry count.
 			retryNumber: 0
 
-		}, this.requestOptions, customRequestOptions);
+		}, mergeRequestOptions(this.requestOptions, customRequestOptions || {}));
 
 		requestOptions.data = merge(requestOptions.data, params);
 
 		// pre-process params:
-		// copied from mw.Api().preprocessParameters & refactored to ES6
+		// Convert arrays to |-delimited strings. If one of the array items
+		// itself contains a |, then use \x1f as delimiter and begin the string
+		// with \x1f.
+		// Copied from mw.Api().preprocessParameters & refactored to ES6
 		Object.entries(requestOptions.data).forEach(([key, val]) => {
 			if (Array.isArray(val)) {
 				if (!val.join('').includes('|')) {
@@ -813,6 +791,67 @@ class Bot {
 	}
 
 	/**
+	 * Upload an image from a web URL to the wiki
+	 * If a file with the same name exists, it will be over-written,
+	 * to disable this behaviour, use `ignorewarning: false` in options.
+	 * @param {string} url
+	 * @param {string} title
+	 * @param {string} text
+	 * @param {Object} options
+	 */
+	uploadFromUrl(url, title, text, options) {
+		return this.request(merge({
+			action: 'upload',
+			url: url,
+			filename: title || path.basename(url),
+			text: text,
+			ignorewarnings: '1',
+			token: this.csrfToken
+		}, options)).then(data => {
+			return data.upload;
+		});
+	}
+
+	/**
+	 * Download an image from the wiki.
+	 * If you're downloading multiple images, then for better efficiency, you may want
+	 * to query the API for the urls of all images in one request, and follow that with
+	 * running downloadFromUrl for each one.
+	 * @param {string|number} file - title or page ID
+	 * @param {string} [localname] - local path (with file name) to download to,
+	 * defaults to current directory with same file name as on the wiki.
+	 * @returns {Promise<void>}
+	 */
+	download(file, localname) {
+		return this.request(merge({
+			action: 'query',
+			prop: 'imageinfo',
+			iiprop: 'url'
+		}, makeTitles(file))).then(data => {
+			var url = data.query.pages[0].imageinfo[0].url;
+			var name = new this.title(data.query.pages[0].title).getMainText();
+			return this.downloadFromUrl(url, localname || name);
+		});
+	}
+
+	/**
+	 * Download an image from a URL.
+	 * @param {string} url
+	 * @param {string} [localname] - local path (with file name) to download to,
+	 * defaults to current directory with same file name as that of the web image.
+	 * @returns {Promise<void>}
+	 */
+	downloadFromUrl(url, localname) {
+		return this.rawRequest({
+			method: 'get',
+			url: url,
+			responseType: 'stream'
+		}).then(response => {
+			response.pipe(fs.createWriteStream(localname || path.basename(url)));
+		});
+	}
+
+	/**
 	 * Convenience method for `action=rollback`.
 	 *
 	 * @param {string|number} page - page title or page id as number or Title object
@@ -1238,6 +1277,25 @@ class Bot {
 var merge = function(...objects) {
 	// {} used as first parameter as this object is mutated by default
 	return Object.assign({}, ...objects);
+};
+
+/**
+ * Merge objects deeply to 1 level. Object properties like params, form,
+ * header get merged. But not any object properties within them.
+ * Arrays are not merged, but over-written (as if it were a primitive)
+ * The original object is mutated and returned.
+ */
+var mergeRequestOptions = function(options, customOptions) {
+	Object.entries(customOptions).forEach(([key, val]) => {
+		if (typeof val === 'object' && !Array.isArray(val)) {
+			options[key] = merge(options[key], val);
+			// this can't be written as Object.assign(options[key], val)
+			// as options[key] could be undefined
+		} else {
+			options[key] = val;
+		}
+	});
+	return options;
 };
 
 /**
