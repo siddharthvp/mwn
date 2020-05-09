@@ -556,17 +556,19 @@ class Bot {
 	/***************** HELPER FUNCTIONS ******************/
 
 
+	// adapted from mw.Api().edit
 	/**
-	* @param {string|number|Title} title Page title or page ID or Title object
-	* @param {Function} transform Callback that prepares the edit
-	* @param {Object} transform.revision Current revision
-	* @param {string} transform.revision.content Current revision content
-	* @param {string|Object|Promise} transform.return New content, object with edit
-	*  API parameters, or promise providing one of those.
-	* @return {Promise} Edit API response
+	* @param {string|number|Title} title - Page title or page ID or Title object
+	* @param {Function} transform - Callback that prepares the edit. It takes one 
+	* argument that is an { content: 'string: page content', timestamp: 'string: 
+	* time of last edit' } object. This function should return an object with 
+	* edit API parameters or just the updated text, or a promise providing one of 
+	* those. 
+	* @param {number} [conflictRetries=2] - max number of times to retry edit on 
+	* encountering an edit conflict (default 2)
+	* @return {Promise<Object>} Edit API response
 	*/
-	// copied from mw.Api().edit, with promises used instead of jQuery
-	edit(title, transform) {
+	edit(title, transform, conflictRetries=2) {
 
 		var basetimestamp, curtimestamp;
 
@@ -598,9 +600,12 @@ class Bot {
 				content: revision.content
 			});
 
-		}).then(params => {
-			var editParams = typeof params === 'object' ? params : {
-				text: String(params)
+		}).then(returnVal => {
+			if (typeof returnVal !== 'string' && !returnVal) {
+				return { edit: { result: 'aborted' } };
+			}
+			var editParams = typeof returnVal === 'object' ? returnVal : {
+				text: String(returnVal)
 			};
 			return this.request(merge({
 				action: 'edit',
@@ -613,6 +618,10 @@ class Bot {
 
 		}).then(data => {
 			return data.edit;
+		}, errorCode => {
+			if (errorCode === 'editconflict' && conflictRetries > 0) {
+				return this.edit(title, transform, conflictRetries - 1);
+			}
 		});
 	}
 
