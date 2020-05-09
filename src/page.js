@@ -97,7 +97,7 @@ module.exports = function(bot) {
 		 * @returns {Promise<String[]>}
 		 */
 		subpages(options) {
-			return this.request(Object.assign({
+			return bot.request(Object.assign({
 				"action": "query",
 				"list": "allpages",
 				"apprefix": this.title + '/',
@@ -105,6 +105,59 @@ module.exports = function(bot) {
 				"aplimit": "max"
 			}, options)).then((data) => {
 				return data.query.allpages.map(pg => pg.title);
+			});
+		}
+
+		/**
+		 * Get the edit history of the page
+		 * @param {Array} props - revision properties to fetch, by default content is
+		 * excluded
+		 * @param {number} [limit=50] - number of revisions to fetch data about
+		 * @param {Object} customOptions - custom API options
+		 * @returns {Promise<Object[]>} - resolved with array of objects representing
+		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
+		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
+		 */
+		history(props, limit, customOptions) {
+			return bot.request(Object.assign({
+				"action": "query",
+				"prop": "revisions",
+				"titles": this.toString(),
+				"rvprop": props || "ids|timestamp|flags|comment|user",
+				"rvlimit": limit || 50
+			}, customOptions)).then(data => {
+				return data.query.pages[0].revisions;
+			});
+		}
+
+		/**
+		 * Get the page logs.
+		 * @param {Array} props - data about log entries to fetch
+		 * @param {number} limit - max number of log entries to fetch
+		 * @param {string} type - type of log to fetch, can either be an letype or leaction
+		 * Leave undefined (or null) to fetch all log types
+		 * @param {Object} customOptions
+		 * @returns {Promise<Object[]>} - resolved with array of objects representing
+		 * log entries, eg. { ns: '0', title: 'Main Page', type: 'delete', user: 'Example',
+		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
+		 */
+		logs(props, limit, type, customOptions) {
+			var logtypeObj = {};
+			if (type) {
+				if (type.includes('/')) {
+					logtypeObj.leaction = type;
+				} else {
+					logtypeObj.letype = type;
+				}
+			}
+			return bot.request(Object.assign({
+				"action": "query",
+				"list": "logevents",
+				"leprop": props || "title|type|user|timestamp|comment",
+				"letitle": this.toString(),
+				"lelimit": limit || 50
+			}, logtypeObj, customOptions)).then(data => {
+				return data.query.logevents;
 			});
 		}
 
