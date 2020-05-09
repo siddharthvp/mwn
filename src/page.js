@@ -2,6 +2,28 @@ module.exports = function(bot) {
 
 	class Page extends bot.title {
 
+		constructor(arg) {
+			if (arg instanceof bot.title) {
+				super(arg.title, arg.namespace);
+			} else {
+				super(...arguments);
+			}
+		}
+
+		/**
+		 * @override
+		 */
+		getTalkPage() {
+			return new Page(super.getTalkPage());
+		}
+
+		/**
+		 * @override
+		 */
+		getSubjectPage() {
+			return new Page(super.getSubjectPage());
+		}
+
 		/**** Get operations *****/
 
 		/**

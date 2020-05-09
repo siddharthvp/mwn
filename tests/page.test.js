@@ -43,6 +43,22 @@ describe('Page', async function() {
 		expect(page.toText()).to.equal('Wikipedia:Requests/Permissions');
 	});
 
+	it('constructor', function() {
+		var title = new bot.title('wp:Requests/Permissions');
+		expect(new bot.page(title)).to.be.instanceOf(bot.page);
+
+		var page = new bot.page('Requests/Permissions', 4);
+		expect(page).to.be.instanceOf(bot.page);
+		expect(page.title).to.equal(title.title);
+		expect(page.namespace).to.equal(title.namespace);
+	});
+
+	it('getTalkPage and getSubjectPage are overridden', function() {
+		var talkpage = page.getTalkPage();
+		expect(talkpage).to.be.instanceOf(bot.page);
+		expect(talkpage.getSubjectPage()).to.be.instanceOf(bot.page);
+	});
+
 	it('categories', function(done) {
 		page.categories().then(cats => {
 			expect(cats).to.be.instanceOf(Array);
