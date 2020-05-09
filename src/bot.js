@@ -48,6 +48,7 @@ const Page = require('./page');
 const Wikitext = require('./wikitext');
 const User = require('./user');
 const Category = require('./category');
+const File = require('./File');
 
 class Bot {
 
@@ -203,6 +204,11 @@ class Bot {
 		 * Category class associated with the bot instance
 		 */
 		this.category = Category(this);
+
+		/**
+		 * File class associated with the bot instance
+		 */
+		this.file = File(this);
 
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
@@ -559,12 +565,12 @@ class Bot {
 	// adapted from mw.Api().edit
 	/**
 	* @param {string|number|Title} title - Page title or page ID or Title object
-	* @param {Function} transform - Callback that prepares the edit. It takes one 
-	* argument that is an { content: 'string: page content', timestamp: 'string: 
-	* time of last edit' } object. This function should return an object with 
-	* edit API parameters or just the updated text, or a promise providing one of 
-	* those. 
-	* @param {number} [conflictRetries=2] - max number of times to retry edit on 
+	* @param {Function} transform - Callback that prepares the edit. It takes one
+	* argument that is an { content: 'string: page content', timestamp: 'string:
+	* time of last edit' } object. This function should return an object with
+	* edit API parameters or just the updated text, or a promise providing one of
+	* those.
+	* @param {number} [conflictRetries=2] - max number of times to retry edit on
 	* encountering an edit conflict (default 2)
 	* @return {Promise<Object>} Edit API response
 	*/
