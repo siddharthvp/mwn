@@ -54,11 +54,46 @@ module.exports = function(bot) {
 		/**
 		 * Parse the text using the API.
 		 * @see https://www.mediawiki.org/wiki/API:Parsing_wikitext
-		 * @param {Object} options - additional API options
+		 * @param {Object} [options] - additional API options
 		 * @returns {Promise}
 		 */
 		api_parse(options) {
 			return bot.parseWikitext(this.text, options);
+		}
+
+		/**
+		 * Get wikitext for a new link
+		 * @param {string|bot.title} target
+		 * @param {string} [displaytext]
+		 */
+		static link(target, displaytext) {
+			if (target instanceof bot.title) {
+				return '[[' + target.toText() +
+					(target.fragment ? '#' + target.fragment : '') +
+					(displaytext ? '|' + displaytext : '') +
+					']]';
+			}
+			return '[[' + target + (displaytext ? '|' + displaytext : '') + ']]';
+		}
+
+		/**
+		 * Get wikitext for a template usage
+		 * @param {string|bot.title} title
+		 * @param {Object} [options] - template parameters as object
+		 */
+		static template(title, options) {
+			if (title instanceof bot.title) {
+				if (title.namespace === 10) {
+					title = title.getMainText(); // skip namespace name for templates
+				} else if (title.namespace === 0) {
+					title = ':' + title.toText(); // prefix colon for mainspace
+				}
+			}
+			return '{{' + String(title) +
+				Object.entries(options).map(([key, val]) => {
+					return '|' + key + '=' + val;
+				}).join('') +
+				'}}';
 		}
 
 	}
