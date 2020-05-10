@@ -49,6 +49,7 @@ const Wikitext = require('./wikitext');
 const User = require('./user');
 const Category = require('./category');
 const File = require('./file');
+const Util = require('./util');
 
 class Bot {
 
@@ -1270,6 +1271,8 @@ class Bot {
 		log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
 	}
 }
+
+Bot.util = Util;
 
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined
