@@ -2,7 +2,11 @@
 
 **mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
-Development status: **Unstable**
+Development status: **Unstable**. mwn currently does not follow semantic versioning rules. For now, changes may be made to the public interface without a change in version number.
+
+Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. 
+
+Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions can be automatically retried. 
 
 ### Setup
 
@@ -248,7 +252,7 @@ bot.batchOperation(pageList, (page, idx) => {
 	// the index of the page in pageList is available as the 2nd argument
 
 	// return a promise in the end
-}, 5); // set the concurrency as the third parameter.
+}, 5, 2); // set the concurrency as the third parameter, number of retries as 4th parameter
 ```
 
 ##### seriesBatchOperation(pageList, workerFunction, sleepDuration)
@@ -261,6 +265,6 @@ bot.seriesBatchOperation(pageList, (page, idx) => {
 	// the index of the page in pageList is available as the 2nd argument
 
 	// return a promise in the end
-}, 5000); // set the sleep duration in milliseconds as the third parameter
+}, 5000, 2); // set the sleep duration in milliseconds as the third parameter, max number of retries for each action is set as the 4th parameter
 ```
 Note that `seriesBatchOperation` with delay=0 is same as `batchOperation` with concurrency=1.
