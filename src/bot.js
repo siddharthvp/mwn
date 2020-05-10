@@ -48,7 +48,7 @@ const Page = require('./page');
 const Wikitext = require('./wikitext');
 const User = require('./user');
 const Category = require('./category');
-const File = require('./File');
+const File = require('./file');
 
 class Bot {
 
@@ -60,10 +60,9 @@ class Bot {
 	 * It is advised to create one bot instance for every API to use
 	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations
 	 *
-	 * @param {Object} [customOptions]        Custom options
-	 * @param {Object} [customRequestOptions] Custom request options
+	 * @param {Object} [customOptions] - Custom options
 	 */
-	constructor(customOptions, customRequestOptions) {
+	constructor(customOptions) {
 
 		/**
 		 * Bot instance Login State
@@ -144,11 +143,12 @@ class Bot {
 		this.cookieJar = new tough.CookieJar();
 
 		/**
-		 * Default options for the axios library
+		 * Request options for the axios library.
+		 * Change the defaults using setRequestOptions()
 		 *
 		 * @type {Object}
 		 */
-		this.defaultRequestOptions = {
+		this.requestOptions = {
 			method: 'post',
 			headers: {
 				'User-Agent': 'mwn'
@@ -172,13 +172,6 @@ class Bot {
 			withCredentials: true,
 			responseType: 'json'
 		};
-
-		/**
-		 * The actual, current options for the NPM request library
-		 *
-		 * @type {Object}
-		 */
-		this.requestOptions = this.setRequestOptions(customRequestOptions || {});
 
 		/**
 		 * Title class associated with the bot instance
@@ -240,9 +233,6 @@ class Bot {
 	 * @param {Object} customRequestOptions
 	 */
 	setRequestOptions(customRequestOptions) {
-		if (!this.requestOptions) {
-			this.requestOptions = this.defaultRequestOptions;
-		}
 		return mergeRequestOptions(this.requestOptions, customRequestOptions);
 	}
 
