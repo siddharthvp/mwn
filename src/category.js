@@ -17,58 +17,65 @@ module.exports = function(bot) {
 
 		/**
 		 * Get all members in the category - this includes subcategories, pages and files
+		 * @param {Object} options - additional API parameters
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 0, title: 'Main Page' }
 		 */
-		members() {
-			return bot.request({
+		members(options) {
+			return bot.request(Object.assign({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
-			}).then(data => data.query.categorymembers);
+				"cmlimit": "max"
+			}, options)).then(data => data.query.categorymembers);
 		}
 
 		/**
 		 * Get all pages in the category - does not include subcategories or files
+		 * @param {Object} options - additional API parameters
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 0, title: 'Main Page' }
 		 */
-		pages() {
-			return bot.request({
+		pages(options) {
+			return bot.request(Object.assign({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
-				"cmtype": "page"
-			}).then(data => data.query.categorymembers);
+				"cmtype": "page",
+				"cmlimit": "max"
+			}, options)).then(data => data.query.categorymembers);
 		}
 
 		/**
 		 * Get all subcategories of the category
+		 * @param {Object} options - additional API parameters
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
 		 */
-		subcats() {
-			return bot.request({
+		subcats(options) {
+			return bot.request(Object.assign({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
-				"cmtype": "subcat"
-			}).then(data => data.query.categorymembers);
+				"cmtype": "subcat",
+				"cmlimit": "max"
+			}, options)).then(data => data.query.categorymembers);
 		}
 
 		/**
 		 * Get all files in the category
+		 * @param {Object} options - additional API parameters
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
 		 */
-		files() {
-			return bot.request({
+		files(options) {
+			return bot.request(Object.assign({
 				"action": "query",
-				"format": "json",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
-				"cmtype": "file"
-			}).then(data => data.query.categorymembers);
+				"cmtype": "file",
+				"cmlimit": "max"
+			}, options)).then(data => data.query.categorymembers);
 		}
 
 	}
