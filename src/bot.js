@@ -204,6 +204,11 @@ class Bot {
 		 */
 		this.file = File(this);
 
+		/**
+		 * Util class associated with the bot instance
+		 */
+		this.util = Util();
+
 		// SEMLOG OPTIONS
 		semlog.updateConfig(this.options.semlog || {});
 	}
@@ -1271,8 +1276,6 @@ class Bot {
 		log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
 	}
 }
-
-Bot.util = Util;
 
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined
