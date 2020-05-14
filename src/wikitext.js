@@ -11,7 +11,7 @@ module.exports = function(bot) {
 		}
 
 		/** Parse links, file usages and categories from the wikitext */
-		parse_links() {
+		parseLinks() {
 			this.links = [];
 			this.files = [];
 			this.categories = [];
@@ -47,7 +47,7 @@ module.exports = function(bot) {
 		 * within other templates, rather than just top-level templates.
 	     * @return Template[]
 		 */
-		parse_templates(recursive) {
+		parseTemplates(recursive) {
 			return this.templates = parseTemplates(this.text, recursive);
 		}
 
@@ -57,7 +57,7 @@ module.exports = function(bot) {
 		 * @param {Object} [options] - additional API options
 		 * @returns {Promise}
 		 */
-		api_parse(options) {
+		apiParse(options) {
 			return bot.parseWikitext(this.text, options);
 		}
 
