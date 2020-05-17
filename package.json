@@ -1,6 +1,6 @@
 {
   "name": "mwn",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MediaWiki bot framework for NodeJS",
   "main": "./src/bot.js",
   "scripts": {
@@ -15,6 +15,9 @@
   ],
   "author": "Siddharth VP",
   "license": "GPL-3.0-or-later",
+  "files": [
+    "src/"
+  ],
   "dependencies": {
     "axios": "^0.19.2",
     "axios-cookiejar-support": "^1.0.0",
