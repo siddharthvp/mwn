@@ -1,10 +1,20 @@
 module.exports = function(bot) {
 
+	/**
+	 * Class for some basic wikitext parsing, involving 
+	 * links, files, categories and templates.
+	 * 
+	 * For more advanced and sophisticated wikitext parsing, use
+	 * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
+	 * implemented in python (which you can use within node.js using
+	 * the child_process interface)
+	 */
 	class Wikitext {
 
 		/** @param {string} wikitext */
 		constructor(wikitext) {
 			this.text = wikitext;
+			this.removedSpans = []; // used by removeEntity()
 		}
 
 		/** Parse links, file usages and categories from the wikitext */
@@ -18,10 +28,10 @@ module.exports = function(bot) {
 			var stack = new Stack();
 			for (let i=0; i<n; i++) {
 				if (this.text[i] === '[' && this.text[i+1] === '[') {
-					stack.push({startIdx: i + 2});
+					stack.push({startIdx: i });
 				} else if (this.text[i] === ']' && this.text[i+1] === ']' && stack.top()) {
-					stack.top().endIdx = i;
-					processLink(this, this.text.slice(stack.top().startIdx, stack.top().endIdx));
+					stack.top().endIdx = i + 1;
+					processLink(this, stack.top().startIdx, stack.top().endIdx);
 					stack.pop();
 				}
 			}
@@ -47,6 +57,42 @@ module.exports = function(bot) {
 		 */
 		parseTemplates(recursive) {
 			return this.templates = parseTemplates(this.text, recursive);
+		}
+
+		/**
+		 * Remove a template, link, file or category from the text
+		 * @param {Object|Template} entity - anything with a dsr attribute giving the start index
+		 * and end index
+		 */
+		removeEntity(entity) {
+			// Can't just do this.text = this.text.slice(0, entity.dsr[0]) + this.text.slice(entity.dsr[1] + 1);
+			// since that will invalidate the existing dsr values
+			this.removedSpans.push(entity.dsr);
+		}
+
+		/**
+		 * Get the updated text after any entity removals 
+		 * @returns {string}
+		 */
+		getText() {
+			var distinctSpans = this.removedSpans.sort((x,y) => x[0] > y[0] ? 1 : -1).filter((span, idx, arr) => {
+				if (!arr[idx-1]) return true;
+				return span[1] > arr[idx-1][1];
+			});
+			if (distinctSpans.length === 0) {
+				return this.text;
+			}
+			var allowedSpans = [];
+			allowedSpans.push([0, distinctSpans[0][0] - 1]);
+			for (var i = 0; i < distinctSpans.length - 1; i++) {
+				allowedSpans.push([distinctSpans[i][1] + 1, distinctSpans[i+1][0] -1 ]);
+			}
+			allowedSpans.push([distinctSpans[distinctSpans.length-1][1] + 1, this.text.length - 1]);
+			var text = '';
+			allowedSpans.forEach(span => {
+				text += this.text.slice(span[0], span[1] + 1);
+			});
+			return text;
 		}
 
 		/**
@@ -102,8 +148,9 @@ module.exports = function(bot) {
 		}
 	}
 
-	var processLink = function(self, linktext) {
-		var [target, displaytext] = linktext.split('|');
+	var processLink = function(self, startIdx, endIdx) {
+		var linktext = self.text.slice(startIdx, endIdx + 1);
+		var [target, displaytext] = linktext.slice(2, -2).split('|');
 		var noSortkey = false;
 		if (!displaytext) {
 			displaytext = target[0] === ':' ? target.slice(1) : target;
@@ -113,22 +160,29 @@ module.exports = function(bot) {
 		if (!title) {
 			return;
 		}
+		var linkobj = {
+			wikitext: linktext, 
+			dsr: [startIdx, endIdx]
+		};
 		if (target[0] !== ':') {
 			if (title.namespace === 6) {
-				self.files.push({
+				self.files.push(Object.assign({
 					target: title,
-					props: linktext.slice(linktext.indexOf('|') + 1)
-				});
+					props: linktext.slice(linktext.indexOf('|') + 1, -2)
+				}, linkobj));
 				return;
 			} else if (title.namespace === 14) {
-				self.categories.push({
+				self.categories.push(Object.assign({
 					target: title,
 					sortkey: noSortkey ? '' : displaytext
-				});
+				}, linkobj));
 				return;
 			}
 		}
-		self.links.push({ target: title, displaytext: displaytext, wikitext: `[[${linktext}]]` });
+		self.links.push(Object.assign({
+			target: title, 
+			displaytext: displaytext
+		}, linkobj));
 	};
 
 	// Adapted from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
@@ -151,8 +205,10 @@ module.exports = function(bot) {
 		 * @param {String} wikitext Wikitext of a template transclusion,
 		 * starting with '{{' and ending with '}}'.
 		 */
-		constructor(wikitext) {
+		constructor(wikitext, startIdx, endIdx) {
 			this.wikitext = wikitext;
+			// dsr stands for data source range, gives the starting and ending index in wikitext
+			this.dsr = [startIdx, endIdx],
 			this.parameters = [];
 		}
 		addParam(name, val, wikitext) {
@@ -191,7 +247,7 @@ module.exports = function(bot) {
 		var processTemplateText = function (startIdx, endIdx) {
 			var text = wikitext.slice(startIdx, endIdx);
 
-			var template = new Template('{{' + text.replace(/\1/g, '|') + '}}');
+			var template = new Template('{{' + text.replace(/\1/g, '|') + '}}', startIdx - 2, endIdx + 1);
 
 			// swap out pipe in links with \1 control character
 			// [[File: ]] can have multiple pipes, so might need multiple passes

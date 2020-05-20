@@ -41,51 +41,73 @@ describe('wikitext', async function() {
 	});
 
 	it('wikitext parse links', function() {
-		var ll = new bot.wikitext(`
+		var wkt = new bot.wikitext(`
 			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
 			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
 			An [[image:image|thumb]].
 			A [[File:Image with wikilink in captions.jpg|thumb|A [[link]].]]
 		`);
-		ll.parseLinks();
+		wkt.parseLinks();
 
 		var result = {
 			links: [
-				{ target: 'Plain link', displaytext: 'plain link' },
-				{ target: 'Piped', displaytext: 'link' },
-				{ target: 'Category:Link category', displaytext: 'Category:Link category' },
-				{ target: 'File:Linked file', displaytext: 'disptext' },
-				{ target: 'Category:Link category', displaytext: 'disptext' },
-				{ target: 'File:File link without disp text', displaytext: 'File:File link without disp text' },
-				{ target: 'User:Userpage link with colon', displaytext: 'User:Userpage link with colon' },
-				{ target: 'Link', displaytext: 'link' }
+				{ target: 'Plain link', displaytext: 'plain link', wikitext: '[[plain link]]', dsr: [ 6, 19 ] },
+				{ target: 'Piped', displaytext: 'link', wikitext: '[[piped|link]]', dsr: [ 24, 37 ] },
+				{ target: 'Category:Link category', displaytext: 'Category:Link category', wikitext: '[[:Category:Link category]]', dsr: [ 175, 201 ] },
+				{ target: 'File:Linked file', displaytext: 'disptext', wikitext: '[[:File:linked file|disptext]]', dsr: [ 204, 233 ] },
+				{ target: 'Category:Link category', displaytext: 'disptext', wikitext: '[[:Category:Link category|disptext]]', dsr:[ 236, 271 ] },
+				{ target: 'File:File link without disp text', displaytext: 'File:File link without disp text', wikitext: '[[:File:File link without disp text]]', dsr: [ 274,310 ] },
+				{ target: 'User:Userpage link with colon', displaytext: 'User:Userpage link with colon', wikitext: '[[:User:Userpage link with colon]]', dsr: [315,348] },
+				{ target: 'Link', displaytext: 'link', wikitext: '[[link]]', dsr: [436,443] },
 			],
 			files: [
-				{ target: 'File:Beans.jpg', props: 'thumb|200px' },
-				{ target: 'File:Image', props: 'thumb' },
-				{ target: 'File:Image with wikilink in captions.jpg', props: 'thumb|A [[link]].' }
+				{ target: 'File:Beans.jpg', props: 'thumb|200px' , wikitext: '[[File:Beans.jpg|thumb|200px]]', dsr: [70, 99] },
+				{ target: 'File:Image', props: 'thumb', wikitext: '[[image:image|thumb]]', dsr: [357, 377] },
+				{ target: 'File:Image with wikilink in captions.jpg', props: 'thumb|A [[link]].', wikitext: '[[File:Image with wikilink in captions.jpg|thumb|A [[link]].]]', dsr: [385, 446] },
 			],
 			categories: [
-				{ target: 'Category:X1', sortkey: '*' },
-				{ target: 'Category:Category without sortkey', sortkey: '' },
+				{ target: 'Category:X1', sortkey: '*', wikitext: '[[category:X1|*]]', dsr: [114, 130] },
+				{ target: 'Category:Category without sortkey', sortkey: '', wikitext: '[[Category:Category without sortkey]]', dsr: [133, 169] },
 			]
 		};
 
-		expect(ll.links).to.be.instanceOf(Array);
-		expect(ll.links.length).to.equal(8);
+		expect(wkt.links).to.be.instanceOf(Array);
+		expect(wkt.links.length).to.equal(8);
 
-		ll.links.forEach((link, idx) => {
-			assert(link.target.toText() === result.links[idx].target);
-			assert(link.displaytext === result.links[idx].displaytext);
+		wkt.links.forEach((link, idx) => {
+			expect(link.target.toText()).to.equal(result.links[idx].target);
+			expect(link.displaytext).to.equal(result.links[idx].displaytext);
+			expect(link.wikitext).to.equal(result.links[idx].wikitext);
+			expect(link.dsr).to.deep.equal(result.links[idx].dsr);
 		});
-		ll.files.forEach((link, idx) => {
-			assert(link.target.toText() === result.files[idx].target);
-			assert(link.props === result.files[idx].props);
+		wkt.files.forEach((link, idx) => {
+			expect(link.target.toText()).to.equal(result.files[idx].target);
+			expect(link.props).to.equal(result.files[idx].props);
+			expect(link.wikitext).to.equal(result.files[idx].wikitext);
+			expect(link.dsr).to.deep.equal(result.files[idx].dsr);
 		});
-		ll.categories.forEach((link, idx) => {
-			assert(link.target.toText() === result.categories[idx].target);
-			assert(link.sortkey === result.categories[idx].sortkey);
+		wkt.categories.forEach((link, idx) => {
+			expect(link.target.toText()).to.equal(result.categories[idx].target);
+			expect(link.sortkey).to.equal(result.categories[idx].sortkey);
+			expect(link.wikitext).to.equal(result.categories[idx].wikitext);
+			expect(link.dsr).to.deep.equal(result.categories[idx].dsr);
 		});
+
+		var earlierText = wkt.getText().replace(result.links[0].wikitext, '');
+		wkt.removeEntity(result.links[0]);
+		console.log(wkt.getText());
+		expect(earlierText).to.equal(wkt.getText());
+
+		
+		earlierText = wkt.getText().replace(result.files[0].wikitext, '');
+		wkt.removeEntity(result.files[0]);
+		console.log(wkt.getText());
+		expect(earlierText).to.equal(wkt.getText());
+
+		earlierText = wkt.getText().replace(result.categories[0].wikitext, '');
+		wkt.removeEntity(result.categories[0]);
+		console.log(wkt.getText());
+		expect(earlierText).to.equal(wkt.getText());
 
 	});
 
@@ -126,14 +148,20 @@ describe('wikitext', async function() {
 		})).to.equal('{{:Cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 	});
 
-	it("Single template, no params", function() {
+	it("Single template, no params; removeEntity for templates", function() {
 		var wikitext = "Lorem {{ipsum}} dorem";
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var wkt = new bot.wikitext(wikitext);
+		var parsed = wkt.parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
 		assert.equal(parsed[0].name, "ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 0, "No parameters");
 		assert.equal(parsed[0].wikitext, "{{ipsum}}", "Correct wikitext");
+
+		var earlierText = wkt.getText();
+		wkt.removeEntity(wkt.templates[0]);
+		expect(earlierText.replace(wkt.templates[0].wikitext, '')).to.equal(wkt.getText());
+
 	});
 	it("Two templates, no params", function() {
 		var wikitext = "Lorem {{ipsum}} dorem {{sum}}";
