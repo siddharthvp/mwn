@@ -45,6 +45,7 @@ describe('wikitext', async function() {
 			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
 			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
 			An [[image:image|thumb]].
+			A [[File:Image with wikilink in captions.jpg|thumb|A [[link]].]]
 		`);
 		ll.parseLinks();
 
@@ -56,11 +57,13 @@ describe('wikitext', async function() {
 				{ target: 'File:Linked file', displaytext: 'disptext' },
 				{ target: 'Category:Link category', displaytext: 'disptext' },
 				{ target: 'File:File link without disp text', displaytext: 'File:File link without disp text' },
-				{ target: 'User:Userpage link with colon', displaytext: 'User:Userpage link with colon' }
+				{ target: 'User:Userpage link with colon', displaytext: 'User:Userpage link with colon' },
+				{ target: 'Link', displaytext: 'link' }
 			],
 			files: [
 				{ target: 'File:Beans.jpg', props: 'thumb|200px' },
-				{ target: 'File:Image', props: 'thumb' }
+				{ target: 'File:Image', props: 'thumb' },
+				{ target: 'File:Image with wikilink in captions.jpg', props: 'thumb|A [[link]].' }
 			],
 			categories: [
 				{ target: 'Category:X1', sortkey: '*' },
@@ -69,7 +72,7 @@ describe('wikitext', async function() {
 		};
 
 		expect(ll.links).to.be.instanceOf(Array);
-		expect(ll.links.length).to.equal(7);
+		expect(ll.links.length).to.equal(8);
 
 		ll.links.forEach((link, idx) => {
 			assert(link.target.toText() === result.links[idx].target);

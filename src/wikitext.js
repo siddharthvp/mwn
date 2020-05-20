@@ -2,10 +2,7 @@ module.exports = function(bot) {
 
 	class Wikitext {
 
-		/**
-		 * @constructor
-		 * @param {string} wikitext
-		 */
+		/** @param {string} wikitext */
 		constructor(wikitext) {
 			this.text = wikitext;
 		}
@@ -17,14 +14,15 @@ module.exports = function(bot) {
 			this.categories = [];
 
 			var n = this.text.length;
-			var startIdx, endIdx;
+			// files can have links in captions; use a stack to handle the nesting
+			var stack = new Stack();
 			for (let i=0; i<n; i++) {
 				if (this.text[i] === '[' && this.text[i+1] === '[') {
-					startIdx = i + 2;
-				} else if (this.text[i] === ']' && this.text[i+1] === ']') {
-					endIdx = i;
-					processLink(this, this.text.slice(startIdx, endIdx));
-					startIdx = null;
+					stack.push({startIdx: i + 2});
+				} else if (this.text[i] === ']' && this.text[i+1] === ']' && stack.top()) {
+					stack.top().endIdx = i;
+					processLink(this, this.text.slice(stack.top().startIdx, stack.top().endIdx));
+					stack.pop();
 				}
 			}
 		}
@@ -98,6 +96,12 @@ module.exports = function(bot) {
 
 	}
 
+	class Stack extends Array {
+		top() {
+			return this[this.length - 1];
+		}
+	}
+
 	var processLink = function(self, linktext) {
 		var [target, displaytext] = linktext.split('|');
 		var noSortkey = false;
@@ -124,7 +128,7 @@ module.exports = function(bot) {
 				return;
 			}
 		}
-		self.links.push({target: title, displaytext: displaytext});
+		self.links.push({ target: title, displaytext: displaytext, wikitext: `[[${linktext}]]` });
 	};
 
 	// Adapted from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
@@ -169,7 +173,7 @@ module.exports = function(bot) {
 		}
 		setName(name) {
 			this.name = name.trim();
-			// this.nameTitle = bot.title.newFromText(name, 10);
+			this.nameTitle = bot.title.newFromText(name, 10);
 		}
 	}
 
