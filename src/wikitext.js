@@ -29,10 +29,12 @@ module.exports = function(bot) {
 			for (let i=0; i<n; i++) {
 				if (this.text[i] === '[' && this.text[i+1] === '[') {
 					stack.push({startIdx: i });
+					i++;
 				} else if (this.text[i] === ']' && this.text[i+1] === ']' && stack.top()) {
 					stack.top().endIdx = i + 1;
 					processLink(this, stack.top().startIdx, stack.top().endIdx);
 					stack.pop();
+					i++; // necessary to handle cases like [[File:ImageName|thumb|A [[hill]]]]
 				}
 			}
 		}
