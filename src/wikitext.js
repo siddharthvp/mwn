@@ -4,17 +4,17 @@ module.exports = function(bot) {
 	 * Class for some basic wikitext parsing, involving 
 	 * links, files, categories and templates.
 	 * 
-	 * For more advanced and sophisticated wikitext parsing, use
+	 * For more advanced and sophisticated wikitext parsing, use can
 	 * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
 	 * implemented in python (which you can use within node.js using
-	 * the child_process interface)
+	 * the child_process interface). However, mwparserfromhell doesn't
+	 * recognize localised namespaces and wiki-specific configs.
 	 */
 	class Wikitext {
 
 		/** @param {string} wikitext */
 		constructor(wikitext) {
 			this.text = wikitext;
-			this.removedSpans = []; // used by removeEntity()
 		}
 
 		/** Parse links, file usages and categories from the wikitext */
@@ -63,38 +63,18 @@ module.exports = function(bot) {
 
 		/**
 		 * Remove a template, link, file or category from the text
-		 * @param {Object|Template} entity - anything with a dsr attribute giving the start index
+		 * CAUTION: If an entity with the very same wikitext exists earlier in the text, 
+		 * that one will be removed instead.
+		 * @param {Object|Template} entity - anything with a wikitext attribute 
 		 * and end index
 		 */
 		removeEntity(entity) {
-			// Can't just do this.text = this.text.slice(0, entity.dsr[0]) + this.text.slice(entity.dsr[1] + 1);
-			// since that will invalidate the existing dsr values
-			this.removedSpans.push(entity.dsr);
+			this.text = this.text.replace(entity.wikitext, '');
 		}
 
-		/**
-		 * Get the updated text after any entity removals 
-		 * @returns {string}
-		 */
+		/** Get the updated text  @returns {string} */
 		getText() {
-			var distinctSpans = this.removedSpans.sort((x,y) => x[0] > y[0] ? 1 : -1).filter((span, idx, arr) => {
-				if (!arr[idx-1]) return true;
-				return span[1] > arr[idx-1][1];
-			});
-			if (distinctSpans.length === 0) {
-				return this.text;
-			}
-			var allowedSpans = [];
-			allowedSpans.push([0, distinctSpans[0][0] - 1]);
-			for (var i = 0; i < distinctSpans.length - 1; i++) {
-				allowedSpans.push([distinctSpans[i][1] + 1, distinctSpans[i+1][0] -1 ]);
-			}
-			allowedSpans.push([distinctSpans[distinctSpans.length-1][1] + 1, this.text.length - 1]);
-			var text = '';
-			allowedSpans.forEach(span => {
-				text += this.text.slice(span[0], span[1] + 1);
-			});
-			return text;
+			return this.text;
 		}
 
 		/**
@@ -164,7 +144,7 @@ module.exports = function(bot) {
 		}
 		var linkobj = {
 			wikitext: linktext, 
-			dsr: [startIdx, endIdx]
+			dsr: [startIdx, endIdx] // Note: data source ranges (dsr) are invalidated by any removeEntity() operation
 		};
 		if (target[0] !== ':') {
 			if (title.namespace === 6) {
