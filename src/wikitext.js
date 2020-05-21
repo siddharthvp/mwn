@@ -53,12 +53,21 @@ module.exports = function(bot) {
 					{ name: '3', value: '', wikitext: '|3=' }
 				]
 			}
-		 * @param {Boolean} recursive Set to `true` to also parse templates that occur
-		 * within other templates, rather than just top-level templates.
+		 * @param {number} [count] - maximum number of templates to parse (default infinite)
 	     * @return Template[]
 		 */
-		parseTemplates(recursive) {
-			return this.templates = parseTemplates(this.text, recursive);
+		parseTemplates(count) {
+			return this.templates = parseTemplates(this.text, false, count);
+		}
+
+		/**
+		 * Also parse templates that occur within other templates, rather than just top-level templates.
+		 * @param {number} [depth=true] - specify a number to limit recursive parsing to a the given recursion 
+		 * depth. For infinite depth, specify `true` (default). Eg. with recursive=1, all templates and 
+		 * sub-templates will be parsed, but not the templates within the sub-templates
+		 */
+		parseTemplatesRecursive(depth) {
+			return this.templates = parseTemplates(this.text, depth || true);
 		}
 
 		/**
@@ -187,10 +196,10 @@ module.exports = function(bot) {
 		 * @param {String} wikitext Wikitext of a template transclusion,
 		 * starting with '{{' and ending with '}}'.
 		 */
-		constructor(wikitext, startIdx, endIdx) {
+		constructor(wikitext, dsr) {
 			this.wikitext = wikitext;
 			// dsr stands for data source range, gives the starting and ending index in wikitext
-			this.dsr = [startIdx, endIdx],
+			this.dsr = dsr, // an array of two numbers
 			this.parameters = [];
 		}
 		addParam(name, val, wikitext) {
@@ -218,62 +227,18 @@ module.exports = function(bot) {
 	// Copied from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
 	// adapted by Evad37 from the original by written by me at
 	// https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js (cc-by-sa-3.0/GFDL)
-	var parseTemplates = function (wikitext, recursive) {
-
-		var strReplaceAt = function (string, index, char) {
-			return string.slice(0, index) + char + string.slice(index + 1);
-		};
+	/**
+	 * 
+	 * @param {string} wikitext 
+	 * @param {boolean|number} [recursive=false] - also parse templates within templates,
+	 * give a number to specify recursion depth. If given as `true`, infinite recursion 
+	 * depth is assumed.
+	 * @param {number} [count] - stop parsing when this many templates have been found,
+	 * Recursive parsing does NOT work if count is specified.
+	 */
+	var parseTemplates = function (wikitext, recursive, count) {
 
 		var result = [];
-
-		var processTemplateText = function (startIdx, endIdx) {
-			var text = wikitext.slice(startIdx, endIdx);
-
-			var template = new Template('{{' + text.replace(/\1/g, '|') + '}}', startIdx - 2, endIdx + 1);
-
-			// swap out pipe in links with \1 control character
-			// [[File: ]] can have multiple pipes, so might need multiple passes
-			while (/(\[\[[^\]]*?)\|(.*?\]\])/g.test(text)) {
-				text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\1$2');
-			}
-
-			var chunks = text.split('|').map(function (chunk) {
-				// change '\1' control characters back to pipes
-				return chunk.replace(/\1/g, '|');
-			});
-
-			template.setName(chunks[0]);
-
-			var parameterChunks = chunks.slice(1);
-
-			var unnamedIdx = 1;
-			parameterChunks.forEach(function (chunk) {
-				var indexOfEqualTo = chunk.indexOf('=');
-				var indexOfOpenBraces = chunk.indexOf('{{');
-
-				var isWithoutEquals = !chunk.includes('=');
-				var hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;
-				var isUnnamedParam = (isWithoutEquals || hasBracesBeforeEquals);
-
-				var pName, pNum, pVal;
-				if (isUnnamedParam) {
-					// Get the next number not already used by either an unnamed parameter,
-					// or by a named parameter like `|1=val`
-					while (template.getParam(unnamedIdx)) {
-						unnamedIdx++;
-					}
-					pNum = unnamedIdx;
-					pVal = chunk.trim();
-				} else {
-					pName = chunk.slice(0, indexOfEqualTo).trim();
-					pVal = chunk.slice(indexOfEqualTo + 1).trim();
-				}
-				template.addParam(pName || pNum, pVal, chunk);
-			});
-
-			result.push(template);
-		};
-
 
 		var n = wikitext.length;
 
@@ -303,7 +268,11 @@ module.exports = function(bot) {
 				} else if (wikitext[i] === '}' && wikitext[i + 1] === '}') {
 					if (numUnclosed === 2) {
 						endIdx = i;
-						processTemplateText(startIdx, endIdx);
+						var templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
+						result.push(processTemplateText(templateWikitext, [startIdx - 2, endIdx + 1]));
+						if (count && result.length === count) {
+							return result;
+						}
 					}
 					numUnclosed -= 2;
 					i++;
@@ -336,13 +305,13 @@ module.exports = function(bot) {
 
 		}
 
-		if (recursive) {
+		if (recursive && !count) {
 			var subtemplates = result.map(function (template) {
 				return template.wikitext.slice(2, -2);
 			}).filter(function (templateWikitext) {
 				return /\{\{(?:.|\n)*\}\}/.test(templateWikitext);
 			}).map(function (templateWikitext) {
-				return parseTemplates(templateWikitext, true);
+				return parseTemplates(templateWikitext, recursive === true ? true : recursive - 1);
 			});
 
 			return result.concat.apply(result, subtemplates);
@@ -350,6 +319,63 @@ module.exports = function(bot) {
 
 		return result;
 
+	};
+
+	/**
+	 * @param {string} text - template wikitext without braces, with the pipes in 
+	 * nested templates replaced by \1
+	 * @param {Number[]} [dsr] - data source range (optional) for the template object 
+	 * Array of starting and ending indices of template in wikitext
+	 */
+	var processTemplateText = function (text, dsr) {
+
+		var template = new Template('{{' + text.replace(/\1/g, '|') + '}}', dsr);
+
+		// swap out pipe in links with \1 control character
+		// [[File: ]] can have multiple pipes, so might need multiple passes
+		while (/(\[\[[^\]]*?)\|(.*?\]\])/g.test(text)) {
+			text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\1$2');
+		}
+
+		var chunks = text.split('|').map(function (chunk) {
+			// change '\1' control characters back to pipes
+			return chunk.replace(/\1/g, '|');
+		});
+
+		template.setName(chunks[0]);
+
+		var parameterChunks = chunks.slice(1);
+
+		var unnamedIdx = 1;
+		parameterChunks.forEach(function (chunk) {
+			var indexOfEqualTo = chunk.indexOf('=');
+			var indexOfOpenBraces = chunk.indexOf('{{');
+
+			var isWithoutEquals = !chunk.includes('=');
+			var hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;
+			var isUnnamedParam = (isWithoutEquals || hasBracesBeforeEquals);
+
+			var pName, pNum, pVal;
+			if (isUnnamedParam) {
+				// Get the next number not already used by either an unnamed parameter,
+				// or by a named parameter like `|1=val`
+				while (template.getParam(unnamedIdx)) {
+					unnamedIdx++;
+				}
+				pNum = unnamedIdx;
+				pVal = chunk.trim();
+			} else {
+				pName = chunk.slice(0, indexOfEqualTo).trim();
+				pVal = chunk.slice(indexOfEqualTo + 1).trim();
+			}
+			template.addParam(pName || pNum, pVal, chunk);
+		});
+
+		return template;
+	};
+
+	var strReplaceAt = function (string, index, char) {
+		return string.slice(0, index) + char + string.slice(index + 1);
 	};
 
 	return Wikitext;
