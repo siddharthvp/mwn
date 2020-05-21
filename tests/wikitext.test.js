@@ -108,6 +108,13 @@ describe('wikitext', async function() {
 
 	});
 
+	it('parses file with problematic unicode characters', function() {
+		var wkt = new bot.wikitext(`{{short description|Polish politician}}
+		[[File:Michał Cieślak Sejm 2016.JPG|thumb|Michał Cieślak]]`);
+		wkt.parseLinks();
+		expect(wkt.files.length).to.equal(1);
+	});
+
 	it('static link', function() {
 		expect(bot.wikitext.link('Main Page')).to.equal('[[Main Page]]');
 		expect(bot.wikitext.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
@@ -163,7 +170,7 @@ describe('wikitext', async function() {
 
 	it("parseTemplates with count", function() {
 
-		var wikitext = '{{a|zzz|{{er}}}}, {{b|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}';
+		var wikitext = '{{a|zzz|{{er}}}}, {{b|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}'; 
 		var wkt = new bot.wikitext(wikitext);
 	
 		wkt.parseTemplates(1);

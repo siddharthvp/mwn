@@ -229,7 +229,7 @@ var parse = function(title, defaultNamespace) {
 		rUnderscoreTrim = /^_+|_+$/g,
 		rSplit = /^(.+?)_*:_*(.*)$/,
 		rInvalid = new RegExp(
-			'[^' + Title.legaltitlechars + ']' +
+			'[^' + " %!\"$&'()*,\\-./0-9:;=?@A-Z\\\\\\^_`a-z~+\\u0080-\\uFFFF" + ']' +
 			// URL percent encoding sequences interfere with the ability
 			// to round-trip titles -- you can't link to them consistently.
 			'|%[\\dA-Fa-f]{2}' +
