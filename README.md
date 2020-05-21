@@ -2,7 +2,7 @@
 
 **mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
-Development status: **Unstable**. mwn currently does not follow semantic versioning rules. For now, changes may be made to the public interface without a change in version number.
+Development status: **Unstable**. Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
 Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. 
 
@@ -10,7 +10,11 @@ Amongst the major highlights are `batchOperation` and `seriesBatchOperation` whi
 
 ### Setup
 
-Until mwn is released on npm, enter the `node_modules` directory of your project and run:
+To install, run `npm install mwn`.
+
+[![Download stats](https://nodei.co/npm/mwn.png?downloads=true&downloadRank=true)](https://nodei.co/npm/mwn/)
+
+Or obtain the latest development copy:
 ```sh
 git clone https://github.com/siddharthvp/mwn.git
 cd mwn
