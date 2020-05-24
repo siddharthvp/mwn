@@ -9,6 +9,9 @@ module.exports = function(bot) {
 	 * implemented in python (which you can use within node.js using
 	 * the child_process interface). However, mwparserfromhell doesn't
 	 * recognize localised namespaces and wiki-specific configs.
+	 * 
+	 * This class is for methods for parsing wikitext, for the 
+	 * static methods for creating wikitext, see static_utils.js.
 	 */
 	class Wikitext {
 
@@ -96,42 +99,9 @@ module.exports = function(bot) {
 			return bot.parseWikitext(this.text, options);
 		}
 
-		/**
-		 * Get wikitext for a new link
-		 * @param {string|bot.title} target
-		 * @param {string} [displaytext]
-		 */
-		static link(target, displaytext) {
-			if (target instanceof bot.title) {
-				return '[[' + target.toText() +
-					(target.fragment ? '#' + target.fragment : '') +
-					(displaytext ? '|' + displaytext : '') +
-					']]';
-			}
-			return '[[' + target + (displaytext ? '|' + displaytext : '') + ']]';
-		}
-
-		/**
-		 * Get wikitext for a template usage
-		 * @param {string|bot.title} title
-		 * @param {Object} [options] - template parameters as object
-		 */
-		static template(title, options) {
-			if (title instanceof bot.title) {
-				if (title.namespace === 10) {
-					title = title.getMainText(); // skip namespace name for templates
-				} else if (title.namespace === 0) {
-					title = ':' + title.toText(); // prefix colon for mainspace
-				}
-			}
-			return '{{' + String(title) +
-				Object.entries(options).map(([key, val]) => {
-					return '|' + key + '=' + val;
-				}).join('') +
-				'}}';
-		}
-
 	}
+
+	/**** Private members *****/
 
 	class Stack extends Array {
 		top() {
@@ -153,7 +123,9 @@ module.exports = function(bot) {
 		}
 		var linkobj = {
 			wikitext: linktext, 
-			dsr: [startIdx, endIdx] // Note: data source ranges (dsr) are invalidated by any removeEntity() operation
+			dsr: [startIdx, endIdx] 
+			// Note: data source ranges (dsr) are invalidated by any removeEntity() operation,
+			// or any direct modification to this.text
 		};
 		if (target[0] !== ':') {
 			if (title.namespace === 6) {

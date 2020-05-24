@@ -115,43 +115,6 @@ describe('wikitext', async function() {
 		expect(wkt.files.length).to.equal(1);
 	});
 
-	it('static link', function() {
-		expect(bot.wikitext.link('Main Page')).to.equal('[[Main Page]]');
-		expect(bot.wikitext.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
-
-		var title = new bot.title('main Page');
-		expect(bot.wikitext.link(title)).to.equal('[[Main Page]]');
-		expect(bot.wikitext.link(title, 'homepage')).to.equal('[[Main Page|homepage]]');
-
-		var titleWithFragment = new bot.title('Main Page#Did You Know');
-		expect(bot.wikitext.link(titleWithFragment)).to.equal('[[Main Page#Did You Know]]');
-		expect(bot.wikitext.link(titleWithFragment, 'homepage')).to.equal('[[Main Page#Did You Know|homepage]]');
-	});
-
-	it('static template', function() {
-		expect(bot.wikitext.template('cite', {
-			author: 'John Doe',
-			date: '14 January 2012',
-			url: 'https://example.com',
-			1: 'web'
-		})).to.equal('{{cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
-
-		expect(bot.wikitext.template(new bot.title('template:cite#fragment'), {
-			author: 'John Doe',
-			date: '14 January 2012',
-			url: 'https://example.com',
-			1: 'web'
-		})).to.equal('{{Cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
-
-		// mainspace template
-		expect(bot.wikitext.template(new bot.title('cite#fragment'), {
-			author: 'John Doe',
-			date: '14 January 2012',
-			url: 'https://example.com',
-			1: 'web'
-		})).to.equal('{{:Cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
-	});
-
 	it("Single template, no params; removeEntity for templates", function() {
 		var wikitext = "Lorem {{ipsum}} dorem";
 		var wkt = new bot.wikitext(wikitext);

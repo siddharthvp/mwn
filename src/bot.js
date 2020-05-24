@@ -50,6 +50,7 @@ const User = require('./user');
 const Category = require('./category');
 const File = require('./file');
 const Util = require('./util');
+const static_utils = require('./static_utils');
 
 class Bot {
 
@@ -265,8 +266,8 @@ class Bot {
 	/************ CORE REQUESTS ***************/
 
 	/**
-	 * Executes a promisified raw request
-	 * Uses the npm request library
+	 * Executes a raw request
+	 * Uses the axios library
 	 *
 	 * @param {object} requestOptions
 	 *
@@ -1276,6 +1277,9 @@ class Bot {
 		log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
 	}
 }
+
+// Bind static utilities
+Object.assign(Bot, static_utils);
 
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined
