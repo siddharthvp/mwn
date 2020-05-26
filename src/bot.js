@@ -1247,6 +1247,35 @@ class Bot {
 		return this.rawRequest(requestOptions);
 	}
 
+	/**
+	 * Gets ORES predictions from revision IDs
+	 * @param {string} endpointUrl
+	 * @param {string[]|string} models
+	 * @param {string[]|number[]|string|number} revision ID(s)
+	 */
+	oresQueryRevisions(endpointUrl, models, revisions) {
+		var response = {};
+		var chunks = arrayChunk(
+			(revisions instanceof Array) ? revisions : [ revisions ],
+			50
+		);
+		return this.seriesBatchOperation(chunks, (chunk) => {
+			return this.rawRequest({
+				method: 'get',
+				url: endpointUrl,
+				params: {
+					models: models.join('|'),
+					revids: chunk.join('|')
+				},
+				responseType: 'json'
+			}).then(data => {
+				Object.assign(response, Object.values(data)[0].scores);
+			});
+		}, 0, 2).then(() => {
+			return response;
+		});
+	}
+
 
 	/****************** UTILITIES *****************/
 
@@ -1311,6 +1340,16 @@ var mergeRequestOptions = function(options, customOptions) {
 		}
 	});
 	return options;
+};
+
+/** @param {Array} arr, @param {number} size */
+var arrayChunk = function(arr, size) {
+	var numChunks = Math.ceil(arr.length / size);
+	var result = new Array(numChunks);
+	for (let i=0; i<numChunks; i++) {
+		result[i] = arr.slice(i * size, (i + 1) * size);
+	}
+	return result;
 };
 
 /**
