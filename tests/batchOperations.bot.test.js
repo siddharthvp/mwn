@@ -1,6 +1,4 @@
-const mwn = require('../src/bot');
-const expect = require('chai').expect;
-const log = require('semlog').log;
+const { mwn, expect, log } = require('./test_base');
 
 var debugMode = false;
 var debug = function(msg) {

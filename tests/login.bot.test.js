@@ -1,10 +1,6 @@
 'use strict';
 
-const mwn = require('../src/bot');
-
-const chai = require('chai');
-const expect = chai.expect;
-const assert = require('assert');
+const { mwn, expect, assert } = require('./test_base');
 
 const loginCredentials = require('./mocking/loginCredentials.js').valid;
 
@@ -13,8 +9,6 @@ let bot = new mwn({
 });
 
 describe('login', async function() {
-
-	'use strict';
 	this.timeout(7000);
 
 	it('successfully logs in and gets token', function(done) {

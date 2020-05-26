@@ -6,39 +6,13 @@
 
 'use strict';
 
-const mwn = require('../src/bot');
+const { bot, assert, expect, loginBefore, logoutAfter} = require('./test_base');
 
-const expect = require('chai').expect;
-const assert = require('assert');
-
-const loginCredentials = require('./mocking/loginCredentials.js').valid;
-
-let bot = new mwn({
-	silent: true,
-	hasApiHighLimit: true,
-	apiUrl: loginCredentials.apiUrl,
-	username: loginCredentials.username,
-	password: loginCredentials.password
-});
 
 describe('wikitext', async function() {
 
-	before('logs in and gets token & namespaceInfo', function(done) {
-		this.timeout(7000);
-		bot.loginGetToken().then(() => {
-			expect(bot.csrfToken).to.be.a('string');
-			assert(bot.csrfToken.endsWith('+\\'));
-			expect(bot.title.nameIdMap).to.be.a('object');
-			expect(bot.title.legaltitlechars).to.be.a('string');
-			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-			done();
-		});
-	});
-
-	after('logs out', function(done) {
-		this.timeout(4000);
-		bot.logout().then(() => done());
-	});
+	before('logs in and gets token & namespaceInfo', loginBefore);
+	after('logs out', logoutAfter);
 
 	it('wikitext parse links', function() {
 		var wkt = new bot.wikitext(`

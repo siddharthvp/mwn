@@ -1,18 +1,6 @@
 'use strict';
 
-const mwn = require('../src/bot');
-
-const expect = require('chai').expect;
-
-const loginCredentials = require('./mocking/loginCredentials.js').valid;
-
-let bot = new mwn({
-	silent: true,
-	hasApiHighLimit: true,
-	apiUrl: loginCredentials.apiUrl,
-	username: loginCredentials.username,
-	password: loginCredentials.password
-});
+const { bot, expect, logoutAfter} = require('./test_base');
 
 describe('Page', async function() {
 
@@ -21,12 +9,6 @@ describe('Page', async function() {
 	before('logs in and gets token & namespaceInfo', function(done) {
 		this.timeout(7000);
 		bot.loginGetToken().then(() => {
-			expect(bot.csrfToken).to.be.a('string');
-			expect(bot.csrfToken.endsWith('+\\')).to.be.ok;
-			expect(bot.title.nameIdMap).to.be.a('object');
-			expect(bot.title.legaltitlechars).to.be.a('string');
-			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-
 			// for further tests
 			page = new bot.page('Wp:Requests/Permissions');
 
@@ -34,10 +16,7 @@ describe('Page', async function() {
 		});
 	});
 
-	after('logs out', function(done) {
-		this.timeout(4000);
-		bot.logout().then(() => done());
-	});
+	after('logs out', logoutAfter);
 
 	it('page inherits title', function() {
 		expect(page.toText()).to.equal('Wikipedia:Requests/Permissions');

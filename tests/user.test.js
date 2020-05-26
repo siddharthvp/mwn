@@ -1,40 +1,12 @@
 'use strict';
 
-const mwn = require('../src/bot');
-
-const expect = require('chai').expect;
-const assert = require('assert');
-
-const loginCredentials = require('./mocking/loginCredentials.js').valid;
-
-let bot = new mwn({
-	silent: true,
-	hasApiHighLimit: true,
-	apiUrl: loginCredentials.apiUrl,
-	username: loginCredentials.username,
-	password: loginCredentials.password
-});
+const { bot, expect, loginBefore, logoutAfter} = require('./test_base');
 
 describe('User', async function() {
 	this.timeout(7000);
 
-	before('logs in and gets token & namespaceInfo', function(done) {
-		this.timeout(7000);
-		bot.loginGetToken().then(() => {
-			expect(bot.csrfToken).to.be.a('string');
-			assert(bot.csrfToken.endsWith('+\\'));
-			expect(bot.title.nameIdMap).to.be.a('object');
-			expect(bot.title.legaltitlechars).to.be.a('string');
-			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-			done();
-		});
-	});
-
-	after('logs out', function(done) {
-		this.timeout(4000);
-		bot.logout().then(() => done());
-	});
-
+	before('logs in and gets token & namespaceInfo', loginBefore);
+	after('logs out', logoutAfter);
 
 	it('gets user contribs', function(done) {
 		var u = new bot.user('SD0001');

@@ -1,42 +1,13 @@
 'use strict';
 
-const mwn = require('../src/bot');
-const log = require('semlog').log;
-const crypto = require('crypto');
-
-const chai = require('chai');
-const expect = chai.expect;
-const assert = require('assert');
-
-const loginCredentials = require('./mocking/loginCredentials.js').valid;
-
-let bot = new mwn({
-	silent: true,
-	hasApiHighLimit: true,
-	apiUrl: loginCredentials.apiUrl,
-	username: loginCredentials.username,
-	password: loginCredentials.password
-});
+const { mwn, bot, log, crypto, expect, assert, loginBefore, logoutAfter} = require('./test_base');
 
 describe('mwn', async function() {
 	this.timeout(5000);
 
-	before('logs in and gets token & namespaceInfo', function(done) {
-		this.timeout(7000);
-		bot.loginGetToken().then(() => {
-			log('[S] Logged in');
-			expect(bot.csrfToken).to.be.a('string');
-			assert(bot.csrfToken.endsWith('+\\'));
-			expect(bot.title.nameIdMap).to.be.a('object');
-			expect(bot.title.legaltitlechars).to.be.a('string');
-			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-			done();
-		});
-	});
+	before('logs in and gets token & namespaceInfo', loginBefore);
 
-	after('logs out', function(done) {
-		bot.logout().then(() => done());
-	});
+	after('logs out', logoutAfter);
 
 
 	//////////////////////////////////////////
@@ -261,9 +232,8 @@ describe('mwn', async function() {
 			it('successfully upload image from URL', function(done) {
 				var url = 'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png';
 				bot.uploadFromUrl(url, randFileName, 'Test upload using mwn').then(data => {
-					console.log(data);
 					expect(data.result).to.equal('Success');
-					bot.delete(randFileName, 'Delete after testing (mwn)');
+					bot.delete('File:' + randFileName, 'Delete after testing (mwn)');
 					done();
 				});
 			});
@@ -304,7 +274,7 @@ describe('mwn', async function() {
 			bot.download(fileTitle).then(function() {
 				var expectedTitle = 'Example demo image.png';
 				expect(fs.readdirSync('.')).to.include(expectedTitle);
-				fs.unlinkSync(expectedTitle);
+				fs.unlinkSync(expectedTitle); // delete the file
 				done();
 			});
 		});
