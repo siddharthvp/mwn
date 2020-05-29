@@ -39,7 +39,6 @@ axiosCookieJarSupport(axios);
 
 const fs = require('fs');
 const path = require('path');
-const ispromise = require('is-promise');
 const semlog = require('semlog');
 const log = semlog.log;
 
@@ -1309,6 +1308,13 @@ class Bot {
 
 // Bind static utilities
 Object.assign(Bot, static_utils);
+
+
+/** Check whether object looks like a promises-a+ promise, from https://www.npmjs.com/package/is-promise */
+var ispromise = function (obj) {
+	return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
+		typeof obj.then === 'function';
+};
 
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined
