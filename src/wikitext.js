@@ -1,16 +1,16 @@
 module.exports = function(bot) {
 
 	/**
-	 * Class for some basic wikitext parsing, involving 
+	 * Class for some basic wikitext parsing, involving
 	 * links, files, categories and templates.
-	 * 
-	 * For more advanced and sophisticated wikitext parsing, use can
+	 *
+	 * For more advanced and sophisticated wikitext parsing, use
 	 * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
 	 * implemented in python (which you can use within node.js using
 	 * the child_process interface). However, mwparserfromhell doesn't
 	 * recognize localised namespaces and wiki-specific configs.
-	 * 
-	 * This class is for methods for parsing wikitext, for the 
+	 *
+	 * This class is for methods for parsing wikitext, for the
 	 * static methods for creating wikitext, see static_utils.js.
 	 */
 	class Wikitext {
@@ -65,8 +65,8 @@ module.exports = function(bot) {
 
 		/**
 		 * Also parse templates that occur within other templates, rather than just top-level templates.
-		 * @param {number} [depth=true] - specify a number to limit recursive parsing to a the given recursion 
-		 * depth. For infinite depth, specify `true` (default). Eg. with recursive=1, all templates and 
+		 * @param {number} [depth=true] - specify a number to limit recursive parsing to a the given recursion
+		 * depth. For infinite depth, specify `true` (default). Eg. with recursive=1, all templates and
 		 * sub-templates will be parsed, but not the templates within the sub-templates
 		 */
 		parseTemplatesRecursive(depth) {
@@ -75,9 +75,9 @@ module.exports = function(bot) {
 
 		/**
 		 * Remove a template, link, file or category from the text
-		 * CAUTION: If an entity with the very same wikitext exists earlier in the text, 
+		 * CAUTION: If an entity with the very same wikitext exists earlier in the text,
 		 * that one will be removed instead.
-		 * @param {Object|Template} entity - anything with a wikitext attribute 
+		 * @param {Object|Template} entity - anything with a wikitext attribute
 		 * and end index
 		 */
 		removeEntity(entity) {
@@ -122,8 +122,8 @@ module.exports = function(bot) {
 			return;
 		}
 		var linkobj = {
-			wikitext: linktext, 
-			dsr: [startIdx, endIdx] 
+			wikitext: linktext,
+			dsr: [startIdx, endIdx]
 			// Note: data source ranges (dsr) are invalidated by any removeEntity() operation,
 			// or any direct modification to this.text
 		};
@@ -143,7 +143,7 @@ module.exports = function(bot) {
 			}
 		}
 		self.links.push(Object.assign({
-			target: title, 
+			target: title,
 			displaytext: displaytext
 		}, linkobj));
 	};
@@ -200,10 +200,10 @@ module.exports = function(bot) {
 	// adapted by Evad37 from the original by written by me at
 	// https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js (cc-by-sa-3.0/GFDL)
 	/**
-	 * 
-	 * @param {string} wikitext 
+	 *
+	 * @param {string} wikitext
 	 * @param {boolean|number} [recursive=false] - also parse templates within templates,
-	 * give a number to specify recursion depth. If given as `true`, infinite recursion 
+	 * give a number to specify recursion depth. If given as `true`, infinite recursion
 	 * depth is assumed.
 	 * @param {number} [count] - stop parsing when this many templates have been found,
 	 * Recursive parsing does NOT work if count is specified.
@@ -294,9 +294,9 @@ module.exports = function(bot) {
 	};
 
 	/**
-	 * @param {string} text - template wikitext without braces, with the pipes in 
+	 * @param {string} text - template wikitext without braces, with the pipes in
 	 * nested templates replaced by \1
-	 * @param {Number[]} [dsr] - data source range (optional) for the template object 
+	 * @param {Number[]} [dsr] - data source range (optional) for the template object
 	 * Array of starting and ending indices of template in wikitext
 	 */
 	var processTemplateText = function (text, dsr) {
