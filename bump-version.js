@@ -32,16 +32,24 @@ switch (process.argv[2]) {
 		break;
 	default:
 		console.log(`[E] version increment type not specified`);
+		process.exit(1);
 }
 
 packageJson.version = versionNums.join('.');
 
-fs.writeFileSync('./package.json', JSON.stringify(packageJson, undefined, 2), console.log);
-
-exec('git commit --amend --no-edit', (err) => {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log(`Successfully bumped version number to ${packageJson.version}`);
+exec('git diff --name-only | grep package.json', (err, stdout) => {
+	if (stdout.trim()) {
+		console.log(`[E] There are unstaged changes to package.json. Please stage or commit or stash these changes first`);
+		process.exit(1);
 	}
+
+	fs.writeFileSync('./package.json', JSON.stringify(packageJson, undefined, 2), console.log);
+
+	exec('git add package.json; git commit --amend --no-edit', (err) => {
+		if (err) {
+			console.log(err);
+		} else {
+			console.log(`Successfully bumped version number to ${packageJson.version}`);
+		}
+	});
 });

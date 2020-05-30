@@ -16,7 +16,7 @@ describe('mwn', async function() {
 
 	it('successfully executes a raw HTTP request', function(done) {
 
-		bot.rawRequest({
+		mwn.rawRequest({
 			method: 'get',
 			url: 'https://jsonplaceholder.typicode.com/comments',
 			responseType: 'json',

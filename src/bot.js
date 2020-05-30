@@ -90,18 +90,6 @@ class mwn {
 		this.csrfToken = '%notoken%';
 
 		/**
-		 * Internal statistics
-		 *
-		 * @type {object}
-		 */
-		this.counter = {
-			total: 0,
-			resolved: 0,
-			fulfilled: 0,
-			rejected: 0
-		};
-
-		/**
 		 * Default options.
 		 * Should be immutable
 		 *
@@ -272,21 +260,13 @@ class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	rawRequest(requestOptions) {
+	static rawRequest(requestOptions) {
 
-		this.counter.total += 1;
-
-		this.counter.resolved += 1;
 		if (!requestOptions.url) {
-			this.counter.rejected += 1;
 			return Promise.reject(new Error('No API URL provided!'));
 		}
 		return axios(requestOptions).then(response => {
-			this.counter.fulfilled +=1;
 			return response.data;
-		}, error => {
-			this.counter.rejected +=1;
-			return Promise.reject(error);
 		});
 
 	}
@@ -331,7 +311,7 @@ class mwn {
 			}
 		});
 
-		return this.rawRequest(requestOptions).then((response) => {
+		return mwn.rawRequest(requestOptions).then((response) => {
 			if (typeof response !== 'object') {
 				let err = new Error('invalidjson: No valid JSON response');
 				err.code = 'invalidjson';
@@ -853,7 +833,7 @@ class mwn {
 	 * @returns {Promise<void>}
 	 */
 	downloadFromUrl(url, localname) {
-		return this.rawRequest({
+		return mwn.rawRequest({
 			method: 'get',
 			url: url,
 			responseType: 'stream'
@@ -1215,7 +1195,7 @@ class mwn {
 			}
 		}, customRequestOptions);
 
-		return this.rawRequest(requestOptions);
+		return mwn.rawRequest(requestOptions);
 	}
 
 
@@ -1243,7 +1223,7 @@ class mwn {
 			}
 		}, customRequestOptions);
 
-		return this.rawRequest(requestOptions);
+		return mwn.rawRequest(requestOptions);
 	}
 
 	/**
@@ -1259,7 +1239,7 @@ class mwn {
 			50
 		);
 		return this.seriesBatchOperation(chunks, (chunk) => {
-			return this.rawRequest({
+			return mwn.rawRequest({
 				method: 'get',
 				url: endpointUrl,
 				params: {

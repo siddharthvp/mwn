@@ -1,6 +1,6 @@
 {
   "name": "mwn",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "MediaWiki bot framework for NodeJS",
   "main": "./src/bot.js",
   "scripts": {
