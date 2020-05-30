@@ -51,7 +51,7 @@ const File = require('./file');
 const Util = require('./util');
 const static_utils = require('./static_utils');
 
-class Bot {
+class mwn {
 
 
 	/***************** CONSTRUCTOR ********************/
@@ -1275,42 +1275,19 @@ class Bot {
 		});
 	}
 
-
-	/****************** UTILITIES *****************/
-
-	/**
-	 * Prints status information about a completed request
-	 *
-	 * @param status
-	 * @param currentCounter
-	 * @param totalCounter
-	 * @param operation
-	 * @param pageName
-	 * @param reason
-	 */
-	static logStatus(status, currentCounter, totalCounter, operation, pageName, reason) {
-
-		operation = operation || '';
-
-		if (operation) {
-			operation = ' [' + operation.toUpperCase() + ']';
-			operation = (operation + '            ').substring(0, 12); // Right space padding: http://stackoverflow.com/a/24398129
-		}
-
-		reason = reason || '';
-		if (reason) {
-			reason = ' (' + reason + ')';
-		}
-
-		log(status + '[' + semlog.pad(currentCounter, 4) + '/' + semlog.pad(totalCounter, 4) + ']' + operation + pageName + reason);
-	}
 }
 
 // Bind static utilities
-Object.assign(Bot, static_utils);
+Object.assign(mwn, static_utils);
 
 
-/** Check whether object looks like a promises-a+ promise, from https://www.npmjs.com/package/is-promise */
+// Expose semlog
+mwn.log = log;
+
+
+/**** Private utilities ****/
+
+/** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
 var ispromise = function (obj) {
 	return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
 		typeof obj.then === 'function';
@@ -1386,4 +1363,4 @@ var makeTitle = function(page) {
 	}
 };
 
-module.exports = Bot;
+module.exports = mwn;
