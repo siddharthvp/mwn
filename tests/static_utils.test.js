@@ -78,7 +78,8 @@ describe('static utils', function() {
 		expect(table.getText()).to.equal(expected2);
 
 		expect(new mwn.table({ sortable: true }).getText()).to.equal(`{| class="wikitable sortable"\n|}`);
-		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| \n|}`);
+		expect(new mwn.table({ plain: true }).getText()).to.equal(`{|\n|}`);
+		expect(new mwn.table({ plain: true, style: 'text-align: center' }).getText()).to.equal(`{| style="text-align: center"\n|}`);
 
 	});
 

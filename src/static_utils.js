@@ -100,28 +100,32 @@ module.exports = {
 
 	table: class table {
 		/**
-		 * @param {Object} config
+		 * @param {Object} [config={}]
 		 * @config {boolean} plain - plain table without borders
 		 * @config {boolean} sortable - make columns sortable
+		 * @config {string} style - style attribute
 		 * @config {boolean} multiline - put each cell of the table on a new line,
 		 * this causes no visual changes, but the wikitext representation is different.
 		 */
-		constructor(config) {
+		constructor(config = {}) {
 			var classes = [];
-			if (config) {
-				if (!config.plain) {
-					classes.push('wikitable');
-				}
-				if (config.sortable) {
-					classes.push('sortable');
-				}
-				if (config.multiline) {
-					this.multiline = true;
-				}
-			} else {
+			if (!config.plain) {
 				classes.push('wikitable');
 			}
-			this.text = `{| ${classes.length ? `class="${classes.join(' ')}"` : ''}\n`;
+			if (config.sortable) {
+				classes.push('sortable');
+			}
+			if (config.multiline) {
+				this.multiline = true;
+			}
+			this.text = `{|`;
+			if (classes.length) {
+				this.text += ` class="${classes.join(' ')}"`;
+			}
+			if (config.style) {
+				this.text += ` style="${config.style}"`;
+			}
+			this.text += '\n';
 		}
 		/**
 		 * Add the headers
