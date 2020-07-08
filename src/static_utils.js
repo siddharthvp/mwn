@@ -1,6 +1,5 @@
 /**
  * Static functions on mwn
- * rawRequest() is also a static method but is defined in bot.js itself.
  */
 
 
@@ -93,6 +92,9 @@ module.exports = {
 		}
 		return '{{' + title +
 			Object.entries(parameters).map(([key, val]) => {
+				if (!val) { // skip parameter if no value provided
+					return '';
+				}
 				return '|' + key + '=' + val;
 			}).join('') +
 			'}}';
@@ -134,7 +136,7 @@ module.exports = {
 		addHeaders(headers) {
 			this.text += `|-\n`; // row separator
 			if (this.multiline) {
-				this.text += headers.map(e => `! ${e} \n`);
+				this.text += headers.map(e => `! ${e} \n`).join('');
 			} else {
 				this.text += `! ` + headers.join(' !! ') + '\n';
 			}
@@ -146,7 +148,7 @@ module.exports = {
 		addRow(fields) {
 			this.text += `|-\n`; // row separator
 			if (this.multiline) {
-				this.text += fields.map(e => `| ${e} \n`);
+				this.text += fields.map(e => `| ${e} \n`).join('');
 			} else {
 				this.text += `| ` + fields.join(' || ') + '\n';
 			}
