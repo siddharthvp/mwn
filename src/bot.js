@@ -473,13 +473,17 @@ class mwn {
 
 	/**
 	 * Log out of the account
-	 * @returns {Promise} - resolved with an empty object if successful
+	 * @returns {Promise<void>}
 	 */
 	logout() {
 		return this.request({
 			action: 'logout',
 			token: this.csrfToken
-		}); // returns an empty response if successful
+		}).then(() => { // returns an empty response if successful
+			this.loggedIn = false;
+			this.cookieJar.removeAllCookiesSync();
+			this.state.csrfToken = this.csrfToken = '%notoken%';
+		});
 	}
 
 	/**
