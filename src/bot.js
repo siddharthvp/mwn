@@ -955,6 +955,7 @@ class mwn {
 	 * @param {string} title
 	 * @param {string} text
 	 * @param {Object} options
+	 * @returns {Promise<Object>}
 	 */
 	uploadFromUrl(url, title, text, options) {
 		return this.request(merge({
@@ -1425,7 +1426,7 @@ class mwn {
 
 mwn.requestDefaults = {
 	headers: {
-		// 'Accept-Encoding': 'gzip' // XXX: CHECK THIS
+		'Accept-Encoding': 'gzip'
 	},
 
 	// keep-alive pools and reuses TCP connections, for better performance
