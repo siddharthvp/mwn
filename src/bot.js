@@ -598,11 +598,18 @@ class mwn {
 	* time of last edit' } object. This function should return an object with
 	* edit API parameters or just the updated text, or a promise providing one of
 	* those.
-	* @param {number} [conflictRetries=2] - max number of times to retry edit on
-	* encountering an edit conflict (default 2)
+	* @param {Object} [editConfig] - Overridden edit options. Available options:
+	* conflictRetries, suppressNochangeWarning, exclusionRegex
+	* @config conflictRetries - maximum number of times to retry edit after encountering edit
+	* conflicts.
+	* @config suppressNochangeWarning - don't show the warning when no change is actually
+	* made to the page on an successful edit
+	* @config exclusionRegex - don't edit if the page text matches this regex. Used for bot
+	* per-page exclusion compliance.
 	* @return {Promise<Object>} Edit API response
 	*/
-	edit(title, transform, conflictRetries=2) {
+	edit(title, transform, editConfig) {
+		editConfig = editConfig || this.options.editConfig;
 
 		var basetimestamp, curtimestamp;
 
@@ -629,6 +636,10 @@ class mwn {
 			basetimestamp = revision.timestamp;
 			curtimestamp = data.curtimestamp;
 
+			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revision)) {
+				return Promise.reject('bot-denied');
+			}
+
 			return transform({
 				timestamp: revision.timestamp,
 				content: revision.content
@@ -651,10 +662,14 @@ class mwn {
 			}, makeTitle(title), editParams));
 
 		}).then(data => {
+			if (data.edit.nochange && !editConfig.suppressNochangeWarning) {
+				log(`[W] No change from edit to ${data.edit.title}`);
+			}
 			return data.edit;
 		}, errorCode => {
-			if (errorCode === 'editconflict' && conflictRetries > 0) {
-				return this.edit(title, transform, conflictRetries - 1);
+			if (errorCode === 'editconflict' && editConfig.conflictRetries > 0) {
+				editConfig.conflictRetries--;
+				return this.edit(title, transform, editConfig);
 			}
 		});
 	}
