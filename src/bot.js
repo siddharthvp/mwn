@@ -155,6 +155,14 @@ class mwn {
 		 *
 		 * @type {Object}
 		 */
+		if (typeof customOptions === 'string') {
+			// Read options from file (JSON):
+			try {
+				customOptions = JSON.parse(fs.readFileSync(customOptions).toString());
+			} catch (err) {
+				throw new Error(`Failed to load or parse JSON config file: ` + err);
+			}
+		}
 		this.options = merge(this.defaultOptions, customOptions);
 
 		/**
