@@ -17,6 +17,9 @@ module.exports = function(bot) {
 
 		/** @param {string} wikitext */
 		constructor(wikitext) {
+			if (typeof wikitext !== 'string') {
+				throw new Error('non-string constructor for wikitext class');
+			}
 			this.text = wikitext;
 		}
 
