@@ -171,15 +171,6 @@ class mwn {
 		 * @type {Object}
 		 */
 		this.requestOptions = mergeDeep1(mwn.requestDefaults, {
-			method: 'post',
-			data: this.options.defaultParams,
-			transformRequest: [
-				function(data) {
-					return Object.entries(data).map(([key, val]) => {
-						return encodeURIComponent(key) + '=' + encodeURIComponent(val);
-					}).join('&');
-				}
-			],
 			jar: this.cookieJar,
 			withCredentials: true,
 			responseType: 'json'
@@ -266,7 +257,7 @@ class mwn {
 	 * @param {Object} params - default parameters
 	 */
 	setDefaultParams(params) {
-		this.options.defaultParams = params;
+		this.options.defaultParams = merge(this.options.defaultParams, params);
 	}
 
 	/**
@@ -315,34 +306,97 @@ class mwn {
 	 * @returns {Promise}
 	 */
 	request(params, customRequestOptions) {
+		params = merge(this.options.defaultParams, params);
 
-		let requestOptions = merge({
+		var getOrPost = function(data) {
+			if (data.action === 'query') {
+				return 'get';
+			}
+			if (data.action === 'parse' && !data.text) {
+				return 'get';
+			}
+			if (data.token) {
+				return 'post';
+			}
+			return 'post';
+		};
+
+		let requestOptions = mergeDeep1({
 			url: this.options.apiUrl,
+			method: getOrPost(params),
 
 			// retryNumber isn't actually used by the API, but this is
 			// included here for tracking our maxlag retry count.
 			retryNumber: 0
 
-		}, mergeDeep1(this.requestOptions, customRequestOptions || {}));
+		}, this.requestOptions, customRequestOptions);
 
-		requestOptions.data = merge(requestOptions.data, params);
+		const MULTIPART_THRESHOLD = 8000;
+		var hasLongFields = false;
 
 		// pre-process params:
 		// Convert arrays to |-delimited strings. If one of the array items
 		// itself contains a |, then use \x1f as delimiter and begin the string
 		// with \x1f.
-		// Copied from mw.Api().preprocessParameters & refactored to ES6
-		Object.entries(requestOptions.data).forEach(([key, val]) => {
+		// Adapted from mw.Api().preprocessParameters
+		Object.entries(params).forEach(([key, val]) => {
 			if (Array.isArray(val)) {
 				if (!val.join('').includes('|')) {
-					requestOptions.data[key] = val.join('|');
+					params[key] = val.join('|');
 				} else {
-					requestOptions.data[key] = '\x1f' + val.join('\x1f');
+					params[key] = '\x1f' + val.join('\x1f');
 				}
-			} else if (val === false || val === undefined) {
-				delete requestOptions.data[key];
+			}
+			if (val === false || val === undefined) {
+				delete params[key];
+			} else if (val === true) {
+				params[key] = '1'; // booleans cause error with multipart/form-data requests
+			}
+			if (String(params[key]).length > MULTIPART_THRESHOLD) {
+				// use multipart/form-data if there are large fields, for better performance
+				hasLongFields = true;
 			}
 		});
+
+		if (requestOptions.method === 'post') {
+			// Shift the token to the end of the query string, to prevent
+			// incomplete data sent from being accepted meaningfully by the server
+			if (params.token) {
+				let token = params.token;
+				delete params.token;
+				params.token = token;
+			}
+
+			var contentTypeGiven = customRequestOptions &&
+				customRequestOptions.headers &&
+				customRequestOptions.headers['Content-Type'];
+
+			if ((hasLongFields && (!contentTypeGiven || contentTypeGiven === 'mulipart/form-data')) || contentTypeGiven === 'multipart/form-data') {
+				// console.log('sending multipart POST request for action=' + params.action);
+				// use multipart/form-data
+				var form = new formData();
+				Object.entries(params).forEach(([key, val]) => {
+					form.append(key, val);
+				});
+				requestOptions.data = form;
+				requestOptions.headers = {
+					...requestOptions.headers,
+					...form.getHeaders(),
+					'Content-Length': form.getLengthSync() // XXX: sync
+				};
+			} else {
+				// console.log('sending POST request for action=' + params.action);
+				// use application/x-www-form-urlencoded (default)
+				// requestOptions.data = params;
+				requestOptions.data = Object.entries(params).map(([key, val]) => {
+					return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+				}).join('&');
+			}
+		} else {
+			// console.log('sending GET request for action=' + params.action);
+			// axios takes care of stringifying to URL query string
+			requestOptions.params = params;
+		}
 
 		return this.rawRequest(requestOptions).then((response) => {
 			if (typeof response !== 'object') {
@@ -355,42 +409,85 @@ class mwn {
 
 			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
 			if (response.error) {
+				// console.log('Error response; ', response);
 
-				// This will not work if the token type to be used is defined by an
-				// extension, and not a part of mediawiki core
-				if (response.error.code === 'badtoken') {
-					return Promise.all(
-						[this.getTokenType(requestOptions.data.action), this.getTokens()]
-					).then(([tokentype]) => {
-						var token = this.state[ (tokentype || 'csrf') + 'token' ];
-						requestOptions.data.token = token;
-						return this.request({}, requestOptions);
-					});
+				if (requestOptions.retryNumber < this.options.maxRetries) {
+					requestOptions.retryNumber++;
+
+					switch (response.error.code) {
+
+						// This will not work if the token type to be used is defined by an
+						// extension, and not a part of mediawiki core
+						case 'badtoken':
+							log(`[W] Encountered badtoken error, fetching new token and retrying`);
+							// console.log(this.state);
+							return Promise.all(
+								[this.getTokenType(params.action), this.getTokens()]
+							).then(([tokentype]) => {
+								var token = this.state[ (tokentype || 'csrf') + 'token' ];
+								if (typeof requestOptions.data === 'string') {
+									requestOptions.data = requestOptions.data.replace(/\btoken=.*/, 'token=' + encodeURIComponent(token));
+								} else if (requestOptions.data instanceof formData) {
+									// FIXME: can't change token for formdata request
+									return this.dieWithError(response, requestOptions);
+								}
+								return this.request({}, requestOptions);
+							});
+
+						case 'readonly':
+						case 'maxlag':
+							// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
+							log(`[W] Encountered maxlag/readonly error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
+							return sleep(this.options.maxlagPause).then(() => {
+								return this.request({}, requestOptions);
+							});
+
+						case 'assertbotfailed':
+						case 'assertuserfailed':
+							// Possibly due to session loss: retry after logging in again
+							log(`[W] Received ${response.error}, attempting to log in and retry`);
+							return this.login().then(() => {
+								return this.request({}, requestOptions);
+							});
+
+						default:
+							return this.dieWithError(response, requestOptions);
+					}
+
+				} else {
+					return this.dieWithError(response, requestOptions);
 				}
 
-				// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-				if (response.error.code === 'maxlag' && requestOptions.retryNumber < this.options.maxRetries) {
-					log(`[W] Encountered maxlag error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
-					return sleep(this.options.maxlagPause).then(() => {
-						requestOptions.retryNumber++;
-						return this.request({}, requestOptions);
-					});
-				}
-
-				let err = new Error(response.error.code + ': ' + response.error.info);
-				// Enhance error object with additional information
-				err.errorResponse = true;
-				err.code = response.error.code;
-				err.info = response.error.info;
-				err.response = response;
-				err.request = requestOptions;
-				return Promise.reject(err);
 			}
 
 			return response;
 
+		}, error => {
+
+			// if (requestOptions.retryNumber < this.options.maxRetries) {
+			// 	// error might be transient, give it another go!
+			// 	// XXX: should we wait for some time before retrying?
+			// 	log(`[W] Encountered ${error}, retrying`);
+			// 	requestOptions.retryNumber++;
+			// 	return this.request({}, requestOptions);
+			// }
+
+			error.request = requestOptions;
+			return Promise.reject(error);
 		});
 
+	}
+
+	/** @private */
+	dieWithError(response, requestOptions) {
+		var err = new Error(response.error.code + ': ' + response.error.info);
+		// Enhance error object with additional information
+		err.errorResponse = true;
+		err.code = response.error.code;
+		err.info = response.error.info;
+		err.response = response;
+		err.request = requestOptions;
+		return Promise.reject(err);
 	}
 
 
@@ -465,7 +562,7 @@ class mwn {
 			let err = new Error('Could not login: ' + reason);
 			err.response = response;
 			log('[E] [mwn] Login failed: ' + loginString);
-			return Promise.reject(err) ;
+			return Promise.reject(err);
 
 		});
 
@@ -482,7 +579,8 @@ class mwn {
 		}).then(() => { // returns an empty response if successful
 			this.loggedIn = false;
 			this.cookieJar.removeAllCookiesSync();
-			this.state.csrfToken = this.csrfToken = '%notoken%';
+			this.state = {};
+			this.csrfToken = '%notoken%';
 		});
 	}
 
@@ -490,7 +588,7 @@ class mwn {
 	 * Gets namespace-related information for use in title nested class.
 	 * This need not be used if login() is being used. This is for cases
 	 * where mwn needs to be used without logging in.
-	 * @returns {Promise}
+	 * @returns {Promise<void>}
 	 */
 	getSiteInfo() {
 		return this.request({
@@ -512,6 +610,7 @@ class mwn {
 			meta: 'tokens',
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
 		}).then((response) => {
+			// console.log('getTokens response:', response);
 			if (response.query && response.query.tokens) {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
@@ -709,7 +808,7 @@ class mwn {
 			title: String(title),
 			text: content,
 			summary: summary,
-			createonly: true,
+			createonly: '1',
 			token: this.csrfToken
 		}, options)).then(data => data.edit);
 	}
@@ -737,7 +836,7 @@ class mwn {
 	 * Reads the content / and meta-data of one (or many) pages
 	 *
 	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
-	 * @param {object} [options]
+	 * @param {Object} [options]
 	 *
 	 * @returns {Promise}
 	 */

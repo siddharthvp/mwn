@@ -15,25 +15,28 @@ let bot = new mwn({
 	hasApiHighLimit: true,
 	apiUrl: loginCredentials.apiUrl,
 	username: loginCredentials.username,
-	password: loginCredentials.password
+	password: loginCredentials.password,
+	userAgent: 'mwn (https://github.com/siddharthvp/mwn)'
 });
 
-let loginBefore = function(done) {
+let loginBefore = function() {
 	this.timeout(7000);
-	bot.loginGetToken().then(() => {
+	return bot.login().then(() => {
+		return bot.getTokens();
+	}, err => {
+		log('[E] Failed to log in: ');
+		console.log(err.response);
+	}).then(() => {
 		expect(bot.csrfToken).to.be.a('string');
 		assert(bot.csrfToken.endsWith('+\\'));
 		expect(bot.title.nameIdMap).to.be.a('object');
 		expect(bot.title.legaltitlechars).to.be.a('string');
 		expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-		done();
-	}, () => {
-		log('[E] Failed to log in');
 	});
 };
 
-let logoutAfter = function(done) {
-	bot.logout().then(() => done());
+let logoutAfter = function() {
+	return bot.logout();
 };
 
 // Export everything

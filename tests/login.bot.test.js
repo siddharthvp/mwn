@@ -50,4 +50,8 @@ describe('login', async function() {
 		await mwn.init(loginCredentials);
 	});
 
+	it('successfully logs out', function(done) {
+		bot.logout().then(() => done());
+	});
+
 });
