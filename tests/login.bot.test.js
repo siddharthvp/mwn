@@ -46,4 +46,8 @@ describe('login', async function() {
 		bot.logout().then(() => done());
 	});
 
+	it('successfully logs in thorugh init', async function() {
+		await mwn.init(loginCredentials);
+	});
+
 });

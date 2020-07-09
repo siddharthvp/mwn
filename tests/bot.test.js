@@ -60,6 +60,13 @@ describe('mwn', async function() {
 		});
 	});
 
+	it('parses a JSON page', async function() {
+		var jsonpage = await bot.parseJsonPage('Test JSONL page');
+		expect(jsonpage).to.be.a('object');
+		expect(jsonpage).to.have.all.keys('a');
+		expect(jsonpage.a).to.equal('b');
+	});
+
 
 
 

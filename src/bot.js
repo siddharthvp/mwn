@@ -572,6 +572,21 @@ class mwn {
 		});
 	}
 
+	/**
+	 * Fetch and parse a JSON wikipage
+	 * @param {string} title - page title
+	 * @returns {Promise<Object>} parsed JSON object
+	 */
+	parseJsonPage(title) {
+		return this.read(title).then(data => {
+			try {
+				return JSON.parse(data.revisions[0].content);
+			} catch(e) {
+				return Promise.reject('invalidjson');
+			}
+		});
+	}
+
 	/***************** HELPER FUNCTIONS ******************/
 
 
