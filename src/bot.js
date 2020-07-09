@@ -36,6 +36,9 @@ const axios = require('axios');
 const tough = require('tough-cookie');
 const axiosCookieJarSupport = require('axios-cookiejar-support').default;
 axiosCookieJarSupport(axios);
+const formData = require('form-data');
+const http = require('http');
+const https = require('https');
 
 const fs = require('fs');
 const path = require('path');
@@ -80,7 +83,7 @@ class mwn {
 		this.loggedIn = false;
 
 		/**
-		 * Bot instances edit token. Initially set as an invalid token string
+		 * Bot instance's edit token. Initially set as an invalid token string
 		 * so that the badtoken handling logic is invoked if the token is
 		 * not set before a query is sent.
 		 *
@@ -101,6 +104,9 @@ class mwn {
 			// site API url, example https://en.wikipedia.org/w/api.php
 			apiUrl: null,
 
+			// User agent string
+			userAgent: 'mwn',
+
 			// bot login username and password, setup using Special:BotPasswords
 			username: null,
 			password: null,
@@ -112,7 +118,35 @@ class mwn {
 			maxlagPause: 5000,
 
 			// max number of times to retry the same request on maxlag error.
-			maxlagMaxRetries: 3
+			maxRetries: 3,
+
+			// for emergency-shutoff compliance: shutdown bot if the text of the
+			// shutoffPage doesn't meet the shutoffRegex
+			// XXX: not implemented
+			// shutoffPage: null,
+			// shutoffRegex: /^\s*$/,
+
+			// default parameters included in every API request
+			defaultParams: {
+				format: 'json',
+				formatversion: '2',
+				maxlag: 5
+			},
+
+			// options for the edit() function
+			editConfig: {
+				// max number of retries on edit conflicts
+				conflictRetries: 2,
+				// suppress warning on an edit resulting in no change to the page
+				suppressNochangeWarning: false,
+				// abort edit if exclusionRegex matches on the page content
+				exclusionRegex: null
+			},
+
+			// options for logging, see semlog documentation
+			semlog: {
+				printDateTime: true
+			}
 		};
 
 		/**
@@ -136,18 +170,9 @@ class mwn {
 		 *
 		 * @type {Object}
 		 */
-		this.requestOptions = {
+		this.requestOptions = mergeDeep1(mwn.requestDefaults, {
 			method: 'post',
-			headers: {
-				'User-Agent': 'mwn'
-			},
-			params: {
-			},
-			data: {
-				format: 'json',
-				formatversion: '2',
-				maxlag: 5
-			},
+			data: this.options.defaultParams,
 			transformRequest: [
 				function(data) {
 					return Object.entries(data).map(([key, val]) => {
@@ -155,11 +180,10 @@ class mwn {
 					}).join('&');
 				}
 			],
-			timeout: 120000, // 120 seconds
 			jar: this.cookieJar,
 			withCredentials: true,
 			responseType: 'json'
-		};
+		});
 
 		/**
 		 * Title class associated with the bot instance
@@ -196,6 +220,19 @@ class mwn {
 	}
 
 	/**
+	 * Initialise a bot object. Login to the wiki and fetch editing tokens.
+	 * @param {Object} config - Bot configurations, including apiUrl, username and
+	 * password (required)
+	 * @returns {mwn} bot object
+	 */
+	static async init(config) {
+		var bot = new mwn(config);
+		await bot.loginGetToken();
+		return bot;
+	}
+
+
+	/**
 	 * Set and overwrite mwn options
 	 *
 	 * @param {Object} customOptions
@@ -221,7 +258,7 @@ class mwn {
 	 * @param {Object} customRequestOptions
 	 */
 	setRequestOptions(customRequestOptions) {
-		return mergeRequestOptions(this.requestOptions, customRequestOptions);
+		return mergeDeep1(this.requestOptions, customRequestOptions);
 	}
 
 	/**
@@ -229,7 +266,7 @@ class mwn {
 	 * @param {Object} params - default parameters
 	 */
 	setDefaultParams(params) {
-		this.requestOptions.data = merge(this.requestOptions.data, params);
+		this.options.defaultParams = params;
 	}
 
 	/**
@@ -238,10 +275,7 @@ class mwn {
 	 * @param {string} userAgent
 	 */
 	setUserAgent(userAgent) {
-		if (!this.requestOptions.headers) {
-			this.requestOptions.headers = {};
-		}
-		this.requestOptions.headers['User-Agent'] = userAgent;
+		this.options.userAgent = userAgent;
 	}
 
 	/************ CORE REQUESTS ***************/
@@ -254,12 +288,17 @@ class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	static rawRequest(requestOptions) {
+	rawRequest(requestOptions) {
 
 		if (!requestOptions.url) {
-			return Promise.reject(new Error('No API URL provided!'));
+			return Promise.reject(new Error('No URL provided!'));
 		}
-		return axios(requestOptions).then(response => {
+		return axios(mergeDeep1({}, mwn.requestDefaults, {
+			method: 'get',
+			headers: {
+				'User-Agent': this.options.userAgent
+			},
+		}, requestOptions)).then(response => {
 			return response.data;
 		});
 
@@ -284,7 +323,7 @@ class mwn {
 			// included here for tracking our maxlag retry count.
 			retryNumber: 0
 
-		}, mergeRequestOptions(this.requestOptions, customRequestOptions || {}));
+		}, mergeDeep1(this.requestOptions, customRequestOptions || {}));
 
 		requestOptions.data = merge(requestOptions.data, params);
 
@@ -305,7 +344,7 @@ class mwn {
 			}
 		});
 
-		return mwn.rawRequest(requestOptions).then((response) => {
+		return this.rawRequest(requestOptions).then((response) => {
 			if (typeof response !== 'object') {
 				let err = new Error('invalidjson: No valid JSON response');
 				err.code = 'invalidjson';
@@ -330,7 +369,7 @@ class mwn {
 				}
 
 				// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-				if (response.error.code === 'maxlag' && requestOptions.retryNumber < this.options.maxlagMaxRetries) {
+				if (response.error.code === 'maxlag' && requestOptions.retryNumber < this.options.maxRetries) {
 					log(`[W] Encountered maxlag error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
 					return sleep(this.options.maxlagPause).then(() => {
 						requestOptions.retryNumber++;
@@ -363,7 +402,7 @@ class mwn {
 	 *
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 *
-	 * @param {object} [loginOptions] - object containing the apiUrl, username,
+	 * @param {Object} [loginOptions] - object containing the apiUrl, username,
 	 * and password
 	 *
 	 * @returns {Promise}
@@ -827,7 +866,7 @@ class mwn {
 	 * @returns {Promise<void>}
 	 */
 	downloadFromUrl(url, localname) {
-		return mwn.rawRequest({
+		return this.rawRequest({
 			method: 'get',
 			url: url,
 			responseType: 'stream'
@@ -1189,7 +1228,7 @@ class mwn {
 			}
 		}, customRequestOptions);
 
-		return mwn.rawRequest(requestOptions);
+		return this.rawRequest(requestOptions);
 	}
 
 
@@ -1217,7 +1256,7 @@ class mwn {
 			}
 		}, customRequestOptions);
 
-		return mwn.rawRequest(requestOptions);
+		return this.rawRequest(requestOptions);
 	}
 
 	/**
@@ -1233,7 +1272,7 @@ class mwn {
 			50
 		);
 		return this.seriesBatchOperation(chunks, (chunk) => {
-			return mwn.rawRequest({
+			return this.rawRequest({
 				method: 'get',
 				url: endpointUrl,
 				params: {
@@ -1251,6 +1290,18 @@ class mwn {
 
 }
 
+mwn.requestDefaults = {
+	headers: {
+		// 'Accept-Encoding': 'gzip' // XXX: CHECK THIS
+	},
+
+	// keep-alive pools and reuses TCP connections, for better performance
+	httpAgent: new http.Agent({ keepAlive: true }),
+	httpsAgent: new https.Agent({ keepAlive: true }),
+
+	timeout: 60000, // 60 seconds
+};
+
 // Bind static utilities
 Object.assign(mwn, static_utils);
 
@@ -1267,6 +1318,16 @@ var ispromise = function (obj) {
 		typeof obj.then === 'function';
 };
 
+/** Check whether an object is plain object, from https://github.com/sindresorhus/is-plain-obj/blob/master/index.js */
+var isplainobject = function(value) {
+	if (Object.prototype.toString.call(value) !== '[object Object]') {
+		return false;
+	}
+	const prototype = Object.getPrototypeOf(value);
+	return prototype === null || prototype === Object.prototype;
+};
+
+
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined
  * arguments in argument list will be ignored.
@@ -1281,22 +1342,32 @@ var merge = function(...objects) {
 };
 
 /**
- * Merge objects deeply to 1 level. Object properties like params, form,
- * header get merged. But not any object properties within them.
+ * Merge objects deeply to 1 level. Object properties like params, data,
+ * headers get merged. But not any object properties within them.
  * Arrays are not merged, but over-written (as if it were a primitive)
- * The original object is mutated and returned.
+ * The first object is mutated and returned.
+ * @param {...Object} - any number of objects
+ * @returns {Object}
  */
-var mergeRequestOptions = function(options, customOptions) {
-	Object.entries(customOptions).forEach(([key, val]) => {
-		if (typeof val === 'object' && !Array.isArray(val)) {
-			options[key] = merge(options[key], val);
-			// this can't be written as Object.assign(options[key], val)
-			// as options[key] could be undefined
+var mergeDeep1 = function(...objects) {
+	var args = [...objects].filter(e => e); // skip null/undefined values
+	if (!args.length) {
+		return {};
+	}
+	var entries = [];
+	for (let options of args.slice(1)) {
+		entries = entries.concat(Object.entries(options));
+	}
+	entries.forEach(([key, val]) => {
+		if (isplainobject(val)) {
+			args[0][key] = merge(args[0][key], val);
+			// this can't be written as Object.assign(args[0][key], val)
+			// as args[0][key] could be undefined
 		} else {
-			options[key] = val;
+			args[0][key] = val;
 		}
 	});
-	return options;
+	return args[0];
 };
 
 /** @param {Array} arr, @param {number} size */
@@ -1314,7 +1385,7 @@ var arrayChunk = function(arr, size) {
  * @param {number} duration - of sleep in milliseconds
  */
 var sleep = function(duration) {
-	return new Promise((resolve) => {
+	return new Promise(resolve => {
 		setTimeout(resolve, duration);
 	});
 };
