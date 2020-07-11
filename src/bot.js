@@ -1,6 +1,6 @@
 /**
  *
- *  mwn: a MediaWiki bot framework for NodeJS
+ *  mwn: a MediaWiki bot framework for Node.js
  *
  * 	Copyright (C) 2020 Siddharth VP
  *
@@ -124,11 +124,12 @@ class mwn {
 			// does your account have apihighlimits right? Yes for bots and sysops
 			hasApiHighLimit: true,
 
-			// milliseconds to pause before retrying after a maxlag error
-			maxlagPause: 5000,
-
-			// max number of times to retry the same request on maxlag error.
+			// max number of times to retry the same request on errors due to
+			// maxlag, wiki being in readonly mode, and other transient errors
 			maxRetries: 3,
+
+			// milliseconds to pause before retrying after a transient error
+			retryPause: 5000,
 
 			// for emergency-shutoff compliance: shutdown bot if the text of the
 			// shutoffPage doesn't meet the shutoffRegex
@@ -497,11 +498,14 @@ class mwn {
 
 		return this.rawRequest(requestOptions).then((response) => {
 			if (typeof response !== 'object') {
+				if (params.format !== 'json') {
+					throw new Error('must use format=json');
+				}
 				let err = new Error('invalidjson: No valid JSON response');
 				err.code = 'invalidjson';
 				err.info = 'No valid JSON response';
 				err.response = response;
-				return Promise.reject(err) ;
+				return Promise.reject(err);
 			}
 
 			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
@@ -533,8 +537,8 @@ class mwn {
 						case 'readonly':
 						case 'maxlag':
 							// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-							log(`[W] Encountered maxlag/readonly error, waiting for ${this.options.maxlagPause/1000} seconds before retrying`);
-							return sleep(this.options.maxlagPause).then(() => {
+							log(`[W] Encountered ${response.error.code} error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
+							return sleep(this.options.retryPause).then(() => {
 								return this.request({}, requestOptions);
 							});
 
@@ -565,13 +569,14 @@ class mwn {
 
 		}, error => {
 
-			// if (requestOptions.retryNumber < this.options.maxRetries) {
-			// 	// error might be transient, give it another go!
-			// 	// XXX: should we wait for some time before retrying?
-			// 	log(`[W] Encountered ${error}, retrying`);
-			// 	requestOptions.retryNumber++;
-			// 	return this.request({}, requestOptions);
-			// }
+			if (requestOptions.retryNumber < this.options.maxRetries) {
+				// error might be transient, give it another go!
+				log(`[W] Encountered ${error}, retrying in ${this.options.retryPause/1000} seconds`);
+				requestOptions.retryNumber++;
+				return sleep(this.options.retryPause).then(() => {
+					return this.request({}, requestOptions);
+				});
+			}
 
 			error.request = requestOptions;
 			return Promise.reject(error);
@@ -632,7 +637,7 @@ class mwn {
 				let err = new Error('Failed to get login token');
 				err.response = response;
 				log('[E] [mwn] Login failed with invalid response: ' + loginString);
-				return Promise.reject(err) ;
+				return Promise.reject(err);
 			}
 			this.state = merge(this.state, response.query.tokens);
 
@@ -1330,6 +1335,23 @@ class mwn {
 			};
 			sendQuery(0);
 		});
+	}
+
+	/**
+	 * Generator version of massQuery(). Iterate through pages of API results.
+	 * @param {Object} query
+	 * @param {string} batchFieldName
+	 */
+	async *massQueryGen(query, batchFieldName='titles') {
+		var batchValues = query[batchFieldName];
+		var limit = this.options.hasApiHighLimit ? 500 : 50;
+		var batches = arrayChunk(batchValues, limit);
+		var numBatches = batches.length;
+
+		for (let i = 0; i < numBatches; i++) {
+			query[batchFieldName] = batches[i];
+			yield await this.request(query);
+		}
 	}
 
 	/**
