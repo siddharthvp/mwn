@@ -160,7 +160,7 @@ class mwn {
 			try {
 				customOptions = JSON.parse(fs.readFileSync(customOptions).toString());
 			} catch (err) {
-				throw new Error(`Failed to load or parse JSON config file: ` + err);
+				throw new Error(`Failed to read or parse JSON config file: ` + err);
 			}
 		}
 		this.options = merge(this.defaultOptions, customOptions);
@@ -244,7 +244,7 @@ class mwn {
 	 * Sets the API URL for MediaWiki requests
 	 * This can be uses instead of a login, if no actions are used that require login.
 	 *
-	 * @param {String} apiUrl - API url to MediaWiki, e.g. https://en.wikipedia.org/w/api.php
+	 * @param {string} apiUrl - API url to MediaWiki, e.g. https://en.wikipedia.org/w/api.php
 	 */
 	setApiUrl(apiUrl) {
 		this.options.apiUrl = apiUrl;
@@ -668,7 +668,7 @@ class mwn {
 
 	/**
 	 * Get the wiki's server time
-	 * @returns {string}
+	 * @returns {Promise<string>}
 	 */
 	getServerTime() {
 		return this.request({
@@ -696,6 +696,46 @@ class mwn {
 
 	/***************** HELPER FUNCTIONS ******************/
 
+	/**
+	 * Reads the content / and meta-data of one (or many) pages
+	 *
+	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
+	 * @param {Object} [options]
+	 *
+	 * @returns {Promise}
+	 */
+	read(titles, options) {
+		return this.massQuery(merge({
+			action: 'query',
+			prop: 'revisions',
+			rvprop: 'content',
+			redirects: '1'
+		}, makeTitles(titles), options),
+		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
+			var data = jsons.reduce((data, json) => {
+				return data.concat(json.query.pages);
+			}, []);
+			return data.length === 1 ? data[0] : data;
+		});
+	}
+
+	async *readGen(titles, options) {
+		let massQueryResponses = this.massQueryGen(merge({
+			action: 'query',
+			prop: 'revisions',
+			rvprop: 'content',
+			redirects: '1'
+		}, makeTitles(titles), options),
+		typeof titles[0] === 'number' ? 'pageids' : 'titles');
+
+		for await (let response of massQueryResponses) {
+			if (response && response.query && response.query.pages) {
+				for (let pg of response.query.pages) {
+					yield pg;
+				}
+			}
+		}
+	}
 
 	// adapted from mw.Api().edit
 	/**
@@ -743,7 +783,7 @@ class mwn {
 			basetimestamp = revision.timestamp;
 			curtimestamp = data.curtimestamp;
 
-			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revision)) {
+			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revision.content)) {
 				return Promise.reject('bot-denied');
 			}
 
@@ -840,28 +880,6 @@ class mwn {
 		}, makeTitle(title), additionalParams)).then(data => data.edit);
 	}
 
-	/**
-	 * Reads the content / and meta-data of one (or many) pages
-	 *
-	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
-	 * @param {Object} [options]
-	 *
-	 * @returns {Promise}
-	 */
-	read(titles, options) {
-		return this.massQuery(merge({
-			action: 'query',
-			prop: 'revisions',
-			rvprop: 'content',
-			redirects: '1'
-		}, makeTitles(titles), options),
-		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
-			var data = jsons.reduce((data, json) => {
-				return data.concat(json.query.pages);
-			}, []);
-			return data.length === 1 ? data[0] : data;
-		});
-	}
 
 	/**
 	 * Deletes a page
@@ -1119,6 +1137,23 @@ class mwn {
 			});
 		};
 		return callApi(query, 1);
+	}
+
+	/**
+	 * Generator to iterate through API response continuations.
+	 * @generator
+	 * @param {Object} query
+	 * @param {number} [limit=10]
+	 * @yields {Object} a single page of the response
+	 */
+	async *continuedQueryGen(query, limit=10) {
+		let response = { continue: {} };
+		for (let i = 0; i < limit; i++) {
+			if (response.continue) {
+				response = await this.request(merge(query, response.continue));
+				yield response;
+			}
+		}
 	}
 
 	/**
