@@ -37,11 +37,13 @@ const tough = require('tough-cookie');
 const axiosCookieJarSupport = require('axios-cookiejar-support').default;
 axiosCookieJarSupport(axios);
 const formData = require('form-data');
+const OAuth = require('oauth-1.0a');
 const http = require('http');
 const https = require('https');
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const semlog = require('semlog');
 const log = semlog.log;
 
@@ -110,6 +112,14 @@ class mwn {
 			// bot login username and password, setup using Special:BotPasswords
 			username: null,
 			password: null,
+
+			// OAuth credentials
+			OAuthCredentials: {
+				consumerToken: null,
+				consumerSecret: null,
+				accessToken: null,
+				accessSecret: null
+			},
 
 			// does your account have apihighlimits right? Yes for bots and sysops
 			hasApiHighLimit: true,
@@ -217,14 +227,20 @@ class mwn {
 	}
 
 	/**
-	 * Initialise a bot object. Login to the wiki and fetch editing tokens.
-	 * @param {Object} config - Bot configurations, including apiUrl, username and
-	 * password (required)
+	 * Initialize a bot object. Login to the wiki and fetch editing tokens.
+	 * Also fetches the site data needed for parsing and constructing title objects.
+	 * @param {Object} config - Bot configurations, including apiUrl, and either the
+	 * username and password or the OAuth credentials
 	 * @returns {mwn} bot object
 	 */
 	static async init(config) {
 		var bot = new mwn(config);
-		await bot.loginGetToken();
+		if (bot._usingOAuth()) {
+			bot.initOAuth();
+			await bot.getTokensAndSiteInfo();
+		} else {
+			await bot.loginGetToken();
+		}
 		return bot;
 	}
 
@@ -275,6 +291,66 @@ class mwn {
 		this.options.userAgent = userAgent;
 	}
 
+	/**
+	 * @private
+	 * Determine if we're going to use OAuth for authentication
+	 */
+	_usingOAuth() {
+		if (Object.values(this.options.OAuthCredentials).length < 4) {
+			return false;
+		}
+		for (let val of Object.values(this.options.OAuthCredentials)) {
+			if (!val) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Initialize OAuth instance
+	 */
+	initOAuth() {
+		if (!this._usingOAuth()) {
+			// without this, the API would return a confusing
+			// mwoauth-invalid-authorization invalid consumer error
+			throw new Error('[mwn] Invalid OAuth config');
+		}
+		try {
+			this.oauth = OAuth({
+				consumer: {
+					key: this.options.OAuthCredentials.consumerToken,
+					secret: this.options.OAuthCredentials.consumerSecret
+				},
+				signature_method: 'HMAC-SHA1',
+				// based on example at https://www.npmjs.com/package/oauth-1.0a
+				hash_function(base_string, key) {
+					return crypto
+						.createHmac('sha1', key)
+						.update(base_string)
+						.digest('base64');
+				}
+			});
+			this.usingOAuth = true;
+		} catch (err) {
+			throw new Error('Failed to construct OAuth object. ' + err);
+		}
+	}
+
+	/**
+	 * @private
+	 * Get OAuth Authorization header
+	 * @param {Object} params
+	 * @returns {Object}
+	 */
+	makeOAuthHeader(params) {
+		return this.oauth.toHeader(this.oauth.authorize(params, {
+			key: this.options.OAuthCredentials.accessToken,
+			secret: this.options.OAuthCredentials.accessSecret
+		}));
+	}
+
+
 	/************ CORE REQUESTS ***************/
 
 	/**
@@ -300,7 +376,6 @@ class mwn {
 		});
 
 	}
-
 
 	/**
 	 * Executes a request with the ability to use custom parameters and custom
@@ -404,6 +479,22 @@ class mwn {
 			requestOptions.params = params;
 		}
 
+		if (this.usingOAuth) {
+			// OAuth authentication
+			requestOptions.headers = {
+				...requestOptions.headers,
+				...this.makeOAuthHeader({
+					url: requestOptions.url,
+					method: requestOptions.method,
+					data: requestOptions.data instanceof formData ? {} : params
+				})
+			};
+		} else {
+			// BotPassword authentication
+			requestOptions.jar = this.cookieJar;
+			requestOptions.withCredentials = true;
+		}
+
 		return this.rawRequest(requestOptions).then((response) => {
 			if (typeof response !== 'object') {
 				let err = new Error('invalidjson: No valid JSON response');
@@ -415,7 +506,6 @@ class mwn {
 
 			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
 			if (response.error) {
-				// console.log('Error response; ', response);
 
 				if (requestOptions.retryNumber < this.options.maxRetries) {
 					requestOptions.retryNumber++;
@@ -450,6 +540,11 @@ class mwn {
 
 						case 'assertbotfailed':
 						case 'assertuserfailed':
+							if (this.usingOAuth) {
+								// this shouldn't have happened if we're using OAuth
+								return this.dieWithError(response, requestOptions);
+							}
+
 							// Possibly due to session loss: retry after logging in again
 							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
 							return this.login().then(() => {
@@ -636,6 +731,29 @@ class mwn {
 	 */
 	getCsrfToken() {
 		return this.getTokens().then(() => this.csrfToken);
+	}
+
+	/**
+	 * Get the tokens and siteinfo in one request
+	 * @returns {Promise<void>}
+	 */
+	getTokensAndSiteInfo() {
+		return this.request({
+			action: 'query',
+			meta: 'siteinfo|tokens',
+			siprop: 'general|namespaces|namespacealiases',
+			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
+		}).then(response => {
+			Title.processNamespaceData(response);
+			if (response.query && response.query.tokens) {
+				this.csrfToken = response.query.tokens.csrftoken;
+				this.state = merge(this.state, response.query.tokens);
+			} else {
+				let err = new Error('Could not get token');
+				err.response = response;
+				return Promise.reject(err);
+			}
+		});
 	}
 
 	/**
