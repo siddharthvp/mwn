@@ -163,7 +163,7 @@ class mwn {
 				throw new Error(`Failed to read or parse JSON config file: ` + err);
 			}
 		}
-		this.options = merge(this.defaultOptions, customOptions);
+		this.options = mergeDeep1(this.defaultOptions, customOptions);
 
 		/**
 		 * Cookie jar for the bot instance - holds session and login cookies
@@ -178,11 +178,9 @@ class mwn {
 		 *
 		 * @type {Object}
 		 */
-		this.requestOptions = mergeDeep1(mwn.requestDefaults, {
-			jar: this.cookieJar,
-			withCredentials: true,
+		this.requestOptions = mergeDeep1({
 			responseType: 'json'
-		});
+		}, mwn.requestDefaults);
 
 		/**
 		 * Title class associated with the bot instance
@@ -237,7 +235,7 @@ class mwn {
 	 * @param {Object} customOptions
 	 */
 	setOptions(customOptions) {
-		this.options = merge(this.options, customOptions);
+		this.options = mergeDeep1(this.options, customOptions);
 	}
 
 	/**
@@ -453,7 +451,7 @@ class mwn {
 						case 'assertbotfailed':
 						case 'assertuserfailed':
 							// Possibly due to session loss: retry after logging in again
-							log(`[W] Received ${response.error}, attempting to log in and retry`);
+							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
 							return this.login().then(() => {
 								return this.request({}, requestOptions);
 							});
@@ -625,7 +623,7 @@ class mwn {
 			} else {
 				let err = new Error('Could not get token');
 				err.response = response;
-				return Promise.reject(err) ;
+				return Promise.reject(err);
 			}
 		});
 	}
