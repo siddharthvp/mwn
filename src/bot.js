@@ -1044,17 +1044,11 @@ class mwn {
 	 * @return {Promise}
 	 */
 	rollback(page, user, params) {
-		return this.request({
-			action: 'query',
-			meta: 'tokens',
-			type: 'rollback'
-		}).then(data => {
-			return this.request(merge({
-				action: 'rollback',
-				user: user,
-				token: data.query.tokens.rollbacktoken
-			}, makeTitle(page), params));
-		}).then(data => {
+		return this.request(merge({
+			action: 'rollback',
+			user: user,
+			token: this.state.rollbacktoken
+		}, makeTitle(page), params)).then(data => {
 			return data.rollback;
 		});
 	}
