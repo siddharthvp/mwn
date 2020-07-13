@@ -1282,6 +1282,9 @@ class mwn {
 	 * A promise is returned finally resolved with the array of responses of each
 	 * API call.
 	 *
+	 * The API calls are made via POST instead of GET to avoid potential 414 (URI
+	 * too long) errors.
+	 *
 	 * This assumes that the user has the apihighlimits user right, available to bots
 	 * and sysops by default. If your account does not have the right, you MUST set
 	 * `hasApiHighLimit` false using bot.setOptions() or in the bot constructor, failing
@@ -1313,7 +1316,7 @@ class mwn {
 					return resolve(responses);
 				}
 				query[batchFieldName] = batches[idx];
-				this.request(query).then(response => {
+				this.request(query, { method: 'post' }).then(response => {
 					responses[idx] = response;
 				}, err => {
 					if (err.code === 'toomanyvalues') {
