@@ -222,7 +222,7 @@ class mwn {
 		 */
 		this.file = File(this);
 
-		// SEMLOG OPTIONS
+		// set up any semlog options
 		semlog.updateConfig(this.options.semlog || {});
 	}
 
@@ -1640,23 +1640,18 @@ var merge = function(...objects) {
  * @returns {Object}
  */
 var mergeDeep1 = function(...objects) {
-	var args = [...objects].filter(e => e); // skip null/undefined values
-	if (!args.length) {
-		return {};
-	}
-	var entries = [];
+	let args = [...objects].filter(e => e); // skip null/undefined values
 	for (let options of args.slice(1)) {
-		entries = entries.concat(Object.entries(options));
-	}
-	entries.forEach(([key, val]) => {
-		if (isplainobject(val)) {
-			args[0][key] = merge(args[0][key], val);
-			// this can't be written as Object.assign(args[0][key], val)
-			// as args[0][key] could be undefined
-		} else {
-			args[0][key] = val;
+		for (let [key, val] of Object.entries(options)) {
+			if (isplainobject(val)) {
+				args[0][key] = merge(args[0][key], val);
+				// this can't be written as Object.assign(args[0][key], val)
+				// as args[0][key] could be undefined
+			} else {
+				args[0][key] = val;
+			}
 		}
-	});
+	}
 	return args[0];
 };
 
