@@ -48,12 +48,57 @@ describe('Page', async function() {
 		});
 	});
 
+	it('getRedirectTarget on non-redirect', function() {
+		return page.getRedirectTarget().then(target => {
+			expect(target).to.equal('Wikipedia:Requests/Permissions');
+			return page.isRedirect().then(bool => {
+				expect(bool).to.equal(false);
+			});
+		});
+	});
+
+	var page2;
+
+	it('getRedirectTarget and isRedirect on redirect', function() {
+		// XXX: possibly transient testcase
+		page2 = new bot.page('API page move test');
+		return page2.getRedirectTarget(target => {
+			expect(target).to.equal('API page move test (disambiguation)');
+		});
+	});
+
+	it('isRedirect on redirect', function() {
+		return page2.isRedirect().then(function(bool) {
+			expect(bool).to.equal(true);
+		});
+	});
+
+	it('getCreator', function() {
+		return page.getCreator().then(function(creator) {
+			expect(creator).to.equal('Sir Lestaty de Lioncourt');
+		});
+	});
+
+	it('getDeletingAdmin', function() {
+		new bot.page('File:Mwn-0.22011644726991153.png').getDeletingAdmin().then(admin => {
+			expect(admin).to.equal('SD0001');
+		});
+	});
+
 	it('links', function(done) {
 		page.links().then(links => {
 			expect(links).to.be.instanceOf(Array);
 			expect(links.length).to.be.gte(1);
 			expect(links[0].title).to.be.a('string');
 			done();
+		});
+	});
+
+	it('backlinks', function() {
+		return page.backlinks().then(backlinks => {
+			console.log(backlinks);
+			expect(backlinks).to.be.instanceOf(Array);
+			expect(backlinks.length).to.be.gte(1);
 		});
 	});
 

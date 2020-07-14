@@ -8,6 +8,7 @@ module.exports = function(bot) {
 			} else {
 				super(...arguments);
 			}
+			this.data = {};
 		}
 
 		/**
@@ -35,7 +36,10 @@ module.exports = function(bot) {
 				"action": "parse",
 				"page": this.toString(),
 				"prop": "wikitext"
-			}).then(data => data.parse.wikitext);
+			}).then(data => {
+				this.data.text = data.parse.wikitext;
+				return data.parse.wikitext;
+			});
 		}
 
 		/**
@@ -78,16 +82,26 @@ module.exports = function(bot) {
 		}
 
 
-		// backlinks() {
-		// XXX: FIX UP continuedQuery first
-		// return bot.continuedQuery({
-		// 	"action": "query",
-		// 	"prop": "linkshere",
-		// 	"titles": this.toString(),
-		// 	"lhprop": "title",
-		// 	"lhlimit": "max"
-		// }).then(data => data.query.pages[0].linkshere.map(pg => pg.title));
-		//}
+		/**
+		 * Get list of pages linking to this page
+		 * @returns {Promise<String[]>}
+		 */
+		backlinks() {
+			return bot.continuedQuery({
+				"action": "query",
+				"prop": "linkshere",
+				"titles": this.toString(),
+				"lhprop": "title",
+				"lhlimit": "max"
+			}).then(jsons => {
+				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
+				var page = pages[0];
+				if (page.missing) {
+					return Promise.reject('missingarticle');
+				}
+				return page.linkshere.map(pg => pg.title);
+			});
+		}
 
 
 		/**
@@ -127,6 +141,80 @@ module.exports = function(bot) {
 				"aplimit": "max"
 			}, options)).then((data) => {
 				return data.query.allpages.map(pg => pg.title);
+			});
+		}
+
+		/**
+		 * Check if page is redirect or not
+		 * @returns {Promise<boolean>}
+		 */
+		isRedirect() {
+			return this.getRedirectTarget().then(target => {
+				return this.toText() !== target;
+			});
+		}
+
+		/**
+		 * Get redirect target.
+		 * Returns the same page name if the page is not a redirect.
+		 * @returns {Promise<string>}
+		 */
+		getRedirectTarget() {
+			if (this.data.text) {
+				var target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
+				if (!target) {
+					return this.toText();
+				}
+				return Promise.resolve(new bot.title(target[1]).toText());
+			}
+			return bot.request({
+				action: 'query',
+				titles: this.toString(),
+				redirects: '1',
+			}).then(data => {
+				var page = data.query.pages[0];
+				if (page.missing) {
+					return Promise.reject('missingarticle');
+				}
+				return page.title;
+			});
+		}
+
+
+		/**
+		 * Get username of the page creator
+		 * @returns {Promise<string>}
+		 */
+		getCreator() {
+			return bot.request({
+				action: 'query',
+				titles: this.toString(),
+				prop: 'revisions',
+				rvprop: 'user',
+				rvlimit: 1,
+				rvdir: 'newer'
+			}).then(data => {
+				var page = data.query.pages[0];
+				if (page.missing) {
+					return Promise.reject('missingarticle');
+				}
+				return page.revisions[0].user;
+			});
+		}
+
+		getDeletingAdmin() {
+			return bot.request({
+				action: "query",
+				list: "logevents",
+				leaction: "delete/delete",
+				letitle: this.toString(),
+				lelimit: 1
+			}).then(data => {
+				var logs = data.query.logevents;
+				if (logs.length === 0) {
+					return null;
+				}
+				return logs[0].user;
 			});
 		}
 
