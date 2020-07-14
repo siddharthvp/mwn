@@ -33,6 +33,13 @@ describe('methods which modify the wiki', function() {
 		});
 	});
 
+	// will have to observe the warning, can't test it by code :(
+	it('shows warning (see above) on a no-op edit', function() {
+		return bot.edit('SD0001test', rev => {
+			return rev.content;
+		});
+	});
+
 	it('successfully edits a page with custom request()', function(done) {
 		bot.request({
 			action: 'edit',
