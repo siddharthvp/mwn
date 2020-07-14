@@ -382,12 +382,12 @@ class mwn {
 	 * Executes a request with the ability to use custom parameters and custom
 	 * request options
 	 *
-	 * @param {object} params               Request Parameters
-	 * @param {object} customRequestOptions Custom request options
+	 * @param {object} params - API call parameters
+	 * @param {object} [customRequestOptions={}] - custom axios request options
 	 *
 	 * @returns {Promise}
 	 */
-	request(params, customRequestOptions) {
+	request(params, customRequestOptions = {}) {
 		params = merge(this.options.defaultParams, params);
 
 		var getOrPost = function(data) {
@@ -449,8 +449,7 @@ class mwn {
 				params.token = token;
 			}
 
-			var contentTypeGiven = customRequestOptions &&
-				customRequestOptions.headers &&
+			var contentTypeGiven = customRequestOptions.headers &&
 				customRequestOptions.headers['Content-Type'];
 
 			if ((hasLongFields && (!contentTypeGiven || contentTypeGiven === 'mulipart/form-data')) || contentTypeGiven === 'multipart/form-data') {
@@ -512,7 +511,7 @@ class mwn {
 			if (response.error) {
 
 				if (requestOptions.retryNumber < this.options.maxRetries) {
-					requestOptions.retryNumber++;
+					customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
 
 					switch (response.error.code) {
 
@@ -520,18 +519,15 @@ class mwn {
 						// extension, and not a part of mediawiki core
 						case 'badtoken':
 							log(`[W] Encountered badtoken error, fetching new token and retrying`);
-							// console.log(this.state);
 							return Promise.all(
 								[this.getTokenType(params.action), this.getTokens()]
 							).then(([tokentype]) => {
-								var token = this.state[ (tokentype || 'csrf') + 'token' ];
-								if (typeof requestOptions.data === 'string') {
-									requestOptions.data = requestOptions.data.replace(/\btoken=.*/, 'token=' + encodeURIComponent(token));
-								} else if (requestOptions.data instanceof formData) {
-									// FIXME: can't change token for formdata request
+								if (!tokentype || !this.state[tokentype + 'token']) {
 									return this.dieWithError(response, requestOptions);
 								}
-								return this.request({}, requestOptions);
+								var token = this.state[ tokentype + 'token' ];
+								params.token = token;
+								return this.request(params, customRequestOptions);
 							});
 
 						case 'readonly':
@@ -539,20 +535,20 @@ class mwn {
 							// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
 							log(`[W] Encountered ${response.error.code} error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
 							return sleep(this.options.retryPause).then(() => {
-								return this.request({}, requestOptions);
+								return this.request(params, customRequestOptions);
 							});
 
 						case 'assertbotfailed':
 						case 'assertuserfailed':
+							// this shouldn't have happened if we're using OAuth
 							if (this.usingOAuth) {
-								// this shouldn't have happened if we're using OAuth
 								return this.dieWithError(response, requestOptions);
 							}
 
 							// Possibly due to session loss: retry after logging in again
 							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
 							return this.login().then(() => {
-								return this.request({}, requestOptions);
+								return this.request(params, customRequestOptions);
 							});
 
 						default:
@@ -572,9 +568,9 @@ class mwn {
 			if (requestOptions.retryNumber < this.options.maxRetries) {
 				// error might be transient, give it another go!
 				log(`[W] Encountered ${error}, retrying in ${this.options.retryPause/1000} seconds`);
-				requestOptions.retryNumber++;
+				customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
 				return sleep(this.options.retryPause).then(() => {
-					return this.request({}, requestOptions);
+					return this.request(params, customRequestOptions);
 				});
 			}
 

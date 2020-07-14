@@ -3,7 +3,7 @@
 const { bot, log, crypto, expect, loginBefore, logoutAfter} = require('./test_base');
 
 
-describe.skip('methods which modify the wiki', function() {
+describe('methods which modify the wiki', function() {
 	this.timeout(7000);
 
 	before('logs in and gets token & namespaceInfo', loginBefore);

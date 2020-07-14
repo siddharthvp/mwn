@@ -67,6 +67,12 @@ describe('mwn', async function() {
 		expect(jsonpage.a).to.equal('b');
 	});
 
+	it('gets token type', function() {
+		return bot.getTokenType('edit').then(type => {
+			expect(type).to.equal('csrf');
+		});
+	});
+
 
 
 
