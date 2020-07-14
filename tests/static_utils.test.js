@@ -56,7 +56,7 @@ describe('static utils', function() {
 | Example || Example || Example
 |}`;
 
-		var table = new mwn.table();
+		var table = new mwn.table({ multiline: false });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', 'Example', 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
@@ -71,7 +71,7 @@ describe('static utils', function() {
 | Example21 || Example22 || Example23
 |}`;
 
-		table = new mwn.table({ sortable: true });
+		table = new mwn.table({ sortable: true, multiline: false });
 		table.addHeaders(['Header1 text', 'Header2 text', 'Header3 text']);
 		table.addRow(['Example11', 'Example12', 'Example13']);
 		table.addRow(['Example21', 'Example22', 'Example23']);

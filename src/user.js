@@ -11,6 +11,8 @@ module.exports = function(bot) {
 		}
 
 		get userpage() {
+			// User: namespace name will work across all MW sites
+			// as it is a canonical namespace name
 			return new bot.page('User:' + this.username);
 		}
 
@@ -87,7 +89,7 @@ module.exports = function(bot) {
 				target: this.username,
 				subject: subject,
 				text: message,
-				token: bot.csrfToken
+				token: this.csrfToken
 			}).then(data => data.emailuser);
 		}
 

@@ -103,11 +103,12 @@ module.exports = {
 	table: class table {
 		/**
 		 * @param {Object} [config={}]
-		 * @config {boolean} plain - plain table without borders
-		 * @config {boolean} sortable - make columns sortable
+		 * @config {boolean} plain - plain table without borders (default: false)
+		 * @config {boolean} sortable - make columns sortable (default: false)
 		 * @config {string} style - style attribute
 		 * @config {boolean} multiline - put each cell of the table on a new line,
 		 * this causes no visual changes, but the wikitext representation is different.
+		 * This is more reliable. (default: true)
 		 */
 		constructor(config = {}) {
 			var classes = [];
@@ -117,7 +118,7 @@ module.exports = {
 			if (config.sortable) {
 				classes.push('sortable');
 			}
-			if (config.multiline) {
+			if (config.multiline !== false) {
 				this.multiline = true;
 			}
 			this.text = `{|`;
@@ -129,6 +130,20 @@ module.exports = {
 			}
 			this.text += '\n';
 		}
+
+		_getheaderline(header) {
+			if (typeof header === 'object') {
+				var text = '';
+				if (header.style) {
+					text += `scope="col" style="${header.style}" | `;
+				}
+				if (header.label) {
+					text += `${header.label}`;
+				}
+				return text;
+			}
+			return header;
+		}
 		/**
 		 * Add the headers
 		 * @param {string[]} headers - array of header items
@@ -136,11 +151,12 @@ module.exports = {
 		addHeaders(headers) {
 			this.text += `|-\n`; // row separator
 			if (this.multiline) {
-				this.text += headers.map(e => `! ${e} \n`).join('');
+				this.text += headers.map(e => `! ${this._getheaderline(e)} \n`).join('');
 			} else {
-				this.text += `! ` + headers.join(' !! ') + '\n';
+				this.text += `! ` + headers.map(this._getheaderline).join(' !! ') + '\n';
 			}
 		}
+
 		/**
 		 * Add a row to the table
 		 * @param {string[]} fields - array of items on the row,
@@ -153,6 +169,7 @@ module.exports = {
 				this.text += `| ` + fields.join(' || ') + '\n';
 			}
 		}
+
 		/** @returns {string} the final table wikitext */
 		getText() {
 			return this.text + `|}`; // add the table closing tag and return
