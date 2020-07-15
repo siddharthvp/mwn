@@ -106,37 +106,19 @@ describe('methods which modify the wiki', function() {
 
 		var randFileName = 'mwn-' + Math.random() + '.png';
 
-		it('successfully upload image from URL', function(done) {
+		it('successfully upload image from URL', function() {
 			var url = 'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png';
-			bot.uploadFromUrl(url, randFileName, 'Test upload using mwn').then(data => {
+			return bot.uploadFromUrl(url, randFileName, 'Test upload using mwn').then(data => {
 				expect(data.result).to.equal('Success');
 				bot.delete('File:' + randFileName, 'Delete after testing (mwn)');
-				done();
 			});
 		});
 
-		// it('successfully uploads without providing a filename with upload()', function(done) {
-		// 	bot.upload(__dirname + '/mocking/example1.png', randFileName).then(response => {
-		// 		expect(response.result).to.equal('Warning');
-		// 		done();
-		// 	});
-		// });
-
-		// it('successfully uploads and overwrites an image with uploadOverwrite()', function(done) {
-		// 	this.timeout(10000);
-		// 	bot.uploadOverwrite('SD0001test-43543.png', __dirname + '/mocking/example2.png', 'Test Upload using mwn')
-		// 		.then((response) => {
-		// 			expect(response.upload.result).to.equal('Success');
-		// 			done();
-		// 		});
-		// });
-
-		// it('successfully skips an upload of an image duplicate with upload()', function(done) {
-		// 	bot.upload('SD0001test-43543.png', __dirname + '/mocking/example1.png', 'Test Reasons').then((response) => {
-		// 		expect(response.upload.result).to.equal('Warning');
-		// 		done();
-		// 	});
-		// });
+		it('successfully uploads files with upload()', function() {
+			return bot.upload(__dirname + '/mocking/example1.png', randFileName).then(response => {
+				expect(response.result).to.equal('Success');
+			});
+		});
 
 	});
 

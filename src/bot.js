@@ -384,12 +384,12 @@ class mwn {
 	 * Executes a request with the ability to use custom parameters and custom
 	 * request options
 	 *
-	 * @param {object} params - API call parameters
-	 * @param {object} [customRequestOptions={}] - custom axios request options
+	 * @param {Object} params - API call parameters
+	 * @param {Object} [customRequestOptions={}] - custom axios request options
 	 *
-	 * @returns {Promise}
+	 * @returns {Promise<Object>}
 	 */
-	request(params, customRequestOptions = {}) {
+	async request(params, customRequestOptions = {}) {
 		params = merge(this.options.defaultParams, params);
 
 		var getOrPost = function(data) {
@@ -432,8 +432,7 @@ class mwn {
 				delete params[key];
 			} else if (val === true) {
 				params[key] = '1'; // booleans cause error with multipart/form-data requests
-			}
-			if (String(params[key]).length > MULTIPART_THRESHOLD) {
+			} else if (String(params[key]).length > MULTIPART_THRESHOLD) {
 				// use multipart/form-data if there are large fields, for better performance
 				hasLongFields = true;
 			}
@@ -455,15 +454,26 @@ class mwn {
 				// console.log('sending multipart POST request for action=' + params.action);
 				// use multipart/form-data
 				var form = new formData();
-				Object.entries(params).forEach(([key, val]) => {
-					form.append(key, val);
-				});
+				for (let [key, val] of Object.entries(params)) {
+					if (val.stream) {
+						form.append(key, val.stream, val.name);
+					} else {
+						form.append(key, val);
+					}
+				}
 				requestOptions.data = form;
-				requestOptions.headers = {
-					...requestOptions.headers,
-					...form.getHeaders(),
-					'Content-Length': form.getLengthSync() // XXX: sync
-				};
+				requestOptions.headers = await new Promise((resolve, reject) => {
+					form.getLength((err, length) => {
+						if (err) {
+							reject('Failed to get length of stream: ' + err);
+						}
+						resolve({
+							...requestOptions.headers,
+							...form.getHeaders(),
+							'Content-Length': length
+						});
+					});
+				});
 			} else {
 				// console.log('sending POST request for action=' + params.action);
 				// use application/x-www-form-urlencoded (default)
@@ -1098,6 +1108,41 @@ class mwn {
 		});
 	}
 
+
+	/**
+	 * Upload an image from a the local disk to the wiki.
+	 * If a file with the same name exists, it will be over-written.
+	 * @param {string} filepath
+	 * @param {string} title
+	 * @param {string} text
+	 * @param {object} options
+	 * @returns {Promise<Object>}
+	 */
+	upload(filepath, title, text, options) {
+		return this.request(merge({
+			action: 'upload',
+			file: {
+				stream: fs.createReadStream(filepath),
+				name: path.basename(filepath)
+			},
+			filename: title,
+			text: text,
+			ignorewarnings: '1',
+			token: this.csrfToken
+		}, options), {
+			headers: {
+				'Content-Type': 'multipart/form-data'
+			}
+		}).then(data => {
+			if (data.upload.warnings) {
+				log('[W] The API returned warnings while uploading to ' + title + ':');
+				log(data.upload.warnings);
+			}
+			return data.upload;
+		});
+	}
+
+
 	/**
 	 * Upload an image from a web URL to the wiki
 	 * If a file with the same name exists, it will be over-written,
@@ -1117,6 +1162,10 @@ class mwn {
 			ignorewarnings: '1',
 			token: this.csrfToken
 		}, options)).then(data => {
+			if (data.upload.warnings) {
+				log('[W] The API returned warnings while uploading to ' + title + ':');
+				log(data.upload.warnings);
+			}
 			return data.upload;
 		});
 	}
