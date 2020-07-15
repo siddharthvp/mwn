@@ -102,6 +102,59 @@ module.exports = function(bot) {
 			return bot.parseWikitext(this.text, options);
 		}
 
+
+		/**
+		 * Simple table parser.
+		 * Parses tables provided:
+		 *  1. It doesn't have any merged or joined rows.
+		 *  2. It doesn't use any templates to produce any table markup.
+		 *  3. It uses multilining, i.e. each cell is on a new line beginning with |, rather
+		 *     than multiple cells of a row being on same line separated by ||
+		 *  4. Further restrictions may apply.
+		 *
+		 * @param {string} text
+		 * @returns {Object[]} - each object in the returned array represents a row,
+		 * with its keys being column names, and values the cell content
+		 */
+		static parseTable(text) {
+			text = text.trim();
+			if (!text.startsWith('{|') || !text.endsWith('|}')) {
+				throw new Error('failed to parse table. Unexpected starting or ending');
+			}
+			text = text.replace(/^\{\|.*$(\n\|-)?/m, '').replace(/^\|\}$/m, '');
+			var rows = text.split(/^\|-/m).map(r => r.trim());
+
+			var header = rows[0];
+			rows = rows.slice(1);
+
+			var cols = header.split('\n').map(h => {
+				if (h.includes(' | ')) {
+					return h.slice(h.lastIndexOf(' | ') + 3).trim();
+				} else {
+					return h.slice(h.lastIndexOf('! ') + 2).trim();
+				}
+			});
+
+			var numcols = cols.length;
+
+			var output = new Array(rows.length);
+
+			rows.forEach((row, idx) => {
+				let cells = row.split(/^\| /m).slice(1).map(e => e.trim());
+				if (cells.length !== numcols) {
+					throw new Error(`failed to parse table: found ${cells.length} on row ${idx}, expected ${numcols}`);
+				}
+				let outputrow = {};
+				for (let i = 0; i < numcols; i++) {
+					outputrow[cols[i]] = cells[i];
+				}
+				output[idx] = outputrow;
+			});
+
+			return output;
+
+		}
+
 	}
 
 	/**** Private members *****/
