@@ -236,6 +236,10 @@ module.exports = function(bot) {
 				"rvprop": props || "ids|timestamp|flags|comment|user",
 				"rvlimit": limit || 50
 			}, customOptions)).then(data => {
+				var page = data.query.pages[0];
+				if (page.missing) {
+					return Promise.reject('missingarticle');
+				}
 				return data.query.pages[0].revisions;
 			});
 		}
