@@ -106,11 +106,12 @@ module.exports = function(bot) {
 		/**
 		 * Simple table parser.
 		 * Parses tables provided:
-		 *  1. It doesn't have any merged or joined rows.
+		 *  1. It doesn't have any merged or joined cells.
 		 *  2. It doesn't use any templates to produce any table markup.
-		 *  3. It uses multilining, i.e. each cell is on a new line beginning with |, rather
-		 *     than multiple cells of a row being on same line separated by ||
+		 *  3. Styles applied on cells or rows may be parsed as content.
 		 *  4. Further restrictions may apply.
+		 *
+		 * Tables generated via mwn.table() class are intended to be parsable.
 		 *
 		 * @param {string} text
 		 * @returns {Object[]} - each object in the returned array represents a row,
@@ -127,23 +128,48 @@ module.exports = function(bot) {
 			var header = rows[0];
 			rows = rows.slice(1);
 
-			var cols = header.split('\n').map(h => {
-				if (h.includes(' | ')) {
-					return h.slice(h.lastIndexOf(' | ') + 3).trim();
-				} else {
-					return h.slice(h.lastIndexOf('! ') + 2).trim();
-				}
-			});
+			var cols = header.split('\n');
+
+			if (cols.length === 1) { // non-multilined table?
+				cols = cols[0].replace(/^! /, '').split('!!');
+				cols = cols.map(h => {
+					if (h.includes(' | ')) {
+						return h.slice(h.lastIndexOf(' | ') + 3).trim();
+					} else {
+						return h.trim();
+					}
+				});
+
+			} else {
+
+				cols = cols.map(h => {
+					if (h.includes(' | ')) {
+						return h.slice(h.lastIndexOf(' | ') + 3).trim();
+					} else {
+						return h.slice(h.lastIndexOf('! ') + 2).trim();
+					}
+				});
+			}
 
 			var numcols = cols.length;
 
 			var output = new Array(rows.length);
 
 			rows.forEach((row, idx) => {
-				let cells = row.split(/^\| /m).slice(1).map(e => e.trim());
-				if (cells.length !== numcols) {
-					throw new Error(`failed to parse table: found ${cells.length} on row ${idx}, expected ${numcols}`);
+				let cells = row.split(/^\|/m).slice(1);  // slice(1) removes the empty
+
+				if (cells.length === 1) { // non-multilined
+					// cells are separated by ||, through we use a regex to split to
+					// handle the case when the last cell is blank (there is no space after ||)
+					cells = cells[0].replace(/^\| /, '').split(/ \|\|(?: |$)/).map(e => e.trim());
+				} else {
+					cells = cells.map(e => e.trim());
 				}
+
+				if (cells.length !== numcols) {
+					throw new Error(`failed to parse table: found ${cells.length} cells on row ${idx}, expected ${numcols}`);
+				}
+
 				let outputrow = {};
 				for (let i = 0; i < numcols; i++) {
 					outputrow[cols[i]] = cells[i];
