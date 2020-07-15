@@ -840,7 +840,7 @@ class mwn {
 		return this.massQuery(merge({
 			action: 'query',
 			prop: 'revisions',
-			rvprop: 'content',
+			rvprop: 'content|timestamp',
 			redirects: '1'
 		}, makeTitles(titles), options),
 		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
@@ -1277,6 +1277,27 @@ class mwn {
 			"cmtitle": title.toText(),
 			"cmlimit": "max"
 		}, otherParams));
+	}
+
+	/**
+	 * Search the wiki.
+	 * @param {string} searchTerm
+	 * @param {number} limit
+	 * @param {("size"|"timestamp"|"worcount"|"snippet"|"redirectitle"|"sectiontitle"|
+	 * "redirectsnippet"|"titlesnippet"|"sectionsnippet"|"categorysnippet")[]} props
+	 * @param {Object} otherParams
+	 * @returns {Promise<Object>}
+	 */
+	search(searchTerm, limit, props, otherParams) {
+		return this.request(merge({
+			action: 'query',
+			list: 'search',
+			srsearch: searchTerm,
+			srlimit: limit,
+			srprop: props || 'size|worcount|timestamp',
+		}, otherParams)).then(data => {
+			return data.query.search;
+		});
 	}
 
 	/************* BULK PROCESSING FUNCTIONS ************/
