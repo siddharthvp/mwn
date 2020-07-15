@@ -220,7 +220,7 @@ module.exports = function(bot) {
 
 		/**
 		 * Get the edit history of the page
-		 * @param {Array} props - revision properties to fetch, by default content is
+		 * @param {revisionprop[]} props - revision properties to fetch, by default content is
 		 * excluded
 		 * @param {number} [limit=50] - number of revisions to fetch data about
 		 * @param {Object} customOptions - custom API options
@@ -246,7 +246,7 @@ module.exports = function(bot) {
 
 		/**
 		 * Get the page logs.
-		 * @param {Array} props - data about log entries to fetch
+		 * @param {logprop[]} props - data about log entries to fetch
 		 * @param {number} limit - max number of log entries to fetch
 		 * @param {string} type - type of log to fetch, can either be an letype or leaction
 		 * Leave undefined (or null) to fetch all log types
@@ -310,3 +310,16 @@ module.exports = function(bot) {
 	return Page;
 
 };
+
+// Type definitions for JSDocs
+
+/**
+ * @typedef {"content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
+ * "size"  | "tags" | "userid" | "contentmodel"} revisionprop
+ */
+
+
+/**
+ * @typedef {"type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" |
+ * "ids" | "tags" | "userid"} logprop
+ */
