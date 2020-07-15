@@ -365,7 +365,9 @@ class mwn {
 	rawRequest(requestOptions) {
 
 		if (!requestOptions.url) {
-			return Promise.reject(new Error('No URL provided!'));
+			var err = new Error('No URL provided!');
+			err.disableRetry = true;
+			return Promise.reject(err);
 		}
 		return axios(mergeDeep1({}, mwn.requestDefaults, {
 			method: 'get',
@@ -396,9 +398,6 @@ class mwn {
 			}
 			if (data.action === 'parse' && !data.text) {
 				return 'get';
-			}
-			if (data.token) {
-				return 'post';
 			}
 			return 'post';
 		};
@@ -548,7 +547,13 @@ class mwn {
 							// Possibly due to session loss: retry after logging in again
 							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
 							return this.login().then(() => {
-								return this.request(params, customRequestOptions);
+								if (params.token) {
+									return this.getTokens().then(() => {
+										return this.request(params, customRequestOptions);
+									});
+								} else {
+									return this.request(params, customRequestOptions);
+								}
 							});
 
 						default:
@@ -565,7 +570,7 @@ class mwn {
 
 		}, error => {
 
-			if (requestOptions.retryNumber < this.options.maxRetries) {
+			if (!error.disableRetry && requestOptions.retryNumber < this.options.maxRetries) {
 				// error might be transient, give it another go!
 				log(`[W] Encountered ${error}, retrying in ${this.options.retryPause/1000} seconds`);
 				customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
@@ -775,11 +780,11 @@ class mwn {
 	 * Combines Login  with getCsrfToken
 	 *
 	 * @param loginOptions
-	 * @returns {Promise<string>}
+	 * @returns {Promise<void>}
 	 */
 	loginGetToken(loginOptions) {
 		return this.login(loginOptions).then(() => {
-			return this.getCsrfToken();
+			return this.getTokens();
 		});
 	}
 
@@ -926,8 +931,11 @@ class mwn {
 			}, makeTitle(title), editParams));
 
 		}).then(data => {
-			if (data.edit.nochange && !editConfig.suppressNochangeWarning) {
+			if (data.edit && data.edit.nochange && !editConfig.suppressNochangeWarning) {
 				log(`[W] No change from edit to ${data.edit.title}`);
+			}
+			if (!data.edit) {
+				log(`[W] Unusual API success response: ` + JSON.stringify(data,undefined,2));
 			}
 			return data.edit;
 		}, errorCode => {
