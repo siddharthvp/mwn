@@ -104,7 +104,7 @@ module.exports = {
 		/**
 		 * @param {Object} [config={}]
 		 * @config {boolean} plain - plain table without borders (default: false)
-		 * @config {boolean} sortable - make columns sortable (default: false)
+		 * @config {boolean} sortable - make columns sortable (default: true)
 		 * @config {string} style - style attribute
 		 * @config {boolean} multiline - put each cell of the table on a new line,
 		 * this causes no visual changes, but the wikitext representation is different.
@@ -115,7 +115,7 @@ module.exports = {
 			if (!config.plain) {
 				classes.push('wikitable');
 			}
-			if (config.sortable) {
+			if (config.sortable !== false) {
 				classes.push('sortable');
 			}
 			if (config.multiline !== false) {
