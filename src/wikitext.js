@@ -1,4 +1,4 @@
-module.exports = function(bot) {
+module.exports = function (bot) {
 
 	/**
 	 * Class for some basic wikitext parsing, involving
@@ -32,11 +32,11 @@ module.exports = function(bot) {
 			var n = this.text.length;
 			// files can have links in captions; use a stack to handle the nesting
 			var stack = new Stack();
-			for (let i=0; i<n; i++) {
-				if (this.text[i] === '[' && this.text[i+1] === '[') {
-					stack.push({startIdx: i });
+			for (let i = 0; i < n; i++) {
+				if (this.text[i] === '[' && this.text[i + 1] === '[') {
+					stack.push({ startIdx: i });
 					i++;
-				} else if (this.text[i] === ']' && this.text[i+1] === ']' && stack.top()) {
+				} else if (this.text[i] === ']' && this.text[i + 1] === ']' && stack.top()) {
 					stack.top().endIdx = i + 1;
 					processLink(this, stack.top().startIdx, stack.top().endIdx);
 					stack.pop();
@@ -59,21 +59,19 @@ module.exports = function(bot) {
 					{ name: '3', value: '', wikitext: '|3=' }
 				]
 			}
-		 * @param {number} [count] - maximum number of templates to parse (default infinite)
-	     * @return Template[]
+		 * @param {string} wikitext
+		 * @param {{recursive: boolean, namePredicate: function, templatePredicate: function,
+		 * count: number}} config
+		 * @config {boolean} recursive - also parse templates within subtemplates
+		 * @config {function} namePredicate - include template in result only if the its name matches this predicate
+		 * More efficient than templatePredicate as the template parameters aren't parsed if name didn't match.
+		 * @config {function} templatePredicate - include template in result only if it matches this predicate
+		 * @config {number} count - max number of templates to be parsed. If recursive is set true, note that
+		 * templates are parsed breadth-first, not depth-first.
+		 * @returns {Template[]}
 		 */
-		parseTemplates(count) {
-			return this.templates = parseTemplates(this.text, false, count);
-		}
-
-		/**
-		 * Also parse templates that occur within other templates, rather than just top-level templates.
-		 * @param {number} [depth=true] - specify a number to limit recursive parsing to a the given recursion
-		 * depth. For infinite depth, specify `true` (default). Eg. with recursive=1, all templates and
-		 * sub-templates will be parsed, but not the templates within the sub-templates
-		 */
-		parseTemplatesRecursive(depth) {
-			return this.templates = parseTemplates(this.text, depth || true);
+		parseTemplates(config) {
+			return this.templates = parseTemplates(this.text, config);
 		}
 
 		/**
@@ -190,8 +188,7 @@ module.exports = function(bot) {
 			return this[this.length - 1];
 		}
 	}
-
-	var processLink = function(self, startIdx, endIdx) {
+	var processLink = function (self, startIdx, endIdx) {
 		var linktext = self.text.slice(startIdx, endIdx + 1);
 		var [target, displaytext] = linktext.slice(2, -2).split('|');
 		var noSortkey = false;
@@ -203,31 +200,28 @@ module.exports = function(bot) {
 		if (!title) {
 			return;
 		}
-		var linkobj = {
-			wikitext: linktext,
-			dsr: [startIdx, endIdx]
-			// Note: data source ranges (dsr) are invalidated by any removeEntity() operation,
-			// or any direct modification to this.text
-		};
 		if (target[0] !== ':') {
 			if (title.namespace === 6) {
-				self.files.push(Object.assign({
+				self.files.push({
+					wikitext: linktext,
 					target: title,
 					props: linktext.slice(linktext.indexOf('|') + 1, -2)
-				}, linkobj));
+				});
 				return;
 			} else if (title.namespace === 14) {
-				self.categories.push(Object.assign({
+				self.categories.push({
+					wikitext: linktext,
 					target: title,
 					sortkey: noSortkey ? '' : displaytext
-				}, linkobj));
+				});
 				return;
 			}
 		}
-		self.links.push(Object.assign({
+		self.links.push({
+			wikitext: linktext,
 			target: title,
 			displaytext: displaytext
-		}, linkobj));
+		});
 	};
 
 	// Adapted from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
@@ -250,10 +244,8 @@ module.exports = function(bot) {
 		 * @param {String} wikitext Wikitext of a template transclusion,
 		 * starting with '{{' and ending with '}}'.
 		 */
-		constructor(wikitext, dsr) {
+		constructor(wikitext) {
 			this.wikitext = wikitext;
-			// dsr stands for data source range, gives the starting and ending index in wikitext
-			this.dsr = dsr, // an array of two numbers
 			this.parameters = [];
 		}
 		addParam(name, val, wikitext) {
@@ -264,7 +256,7 @@ module.exports = function(bot) {
 			});
 		}
 		getParam(paramName) {
-			return this.parameters.find(function (p) {
+			return this.parameters.find(p => {
 				return p.name == paramName;
 			});
 		}
@@ -278,23 +270,25 @@ module.exports = function(bot) {
 		}
 	}
 
-	// Copied from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
-	// adapted by Evad37 from the original by written by me at
-	// https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js (cc-by-sa-3.0/GFDL)
+	// parseTemplates() and processTemplateText() are adapted from
+	// https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js written by Evad37
+	// which was in turn adapted from https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js
+	// written by me. (cc-by-sa/GFDL)
+
 	/**
-	 *
-	 * @param {string} wikitext
-	 * @param {boolean|number} [recursive=false] - also parse templates within templates,
-	 * give a number to specify recursion depth. If given as `true`, infinite recursion
-	 * depth is assumed.
-	 * @param {number} [count] - stop parsing when this many templates have been found,
-	 * Recursive parsing does NOT work if count is specified.
+	 * @inheritdoc
 	 */
-	var parseTemplates = function (wikitext, recursive, count) {
+	const parseTemplates = function (wikitext, config) {
+		config = config || {
+			recursive: false,
+			namePredicate: null,
+			templatePredicate: null,
+			count: null
+		};
 
-		var result = [];
+		const result = [];
 
-		var n = wikitext.length;
+		const n = wikitext.length;
 
 		// number of unclosed braces
 		var numUnclosed = 0;
@@ -323,8 +317,11 @@ module.exports = function(bot) {
 					if (numUnclosed === 2) {
 						endIdx = i;
 						var templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
-						result.push(processTemplateText(templateWikitext, [startIdx - 2, endIdx + 1]));
-						if (count && result.length === count) {
+						var processed = processTemplateText(templateWikitext, config.namePredicate, config.templatePredicate);
+						if (processed) {
+							result.push(processed);
+						}
+						if (config.count && result.length === config.count) {
 							return result;
 						}
 					}
@@ -359,15 +356,14 @@ module.exports = function(bot) {
 
 		}
 
-		if (recursive && !count) {
-			var subtemplates = result.map(function (template) {
+		if (config.recursive) {
+			var subtemplates = result.map(template => {
 				return template.wikitext.slice(2, -2);
-			}).filter(function (templateWikitext) {
-				return /\{\{(?:.|\n)*\}\}/.test(templateWikitext);
-			}).map(function (templateWikitext) {
-				return parseTemplates(templateWikitext, recursive === true ? true : recursive - 1);
+			}).filter(templateWikitext => {
+				return /\{\{.*\}\}/s.test(templateWikitext);
+			}).map(templateWikitext => {
+				return parseTemplates(templateWikitext, config);
 			});
-
 			return result.concat.apply(result, subtemplates);
 		}
 
@@ -377,13 +373,12 @@ module.exports = function(bot) {
 
 	/**
 	 * @param {string} text - template wikitext without braces, with the pipes in
-	 * nested templates replaced by \1
-	 * @param {Number[]} [dsr] - data source range (optional) for the template object
-	 * Array of starting and ending indices of template in wikitext
+	 * nested templates replaced by \x01
+	 * @returns {Template}
 	 */
-	var processTemplateText = function (text, dsr) {
+	const processTemplateText = function (text, namePredicate, templatePredicate) {
 
-		var template = new Template('{{' + text.replace(/\1/g, '|') + '}}', dsr);
+		const template = new Template('{{' + text.replace(/\1/g, '|') + '}}');
 
 		// swap out pipe in links with \1 control character
 		// [[File: ]] can have multiple pipes, so might need multiple passes
@@ -391,14 +386,16 @@ module.exports = function(bot) {
 			text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\1$2');
 		}
 
-		var chunks = text.split('|').map(function (chunk) {
+		const [name, ...parameterChunks] = text.split('|').map(chunk => {
 			// change '\1' control characters back to pipes
 			return chunk.replace(/\1/g, '|');
 		});
 
-		template.setName(chunks[0]);
+		if (namePredicate && !namePredicate(name)) {
+			return null;
+		}
 
-		var parameterChunks = chunks.slice(1);
+		template.setName(name);
 
 		var unnamedIdx = 1;
 		parameterChunks.forEach(function (chunk) {
@@ -425,14 +422,17 @@ module.exports = function(bot) {
 			template.addParam(pName || pNum, pVal, chunk);
 		});
 
+		if (templatePredicate && !templatePredicate(template)) {
+			return null;
+		}
+
 		return template;
 	};
 
-	var strReplaceAt = function (string, index, char) {
+	const strReplaceAt = function (string, index, char) {
 		return string.slice(0, index) + char + string.slice(index + 1);
 	};
 
 	return Wikitext;
 
 };
-

@@ -52,19 +52,19 @@ describe('wikitext', async function() {
 			expect(link.target.toText()).to.equal(result.links[idx].target);
 			expect(link.displaytext).to.equal(result.links[idx].displaytext);
 			expect(link.wikitext).to.equal(result.links[idx].wikitext);
-			expect(link.dsr).to.deep.equal(result.links[idx].dsr);
+			// expect(link.dsr).to.deep.equal(result.links[idx].dsr);
 		});
 		wkt.files.forEach((link, idx) => {
 			expect(link.target.toText()).to.equal(result.files[idx].target);
 			expect(link.props).to.equal(result.files[idx].props);
 			expect(link.wikitext).to.equal(result.files[idx].wikitext);
-			expect(link.dsr).to.deep.equal(result.files[idx].dsr);
+			// expect(link.dsr).to.deep.equal(result.files[idx].dsr);
 		});
 		wkt.categories.forEach((link, idx) => {
 			expect(link.target.toText()).to.equal(result.categories[idx].target);
 			expect(link.sortkey).to.equal(result.categories[idx].sortkey);
 			expect(link.wikitext).to.equal(result.categories[idx].wikitext);
-			expect(link.dsr).to.deep.equal(result.categories[idx].dsr);
+			// expect(link.dsr).to.deep.equal(result.categories[idx].dsr);
 		});
 
 		var earlierText = wkt.getText().replace(result.links[0].wikitext, '');
@@ -110,19 +110,57 @@ describe('wikitext', async function() {
 		var wikitext = '{{a|zzz|{{er}}}}, {{b|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}'; 
 		var wkt = new bot.wikitext(wikitext);
 	
-		wkt.parseTemplates(1);
+		wkt.parseTemplates({count: 1});
 		assert.equal(wkt.templates.length, 1);
 		assert(wkt.templates[0].name, 'a');
 
-		wkt.parseTemplates(2);
+		wkt.parseTemplates({count: 2});
 		assert.equal(wkt.templates.length, 2);
 
-		wkt.parseTemplates(3);
+		wkt.parseTemplates({count: 3});
 		assert.equal(wkt.templates.length, 3);
 
-		wkt.parseTemplates(4);
+		wkt.parseTemplates({count: 4});
 		assert.equal(wkt.templates.length, 3);
 
+	});
+
+	it("parseTemplates with namePredicate", function() {
+		var wikitext = '{{a|zzz|{{er}}}}, {{lorem|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}'; 
+		var wkt = new bot.wikitext(wikitext);
+
+		wkt.parseTemplates({
+			namePredicate: function(name) {
+				return name === 'a';
+			}
+		});
+		assert.equal(wkt.templates.length, 1);
+
+		wkt.parseTemplates({
+			namePredicate: function(name) {
+				return name.length === 1;
+			}
+		});
+		assert.equal(wkt.templates.length, 2);
+	});
+
+	it("parseTemplates with templatePredicate", function() {
+		var wikitext = '{{a|zzz|{{er}}}}, {{lorem|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}'; 
+		var wkt = new bot.wikitext(wikitext);
+
+		wkt.parseTemplates({
+			namePredicate: function(name) {
+				return name === 'a';
+			}
+		});
+		assert.equal(wkt.templates.length, 1);
+
+		wkt.parseTemplates({
+			templatePredicate: function(template) {
+				return template.name.length === 1 && template.parameters.length === 1;
+			}
+		});
+		assert.equal(wkt.templates.length, 1);
 	});
 
 	it("Two templates, no params", function() {
@@ -151,7 +189,7 @@ describe('wikitext', async function() {
 	});
 	it("Two nested templates, recursive", function() {
 		var wikitext = "Lorem {{ipsum|{{dorem}}}} sum";
-		var parsed = new bot.wikitext(wikitext).parseTemplatesRecursive();
+		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 2, "Two template found");
 		assert.equal(parsed[0].name, "ipsum", "Correct name");
@@ -187,7 +225,7 @@ describe('wikitext', async function() {
 	{{DYK talk|31 January|2015|entry= ... that in 1998 '''[[Eleanor Robinson]]''' set a world record of 13 days, 1 hour, 54 minutes for a woman to run {{convert|1000|mi}}?}}
 
 	{{Did you know nominations/Eleanor Robinson}}`;
-		var parsed = new bot.wikitext(wikitext).parseTemplatesRecursive();
+		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 8, "Eight templates found");
 		assert.equal(parsed[0].name, "WikiProjectBannerShell", "First: Correct name");
@@ -320,7 +358,7 @@ describe('wikitext', async function() {
 
 	it("Four braces (template name is a template), recursive", function() {
 		var wikitext = "Lorem {{{{ipsum|one}}|bar}} dorem";
-		var parsed = new bot.wikitext(wikitext).parseTemplatesRecursive();
+		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 2, "Two templates found");
 		assert.equal(parsed[0].name, "{{ipsum|one}}", "First: Correct name");
@@ -353,7 +391,7 @@ describe('wikitext', async function() {
 
 	it("Five braces (template name is a triple-brace parameter), recursive", function() {
 		var wikitext = "Lorem {{{{{ipsum|foo}}}|bar}} dorem";
-		var parsed = new bot.wikitext(wikitext).parseTemplatesRecursive();
+		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 1, "One template found");
 		assert.equal(parsed[0].name, "{{{ipsum|foo}}}", "Correct name");
@@ -366,7 +404,7 @@ describe('wikitext', async function() {
 
 	it("Six braces (template name is a template, which itself has a template name that is a template), recursive", function() {
 		var wikitext = "Lorem {{{{{{ipsum|foo}}|bar}}|baz}} dorem";
-		var parsed = new bot.wikitext(wikitext).parseTemplatesRecursive();
+		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 3, "Three templates found");
 		assert.equal(parsed[0].name, "{{{{ipsum|foo}}|bar}}", "First: Correct name");
@@ -393,7 +431,7 @@ describe('wikitext', async function() {
 	// specific namespaces to check usage.
 	it.skip("Six braces (triple-brace parameter within triple-brace parameter), recursive", function() {
 		var wikitext = "Lorem {{foo|{{{{{{ipsum|}}}|bar}}}|baz}} dorem";
-		var parsed = new bot.wikitext(wikitext).parseTemplatesRecursive();
+		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 1, "One template found");
 		assert.equal(parsed[0].name, "foo", "Correct name");
