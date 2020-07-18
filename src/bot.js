@@ -297,13 +297,13 @@ class mwn {
 	 * Determine if we're going to use OAuth for authentication
 	 */
 	_usingOAuth() {
-		if (Object.values(this.options.OAuthCredentials).length < 4) {
+		const creds = this.options.OAuthCredentials;
+		if (typeof creds !== 'object') {
 			return false;
 		}
-		for (let val of Object.values(this.options.OAuthCredentials)) {
-			if (!val) {
-				return false;
-			}
+		if (!creds.consumerToken || !creds.consumerSecret || 
+			!creds.accessToken || !creds.accessSecret) {
+			return false;
 		}
 		return true;
 	}
