@@ -516,6 +516,19 @@ class mwn {
 				return Promise.reject(err);
 			}
 
+			const refreshTokenAndRetry = () => {
+				return Promise.all(
+					[this.getTokenType(params.action), this.getTokens()]
+				).then(([tokentype]) => {
+					if (!tokentype || !this.state[tokentype + 'token']) {
+						return this.dieWithError(response, requestOptions);
+					}
+					var token = this.state[ tokentype + 'token' ];
+					params.token = token;
+					return this.request(params, customRequestOptions);
+				});
+			};
+
 			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
 			if (response.error) {
 
@@ -528,16 +541,7 @@ class mwn {
 						// extension, and not a part of mediawiki core
 						case 'badtoken':
 							log(`[W] Encountered badtoken error, fetching new token and retrying`);
-							return Promise.all(
-								[this.getTokenType(params.action), this.getTokens()]
-							).then(([tokentype]) => {
-								if (!tokentype || !this.state[tokentype + 'token']) {
-									return this.dieWithError(response, requestOptions);
-								}
-								var token = this.state[ tokentype + 'token' ];
-								params.token = token;
-								return this.request(params, customRequestOptions);
-							});
+							return refreshTokenAndRetry();
 
 						case 'readonly':
 						case 'maxlag':
@@ -558,9 +562,7 @@ class mwn {
 							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
 							return this.login().then(() => {
 								if (params.token) {
-									return this.getTokens().then(() => {
-										return this.request(params, customRequestOptions);
-									});
+									return refreshTokenAndRetry();
 								} else {
 									return this.request(params, customRequestOptions);
 								}
