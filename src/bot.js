@@ -301,7 +301,7 @@ class mwn {
 		if (typeof creds !== 'object') {
 			return false;
 		}
-		if (!creds.consumerToken || !creds.consumerSecret || 
+		if (!creds.consumerToken || !creds.consumerSecret ||
 			!creds.accessToken || !creds.accessSecret) {
 			return false;
 		}
@@ -1426,7 +1426,7 @@ class mwn {
 
 		for (let i = 0; i < numBatches; i++) {
 			query[batchFieldName] = batches[i];
-			yield await this.request(query);
+			yield await this.request(query, { method: 'post' });
 		}
 	}
 
