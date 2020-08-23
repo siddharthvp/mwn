@@ -284,6 +284,10 @@ module.exports = function(bot) {
 			return bot.edit(this.toString(), transform);
 		}
 
+		save(text, summary, options) {
+			return bot.save(this.toString(), text, summary, options);
+		}
+
 		newSection(header, message, additionalParams) {
 			return bot.newSection(this.toString(), header, message, additionalParams);
 		}
