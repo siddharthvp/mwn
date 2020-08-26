@@ -391,16 +391,16 @@ module.exports = function (bot) {
 			return chunk.replace(/\1/g, '|');
 		});
 
-		if (namePredicate && !namePredicate(name)) {
+		template.setName(name);
+		
+		if (namePredicate && !namePredicate(template.name)) {
 			return null;
 		}
-
-		template.setName(name);
 
 		var unnamedIdx = 1;
 		parameterChunks.forEach(function (chunk) {
 			var indexOfEqualTo = chunk.indexOf('=');
-			var indexOfOpenBraces = chunk.indexOf('{{');
+			var indexOfOpenBraces = chunk.indexOf('{{'); 
 
 			var isWithoutEquals = !chunk.includes('=');
 			var hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;

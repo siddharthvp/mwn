@@ -126,7 +126,7 @@ describe('wikitext', async function() {
 	});
 
 	it("parseTemplates with namePredicate", function() {
-		var wikitext = '{{a|zzz|{{er}}}}, {{lorem|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}'; 
+		var wikitext = '{{a\n|zzz|{{er}}}}, {{lorem|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}'; 
 		var wkt = new bot.wikitext(wikitext);
 
 		wkt.parseTemplates({
