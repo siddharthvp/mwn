@@ -120,7 +120,10 @@ module.exports = function (bot) {
 			if (!text.startsWith('{|') || !text.endsWith('|}')) {
 				throw new Error('failed to parse table. Unexpected starting or ending');
 			}
-			text = text.replace(/^\{\|.*$(\n\|-)?/m, '').replace(/^\|\}$/m, '');
+			// remove front matter and final matter
+			// including table attributes and caption, and unnecessary |- at the beginning
+			text = text.replace(/^\{\|.*$((\n\|-)?\n\|\+.*$)?(\n\|-)?/m, '').replace(/^\|\}$/m, '');
+
 			var rows = text.split(/^\|-/m).map(r => r.trim());
 
 			var header = rows[0];
