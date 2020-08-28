@@ -106,10 +106,12 @@ module.exports = function (bot) {
 		 * Parses tables provided:
 		 *  1. It doesn't have any merged or joined cells.
 		 *  2. It doesn't use any templates to produce any table markup.
-		 *  3. Styles applied on cells or rows may be parsed as content.
-		 *  4. Further restrictions may apply.
+		 *  3. Further restrictions may apply.
 		 *
 		 * Tables generated via mwn.table() class are intended to be parsable.
+		 * 
+		 * This method throws when it finds an inconsistency (rather than silently
+		 * cause undesired behaviour).
 		 *
 		 * @param {string} text
 		 * @returns {Object[]} - each object in the returned array represents a row,
@@ -121,61 +123,49 @@ module.exports = function (bot) {
 				throw new Error('failed to parse table. Unexpected starting or ending');
 			}
 			// remove front matter and final matter
-			// including table attributes and caption, and unnecessary |- at the beginning
+			// including table attributes and caption, and unnecessary |- at the top
 			text = text.replace(/^\{\|.*$((\n\|-)?\n\|\+.*$)?(\n\|-)?/m, '').replace(/^\|\}$/m, '');
 
-			var rows = text.split(/^\|-/m).map(r => r.trim());
+			let [header, ...rows] = text.split(/^\|-/m).map(r => r.trim());
 
-			var header = rows[0];
-			rows = rows.slice(1);
+			// remove cell attributes, extracts data
+			const extractData = (cell) => {
+				if (cell.includes(' | ')) { // ideally it should be '|' but then we'd trip over piped links
+					return cell.slice(cell.lastIndexOf(' | ') + 3).trim();
+				} else {
+					return cell.trim();
+				}
+			};
 
-			var cols = header.split('\n');
+			let cols = header.split('\n').map(e => e.replace(/^!/, ''));
 
 			if (cols.length === 1) { // non-multilined table?
-				cols = cols[0].replace(/^! /, '').split('!!');
-				cols = cols.map(h => {
-					if (h.includes(' | ')) {
-						return h.slice(h.lastIndexOf(' | ') + 3).trim();
-					} else {
-						return h.trim();
-					}
-				});
-
-			} else {
-
-				cols = cols.map(h => {
-					if (h.includes(' | ')) {
-						return h.slice(h.lastIndexOf(' | ') + 3).trim();
-					} else {
-						return h.slice(h.lastIndexOf('! ') + 2).trim();
-					}
-				});
+				cols = cols[0].split('!!');
 			}
+			cols = cols.map(extractData);
 
-			var numcols = cols.length;
+			let numcols = cols.length;
 
-			var output = new Array(rows.length);
+			let output = new Array(rows.length);
 
 			rows.forEach((row, idx) => {
-				let cells = row.split(/^\|/m).slice(1);  // slice(1) removes the empty
+				let cells = row.split(/^\|/m).slice(1);  // slice(1) removes the emptiness or the row styles if present
 
 				if (cells.length === 1) { // non-multilined
-					// cells are separated by ||, through we use a regex to split to
-					// handle the case when the last cell is blank (there is no space after ||)
-					cells = cells[0].replace(/^\| /, '').split(/ \|\|(?: |$)/).map(e => e.trim());
-				} else {
-					cells = cells.map(e => e.trim());
+					// cells are separated by ||
+					cells = cells[0].replace(/^\|/, '').split('||');
 				}
+
+				cells = cells.map(extractData);
 
 				if (cells.length !== numcols) {
 					throw new Error(`failed to parse table: found ${cells.length} cells on row ${idx}, expected ${numcols}`);
 				}
 
-				let outputrow = {};
+				output[idx] = {}; // output[idx] represents a row
 				for (let i = 0; i < numcols; i++) {
-					outputrow[cols[i]] = cells[i];
+					output[idx][cols[i]] = cells[i];
 				}
-				output[idx] = outputrow;
 			});
 
 			return output;
