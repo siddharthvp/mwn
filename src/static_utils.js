@@ -160,9 +160,14 @@ module.exports = {
 		/**
 		 * Add a row to the table
 		 * @param {string[]} fields - array of items on the row,
+		 * @param {Object} [attributes={}] - row attributes
 		 */
-		addRow(fields) {
-			this.text += `|-\n`; // row separator
+		addRow(fields, attributes = {}) {
+			let attributetext = '';
+			Object.entries(attributes).forEach(([key, value]) => {
+				attributetext += ` ${key}="${value}"`;
+			});
+			this.text += `|-${attributetext}\n`; // row separator
 			if (this.multiline) {
 				this.text += fields.map(e => `| ${e} \n`).join('');
 			} else {

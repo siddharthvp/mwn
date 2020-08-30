@@ -65,7 +65,7 @@ describe('static utils', function() {
 		var expected2 = `{| class="wikitable"
 |-
 ! Header1 text !! Header2 text !! Header3 text
-|-
+|- style="background: green;"
 | Example11 || Example12 || Example13
 |-
 | Example21 || Example22 || Example23
@@ -73,7 +73,7 @@ describe('static utils', function() {
 
 		table = new mwn.table({ sortable: false, multiline: false });
 		table.addHeaders(['Header1 text', 'Header2 text', 'Header3 text']);
-		table.addRow(['Example11', 'Example12', 'Example13']);
+		table.addRow(['Example11', 'Example12', 'Example13'], {style: 'background: green;'});
 		table.addRow(['Example21', 'Example22', 'Example23']);
 		expect(table.getText()).to.equal(expected2);
 
