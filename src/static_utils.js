@@ -133,13 +133,14 @@ module.exports = {
 
 		_getheaderline(header) {
 			if (typeof header === 'object') {
-				var text = '';
-				if (header.style) {
-					text += `scope="col" style="${header.style}" | `;
+				var text = `scope="col"`;
+				for (let [key, value] of Object.entries(header)) {
+					if (key === 'label') {
+						continue;
+					}
+					text += ` ${key}="${value}"`;
 				}
-				if (header.label) {
-					text += `${header.label}`;
-				}
+				text += ` | ${header.label}`;
 				return text;
 			}
 			return header;

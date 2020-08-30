@@ -81,6 +81,35 @@ describe('static utils', function() {
 		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
 		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(`{| style="text-align: center"\n|}`);
 
+		var expected3 = `{| class="wikitable sortable"
+|-
+! scope="col" class="foobar" | Header1 text 
+! scope="col" style="width: 5em;" | Header2 text 
+! scope="col" | Header3 text 
+|-
+| Example11 
+| Example12 
+| Example13 
+|-
+| Example21 
+| Example22 
+| Example23 
+|}`;
+
+		table = new mwn.table();
+		table.addHeaders([
+			{label: 'Header1 text', class: 'foobar'},
+			{style: 'width: 5em;', label: 'Header2 text'},
+			{label: 'Header3 text'}
+		]);
+		table.addRow(['Example11', 'Example12', 'Example13']);
+		table.addRow(['Example21', 'Example22', 'Example23']);
+		expect(table.getText()).to.equal(expected3);
+
+		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
+		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
+		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(`{| style="text-align: center"\n|}`);
+
 	});
 
 	describe('mwn.util', function() {
