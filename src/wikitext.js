@@ -21,6 +21,12 @@ module.exports = function (bot) {
 				throw new Error('non-string constructor for wikitext class');
 			}
 			this.text = wikitext;
+			this.unbinder = {
+				counter: 0,
+				history: {},
+				prefix: '%UNIQ::' + Math.random() + '::',
+				postfix: '::UNIQ%'
+			};
 		}
 
 		/** Parse links, file usages and categories from the wikitext */
@@ -83,6 +89,46 @@ module.exports = function (bot) {
 		 */
 		removeEntity(entity) {
 			this.text = this.text.replace(entity.wikitext, '');
+		}
+
+
+		/**
+		 * Temporarily hide a part of the string while processing the rest of it.
+		 * 
+	 	 * eg.  let u = new bot.wikitext("Hello world <!-- world --> world");
+		 *      u.unbind('<!--','-->');
+		 *      u.content = u.content.replace(/world/g, 'earth');
+		 *      u.rebind(); // gives "Hello earth <!-- world --> earth"
+		 *
+		 * Text within the 'unbinded' part (in this case, the HTML comment) remains intact
+		 * unbind() can be called multiple times to unbind multiple parts of the string.
+		 *
+		 * Attribution: https://en.wikipedia.org/wiki/MediaWiki:Gadget-morebits.js (cc-by-sa 3.0/GFDL)
+		 * @param {string} prefix
+		 * @param {string} postfix
+		 */
+		unbind(prefix, postfix) {
+			let re = new RegExp(prefix + '([\\s\\S]*?)' + postfix, 'g');
+			this.text = this.text.replace(re, match => {
+				let current = this.unbinder.prefix + this.unbinder.counter + this.unbinder.postfix;
+				this.unbinder.history[current] = match;
+				++this.unbinder.counter;
+				return current;
+			});
+		}
+				
+		/**
+		 * Rebind after unbinding.
+		 * @returns {string} The output 
+		 */
+		rebind() {
+			let content = this.text;
+			content.self = this;
+			for (let [current, replacement] of Object.entries(this.unbinder.history)) {
+				content = content.replace(current, replacement);
+			}
+			this.text = content;
+			return this.text;
 		}
 
 		/** Get the updated text  @returns {string} */
