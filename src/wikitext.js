@@ -2,7 +2,7 @@ module.exports = function (bot) {
 
 	/**
 	 * Class for some basic wikitext parsing, involving
-	 * links, files, categories and templates.
+	 * links, files, categories, templates and simple tables.
 	 *
 	 * For more advanced and sophisticated wikitext parsing, use
 	 * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
@@ -119,6 +119,31 @@ module.exports = function (bot) {
 		 */
 		static parseTable(text) {
 			text = text.trim();
+			const indexOfRawPipe = function (text) {
+
+				// number of unclosed brackets
+				let tlevel = 0, llevel = 0;
+		
+				let n = text.length;
+				for (let i = 0; i < n; i++) {
+			
+					if (text[i] === '{' && text[i+1] === '{') {
+						tlevel++;
+						i++;
+					} else if (text[i] === '[' && text[i+1] === '[') {
+						llevel++;
+						i++;
+					} else if (text[i] === '}' && text[i+1] === '}') {
+						tlevel--;
+						i++;
+					} else if (text[i] === ']' && text[i+1] === ']') {
+						llevel--;
+						i++;
+					} else if (text[i] === '|' && tlevel === 0 && llevel === 0) {
+						return i;
+					}
+				}
+			};
 			if (!text.startsWith('{|') || !text.endsWith('|}')) {
 				throw new Error('failed to parse table. Unexpected starting or ending');
 			}
@@ -130,13 +155,10 @@ module.exports = function (bot) {
 
 			// remove cell attributes, extracts data
 			const extractData = (cell) => {
-				if (cell.includes(' | ')) { // ideally it should be '|' but then we'd trip over piped links
-					return cell.slice(cell.lastIndexOf(' | ') + 3).trim();
-				} else {
-					return cell.trim();
-				}
+				return cell.slice(indexOfRawPipe(cell) + 1).trim();
 			};
 
+			// XXX: handle the case where there are is no header row
 			let cols = header.split('\n').map(e => e.replace(/^!/, ''));
 
 			if (cols.length === 1) { // non-multilined table?
