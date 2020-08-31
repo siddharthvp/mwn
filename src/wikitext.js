@@ -240,6 +240,40 @@ module.exports = function (bot) {
 
 		}
 
+
+		/**
+		 * Parse sections from wikitext
+		 * @param {string} text 
+		 * @returns {{level: number, header: string, index: number, content: string}[]} array of 
+		 * section objects. Each section object has the level, header, index (of beginning) and content.
+		 * Content *includes* the equal signs and the header.
+		 * The top is represented as level 1, with header `null`.
+		 */
+		static parseSections(text) {
+			const rgx = /^(=+)(.*?)\1/mg;
+			let sections = [
+				{
+					level: 1,
+					header: null,
+					index: 0
+				}
+			];
+			let match;
+			while (match = rgx.exec(text)) { // eslint-disable-line no-cond-assign
+				sections.push({
+					level: match[1].length,
+					header: match[2].trim(),
+					index: match.index
+				});
+			}
+			let n = sections.length;
+			for (let i = 0; i < n - 1; i++) {
+				sections[i].content = text.slice(sections[i].index, sections[i + 1].index);
+			}
+			sections[n - 1].content = text.slice(sections[n - 1].index);
+			return sections;
+		}
+
 	}
 
 	/**** Private members *****/
