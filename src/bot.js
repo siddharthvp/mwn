@@ -547,7 +547,7 @@ class mwn {
 						case 'maxlag':
 							// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
 							log(`[W] Encountered ${response.error.code} error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
-							return sleep(this.options.retryPause).then(() => {
+							return this.sleep(this.options.retryPause).then(() => {
 								return this.request(params, customRequestOptions);
 							});
 
@@ -586,7 +586,7 @@ class mwn {
 				// error might be transient, give it another go!
 				log(`[W] Encountered ${error}, retrying in ${this.options.retryPause/1000} seconds`);
 				customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
-				return sleep(this.options.retryPause).then(() => {
+				return this.sleep(this.options.retryPause).then(() => {
 					return this.request(params, customRequestOptions);
 				});
 			}
@@ -1676,6 +1676,16 @@ class mwn {
 		});
 	}
 
+	/**
+	* Promisified version of setTimeout
+	* @param {number} duration - of sleep in milliseconds
+	*/
+	sleep(duration) {
+		return new Promise(resolve => {
+			setTimeout(resolve, duration);
+		});
+	}
+
 }
 
 mwn.requestDefaults = {
@@ -1761,16 +1771,6 @@ var arrayChunk = function(arr, size) {
 		result[i] = arr.slice(i * size, (i + 1) * size);
 	}
 	return result;
-};
-
-/**
- * Promisified version of setTimeout
- * @param {number} duration - of sleep in milliseconds
- */
-var sleep = function(duration) {
-	return new Promise(resolve => {
-		setTimeout(resolve, duration);
-	});
 };
 
 var makeTitles = function(pages) {

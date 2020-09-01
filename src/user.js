@@ -10,12 +10,18 @@ module.exports = function(bot) {
 			this.username = name;
 		}
 
+		/**
+		 * @returns {bot.page}
+		 */
 		get userpage() {
 			// User: namespace name will work across all MW sites
 			// as it is a canonical namespace name
 			return new bot.page('User:' + this.username);
 		}
 
+		/**
+		 * @returns {bot.page}
+		 */
 		get talkpage() {
 			return new bot.page('User talk:' + this.username);
 		}
