@@ -131,19 +131,19 @@ module.exports = {
 			this.text += '\n';
 		}
 
-		_getheaderline(header) {
-			if (typeof header === 'object') {
-				var text = `scope="col"`;
-				for (let [key, value] of Object.entries(header)) {
+		_makecell(cell, isHeader) {
+			if (typeof cell === 'object') {
+				let text = isHeader ? `scope="col"` : ``;
+				for (let [key, value] of Object.entries(cell)) {
 					if (key === 'label') {
 						continue;
 					}
 					text += ` ${key}="${value}"`;
 				}
-				text += ` | ${header.label}`;
+				text += ` | ${cell.label}`;
 				return text;
 			}
-			return header;
+			return cell;
 		}
 		/**
 		 * Add the headers
@@ -152,9 +152,9 @@ module.exports = {
 		addHeaders(headers) {
 			this.text += `|-\n`; // row separator
 			if (this.multiline) {
-				this.text += headers.map(e => `! ${this._getheaderline(e)} \n`).join('');
+				this.text += headers.map(e => `! ${this._makecell(e, true)} \n`).join('');
 			} else {
-				this.text += `! ` + headers.map(this._getheaderline).join(' !! ') + '\n';
+				this.text += `! ` + headers.map(e => this._makecell(e, true)).join(' !! ') + '\n';
 			}
 		}
 
@@ -170,9 +170,9 @@ module.exports = {
 			});
 			this.text += `|-${attributetext}\n`; // row separator
 			if (this.multiline) {
-				this.text += fields.map(e => `| ${e} \n`).join('');
+				this.text += fields.map(e => `| ${this._makecell(e)} \n`).join('');
 			} else {
-				this.text += `| ` + fields.join(' || ') + '\n';
+				this.text += `| ` + fields.map(this._makecell).join(' || ') + '\n';
 			}
 		}
 

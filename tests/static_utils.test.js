@@ -91,7 +91,7 @@ describe('static utils', function() {
 | Example12 
 | Example13 
 |-
-| Example21 
+|  class="sampleclass" | Example21 
 | Example22 
 | Example23 
 |}`;
@@ -103,7 +103,7 @@ describe('static utils', function() {
 			{label: 'Header3 text'}
 		]);
 		table.addRow(['Example11', 'Example12', 'Example13']);
-		table.addRow(['Example21', 'Example22', 'Example23']);
+		table.addRow([{label: 'Example21', class: 'sampleclass'}, 'Example22', 'Example23']);
 		expect(table.getText()).to.equal(expected3);
 
 		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
