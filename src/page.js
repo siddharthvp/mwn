@@ -103,6 +103,27 @@ module.exports = function(bot) {
 			});
 		}
 
+		/**
+		 * Get list of pages transcluding this page
+		 * @returns {Promise<String[]>}
+		 */
+		transclusions() { 
+			return bot.continuedQuery({
+				"action": "query",
+				"prop": "transcludedin",
+				"titles": this.toString(),
+				"tiprop": "title",
+				"tilimit": "max"
+			}).then(jsons => {
+				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
+				var page = pages[0];
+				if (page.missing) {
+					return Promise.reject('missingarticle');
+				}
+				return page.transcludedin.map(pg => pg.title);
+			});
+		}
+
 
 		/**
 		 * Returns list of images on the page
@@ -202,6 +223,10 @@ module.exports = function(bot) {
 			});
 		}
 
+		/**
+		 * Get username of the last deleting admin (or null)
+		 * @returns {Promise<string>}
+		 */
 		getDeletingAdmin() {
 			return bot.request({
 				action: "query",

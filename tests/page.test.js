@@ -6,9 +6,8 @@ describe('Page', async function() {
 
 	var page;
 
-	before('logs in and gets token & namespaceInfo', function(done) {
-		this.timeout(7000);
-		bot.loginGetToken().then(() => {
+	before('gets site info', function(done) {
+		bot.getSiteInfo().then(() => {
 			// for further tests
 			page = new bot.page('Wp:Requests/Permissions');
 
@@ -96,9 +95,15 @@ describe('Page', async function() {
 
 	it('backlinks', function() {
 		return page.backlinks().then(backlinks => {
-			console.log(backlinks);
 			expect(backlinks).to.be.instanceOf(Array);
 			expect(backlinks.length).to.be.gte(1);
+		});
+	});
+
+	it('transclusions', function() {
+		return page.transclusions().then(transclusions => {
+			expect(transclusions).to.be.instanceOf(Array);
+			expect(transclusions.length).to.be.gte(1);
 		});
 	});
 
