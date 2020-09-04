@@ -2,7 +2,8 @@ module.exports = function (bot) {
 
 	/**
 	 * Class for some basic wikitext parsing, involving
-	 * links, files, categories, templates and simple tables.
+	 * links, files, categories, templates and simple tables
+	 * and sections.
 	 *
 	 * For more advanced and sophisticated wikitext parsing, use
 	 * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
@@ -29,9 +30,9 @@ module.exports = function (bot) {
 			this.files = [];
 			this.categories = [];
 
-			var n = this.text.length;
+			let n = this.text.length;
 			// files can have links in captions; use a stack to handle the nesting
-			var stack = new Stack();
+			let stack = new Stack();
 			for (let i = 0; i < n; i++) {
 				if (this.text[i] === '[' && this.text[i + 1] === '[') {
 					stack.push({
@@ -125,8 +126,8 @@ module.exports = function (bot) {
 					} else if (wikitext[i] === '}' && wikitext[i + 1] === '}') {
 						if (numUnclosed === 2) {
 							endIdx = i;
-							var templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
-							var processed = processTemplateText(templateWikitext, config.namePredicate, config.templatePredicate);
+							let templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
+							let processed = processTemplateText(templateWikitext, config.namePredicate, config.templatePredicate);
 							if (processed) {
 								result.push(processed);
 							}
@@ -166,7 +167,7 @@ module.exports = function (bot) {
 			}
 
 			if (config.recursive) {
-				var subtemplates = result.map(template => {
+				let subtemplates = result.map(template => {
 					return template.wikitext.slice(2, -2);
 				}).filter(templateWikitext => {
 					return /\{\{.*\}\}/s.test(templateWikitext);
@@ -350,6 +351,8 @@ module.exports = function (bot) {
 
 		/**
 		 * Parse sections from wikitext
+		 * CAUTION: section header syntax in comments, nowiki tags, 
+		 * pre, source or syntaxhighlight tags can lead to wrong results.
 		 * @param {string} text 
 		 * @returns {{level: number, header: string, index: number, content: string}[]} array of 
 		 * section objects. Each section object has the level, header, index (of beginning) and content.
@@ -390,14 +393,14 @@ module.exports = function (bot) {
 	}
 
 	const processLink = function (self, startIdx, endIdx) {
-		var linktext = self.text.slice(startIdx, endIdx + 1);
-		var [target, displaytext] = linktext.slice(2, -2).split('|');
-		var noSortkey = false;
+		let linktext = self.text.slice(startIdx, endIdx + 1);
+		let [target, displaytext] = linktext.slice(2, -2).split('|');
+		let noSortkey = false;
 		if (!displaytext) {
 			displaytext = target[0] === ':' ? target.slice(1) : target;
 			noSortkey = true;
 		}
-		var title = bot.title.newFromText(target);
+		let title = bot.title.newFromText(target);
 		if (!title) {
 			return;
 		}
@@ -458,11 +461,11 @@ module.exports = function (bot) {
 		}
 		getParam(paramName) {
 			return this.parameters.find(p => {
-				return p.name == paramName;
+				return p.name == paramName; // == is intentional
 			});
 		}
 		getValue(paramName) {
-			var param = this.getParam(paramName);
+			let param = this.getParam(paramName);
 			return param ? param.value : null;
 		}
 		setName(name) {
@@ -500,16 +503,16 @@ module.exports = function (bot) {
 			return null;
 		}
 
-		var unnamedIdx = 1;
+		let unnamedIdx = 1;
 		parameterChunks.forEach(function (chunk) {
-			var indexOfEqualTo = chunk.indexOf('=');
-			var indexOfOpenBraces = chunk.indexOf('{{');
+			let indexOfEqualTo = chunk.indexOf('=');
+			let indexOfOpenBraces = chunk.indexOf('{{');
 
-			var isWithoutEquals = !chunk.includes('=');
-			var hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;
-			var isUnnamedParam = (isWithoutEquals || hasBracesBeforeEquals);
+			let isWithoutEquals = !chunk.includes('=');
+			let hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;
+			let isUnnamedParam = (isWithoutEquals || hasBracesBeforeEquals);
 
-			var pName, pNum, pVal;
+			let pName, pNum, pVal;
 			if (isUnnamedParam) {
 				// Get the next number not already used by either an unnamed parameter,
 				// or by a named parameter like `|1=val`
