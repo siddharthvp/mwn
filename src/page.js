@@ -243,6 +243,21 @@ module.exports = function(bot) {
 			});
 		}
 
+		getDescription(customOptions) {
+			return bot.request({
+				action: 'query',
+				prop: 'description',
+				titles: this.toString(),
+				...customOptions
+			}).then(data => {
+				var page = data.query.pages[0];
+				if (page.missing) {
+					return Promise.reject('missingarticle');
+				}
+				return data.query.pages[0].description;
+			});
+		}
+
 		/**
 		 * Get the edit history of the page
 		 * @param {revisionprop[]} props - revision properties to fetch, by default content is
