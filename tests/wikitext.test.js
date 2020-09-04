@@ -124,6 +124,24 @@ some text here for 2-3`;
 		]);
 	});
 
+	it('unbind and rebind', function() {
+		let u = new bot.wikitext("Hello world <!-- world --> world");
+		u.unbind('<!--', '-->');
+		u.text = u.text.replace(/world/g, 'earth');
+		expect(u.rebind()).to.equal("Hello earth <!-- world --> earth");
+		expect(u.text).to.equal("Hello earth <!-- world --> earth");
+		expect(u.getText()).to.equal("Hello earth <!-- world --> earth");
+
+		// with multiple unbinds:
+		u = new bot.wikitext("Hello <nowiki>world</nowiki> <!-- world --> world");
+		u.unbind('<!--', '-->');
+		u.unbind('<nowiki>', '</nowiki>');
+		u.text = u.text.replace(/world/g, 'earth');
+		expect(u.rebind()).to.equal("Hello <nowiki>world</nowiki> <!-- world --> earth");
+		expect(u.text).to.equal("Hello <nowiki>world</nowiki> <!-- world --> earth");
+		expect(u.getText()).to.equal("Hello <nowiki>world</nowiki> <!-- world --> earth");
+	});
+
 	it('parses file with problematic unicode characters', function() {
 		var wkt = new bot.wikitext(`{{short description|Polish politician}}
 		[[File:Michał Cieślak Sejm 2016.JPG|thumb|Michał Cieślak]]`);
@@ -137,7 +155,7 @@ some text here for 2-3`;
 		var parsed = wkt.parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 0, "No parameters");
 		assert.equal(parsed[0].wikitext, "{{ipsum}}", "Correct wikitext");
 
@@ -173,7 +191,7 @@ some text here for 2-3`;
 
 		wkt.parseTemplates({
 			namePredicate: function(name) {
-				return name === 'a';
+				return name === 'A';
 			}
 		});
 		assert.equal(wkt.templates.length, 1);
@@ -192,7 +210,7 @@ some text here for 2-3`;
 
 		wkt.parseTemplates({
 			namePredicate: function(name) {
-				return name === 'a';
+				return name === 'A';
 			}
 		});
 		assert.equal(wkt.templates.length, 1);
@@ -210,10 +228,10 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 2, "Two template found");
-		assert.equal(parsed[0].name, "ipsum", "First: Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "First: Correct name");
 		assert.equal(parsed[0].parameters.length, 0, "First: No parameters");
 		assert.equal(parsed[0].wikitext, "{{ipsum}}", "First: Correct wikitext");
-		assert.equal(parsed[1].name, "sum", "First: Correct name");
+		assert.equal(parsed[1].name, "Sum", "First: Correct name");
 		assert.equal(parsed[1].parameters.length, 0, "First: No parameters");
 		assert.equal(parsed[1].wikitext, "{{sum}}", "First: Correct wikitext");
 	});
@@ -222,7 +240,7 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 1, "One parameter");
 		assert.equal(parsed[0].parameters[0].name, 1, "Correct parameter name");
 		assert.equal(parsed[0].parameters[0].value, "{{dorem}}", "Correct parameter value");
@@ -234,13 +252,13 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 2, "Two template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 1, "One parameter");
 		assert.equal(parsed[0].parameters[0].name, 1, "Correct parameter name");
 		assert.equal(parsed[0].parameters[0].value, "{{dorem}}", "Correct parameter value");
 		assert.equal(parsed[0].parameters[0].wikitext, "|{{dorem}}", "Correct parameter wikitext");
 		assert.equal(parsed[0].wikitext, "{{ipsum|{{dorem}}}}", "Correct wikitext");
-		assert.equal(parsed[1].name, "dorem", "Correct name");
+		assert.equal(parsed[1].name, "Dorem", "Correct name");
 		assert.equal(parsed[1].parameters.length, 0, "No parameters");
 		assert.equal(parsed[1].wikitext, "{{dorem}}", "Correct wikitext");
 	});
@@ -332,7 +350,7 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 1, "One parameter");
 		assert.equal(parsed[0].parameters[0].name, 1, "Correct parameter name");
 		assert.equal(parsed[0].parameters[0].value, "foo", "Correct parameter value");
@@ -345,7 +363,7 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 2, "Two parameters");
 		assert.equal(parsed[0].parameters[0].name, 1, "Correct first parameter name");
 		assert.equal(parsed[0].parameters[0].value, "foo", "Correct first parameter value");
@@ -361,7 +379,7 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 2, "Two parameters");
 		assert.equal(parsed[0].parameters[0].name, "2", "Correct first parameter name");
 		assert.equal(parsed[0].parameters[0].value, "foo", "Correct first parameter value");
@@ -377,7 +395,7 @@ some text here for 2-3`;
 		var parsed = new bot.wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, "One template found");
-		assert.equal(parsed[0].name, "ipsum", "Correct name");
+		assert.equal(parsed[0].name, "Ipsum", "Correct name");
 		assert.equal(parsed[0].parameters.length, 1, "One parameter");
 		assert.equal(parsed[0].parameters[0].name, 1, "Correct parameter name");
 		assert.equal(parsed[0].parameters[0].value, "{{{1|}}}", "Correct parameter value");
@@ -409,7 +427,7 @@ some text here for 2-3`;
 		assert.equal(parsed[0].parameters[0].value, "bar", "First: Correct parameter value");
 		assert.equal(parsed[0].parameters[0].wikitext, "|bar", "First: Correct parameter wikitext");
 		assert.equal(parsed[0].wikitext, "{{{{ipsum|one}}|bar}}", "First: Correct wikitext");
-		assert.equal(parsed[1].name, "ipsum", "Second: Correct name");
+		assert.equal(parsed[1].name, "Ipsum", "Second: Correct name");
 		assert.equal(parsed[1].parameters.length, 1, "Second: One parameter");
 		assert.equal(parsed[1].parameters[0].name, 1, "Second: Correct parameter name");
 		assert.equal(parsed[1].parameters[0].value, "one", "Second: Correct parameter value");
@@ -461,7 +479,7 @@ some text here for 2-3`;
 		assert.equal(parsed[1].parameters[0].value, "bar", "Second: Correct parameter value");
 		assert.equal(parsed[1].parameters[0].wikitext, "|bar", "Second: Correct parameter wikitext");
 		assert.equal(parsed[1].wikitext, "{{{{ipsum|foo}}|bar}}", "Second: Correct wikitext");
-		assert.equal(parsed[2].name, "ipsum", "Third: Correct name");
+		assert.equal(parsed[2].name, "Ipsum", "Third: Correct name");
 		assert.equal(parsed[2].parameters.length, 1, "Third: One parameter");
 		assert.equal(parsed[2].parameters[0].name, 1, "Third: Correct parameter name");
 		assert.equal(parsed[2].parameters[0].value, "foo", "Third: Correct parameter value");

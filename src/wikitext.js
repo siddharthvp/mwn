@@ -21,12 +21,6 @@ module.exports = function (bot) {
 				throw new Error('non-string constructor for wikitext class');
 			}
 			this.text = wikitext;
-			this.unbinder = {
-				counter: 0,
-				history: {},
-				prefix: '%UNIQ::' + Math.random() + '::',
-				postfix: '::UNIQ%'
-			};
 		}
 
 		/** Parse links, file usages and categories from the wikitext */
@@ -40,7 +34,9 @@ module.exports = function (bot) {
 			var stack = new Stack();
 			for (let i = 0; i < n; i++) {
 				if (this.text[i] === '[' && this.text[i + 1] === '[') {
-					stack.push({ startIdx: i });
+					stack.push({
+						startIdx: i
+					});
 					i++;
 				} else if (this.text[i] === ']' && this.text[i + 1] === ']' && stack.top()) {
 					stack.top().endIdx = i + 1;
@@ -68,16 +64,120 @@ module.exports = function (bot) {
 		 * @param {string} wikitext
 		 * @param {{recursive: boolean, namePredicate: function, templatePredicate: function,
 		 * count: number}} config
-		 * @config {boolean} recursive - also parse templates within subtemplates
-		 * @config {function} namePredicate - include template in result only if the its name matches this predicate
-		 * More efficient than templatePredicate as the template parameters aren't parsed if name didn't match.
-		 * @config {function} templatePredicate - include template in result only if it matches this predicate
-		 * @config {number} count - max number of templates to be parsed. If recursive is set true, note that
-		 * templates are parsed breadth-first, not depth-first.
+		 * @config {boolean} recursive - also parse templates within subtemplates. The other 
+		 * config parameters (namePredicate, templatePredicate, count) are *not* compatible
+		 * with recursive mode. Expect unexpected results if used.
+		 * @config {function} namePredicate - include template in result only if the its name 
+		 * matches this predicate. More efficient than templatePredicate as the template parameters 
+		 * aren't parsed if name didn't match.
+		 * @config {function} templatePredicate - include template in result only if it matches 
+		 * this predicate
+		 * @config {number} count - max number of templates to be parsed.
 		 * @returns {Template[]}
 		 */
 		parseTemplates(config) {
-			return this.templates = parseTemplates(this.text, config);
+			return this.templates = Wikitext.parseTemplates(this.text, config);
+		}
+
+		// parseTemplates() and processTemplateText() are adapted from
+		// https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js written by Evad37
+		// which was in turn adapted from https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js
+		// written by me. (cc-by-sa/GFDL)
+
+		/**
+		 * @inheritdoc
+		 */
+		static parseTemplates(wikitext, config) {
+			config = config || {
+				recursive: false,
+				namePredicate: null,
+				templatePredicate: null,
+				count: null
+			};
+
+			const result = [];
+
+			const n = wikitext.length;
+
+			// number of unclosed braces
+			let numUnclosed = 0;
+
+			// are we inside a comment, or between nowiki tags, or in a {{{parameter}}}?
+			let inComment = false;
+			let inNowiki = false;
+			let inParameter = false;
+
+			let startIdx, endIdx;
+
+			for (let i = 0; i < n; i++) {
+
+				if (!inComment && !inNowiki && !inParameter) {
+
+					if (wikitext[i] === '{' && wikitext[i + 1] === '{' && wikitext[i + 2] === '{' && wikitext[i + 3] !== '{') {
+						inParameter = true;
+						i += 2;
+					} else if (wikitext[i] === '{' && wikitext[i + 1] === '{') {
+						if (numUnclosed === 0) {
+							startIdx = i + 2;
+						}
+						numUnclosed += 2;
+						i++;
+					} else if (wikitext[i] === '}' && wikitext[i + 1] === '}') {
+						if (numUnclosed === 2) {
+							endIdx = i;
+							var templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
+							var processed = processTemplateText(templateWikitext, config.namePredicate, config.templatePredicate);
+							if (processed) {
+								result.push(processed);
+							}
+							if (config.count && result.length === config.count) {
+								return result;
+							}
+						}
+						numUnclosed -= 2;
+						i++;
+					} else if (wikitext[i] === '|' && numUnclosed > 2) {
+						// swap out pipes in nested templates with \x01 character
+						wikitext = strReplaceAt(wikitext, i, '\x01');
+					} else if (/^<!--/.test(wikitext.slice(i, i + 4))) {
+						inComment = true;
+						i += 3;
+					} else if (/^<nowiki ?>/.test(wikitext.slice(i, i + 9))) {
+						inNowiki = true;
+						i += 7;
+					}
+
+				} else { // we are in a comment or nowiki or {{{parameter}}}
+					if (wikitext[i] === '|') {
+						// swap out pipes with \x01 character
+						wikitext = strReplaceAt(wikitext, i, '\x01');
+					} else if (/^-->/.test(wikitext.slice(i, i + 3))) {
+						inComment = false;
+						i += 2;
+					} else if (/^<\/nowiki ?>/.test(wikitext.slice(i, i + 10))) {
+						inNowiki = false;
+						i += 8;
+					} else if (wikitext[i] === '}' && wikitext[i + 1] === '}' && wikitext[i + 2] === '}') {
+						inParameter = false;
+						i += 2;
+					}
+				}
+
+			}
+
+			if (config.recursive) {
+				var subtemplates = result.map(template => {
+					return template.wikitext.slice(2, -2);
+				}).filter(templateWikitext => {
+					return /\{\{.*\}\}/s.test(templateWikitext);
+				}).map(templateWikitext => {
+					return Wikitext.parseTemplates(templateWikitext, config);
+				});
+				return result.concat.apply(result, subtemplates);
+			}
+
+			return result;
+
 		}
 
 		/**
@@ -95,7 +195,7 @@ module.exports = function (bot) {
 		/**
 		 * Temporarily hide a part of the string while processing the rest of it.
 		 * 
-	 	 * eg.  let u = new bot.wikitext("Hello world <!-- world --> world");
+		 * eg.  let u = new bot.wikitext("Hello world <!-- world --> world");
 		 *      u.unbind('<!--','-->');
 		 *      u.content = u.content.replace(/world/g, 'earth');
 		 *      u.rebind(); // gives "Hello earth <!-- world --> earth"
@@ -108,6 +208,14 @@ module.exports = function (bot) {
 		 * @param {string} postfix
 		 */
 		unbind(prefix, postfix) {
+			if (!this.unbinder) {
+				this.unbinder = {
+					counter: 0,
+					history: {},
+					prefix: '%UNIQ::' + Math.random() + '::',
+					postfix: '::UNIQ%'
+				};
+			}
 			let re = new RegExp(prefix + '([\\s\\S]*?)' + postfix, 'g');
 			this.text = this.text.replace(re, match => {
 				let current = this.unbinder.prefix + this.unbinder.counter + this.unbinder.postfix;
@@ -116,14 +224,13 @@ module.exports = function (bot) {
 				return current;
 			});
 		}
-				
+
 		/**
 		 * Rebind after unbinding.
 		 * @returns {string} The output 
 		 */
 		rebind() {
 			let content = this.text;
-			content.self = this;
 			for (let [current, replacement] of Object.entries(this.unbinder.history)) {
 				content = content.replace(current, replacement);
 			}
@@ -168,21 +275,21 @@ module.exports = function (bot) {
 			const indexOfRawPipe = function (text) {
 
 				// number of unclosed brackets
-				let tlevel = 0, llevel = 0;
-		
+				let tlevel = 0,
+					llevel = 0;
+
 				let n = text.length;
 				for (let i = 0; i < n; i++) {
-			
-					if (text[i] === '{' && text[i+1] === '{') {
+					if (text[i] === '{' && text[i + 1] === '{') {
 						tlevel++;
 						i++;
-					} else if (text[i] === '[' && text[i+1] === '[') {
+					} else if (text[i] === '[' && text[i + 1] === '[') {
 						llevel++;
 						i++;
-					} else if (text[i] === '}' && text[i+1] === '}') {
+					} else if (text[i] === '}' && text[i + 1] === '}') {
 						tlevel--;
 						i++;
-					} else if (text[i] === ']' && text[i+1] === ']') {
+					} else if (text[i] === ']' && text[i + 1] === ']') {
 						llevel--;
 						i++;
 					} else if (text[i] === '|' && tlevel === 0 && llevel === 0) {
@@ -217,7 +324,7 @@ module.exports = function (bot) {
 			let output = new Array(rows.length);
 
 			rows.forEach((row, idx) => {
-				let cells = row.split(/^\|/m).slice(1);  // slice(1) removes the emptiness or the row styles if present
+				let cells = row.split(/^\|/m).slice(1); // slice(1) removes the emptiness or the row styles if present
 
 				if (cells.length === 1) { // non-multilined
 					// cells are separated by ||
@@ -251,13 +358,11 @@ module.exports = function (bot) {
 		 */
 		static parseSections(text) {
 			const rgx = /^(=+)(.*?)\1/mg;
-			let sections = [
-				{
-					level: 1,
-					header: null,
-					index: 0
-				}
-			];
+			let sections = [{
+				level: 1,
+				header: null,
+				index: 0
+			}];
 			let match;
 			while (match = rgx.exec(text)) { // eslint-disable-line no-cond-assign
 				sections.push({
@@ -283,7 +388,8 @@ module.exports = function (bot) {
 			return this[this.length - 1];
 		}
 	}
-	var processLink = function (self, startIdx, endIdx) {
+
+	const processLink = function (self, startIdx, endIdx) {
 		var linktext = self.text.slice(startIdx, endIdx + 1);
 		var [target, displaytext] = linktext.slice(2, -2).split('|');
 		var noSortkey = false;
@@ -360,111 +466,11 @@ module.exports = function (bot) {
 			return param ? param.value : null;
 		}
 		setName(name) {
-			this.name = name.trim();
+			name = name.trim();
+			this.name = name[0].toUpperCase() + name.slice(1);
 			this.nameTitle = bot.title.newFromText(name, 10);
 		}
 	}
-
-	// parseTemplates() and processTemplateText() are adapted from
-	// https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js written by Evad37
-	// which was in turn adapted from https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js
-	// written by me. (cc-by-sa/GFDL)
-
-	/**
-	 * @inheritdoc
-	 */
-	const parseTemplates = function (wikitext, config) {
-		config = config || {
-			recursive: false,
-			namePredicate: null,
-			templatePredicate: null,
-			count: null
-		};
-
-		const result = [];
-
-		const n = wikitext.length;
-
-		// number of unclosed braces
-		var numUnclosed = 0;
-
-		// are we inside a comment, or between nowiki tags, or in a {{{parameter}}}?
-		var inComment = false;
-		var inNowiki = false;
-		var inParameter = false;
-
-		var startIdx, endIdx;
-
-		for (var i = 0; i < n; i++) {
-
-			if (!inComment && !inNowiki && !inParameter) {
-
-				if (wikitext[i] === '{' && wikitext[i + 1] === '{' && wikitext[i + 2] === '{' && wikitext[i + 3] !== '{') {
-					inParameter = true;
-					i += 2;
-				} else if (wikitext[i] === '{' && wikitext[i + 1] === '{') {
-					if (numUnclosed === 0) {
-						startIdx = i + 2;
-					}
-					numUnclosed += 2;
-					i++;
-				} else if (wikitext[i] === '}' && wikitext[i + 1] === '}') {
-					if (numUnclosed === 2) {
-						endIdx = i;
-						var templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
-						var processed = processTemplateText(templateWikitext, config.namePredicate, config.templatePredicate);
-						if (processed) {
-							result.push(processed);
-						}
-						if (config.count && result.length === config.count) {
-							return result;
-						}
-					}
-					numUnclosed -= 2;
-					i++;
-				} else if (wikitext[i] === '|' && numUnclosed > 2) {
-					// swap out pipes in nested templates with \1 character
-					wikitext = strReplaceAt(wikitext, i, '\1');
-				} else if (/^<!--/.test(wikitext.slice(i, i + 4))) {
-					inComment = true;
-					i += 3;
-				} else if (/^<nowiki ?>/.test(wikitext.slice(i, i + 9))) {
-					inNowiki = true;
-					i += 7;
-				}
-
-			} else { // we are in a comment or nowiki or {{{parameter}}}
-				if (wikitext[i] === '|') {
-					// swap out pipes with \1 character
-					wikitext = strReplaceAt(wikitext, i, '\1');
-				} else if (/^-->/.test(wikitext.slice(i, i + 3))) {
-					inComment = false;
-					i += 2;
-				} else if (/^<\/nowiki ?>/.test(wikitext.slice(i, i + 10))) {
-					inNowiki = false;
-					i += 8;
-				} else if (wikitext[i] === '}' && wikitext[i + 1] === '}' && wikitext[i + 2] === '}') {
-					inParameter = false;
-					i += 2;
-				}
-			}
-
-		}
-
-		if (config.recursive) {
-			var subtemplates = result.map(template => {
-				return template.wikitext.slice(2, -2);
-			}).filter(templateWikitext => {
-				return /\{\{.*\}\}/s.test(templateWikitext);
-			}).map(templateWikitext => {
-				return parseTemplates(templateWikitext, config);
-			});
-			return result.concat.apply(result, subtemplates);
-		}
-
-		return result;
-
-	};
 
 	/**
 	 * @param {string} text - template wikitext without braces, with the pipes in
@@ -473,21 +479,23 @@ module.exports = function (bot) {
 	 */
 	const processTemplateText = function (text, namePredicate, templatePredicate) {
 
-		const template = new Template('{{' + text.replace(/\1/g, '|') + '}}');
+		// eslint-disable-next-line no-control-regex
+		const template = new Template('{{' + text.replace(/\x01/g, '|') + '}}');
 
-		// swap out pipe in links with \1 control character
+		// swap out pipe in links with \x01 control character
 		// [[File: ]] can have multiple pipes, so might need multiple passes
 		while (/(\[\[[^\]]*?)\|(.*?\]\])/g.test(text)) {
-			text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\1$2');
+			text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\x01$2');
 		}
 
 		const [name, ...parameterChunks] = text.split('|').map(chunk => {
-			// change '\1' control characters back to pipes
-			return chunk.replace(/\1/g, '|');
+			// change '\x01' control characters back to pipes
+			// eslint-disable-next-line no-control-regex
+			return chunk.replace(/\x01/g, '|');
 		});
 
 		template.setName(name);
-		
+
 		if (namePredicate && !namePredicate(template.name)) {
 			return null;
 		}
@@ -495,7 +503,7 @@ module.exports = function (bot) {
 		var unnamedIdx = 1;
 		parameterChunks.forEach(function (chunk) {
 			var indexOfEqualTo = chunk.indexOf('=');
-			var indexOfOpenBraces = chunk.indexOf('{{'); 
+			var indexOfOpenBraces = chunk.indexOf('{{');
 
 			var isWithoutEquals = !chunk.includes('=');
 			var hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;
