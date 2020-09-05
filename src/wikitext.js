@@ -470,7 +470,7 @@ module.exports = function (bot) {
 		}
 		setName(name) {
 			name = name.trim();
-			this.name = name[0].toUpperCase() + name.slice(1);
+			this.name = name[0] ? (name[0].toUpperCase() + name.slice(1)) : name;
 			this.nameTitle = bot.title.newFromText(name, 10);
 		}
 	}
