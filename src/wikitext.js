@@ -348,16 +348,24 @@ module.exports = function (bot) {
 
 		}
 
-
 		/**
 		 * Parse sections from wikitext
 		 * CAUTION: section header syntax in comments, nowiki tags, 
 		 * pre, source or syntaxhighlight tags can lead to wrong results.
-		 * @param {string} text 
+		 * You're advised to run unbind() first.
 		 * @returns {{level: number, header: string, index: number, content: string}[]} array of 
 		 * section objects. Each section object has the level, header, index (of beginning) and content.
 		 * Content *includes* the equal signs and the header.
 		 * The top is represented as level 1, with header `null`.
+		 */
+		parseSections() {
+			return this.sections = Wikitext.parseSections(this.text);
+		}
+
+
+		// XXX: fix jsdocs
+		/**
+		 * @inheritdoc
 		 */
 		static parseSections(text) {
 			const rgx = /^(=+)(.*?)\1/mg;
