@@ -73,6 +73,21 @@ module.exports = function(bot) {
 		}
 
 		/**
+		 * Get global user info for wikis with CentralAuth
+		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props 
+		 */
+		globalinfo(props) {
+			return bot.request({
+				"action": "query",
+				"meta": "globaluserinfo",
+				"guiuser": this.username,
+				"guiprop": props || ''
+			}).then(data => {
+				return data.query.globaluserinfo;
+			});
+		}
+
+		/**
 		 * Post a message on user's talk page
 		 * @param {string} header
 		 * @param {string} message
