@@ -578,6 +578,12 @@ class mwn {
 
 			}
 
+			if (response.warnings && !this.suppressAPIWarnings) {
+				for (let [key, info] of Object.entries(response.warnings)) {
+					log(`[W] Warning received from API: ${key}: ${info.warnings}`);
+				}
+			}
+
 			return response;
 
 		}, error => {
