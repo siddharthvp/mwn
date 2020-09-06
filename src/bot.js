@@ -876,6 +876,7 @@ class mwn {
 			action: 'query',
 			prop: 'revisions',
 			rvprop: 'content',
+			rvslots: 'main',
 			redirects: '1'
 		}, makeTitles(titles), options),
 		typeof titles[0] === 'number' ? 'pageids' : 'titles');
@@ -883,6 +884,11 @@ class mwn {
 		for await (let response of massQueryResponses) {
 			if (response && response.query && response.query.pages) {
 				for (let pg of response.query.pages) {
+					if (pg.revisions) {
+						pg.revisions.forEach(rev => {
+							Object.assign(rev, rev.slots.main);
+						});
+					}
 					yield pg;
 				}
 			}
