@@ -54,6 +54,7 @@ const Wikitext = require('./wikitext');
 const User = require('./user');
 const Category = require('./category');
 const File = require('./file');
+const Stream = require('./eventstream');
 const static_utils = require('./static_utils');
 
 class mwn {
@@ -228,6 +229,11 @@ class mwn {
 		 * File class associated with the bot instance
 		 */
 		this.file = File(this);
+
+		/**
+		 * Sub-class for the EventStreams API
+		 */
+		this.stream = Stream(mwn, this);
 
 		// set up any semlog options
 		semlog.updateConfig(this.options.semlog || {});

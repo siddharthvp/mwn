@@ -1,6 +1,6 @@
 {
   "name": "mwn",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "MediaWiki bot framework for NodeJS",
   "main": "./src/bot.js",
   "scripts": {
@@ -26,6 +26,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "axios-cookiejar-support": "^1.0.0",
+    "eventsource": "^1.0.7",
     "form-data": "^3.0.0",
     "oauth-1.0a": "^2.2.6",
     "semlog": "^0.6.10",
