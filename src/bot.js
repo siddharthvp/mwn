@@ -837,7 +837,11 @@ class mwn {
 	/***************** HELPER FUNCTIONS ******************/
 
 	/**
-	 * Reads the content / and meta-data of one (or many) pages
+	 * Reads the content and and meta-data of one (or many) pages.
+	 * Content from the "main" slot is copied over to every revision object
+	 * for easier referencing (`pg.revisions[0].content` can be used instead of
+	 * `pg.revisions[0].slots.main.content`).
+	 *
 	 *
 	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
 	 * @param {Object} [options]
@@ -849,10 +853,18 @@ class mwn {
 			action: 'query',
 			prop: 'revisions',
 			rvprop: 'content|timestamp',
+			rvslots: 'main',
 			redirects: '1'
 		}, makeTitles(titles), options),
 		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
 			var data = jsons.reduce((data, json) => {
+				json.query.pages.forEach(pg => {
+					if (pg.revisions) {
+						pg.revisions.forEach(rev => {
+							Object.assign(rev, rev.slots.main);
+						});
+					}
+				});
 				return data.concat(json.query.pages);
 			}, []);
 			return data.length === 1 ? data[0] : data;
