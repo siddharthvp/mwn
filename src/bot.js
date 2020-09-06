@@ -1707,6 +1707,80 @@ class mwn {
 	}
 
 	/**
+	 * Query the top contributors to the article using the WikiWho API.
+	 * This API has a throttling of 2000 requests a day.
+	 * Supported for EN, DE, ES, EU, TR Wikipedias only
+	 * @see https://api.wikiwho.net/
+	 * @param {string} title
+	 * @returns {{totalBytes: number, users: ({id: number, name: string, bytes: number, percent: number})[]}}
+	 */
+	async queryAuthors(title) {
+		let langcodematch = this.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
+		if (!langcodematch || !langcodematch[1]) {
+			throw new Error('WikiWho API is not supported for bot API url. Re-check.');
+		}
+
+		let json;
+		try {
+			json = await this.rawRequest({
+				url: `https://api.wikiwho.net/${langcodematch[1]}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(title)}/?editor=true`
+			});
+		} catch(err) {
+			throw new Error(err && err.response && err.response.data
+				&& err.response.data.Error);
+		}
+
+		const tokens = Object.values(json.revisions[0])[0].tokens;
+
+		let data = {
+				totalBytes: 0,
+				users: []
+			}, userdata = {};
+
+		for (let token of tokens) {
+			data.totalBytes += token.str.length;
+			let editor = token['editor'];
+			if (!userdata[editor]) {
+				userdata[editor] = { bytes: 0 };
+			}
+			userdata[editor].bytes += token.str.length;
+			if (editor.startsWith('0|')) { // IP
+				userdata[editor].name = editor.slice(2);
+			}
+		}
+
+		Object.entries(userdata).map(([userid, {bytes}]) => {
+			userdata[userid].percent = bytes / data.totalBytes;
+			if (userdata[userid].percent < 0.02) {
+				delete userdata[userid];
+			}
+		});
+
+		await this.request({
+			"action": "query",
+			"list": "users",
+			"ususerids": Object.keys(userdata).filter(us => !us.startsWith('0|')) // don't lookup IPs
+		}).then(json => {
+			json.query.users.forEach(us => {
+				userdata[String(us.userid)].name = us.name;
+			});
+		});
+
+		data.users = Object.entries(userdata).map(([userid, {bytes, name, percent}]) => {
+			return {
+				id: userid,
+				name: name,
+				bytes: bytes,
+				percent: percent
+			};
+		}).sort((a, b) => {
+			a.bytes < b.bytes ? 1 : -1;
+		});
+
+		return data;
+	}
+
+	/**
 	* Promisified version of setTimeout
 	* @param {number} duration - of sleep in milliseconds
 	*/
