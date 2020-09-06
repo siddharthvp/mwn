@@ -48,6 +48,7 @@ const semlog = require('semlog');
 const log = semlog.log;
 
 const Title = require('./title');
+const Xdate = require('./date');
 const Page = require('./page');
 const Wikitext = require('./wikitext');
 const User = require('./user');
@@ -197,6 +198,11 @@ class mwn {
 		 * Title class associated with the bot instance
 		 */
 		this.title = Title;
+
+		/**
+		 * Date class
+		 */
+		this.date = Xdate(this);
 
 		/**
 		 * Page class associated with bot instance
