@@ -102,10 +102,10 @@ class mwn {
 		 * @type {object}
 		 */
 		this.defaultOptions = {
-			// suppress messages, except for error messages
+			// suppress messages, except for error messages and warnings
 			silent: false,
 
-			// site API url, example https://en.wikipedia.org/w/api.php
+			// site API url, example "https://en.wikipedia.org/w/api.php"
 			apiUrl: null,
 
 			// User agent string
@@ -145,6 +145,9 @@ class mwn {
 				formatversion: '2',
 				maxlag: 5
 			},
+
+			// suppress logging of warnings received from the API
+			suppressAPIWarnings: false,
 
 			// options for the edit() function
 			editConfig: {
@@ -590,7 +593,7 @@ class mwn {
 
 			}
 
-			if (response.warnings && !this.suppressAPIWarnings) {
+			if (response.warnings && !this.options.suppressAPIWarnings) {
 				for (let [key, info] of Object.entries(response.warnings)) {
 					log(`[W] Warning received from API: ${key}: ${info.warnings}`);
 				}
@@ -858,7 +861,7 @@ class mwn {
 	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
 	 * @param {Object} [options]
 	 *
-	 * @returns {Promise}
+	 * @returns {Promise<{{title: string, revisions: ({content: string})[]}}>}
 	 */
 	read(titles, options) {
 		return this.massQuery(merge({
@@ -1173,7 +1176,7 @@ class mwn {
 			}
 		}).then(data => {
 			if (data.upload.warnings) {
-				log('[W] The API returned warnings while uploading to ' + title + ':');
+				log(`[W] The API returned warnings while uploading to ${title}:`);
 				log(data.upload.warnings);
 			}
 			return data.upload;
@@ -1780,7 +1783,7 @@ class mwn {
 				percent: percent
 			};
 		}).sort((a, b) => {
-			a.bytes < b.bytes ? 1 : -1;
+			return a.bytes < b.bytes ? 1 : -1;
 		});
 
 		return data;

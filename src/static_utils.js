@@ -3,6 +3,10 @@
  */
 
 
+/*
+ * Definitions of some private functions used
+ */
+
 var rawurlencode = function( str ) {
 	return encodeURIComponent( String( str ) )
 		.replace( /!/g, '%21' ).replace( /'/g, '%27' ).replace( /\(/g, '%28' )
