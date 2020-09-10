@@ -933,15 +933,16 @@ class mwn {
 
 		var basetimestamp, curtimestamp;
 
-		return this.request(merge({
+		return this.request({
 			action: 'query',
+			...makeTitles(title),
 			prop: 'revisions',
 			rvprop: ['content', 'timestamp'],
+			rvslots: 'main',
 			formatversion: '2',
 			curtimestamp: !0
-		}, makeTitles(title))).then(data => {
-
-			var page, revision;
+		}).then(data => {
+			var page, revision, revisionContent;
 			if (!data.query || !data.query.pages) {
 				return Promise.reject('unknown');
 			}
@@ -953,16 +954,21 @@ class mwn {
 				return Promise.reject('nocreate-missing');
 			}
 			revision = page.revisions[0];
+			try {
+				revisionContent = revision.slots.main.content;
+			} catch(err) {
+				return Promise.reject('unknown');
+			}
 			basetimestamp = revision.timestamp;
 			curtimestamp = data.curtimestamp;
 
-			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revision.content)) {
+			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revisionContent)) {
 				return Promise.reject('bot-denied');
 			}
 
 			return transform({
 				timestamp: revision.timestamp,
-				content: revision.content
+				content: revisionContent
 			});
 
 		}).then(returnVal => {
