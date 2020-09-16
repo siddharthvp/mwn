@@ -219,6 +219,17 @@ module.exports = function(bot) {
 
 	}
 
+	// Tweak set* methods (setHours, setUTCMinutes, etc) so that they
+	// return the modified xdate object rather than the seconds-since-epoch
+	// representation which is what JS Date() gives
+	Object.getOwnPropertyNames(Date.prototype).filter(f => f.startsWith('set')).forEach(func => {
+		let proxy = xdate.prototype[func];
+		xdate.prototype[func] = function(...args) {
+			proxy.call(this, ...args);
+			return this;
+		};
+	});
+
 	xdate.localeData = {
 		months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 		monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
