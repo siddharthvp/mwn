@@ -1341,7 +1341,7 @@ class mwn {
 			list: 'search',
 			srsearch: searchTerm,
 			srlimit: limit,
-			srprop: props || 'size|worcount|timestamp',
+			srprop: props || 'size|wordcount|timestamp',
 		}, otherParams)).then(data => {
 			return data.query.search;
 		});
