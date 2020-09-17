@@ -983,7 +983,8 @@ class mwn {
 				formatversion: '2',
 				basetimestamp: basetimestamp,
 				starttimestamp: curtimestamp,
-				nocreate: !0,
+				nocreate: 1,
+				bot: 1,
 				token: this.csrfToken
 			}, makeTitle(title), editParams));
 
@@ -1018,6 +1019,7 @@ class mwn {
 			action: 'edit',
 			text: content,
 			summary: summary,
+			bot: 1,
 			token: this.csrfToken
 		}, makeTitle(title), options)).then(data => data.edit);
 	}
@@ -1038,7 +1040,8 @@ class mwn {
 			title: String(title),
 			text: content,
 			summary: summary,
-			createonly: '1',
+			createonly: 1,
+			bot: 1,
 			token: this.csrfToken
 		}, options)).then(data => data.edit);
 	}
@@ -1058,6 +1061,7 @@ class mwn {
 			section: 'new',
 			summary: header,
 			text: message,
+			bot: 1,
 			token: this.csrfToken
 		}, makeTitle(title), additionalParams)).then(data => data.edit);
 	}
