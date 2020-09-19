@@ -844,7 +844,7 @@ class mwn {
 			try {
 				return JSON.parse(data.revisions[0].content);
 			} catch(e) {
-				return Promise.reject('invalidjson');
+				return this.rejectWithErrorCode('invalidjson');
 			}
 		});
 	}
@@ -944,26 +944,26 @@ class mwn {
 		}).then(data => {
 			var page, revision, revisionContent;
 			if (!data.query || !data.query.pages) {
-				return Promise.reject('unknown');
+				return this.rejectWithErrorCode('unknown');
 			}
 			page = data.query.pages[0];
 			if (!page || page.invalid) {
-				return Promise.reject('invalidtitle');
+				return this.rejectWithErrorCode('invalidtitle');
 			}
 			if (page.missing) {
-				return Promise.reject('nocreate-missing');
+				return this.rejectWithErrorCode('nocreate-missing');
 			}
 			revision = page.revisions[0];
 			try {
 				revisionContent = revision.slots.main.content;
 			} catch(err) {
-				return Promise.reject('unknown');
+				return this.rejectWithErrorCode('unknown');
 			}
 			basetimestamp = revision.timestamp;
 			curtimestamp = data.curtimestamp;
 
 			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revisionContent)) {
-				return Promise.reject('bot-denied');
+				return this.rejectWithErrorCode('bot-denied');
 			}
 
 			return transform({
@@ -1809,6 +1809,18 @@ class mwn {
 		});
 	}
 
+	/**
+	 * Returns a promise rejected with an error object
+	 * @private 
+	 * @param {string} errorcode 
+	 * @returns {Promise<Error>}
+	 */
+	rejectWithErrorCode(errorcode) {
+		let error = new Error(errorcode);
+		error.code = errorcode;
+		return Promise.reject(error);
+	}
+
 }
 
 mwn.requestDefaults = {
@@ -1847,7 +1859,6 @@ var isplainobject = function(value) {
 	const prototype = Object.getPrototypeOf(value);
 	return prototype === null || prototype === Object.prototype;
 };
-
 
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined

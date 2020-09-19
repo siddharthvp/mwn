@@ -97,9 +97,7 @@ module.exports = function(bot) {
 				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
 				var page = pages[0];
 				if (page.missing) {
-					let error = new Error('missingarticle');
-					error.code = 'missingarticle';
-					return Promise.reject(error);
+					return bot.rejectWithErrorCode('missingarticle');
 				}
 				return page.linkshere.map(pg => pg.title);
 			});
@@ -120,9 +118,7 @@ module.exports = function(bot) {
 				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
 				var page = pages[0];
 				if (page.missing) {
-					let error = new Error('missingarticle');
-					error.code = 'missingarticle';
-					return Promise.reject(error);
+					return bot.rejectWithErrorCode('missingarticle');
 				}
 				return page.transcludedin.map(pg => pg.title);
 			});
@@ -199,9 +195,7 @@ module.exports = function(bot) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					let error = new Error('missingarticle');
-					error.code = 'missingarticle';
-					return Promise.reject(error);
+					return bot.rejectWithErrorCode('missingarticle');
 				}
 				return page.title;
 			});
@@ -223,9 +217,7 @@ module.exports = function(bot) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					let error = new Error('missingarticle');
-					error.code = 'missingarticle';
-					return Promise.reject(error);
+					return bot.rejectWithErrorCode('missingarticle');
 				}
 				return page.revisions[0].user;
 			});
@@ -265,9 +257,7 @@ module.exports = function(bot) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					let error = new Error('missingarticle');
-					error.code = 'missingarticle';
-					return Promise.reject(error);
+					return bot.rejectWithErrorCode('missingarticle');
 				}
 				return data.query.pages[0].description;
 			});
@@ -293,9 +283,7 @@ module.exports = function(bot) {
 			}, customOptions)).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					let error = new Error('missingarticle');
-					error.code = 'missingarticle';
-					return Promise.reject(error);
+					return bot.rejectWithErrorCode('missingarticle');
 				}
 				return data.query.pages[0].revisions;
 			});
