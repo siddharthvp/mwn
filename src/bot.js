@@ -250,7 +250,7 @@ class mwn {
 	 * @returns {mwn} bot object
 	 */
 	static async init(config) {
-		var bot = new mwn(config);
+		const bot = new mwn(config);
 		if (bot._usingOAuth()) {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
@@ -380,7 +380,7 @@ class mwn {
 	rawRequest(requestOptions) {
 
 		if (!requestOptions.url) {
-			var err = new Error('No URL provided!');
+			const err = new Error('No URL provided!');
 			err.disableRetry = true;
 			return Promise.reject(err);
 		}
@@ -407,7 +407,7 @@ class mwn {
 	async request(params, customRequestOptions = {}) {
 		params = merge(this.options.defaultParams, params);
 
-		var getOrPost = function(data) {
+		const getOrPost = function (data) {
 			if (data.action === 'query') {
 				return 'get';
 			}
@@ -428,7 +428,7 @@ class mwn {
 		}, this.requestOptions, customRequestOptions);
 
 		const MULTIPART_THRESHOLD = 8000;
-		var hasLongFields = false;
+		let hasLongFields = false;
 
 		// pre-process params:
 		// Convert arrays to |-delimited strings. If one of the array items
@@ -462,13 +462,13 @@ class mwn {
 				params.token = token;
 			}
 
-			var contentTypeGiven = customRequestOptions.headers &&
+			const contentTypeGiven = customRequestOptions.headers &&
 				customRequestOptions.headers['Content-Type'];
 
 			if ((hasLongFields && (!contentTypeGiven || contentTypeGiven === 'mulipart/form-data')) || contentTypeGiven === 'multipart/form-data') {
 				// console.log('sending multipart POST request for action=' + params.action);
 				// use multipart/form-data
-				var form = new formData();
+				let form = new formData();
 				for (let [key, val] of Object.entries(params)) {
 					if (val.stream) {
 						form.append(key, val.stream, val.name);
@@ -620,7 +620,7 @@ class mwn {
 
 	/** @private */
 	dieWithError(response, requestOptions) {
-		var err = new Error(response.error.code + ': ' + response.error.info);
+		let err = new Error(response.error.code + ': ' + response.error.info);
 		// Enhance error object with additional information
 		err.errorResponse = true;
 		err.code = response.error.code;
@@ -872,7 +872,7 @@ class mwn {
 			redirects: '1'
 		}, makeTitles(titles), options),
 		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
-			var data = jsons.reduce((data, json) => {
+			let data = jsons.reduce((data, json) => {
 				json.query.pages.forEach(pg => {
 					if (pg.revisions) {
 						pg.revisions.forEach(rev => {
@@ -890,7 +890,7 @@ class mwn {
 		let massQueryResponses = this.massQueryGen(merge({
 			action: 'query',
 			prop: 'revisions',
-			rvprop: 'content',
+			rvprop: 'content|timestamp',
 			rvslots: 'main',
 			redirects: '1'
 		}, makeTitles(titles), options),
@@ -931,7 +931,7 @@ class mwn {
 	edit(title, transform, editConfig) {
 		editConfig = editConfig || this.options.editConfig;
 
-		var basetimestamp, curtimestamp;
+		let basetimestamp, curtimestamp;
 
 		return this.request({
 			action: 'query',
@@ -942,7 +942,7 @@ class mwn {
 			formatversion: '2',
 			curtimestamp: !0
 		}).then(data => {
-			var page, revision, revisionContent;
+			let page, revision, revisionContent;
 			if (!data.query || !data.query.pages) {
 				return this.rejectWithErrorCode('unknown');
 			}
@@ -975,7 +975,7 @@ class mwn {
 			if (typeof returnVal !== 'string' && !returnVal) {
 				return { edit: { result: 'aborted' } };
 			}
-			var editParams = typeof returnVal === 'object' ? returnVal : {
+			const editParams = typeof returnVal === 'object' ? returnVal : {
 				text: String(returnVal)
 			};
 			return this.request(merge({
@@ -1237,8 +1237,8 @@ class mwn {
 			prop: 'imageinfo',
 			iiprop: 'url'
 		}, makeTitles(file))).then(data => {
-			var url = data.query.pages[0].imageinfo[0].url;
-			var name = new this.title(data.query.pages[0].title).getMainText();
+			const url = data.query.pages[0].imageinfo[0].url;
+			const name = new this.title(data.query.pages[0].title).getMainText();
 			return this.downloadFromUrl(url, localname || name);
 		});
 	}
@@ -1299,7 +1299,7 @@ class mwn {
 	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
 	 */
 	getPagesByPrefix(prefix, otherParams) {
-		var title = Title.newFromText(prefix);
+		const title = Title.newFromText(prefix);
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
 		}
@@ -1321,7 +1321,7 @@ class mwn {
 	 * @returns {Promise<string[]>}
 	 */
 	getPagesInCategory(category, otherParams) {
-		var title = Title.newFromText(category, 14);
+		const title = Title.newFromText(category, 14);
 		return this.request(merge({
 			"action": "query",
 			"list": "categorymembers",
@@ -1362,8 +1362,8 @@ class mwn {
 	 * @returns {Promise<Object[]>} - resolved with an array of responses of individual calls.
 	 */
 	continuedQuery(query, limit=10) {
-		var responses = [];
-		var callApi = (query, count) => {
+		let responses = [];
+		let callApi = (query, count) => {
 			return this.request(query).then(response => {
 				if (!this.options.silent) {
 					log(`[+] Got part ${count} of continuous API query`);
@@ -1428,10 +1428,10 @@ class mwn {
 	 * settled, with the array of responses.
 	 */
 	massQuery(query, batchFieldName='titles') {
-		var batchValues = query[batchFieldName];
-		var limit = this.options.hasApiHighLimit ? 500 : 50;
-		var numBatches = Math.ceil(batchValues.length / limit);
-		var batches = new Array(numBatches);
+		let batchValues = query[batchFieldName];
+		const limit = this.options.hasApiHighLimit ? 500 : 50;
+		const numBatches = Math.ceil(batchValues.length / limit);
+		let batches = new Array(numBatches);
 		for (let i = 0; i < numBatches - 1; i++) {
 			batches[i] = new Array(limit);
 		}
@@ -1439,9 +1439,9 @@ class mwn {
 		for (let i = 0; i < batchValues.length; i++) {
 			batches[Math.floor(i/limit)][i % limit] = batchValues[i];
 		}
-		var responses = new Array(numBatches);
+		let responses = new Array(numBatches);
 		return new Promise((resolve) => {
-			var sendQuery = (idx) => {
+			const sendQuery = (idx) => {
 				if (idx === numBatches) {
 					return resolve(responses);
 				}
@@ -1451,7 +1451,7 @@ class mwn {
 				}, err => {
 					if (err.code === 'toomanyvalues') {
 						throw new Error(`[mwn] Your account doesn't have apihighlimit right.` +
-						` Set the option hasApiHighLimit as false`);
+							` Set the option hasApiHighLimit as false`);
 					}
 					responses[idx] = err;
 				}).finally(() => {
@@ -1468,10 +1468,10 @@ class mwn {
 	 * @param {string} batchFieldName
 	 */
 	async *massQueryGen(query, batchFieldName='titles') {
-		var batchValues = query[batchFieldName];
-		var limit = this.options.hasApiHighLimit ? 500 : 50;
-		var batches = arrayChunk(batchValues, limit);
-		var numBatches = batches.length;
+		let batchValues = query[batchFieldName];
+		const limit = this.options.hasApiHighLimit ? 500 : 50;
+		const batches = arrayChunk(batchValues, limit);
+		const numBatches = batches.length;
 
 		for (let i = 0; i < numBatches; i++) {
 			query[batchFieldName] = batches[i];
@@ -1495,42 +1495,42 @@ class mwn {
 	 * { failures: [ ...list of failed items... ] }
 	 */
 	batchOperation(list, worker, concurrency=5, retries=0) {
-		var counts = {
+		let counts = {
 			successes: 0,
 			failures: 0
 		};
-		var failures = [];
-		var incrementSuccesses = () => {
+		let failures = [];
+		let incrementSuccesses = () => {
 			counts.successes++;
 		};
-		var incrementFailures = (idx) => {
+		const incrementFailures = (idx) => {
 			counts.failures++;
 			failures.push(list[idx]);
 		};
-		var updateStatusText = () => {
-			var percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
-			var percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
-			var statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
+		const updateStatusText = () => {
+			const percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
+			const percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
+			const statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
 			if (!this.options.silent) {
 				log(statusText);
 			}
 		};
-		var numBatches = Math.ceil(list.length / concurrency);
+		const numBatches = Math.ceil(list.length / concurrency);
 
 		return new Promise((resolve) => {
-			var sendBatch = (batchIdx) => {
+			const sendBatch = (batchIdx) => {
 
 				// Last batch
 				if (batchIdx === numBatches - 1) {
 
-					var numItemsInLastBatch = list.length - batchIdx * concurrency;
-					var finalBatchPromises = new Array(numItemsInLastBatch);
+					const numItemsInLastBatch = list.length - batchIdx * concurrency;
+					const finalBatchPromises = new Array(numItemsInLastBatch);
 
 					// Hack: Promise.allSettled requires NodeJS 12.9+
 					// so we create a new array finalBatchSettledPromises containing promises
 					// which are resolved irrespective of whether the corresponding
 					// finalBatchPromises are resolved or rejected.
-					var finalBatchSettledPromises = new Array(numItemsInLastBatch);
+					let finalBatchSettledPromises = new Array(numItemsInLastBatch);
 
 					for (let i = 0; i < numItemsInLastBatch; i++) {
 						let idx = batchIdx * concurrency + i;
@@ -1560,7 +1560,7 @@ class mwn {
 				for (let i = 0; i < concurrency; i++) {
 					let idx = batchIdx * concurrency + i;
 
-					var promise = worker(list[idx], idx);
+					const promise = worker(list[idx], idx);
 					if (!ispromise(promise)) {
 						throw new Error('batchOperation worker function must return a promise');
 					}
@@ -1590,29 +1590,29 @@ class mwn {
 	 * { failures: [ ...list of failed items... ] }
 	 */
 	seriesBatchOperation(list, worker, delay=5000, retries=0) {
-		var counts = {
+		let counts = {
 			successes: 0,
 			failures: 0
 		};
-		var failures = [];
-		var incrementSuccesses = () => {
+		let failures = [];
+		const incrementSuccesses = () => {
 			counts.successes++;
 		};
-		var incrementFailures = (idx) => {
+		const incrementFailures = (idx) => {
 			counts.failures++;
 			failures.push(list[idx]);
 		};
-		var updateStatusText = () => {
-			var percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
-			var percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
-			var statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
+		const updateStatusText = () => {
+			const percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
+			const percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
+			const statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
 			if (!this.options.silent) {
 				log(statusText);
 			}
 		};
 
 		return new Promise((resolve) => {
-			var trigger = (idx) => {
+			const trigger = (idx) => {
 				if (list[idx] === undefined) { // reached the end
 					if (counts.failures !== 0 && retries > 0) {
 						return resolve(this.seriesBatchOperation(failures, worker, delay, retries - 1));
@@ -1620,7 +1620,7 @@ class mwn {
 						return resolve({ counts, failures });
 					}
 				}
-				var promise = worker(list[idx], idx);
+				const promise = worker(list[idx], idx);
 				if (!ispromise(promise)) {
 					throw new Error('seriesBatchOperation worker function must return a promise');
 				}
@@ -1703,9 +1703,9 @@ class mwn {
 	 * @param {string[]|number[]|string|number} revision ID(s)
 	 */
 	oresQueryRevisions(endpointUrl, models, revisions) {
-		var response = {};
-		var chunks = arrayChunk(
-			(revisions instanceof Array) ? revisions : [ revisions ],
+		let response = {};
+		const chunks = arrayChunk(
+			(revisions instanceof Array) ? revisions : [revisions],
 			50
 		);
 		return this.seriesBatchOperation(chunks, (chunk) => {
@@ -1846,13 +1846,13 @@ mwn.log = log;
 /**** Private utilities ****/
 
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
-var ispromise = function (obj) {
+const ispromise = function (obj) {
 	return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
 		typeof obj.then === 'function';
 };
 
 /** Check whether an object is plain object, from https://github.com/sindresorhus/is-plain-obj/blob/master/index.js */
-var isplainobject = function(value) {
+const isplainobject = function (value) {
 	if (Object.prototype.toString.call(value) !== '[object Object]') {
 		return false;
 	}
@@ -1868,7 +1868,7 @@ var isplainobject = function(value) {
  * objects, the value on the rightmost one will be kept in the output.
  * @returns {Object} - Merged object
  */
-var merge = function(...objects) {
+const merge = function(...objects) {
 	// {} used as first parameter as this object is mutated by default
 	return Object.assign({}, ...objects);
 };
@@ -1881,7 +1881,7 @@ var merge = function(...objects) {
  * @param {...Object} - any number of objects
  * @returns {Object}
  */
-var mergeDeep1 = function(...objects) {
+const mergeDeep1 = function(...objects) {
 	let args = [...objects].filter(e => e); // skip null/undefined values
 	for (let options of args.slice(1)) {
 		for (let [key, val] of Object.entries(options)) {
@@ -1898,16 +1898,16 @@ var mergeDeep1 = function(...objects) {
 };
 
 /** @param {Array} arr, @param {number} size */
-var arrayChunk = function(arr, size) {
-	var numChunks = Math.ceil(arr.length / size);
-	var result = new Array(numChunks);
+const arrayChunk = function(arr, size) {
+	const numChunks = Math.ceil(arr.length / size);
+	let result = new Array(numChunks);
 	for (let i=0; i<numChunks; i++) {
 		result[i] = arr.slice(i * size, (i + 1) * size);
 	}
 	return result;
 };
 
-var makeTitles = function(pages) {
+const makeTitles = function(pages) {
 	pages = Array.isArray(pages) ? pages : [ pages ];
 	if (typeof pages[0] === 'number') {
 		return { pageids: pages };
@@ -1917,7 +1917,7 @@ var makeTitles = function(pages) {
 	}
 };
 
-var makeTitle = function(page) {
+const makeTitle = function(page) {
 	if (typeof page === 'number') {
 		return { pageid: page };
 	} else {
