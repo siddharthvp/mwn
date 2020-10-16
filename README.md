@@ -1,8 +1,9 @@
 # mwn
+[![NPM version](https://img.shields.io/npm/v/mwn.svg)](https://www.npmjs.com/package/mwn)
 
 **mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
-Development status: **Unstable**. Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
+Development status: Unstable. Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
 Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. 
 
@@ -35,9 +36,14 @@ export PATH=~/bin:$PATH
 ```
 Check that your `.profile` or `.bashrc` file includes the line `PATH="$HOME/bin:$PATH"`, so that the path includes your home directory every time you open the shell.
 
-#### Set up a bot password
+#### MediaWiki version
+mwn is written for and tested on the latest version of MediaWiki used on WMF wikis.
 
-To be able to login to the wiki, you have to set up a bot password using the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page.
+#### Set up a bot password or OAuth credentials
+
+mwn supports authentication via both BotPasswords and via OAuth. Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also a bit more secure. 
+
+Bot passwords may be a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page. 
 
 If you're migrating from mwbot, note that:
 - `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
@@ -47,17 +53,26 @@ If you're migrating from mwbot, note that:
 
 Create a new bot instance:
 ```js
-const bot = new mwn();
+const bot = new mwn({
+    apiUrl: 'https://en.wikipedia.org/w/api.php',
+    username: 'YourBotUsername',
+    password: 'YourBotPassword'
+});
+await bot.login();
+```
+Or to use OAuth:
+```js
+const bot = new mwn({
+    apiUrl: 'https://en.wikipedia.org/w/api.php',
+	oauth_consumer_token: "16_DIGIT_ALPHANUMERIC_KEY",
+	oauth_consumer_secret: "20_DIGIT_ALPHANUMERIC_KEY",
+	oauth_access_token: "16_DIGIT_ALPHANUMERIC_KEY",
+	oauth_access_secret: "20_DIGIT_ALPHANUMERIC_KEY"
+});
+bot.initOAuth(); // does not involve an API call
+// Any errors in authentication will surface when the first actual API call is made
 ```
 
-Log in to the bot:
-```js
-bot.login({
-	apiUrl: 'https://en.wikipedia.org/w/api.php',
-	username: 'YourBotUsername',
-	password: 'YourBotPassword'
-});
-```
 
 Set default parameters to be sent to be included in every API request:
 ```js
