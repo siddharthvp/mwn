@@ -8,14 +8,18 @@ const chai = require('chai');
 const expect = chai.expect; 
 const assert = require('assert');
 
-const loginCredentials = require('./mocking/loginCredentials.js').valid_oauth;
+const loginCredentials = require('./mocking/loginCredentials.js');
 
 let bot = new mwn({
 	silent: true,
 	hasApiHighLimit: true,
-	apiUrl: loginCredentials.apiUrl,
-	OAuthCredentials: loginCredentials.OAuthCredentials,
+	...loginCredentials.account1_oauth,
 	userAgent: 'mwn (https://github.com/siddharthvp/mwn)'
+});
+let bot2 = new mwn({
+	silent: true,
+	userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
+	...loginCredentials.account2
 });
 
 let loginBefore = function() {
@@ -38,4 +42,4 @@ let logoutAfter = function() {
 };
 
 // Export everything
-module.exports = { mwn, bot, log, crypto, expect, assert, loginBefore, logoutAfter };
+module.exports = { mwn, bot, bot2, log, crypto, expect, assert, loginBefore, logoutAfter };

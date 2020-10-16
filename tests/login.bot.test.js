@@ -2,7 +2,7 @@
 
 const { mwn, expect, assert } = require('./test_base');
 
-const loginCredentials = require('./mocking/loginCredentials.js').valid;
+const loginCredentials = require('./mocking/loginCredentials.js').account1;
 
 let bot = new mwn({
 	hasApiHighLimit: false,

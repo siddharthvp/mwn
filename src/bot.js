@@ -992,14 +992,13 @@ class mwn {
 			if (data.edit && data.edit.nochange && !editConfig.suppressNochangeWarning) {
 				log(`[W] No change from edit to ${data.edit.title}`);
 			}
-			if (!data.edit) {
-				log(`[W] Unusual API success response: ` + JSON.stringify(data,undefined,2));
-			}
 			return data.edit;
-		}, errorCode => {
-			if (errorCode === 'editconflict' && editConfig.conflictRetries > 0) {
+		}, err => {
+			if (err.code === 'editconflict' && editConfig.conflictRetries > 0) {
 				editConfig.conflictRetries--;
 				return this.edit(title, transform, editConfig);
+			} else {
+				return Promise.reject(err);
 			}
 		});
 	}

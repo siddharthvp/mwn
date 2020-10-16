@@ -1,12 +1,17 @@
 const realCredentials = require('./.auth.json');
 
 module.exports = {
-	"valid": {
+	"account1": {
 		"apiUrl": "https://test.wikipedia.org/w/api.php",
 		"username": realCredentials.username,
 		"password": realCredentials.password
 	},
-	"valid_oauth": {
+	"account2": {
+		"apiUrl": "https://test.wikipedia.org/w/api.php",
+		"username": realCredentials.username2,
+		"password": realCredentials.password2
+	},
+	"account1_oauth": {
 		"apiUrl": "https://test.wikipedia.org/w/api.php",
 		"OAuthCredentials": {
 			consumerToken: realCredentials.oauth_consumer_token,

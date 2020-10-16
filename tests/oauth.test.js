@@ -2,7 +2,7 @@
 
 const { mwn, expect, assert } = require('./test_base');
 
-const oauthCredentials = require('./mocking/loginCredentials.js').valid_oauth;
+const oauthCredentials = require('./mocking/loginCredentials.js').account1_oauth;
 
 let bot = new mwn({
 	...oauthCredentials
