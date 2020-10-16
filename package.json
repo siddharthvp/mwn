@@ -1,7 +1,7 @@
 {
   "name": "mwn",
-  "version": "0.7.0",
-  "description": "MediaWiki bot framework for NodeJS",
+  "version": "0.7.1",
+  "description": "MediaWiki bot framework for Node.js",
   "main": "./src/bot.js",
   "scripts": {
     "test": "mocha tests/",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/siddharthvp/mwn"
+    "url": "https://github.com/siddharthvp/mwn"
   },
   "keywords": [
     "wikipedia-bot"

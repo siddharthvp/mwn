@@ -23,8 +23,6 @@ let bot2 = new mwn({
 });
 
 let loginBefore = function() {
-	this.timeout(7000);
-
 	bot.initOAuth();
 	return bot.getTokensAndSiteInfo().then(() => {
 		expect(bot.csrfToken).to.be.a('string');
