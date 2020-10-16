@@ -1,45 +1,48 @@
 {
-  "name": "mwn",
-  "version": "0.7.1",
-  "description": "MediaWiki bot framework for Node.js",
-  "main": "./src/bot.js",
-  "scripts": {
-    "test": "mocha tests/",
-    "bump": "node bump-version.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/siddharthvp/mwn"
-  },
-  "keywords": [
-    "wikipedia-bot"
-  ],
-  "author": "Siddharth VP",
-  "license": "GPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/siddharthvp/mwn/issues"
-  },
-  "homepage": "https://github.com/siddharthvp/mwn#readme",
-  "files": [
-    "src/"
-  ],
-  "dependencies": {
-    "axios": "^0.19.2",
-    "axios-cookiejar-support": "^1.0.0",
-    "eventsource": "^1.0.7",
-    "form-data": "^3.0.0",
-    "oauth-1.0a": "^2.2.6",
-    "semlog": "^0.6.10",
-    "tough-cookie": "^4.0.0"
-  },
-  "devDependencies": {
-    "chai": "^4.2.0",
-    "eslint": "^6.8.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "mocha": "^7.1.1"
-  }
+	"name": "mwn",
+	"version": "0.7.1",
+	"description": "MediaWiki bot framework for Node.js",
+	"main": "./src/bot.js",
+	"scripts": {
+		"bump": "node bump-version.js",
+		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
+		"coverage": "nyc report --reporter=text-lcov | coveralls"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/siddharthvp/mwn"
+	},
+	"keywords": [
+		"wikipedia-bot"
+	],
+	"author": "Siddharth VP",
+	"license": "GPL-3.0-or-later",
+	"bugs": {
+		"url": "https://github.com/siddharthvp/mwn/issues"
+	},
+	"homepage": "https://github.com/siddharthvp/mwn#readme",
+	"files": [
+		"src/"
+	],
+	"dependencies": {
+		"axios": "^0.19.2",
+		"axios-cookiejar-support": "^1.0.0",
+		"eventsource": "^1.0.7",
+		"form-data": "^3.0.0",
+		"oauth-1.0a": "^2.2.6",
+		"semlog": "^0.6.10",
+		"tough-cookie": "^4.0.0"
+	},
+	"devDependencies": {
+		"chai": "^4.2.0",
+		"coveralls": "^3.1.0",
+		"eslint": "^6.8.0",
+		"eslint-config-standard": "^14.1.1",
+		"eslint-plugin-import": "^2.20.2",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-promise": "^4.2.1",
+		"eslint-plugin-standard": "^4.0.1",
+		"mocha": "^7.1.1",
+		"nyc": "^15.1.0"
+	}
 }

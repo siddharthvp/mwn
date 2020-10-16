@@ -1,5 +1,6 @@
 # mwn
 [![NPM version](https://img.shields.io/npm/v/mwn.svg)](https://www.npmjs.com/package/mwn)
+[![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 
 **mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
