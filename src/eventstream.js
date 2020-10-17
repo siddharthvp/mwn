@@ -7,7 +7,7 @@ module.exports = function (mwn, bot) {
 		/**
 		 * Access the Wikimedia EventStreams API
 		 * @see https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams
-		 * @param {string[]} streams
+		 * @param {string|string[]} streams
 		 * @param {Object} [config={}]
 		 * @config {string|Date} since
 		 * @config {Function} onopen
@@ -69,7 +69,7 @@ module.exports = function (mwn, bot) {
 		 */
 		static recentchange(filter, action) {
 			let stream = new EventStream('recentchange');
-			stream.addListener(filter, action);
+			stream.addListener(action, filter);
 			return stream;
 		}
 

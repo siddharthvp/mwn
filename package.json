@@ -34,6 +34,7 @@
 		"tough-cookie": "^4.0.0"
 	},
 	"devDependencies": {
+		"@types/node": "^14.11.10",
 		"chai": "^4.2.0",
 		"coveralls": "^3.1.0",
 		"eslint": "^6.8.0",

@@ -74,7 +74,7 @@ module.exports = function(bot) {
 
 		/**
 		 * Get global user info for wikis with CentralAuth
-		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props 
+		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props
 		 */
 		globalinfo(props) {
 			return bot.request({
@@ -105,12 +105,12 @@ module.exports = function(bot) {
 		 * @returns {Promise}
 		 */
 		email(subject, message) {
-			return this.request({
+			return bot.request({
 				action: 'emailuser',
 				target: this.username,
 				subject: subject,
 				text: message,
-				token: this.csrfToken
+				token: bot.csrfToken
 			}).then(data => data.emailuser);
 		}
 
@@ -122,7 +122,7 @@ module.exports = function(bot) {
 			return bot.request(Object.assign({
 				action: 'block',
 				user: this.username,
-				token: this.csrfToken
+				token: bot.csrfToken
 			}, options)).then(data => data.block);
 		}
 
@@ -134,7 +134,7 @@ module.exports = function(bot) {
 			return bot.request(Object.assign({
 				action: 'unblock',
 				user: this.username,
-				token: this.csrfToken
+				token: bot.csrfToken
 			}, options)).then(data => data.unblock);
 		}
 

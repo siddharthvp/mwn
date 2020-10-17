@@ -247,7 +247,7 @@ class mwn {
 	 * Also fetches the site data needed for parsing and constructing title objects.
 	 * @param {Object} config - Bot configurations, including apiUrl, and either the
 	 * username and password or the OAuth credentials
-	 * @returns {mwn} bot object
+	 * @returns {Promise<mwn>} bot object
 	 */
 	static async init(config) {
 		const bot = new mwn(config);
@@ -333,7 +333,7 @@ class mwn {
 			throw new Error('[mwn] Invalid OAuth config');
 		}
 		try {
-			this.oauth = OAuth({
+			this.oauth = new OAuth({
 				consumer: {
 					key: this.options.OAuthCredentials.consumerToken,
 					secret: this.options.OAuthCredentials.consumerSecret
@@ -373,15 +373,19 @@ class mwn {
 	 * Executes a raw request
 	 * Uses the axios library
 	 *
-	 * @param {object} requestOptions
+	 * @param {Object} requestOptions
 	 *
 	 * @returns {Promise}
 	 */
 	rawRequest(requestOptions) {
 
 		if (!requestOptions.url) {
-			const err = new Error('No URL provided!');
-			err.disableRetry = true;
+			const err = new mwn.Error({
+				code: 'mwn_nourl',
+				info: 'No URL provided for API request!',
+				disableRetry: true,
+				request: requestOptions
+			});
 			return Promise.reject(err);
 		}
 		return axios(mergeDeep1({}, mwn.requestDefaults, {
@@ -524,11 +528,11 @@ class mwn {
 				if (params.format !== 'json') {
 					throw new Error('must use format=json');
 				}
-				let err = new Error('invalidjson: No valid JSON response');
-				err.code = 'invalidjson';
-				err.info = 'No valid JSON response';
-				err.response = response;
-				return Promise.reject(err);
+				return Promise.reject(new mwn.Error({
+					code: 'invalidjson',
+					info: 'No valid JSON response',
+					response: response
+				}));
 			}
 
 			const refreshTokenAndRetry = () => {
@@ -620,14 +624,14 @@ class mwn {
 
 	/** @private */
 	dieWithError(response, requestOptions) {
-		let err = new Error(response.error.code + ': ' + response.error.info);
-		// Enhance error object with additional information
-		err.errorResponse = true;
-		err.code = response.error.code;
-		err.info = response.error.info;
-		err.response = response;
-		err.request = requestOptions;
-		return Promise.reject(err);
+		let errorData = Object.assign(response.error, {
+			// Enhance error object with additional information:
+			// the full response
+			response: response,
+			// the original request, should the client want to retry the request
+			request: requestOptions
+		});
+		return Promise.reject(new mwn.Error(errorData));
 	}
 
 
@@ -668,8 +672,11 @@ class mwn {
 		}).then((response) => {
 
 			if (!response.query || !response.query.tokens || !response.query.tokens.logintoken) {
-				let err = new Error('Failed to get login token');
-				err.response = response;
+				let err = new mwn.Error({
+					code: 'mwn_notoken',
+					info: 'Failed to get login token',
+					response,
+				});
 				log('[E] [mwn] Login failed with invalid response: ' + loginString);
 				return Promise.reject(err);
 			}
@@ -699,8 +706,11 @@ class mwn {
 			if (response.login && response.login.result) {
 				reason = response.login.result;
 			}
-			let err = new Error('Could not login: ' + reason);
-			err.response = response;
+			let err = new mwn.Error({
+				code: 'mwn_failedlogin',
+				info: 'Could not log in: ' + reason,
+				response
+			});
 			log('[E] [mwn] Login failed: ' + loginString);
 			return Promise.reject(err);
 
@@ -755,8 +765,11 @@ class mwn {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
 			} else {
-				let err = new Error('Could not get token');
-				err.response = response;
+				let err = new mwn.Error({
+					code: 'mwn_notoken',
+					info: 'Could not get token',
+					response
+				});
 				return Promise.reject(err);
 			}
 		});
@@ -788,8 +801,11 @@ class mwn {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
 			} else {
-				let err = new Error('Could not get token');
-				err.response = response;
+				let err = new mwn.Error({
+					code: 'mwn_notoken',
+					info: 'Could not get token',
+					response
+				});
 				return Promise.reject(err);
 			}
 		});
@@ -812,7 +828,7 @@ class mwn {
 	/**
 	 * Combines Login  with getCsrfToken
 	 *
-	 * @param loginOptions
+	 * @param [loginOptions]
 	 * @returns {Promise<void>}
 	 */
 	loginGetToken(loginOptions) {
@@ -852,6 +868,14 @@ class mwn {
 	/***************** HELPER FUNCTIONS ******************/
 
 	/**
+	 * @typedef {{content: string, timestamp: string}} ApiRevision
+	 */
+
+	/**
+	 * @typedef {{title: string, revisions: (ApiRevision)[]}} ApiPage
+	 */
+
+	/**
 	 * Reads the content and and meta-data of one (or many) pages.
 	 * Content from the "main" slot is copied over to every revision object
 	 * for easier referencing (`pg.revisions[0].content` can be used instead of
@@ -860,8 +884,7 @@ class mwn {
 	 *
 	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
 	 * @param {Object} [options]
-	 *
-	 * @returns {Promise<{{title: string, revisions: ({content: string})[]}}>}
+	 * @returns {Promise<ApiPage>}
 	 */
 	read(titles, options) {
 		return this.massQuery(merge({
@@ -1698,8 +1721,8 @@ class mwn {
 	/**
 	 * Gets ORES predictions from revision IDs
 	 * @param {string} endpointUrl
-	 * @param {string[]|string} models
-	 * @param {string[]|number[]|string|number} revision ID(s)
+	 * @param {string[]} models
+	 * @param {string[]|number[]|string|number} revisions  ID(s)
 	 */
 	oresQueryRevisions(endpointUrl, models, revisions) {
 		let response = {};
@@ -1730,7 +1753,7 @@ class mwn {
 	 * Supported for EN, DE, ES, EU, TR Wikipedias only
 	 * @see https://api.wikiwho.net/
 	 * @param {string} title
-	 * @returns {{totalBytes: number, users: ({id: number, name: string, bytes: number, percent: number})[]}}
+	 * @returns {Promise<{totalBytes: number, users: ({id: number, name: string, bytes: number, percent: number})[]}>}
 	 */
 	async queryAuthors(title) {
 		let langcodematch = this.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
@@ -1810,14 +1833,18 @@ class mwn {
 
 	/**
 	 * Returns a promise rejected with an error object
-	 * @private 
-	 * @param {string} errorcode 
-	 * @returns {Promise<Error>}
+	 * @private
+	 * @param {string} errorCode
+	 * @returns {Promise<mwn.Error>}
 	 */
-	rejectWithErrorCode(errorcode) {
-		let error = new Error(errorcode);
-		error.code = errorcode;
-		return Promise.reject(error);
+	rejectWithErrorCode(errorCode) {
+		return Promise.reject(new mwn.Error({
+			code: errorCode
+		}));
+	}
+
+	rejectWithError(errorConfig) {
+		return Promise.reject(new mwn.Error(errorConfig));
 	}
 
 }
@@ -1832,6 +1859,34 @@ mwn.requestDefaults = {
 	httpsAgent: new https.Agent({ keepAlive: true }),
 
 	timeout: 60000, // 60 seconds
+};
+
+mwn.Error = class MwnError extends Error {
+	/**
+	 * @typedef {{code: string, info: string, response?: Object, request?: Object, disableRetry?: boolean}} errorData
+	 */
+
+	/**
+	 * @param {errorData} config
+	 */
+	constructor(config) {
+		// If it's an mwn internal error, don't put the error code (begins with "mwn")
+		// in the error message
+		const code = (!config.code || config.code.startsWith('mwn')) ? '' : config.code + ': ';
+		const info = config.info || '';
+		super(code + info);
+		Object.assign(this, config);
+	}
+};
+
+mwn.Error.MissingPage = class extends mwn.Error {
+	constructor(config) {
+		super({
+			code: 'missingarticle',
+			info: 'Page does not exist',
+			...config
+		});
+	}
 };
 
 // Bind static utilities
@@ -1877,7 +1932,7 @@ const merge = function(...objects) {
  * headers get merged. But not any object properties within them.
  * Arrays are not merged, but over-written (as if it were a primitive)
  * The first object is mutated and returned.
- * @param {...Object} - any number of objects
+ * @param {...Object} objects - any number of objects
  * @returns {Object}
  */
 const mergeDeep1 = function(...objects) {

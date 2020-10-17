@@ -17,7 +17,7 @@ module.exports = function(bot) {
 				// parse MediaWiki format: YYYYMMDDHHmmss
 				if (/^\d{14}$/.test(args[0])) {
 					let match = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(args[0]);
-					match[2] = parseInt(match[2]) - 1; // fix month
+					match[2] = String(parseInt(match[2]) - 1); // fix month
 					super(...match.slice(1));
 				} else {
 					// Attempt to remove a comma and paren-wrapped timezone, to get MediaWiki
@@ -107,7 +107,7 @@ module.exports = function(bot) {
 		 */
 		add(number, unit) {
 			// mapping time units with getter/setter function names
-			var unitMap = {
+			const unitMap = {
 				seconds: 'Seconds',
 				minutes: 'Minutes',
 				hours: 'Hours',
@@ -115,7 +115,7 @@ module.exports = function(bot) {
 				months: 'Month',
 				years: 'FullYear'
 			};
-			var unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
+			let unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
 			if (unitNorm) {
 				this['set' + unitNorm](this['get' + unitNorm]() + number);
 				return this;
@@ -147,7 +147,7 @@ module.exports = function(bot) {
 			if (!this.isValid()) {
 				return ''; // avoid bogus NaNs in output
 			}
-			var udate = this;
+			let udate = this;
 			// create a new date object that will contain the date to display as system time
 			if (!zone || zone === 'utc') {
 				udate = new xdate(this.getTime()).add(this.getTimezoneOffset(), 'minutes');
@@ -156,13 +156,13 @@ module.exports = function(bot) {
 				udate = new xdate(this.getTime()).add(this.getTimezoneOffset() + zone, 'minutes');
 			}
 
-			var pad = function(num) {
+			const pad = function(num) {
 				return num < 10 ? '0' + num : num;
 			};
-			var h24 = udate.getHours(), m = udate.getMinutes(), s = udate.getSeconds();
-			var D = udate.getDate(), M = udate.getMonth() + 1, Y = udate.getFullYear();
-			var h12 = h24 % 12 || 12, amOrPm = h24 >= 12 ? 'PM' : 'AM';
-			var replacementMap = {
+			const h24 = udate.getHours(), m = udate.getMinutes(), s = udate.getSeconds();
+			const D = udate.getDate(), M = udate.getMonth() + 1, Y = udate.getFullYear();
+			const h12 = h24 % 12 || 12, amOrPm = h24 >= 12 ? 'PM' : 'AM';
+			const replacementMap = {
 				'HH': pad(h24), 'H': h24, 'hh': pad(h12), 'h': h12, 'A': amOrPm,
 				'mm': pad(m), 'm': m,
 				'ss': pad(s), 's': s,
@@ -174,7 +174,7 @@ module.exports = function(bot) {
 
 			// as long as only unbind() and rebind() methods of bot.wikitext are used,
 			// there shouldn't be problems from not having called getSiteInfo() on the bot object
-			var unbinder = new bot.wikitext(formatstr); // escape stuff between [...]
+			let unbinder = new bot.wikitext(formatstr); // escape stuff between [...]
 			unbinder.unbind('\\[', '\\]');
 			unbinder.text = unbinder.text.replace(
 				/* Regex notes:
@@ -199,7 +199,7 @@ module.exports = function(bot) {
 		calendar(zone) {
 			// Zero out the hours, minutes, seconds and milliseconds - keeping only the date;
 			// find the difference. Note that setHours() returns the same thing as getTime().
-			var dateDiff = (new Date().setHours(0, 0, 0, 0) -
+			const dateDiff = (new Date().setHours(0, 0, 0, 0) -
 				new Date(this).setHours(0, 0, 0, 0)) / 8.64e7;
 			switch (true) {
 				case dateDiff === 0:

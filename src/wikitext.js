@@ -62,16 +62,15 @@ module.exports = function (bot) {
 					{ name: '3', value: '', wikitext: '|3=' }
 				]
 			}
-		 * @param {string} wikitext
 		 * @param {{recursive: boolean, namePredicate: function, templatePredicate: function,
 		 * count: number}} config
-		 * @config {boolean} recursive - also parse templates within subtemplates. The other 
+		 * @config {boolean} recursive - also parse templates within subtemplates. The other
 		 * config parameters (namePredicate, templatePredicate, count) are *not* compatible
 		 * with recursive mode. Expect unexpected results if used.
-		 * @config {function} namePredicate - include template in result only if the its name 
-		 * matches this predicate. More efficient than templatePredicate as the template parameters 
+		 * @config {function} namePredicate - include template in result only if the its name
+		 * matches this predicate. More efficient than templatePredicate as the template parameters
 		 * aren't parsed if name didn't match.
-		 * @config {function} templatePredicate - include template in result only if it matches 
+		 * @config {function} templatePredicate - include template in result only if it matches
 		 * this predicate
 		 * @config {number} count - max number of templates to be parsed.
 		 * @returns {Template[]}
@@ -195,7 +194,7 @@ module.exports = function (bot) {
 
 		/**
 		 * Temporarily hide a part of the string while processing the rest of it.
-		 * 
+		 *
 		 * eg.  let u = new bot.wikitext("Hello world <!-- world --> world");
 		 *      u.unbind('<!--','-->');
 		 *      u.content = u.content.replace(/world/g, 'earth');
@@ -228,7 +227,7 @@ module.exports = function (bot) {
 
 		/**
 		 * Rebind after unbinding.
-		 * @returns {string} The output 
+		 * @returns {string} The output
 		 */
 		rebind() {
 			let content = this.text;
@@ -263,7 +262,7 @@ module.exports = function (bot) {
 		 *  3. Further restrictions may apply.
 		 *
 		 * Tables generated via mwn.table() class are intended to be parsable.
-		 * 
+		 *
 		 * This method throws when it finds an inconsistency (rather than silently
 		 * cause undesired behaviour).
 		 *
@@ -350,10 +349,10 @@ module.exports = function (bot) {
 
 		/**
 		 * Parse sections from wikitext
-		 * CAUTION: section header syntax in comments, nowiki tags, 
+		 * CAUTION: section header syntax in comments, nowiki tags,
 		 * pre, source or syntaxhighlight tags can lead to wrong results.
 		 * You're advised to run unbind() first.
-		 * @returns {{level: number, header: string, index: number, content: string}[]} array of 
+		 * @returns {{level: number, header: string, index: number, content: string}[]} array of
 		 * section objects. Each section object has the level, header, index (of beginning) and content.
 		 * Content *includes* the equal signs and the header.
 		 * The top is represented as level 1, with header `null`.
@@ -486,6 +485,8 @@ module.exports = function (bot) {
 	/**
 	 * @param {string} text - template wikitext without braces, with the pipes in
 	 * nested templates replaced by \x01
+	 * @param {Function} [namePredicate]
+	 * @param {Function} [templatePredicate]
 	 * @returns {Template}
 	 */
 	const processTemplateText = function (text, namePredicate, templatePredicate) {
