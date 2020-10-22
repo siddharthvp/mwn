@@ -139,6 +139,18 @@ class mwn {
 			// shutoffPage: null,
 			// shutoffRegex: /^\s*$/,
 
+			/**
+			 * Bot emergency shutoff options
+			 * @type {{condition: RegExp | Function, page: string,
+			 * intervalDuration: number, onShutoff: Function}}
+			 */
+			shutoff: {
+				intervalDuration: 10000,
+				page: null,
+				condition: /^\s*$/,
+				onShutoff: function () {}
+			},
+
 			// default parameters included in every API request
 			defaultParams: {
 				format: 'json',
@@ -197,6 +209,15 @@ class mwn {
 		this.requestOptions = mergeDeep1({
 			responseType: 'json'
 		}, mwn.requestDefaults);
+
+		/**
+		 * Emergency shutoff config
+		 * @type {{hook: ReturnType<typeof setTimeout>, state: boolean}}
+		 */
+		this.shutoff = {
+			state: false,
+			hook: null
+		};
 
 		/**
 		 * Title class associated with the bot instance
@@ -409,6 +430,14 @@ class mwn {
 	 * @returns {Promise<Object>}
 	 */
 	async request(params, customRequestOptions = {}) {
+
+		if (this.shutoff.state) {
+			return this.rejectWithError({
+				code: 'bot-shutoff',
+				info: `Bot was shut off (check ${this.options.shutoff.page})`
+			});
+		}
+
 		params = merge(this.options.defaultParams, params);
 
 		const getOrPost = function (data) {
@@ -863,6 +892,41 @@ class mwn {
 				return this.rejectWithErrorCode('invalidjson');
 			}
 		});
+	}
+
+	/**
+	 * Enable bot emergency shutoff
+	 * @param {Object} [shutoffOptions]
+	 * @config {string} [page]
+	 * @config {number} [intervalDuration]
+	 * @config {RegExp | Function} [condition]
+	 * @config {Function} [onShutoff]
+	 */
+	enableEmergencyShutoff(shutoffOptions) {
+		Object.assign(this.options.shutoff, shutoffOptions);
+
+		this.shutoff.hook = setInterval(async () => {
+			let text = await new this.page(this.options.shutoff.page).text();
+			let cond = this.options.shutoff.condition;
+			if (
+				(cond instanceof RegExp && !cond.test(text)) ||
+				(cond instanceof Function && !cond(text))
+			) {
+				this.shutoff.state = true;
+				this.disableEmergencyShutoff();
+				// user callback executed last, so that an error thrown by
+				// it doesn't prevent the the above from being run
+				this.options.shutoff.onShutoff(text);
+			}
+		}, this.options.shutoff.intervalDuration);
+	}
+
+	/**
+	 * Disable emergency shutoff detection.
+	 * Use this only if it was ever enabled.
+	 */
+	disableEmergencyShutoff() {
+		clearInterval(this.shutoff.hook);
 	}
 
 	/***************** HELPER FUNCTIONS ******************/
