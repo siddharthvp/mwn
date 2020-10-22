@@ -571,8 +571,7 @@ class mwn {
 					if (!tokentype || !this.state[tokentype + 'token']) {
 						return this.dieWithError(response, requestOptions);
 					}
-					var token = this.state[ tokentype + 'token' ];
-					params.token = token;
+					params.token = this.state[ tokentype + 'token' ];
 					return this.request(params, customRequestOptions);
 				});
 			};
@@ -932,11 +931,25 @@ class mwn {
 	/***************** HELPER FUNCTIONS ******************/
 
 	/**
-	 * @typedef {{content: string, timestamp: string}} ApiRevision
+	 * @typedef {{
+	 *      content: string,
+	 *      timestamp: string,
+	 *      slots?: {
+	 *          main: {
+	 *              content: string,
+	 *              timestamp: string
+	 *          }
+	 *      }
+	 * }} ApiRevision
 	 */
 
 	/**
-	 * @typedef {{title: string, revisions: (ApiRevision)[]}} ApiPage
+	 * @typedef {{
+	 *      title: string,
+	 *      missing?: boolean,
+	 *      invalid?: boolean,
+	 *      revisions: ApiRevision[]
+	 * }} ApiPage
 	 */
 
 	/**
@@ -951,14 +964,15 @@ class mwn {
 	 * @returns {Promise<ApiPage>}
 	 */
 	read(titles, options) {
-		return this.massQuery(merge({
+		return this.massQuery({
 			action: 'query',
+			...makeTitles(titles),
 			prop: 'revisions',
 			rvprop: 'content|timestamp',
 			rvslots: 'main',
-			redirects: '1'
-		}, makeTitles(titles), options),
-		typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
+			redirects: '1',
+			...options
+		}, typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
 			let data = jsons.reduce((data, json) => {
 				json.query.pages.forEach(pg => {
 					if (pg.revisions) {
@@ -974,14 +988,15 @@ class mwn {
 	}
 
 	async *readGen(titles, options) {
-		let massQueryResponses = this.massQueryGen(merge({
+		let massQueryResponses = this.massQueryGen({
 			action: 'query',
+			...makeTitles(titles),
 			prop: 'revisions',
 			rvprop: 'content|timestamp',
 			rvslots: 'main',
-			redirects: '1'
-		}, makeTitles(titles), options),
-		typeof titles[0] === 'number' ? 'pageids' : 'titles');
+			redirects: '1',
+			...options
+		}, typeof titles[0] === 'number' ? 'pageids' : 'titles');
 
 		for await (let response of massQueryResponses) {
 			if (response && response.query && response.query.pages) {
@@ -1027,7 +1042,7 @@ class mwn {
 			rvprop: ['content', 'timestamp'],
 			rvslots: 'main',
 			formatversion: '2',
-			curtimestamp: !0
+			curtimestamp: true
 		}).then(data => {
 			let page, revision, revisionContent;
 			if (!data.query || !data.query.pages) {
@@ -1065,15 +1080,17 @@ class mwn {
 			const editParams = typeof returnVal === 'object' ? returnVal : {
 				text: String(returnVal)
 			};
-			return this.request(merge({
+			return this.request({
 				action: 'edit',
+				...makeTitle(title),
 				formatversion: '2',
 				basetimestamp: basetimestamp,
 				starttimestamp: curtimestamp,
 				nocreate: 1,
 				bot: 1,
-				token: this.csrfToken
-			}, makeTitle(title), editParams));
+				token: this.csrfToken,
+				...editParams
+			});
 
 		}).then(data => {
 			if (data.edit && data.edit.nochange && !editConfig.suppressNochangeWarning) {
@@ -1551,11 +1568,12 @@ class mwn {
 	/**
 	 * Generator version of massQuery(). Iterate through pages of API results.
 	 * @param {Object} query
-	 * @param {string} batchFieldName
+	 * @param {string} [batchFieldName=titles]
+	 * @param {number} [batchSize]
 	 */
-	async *massQueryGen(query, batchFieldName='titles') {
+	async *massQueryGen(query, batchFieldName='titles', batchSize) {
 		let batchValues = query[batchFieldName];
-		const limit = this.options.hasApiHighLimit ? 500 : 50;
+		const limit = batchSize || this.options.hasApiHighLimit ? 500 : 50;
 		const batches = arrayChunk(batchValues, limit);
 		const numBatches = batches.length;
 
@@ -1927,7 +1945,7 @@ mwn.requestDefaults = {
 
 mwn.Error = class MwnError extends Error {
 	/**
-	 * @typedef {{code: string, info: string, response?: Object, request?: Object, disableRetry?: boolean}} errorData
+	 * @typedef {{code: string, info?: string, response?: Object, request?: Object, disableRetry?: boolean}} errorData
 	 */
 
 	/**
@@ -2015,7 +2033,10 @@ const mergeDeep1 = function(...objects) {
 	return args[0];
 };
 
-/** @param {Array} arr, @param {number} size */
+/**
+ * @param {Array} arr
+ * @param {number} size
+ */
 const arrayChunk = function(arr, size) {
 	const numChunks = Math.ceil(arr.length / size);
 	let result = new Array(numChunks);
