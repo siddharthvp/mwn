@@ -21,7 +21,7 @@ module.exports = function (mwn, bot) {
 			let since = config.since ? `?since=${new bot.date(config.since).format('YYYYMMDDHHmmss')}` : '';
 			super(`https://stream.wikimedia.org/v2/stream/${streams}${since}`, {
 				headers: {
-					'User-Agent': bot.userAgent
+					'User-Agent': bot.options.userAgent
 				}
 			});
 

@@ -3,7 +3,9 @@
  *
  */
 
-const Title = require('../src/title');
+const mwn = require('../src/bot');
+const bot = new mwn();
+const Title = bot.title;
 
 const assert = require('assert');
 

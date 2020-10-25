@@ -222,7 +222,7 @@ class mwn {
 		/**
 		 * Title class associated with the bot instance
 		 */
-		this.title = Title;
+		this.title = Title(this);
 
 		/**
 		 * Date class
@@ -710,7 +710,7 @@ class mwn {
 			}
 			this.state = merge(this.state, response.query.tokens);
 
-			Title.processNamespaceData(response);
+			this.title.processNamespaceData(response);
 
 			return this.request({
 				action: 'login',
@@ -774,7 +774,7 @@ class mwn {
 			meta: 'siteinfo',
 			siprop: 'general|namespaces|namespacealiases'
 		}).then(result => {
-			Title.processNamespaceData(result);
+			this.title.processNamespaceData(result);
 		});
 	}
 
@@ -824,7 +824,7 @@ class mwn {
 			siprop: 'general|namespaces|namespacealiases',
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
 		}).then(response => {
-			Title.processNamespaceData(response);
+			this.title.processNamespaceData(response);
 			if (response.query && response.query.tokens) {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
@@ -1402,7 +1402,7 @@ class mwn {
 	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
 	 */
 	getPagesByPrefix(prefix, otherParams) {
-		const title = Title.newFromText(prefix);
+		const title = this.title.newFromText(prefix);
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
 		}
@@ -1424,7 +1424,7 @@ class mwn {
 	 * @returns {Promise<string[]>}
 	 */
 	getPagesInCategory(category, otherParams) {
-		const title = Title.newFromText(category, 14);
+		const title = this.title.newFromText(category, 14);
 		return this.request(merge({
 			"action": "query",
 			"list": "categorymembers",
