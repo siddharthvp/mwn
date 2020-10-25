@@ -1,100 +1,89 @@
-module.exports = function(bot) {
+import type {mwn} from "./bot";
 
-	/**
-	 * Wrapper around the native JS Date() for ease of
-	 * handling dates, as well as a constructor that
-	 * can parse MediaWiki dating formats.
-	 */
-	class xdate extends Date {
+/**
+ * Wrapper around the native JS Date() for ease of
+ * handling dates, as well as a constructor that
+ * can parse MediaWiki dating formats.
+ */
+
+module.exports = function (bot: mwn) {
+
+	class MwnDate extends Date {
 
 		/**
 		 * Create a date object. MediaWiki timestamp format is also acceptable,
 		 * in addition to everything that JS Date() accepts.
 		 */
-		constructor(...args) {
+		constructor(...args: any[]) {
 
 			if (args.length === 1 && typeof args[0] === 'string') {
 				// parse MediaWiki format: YYYYMMDDHHmmss
 				if (/^\d{14}$/.test(args[0])) {
 					let match = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(args[0]);
-					match[2] = String(parseInt(match[2]) - 1); // fix month
-					super(...match.slice(1));
+					let dateParts = match.slice(1).map(e => parseInt(e));
+					super(dateParts[0], dateParts[1] - 1, // fix month
+						dateParts[2], dateParts[3], dateParts[4], dateParts[5]);
 				} else {
 					// Attempt to remove a comma and paren-wrapped timezone, to get MediaWiki
 					// signature timestamps to parse. Firefox (at least in 75) seems to be
 					// okay with the comma, though
 					args[0] = args[0].replace(/(\d\d:\d\d),/, '$1').replace(/\(UTC\)/, 'UTC');
-					super(...args);
+					super(args[0]);
 				}
 			} else {
+				// @ts-ignore
 				super(...args);
 			}
 
 			// Still no?
 			if (isNaN(this.getTime()) && !bot.options.suppressInvalidDateWarning) {
-				console.warn('Invalid initialisation of xdate object: ', args);
+				console.warn('Invalid initialisation of MwnDate object: ', args);
 			}
 		}
 
-		/** @return {boolean} */
-		isValid() {
+		isValid(): boolean {
 			return !isNaN(this.getTime());
 		}
 
-		/**
-		 * @param {(Date|xdate)} date
-		 * @return {boolean}
-		 */
-		isBefore(date) {
+		isBefore(date: Date | MwnDate): boolean {
 			return this.getTime() < date.getTime();
 		}
 
-		/**
-		 * @param {(Date|xdate)} date
-		 * @return {boolean}
-		 */
-		isAfter(date) {
+		isAfter(date: Date | MwnDate): boolean {
 			return this.getTime() > date.getTime();
 		}
 
-		/** @return {string} */
-		getUTCMonthName() {
-			return xdate.localeData.months[this.getUTCMonth()];
+
+		getUTCMonthName(): string {
+			return MwnDate.localeData.months[this.getUTCMonth()];
 		}
 
-		/** @return {string} */
-		getUTCMonthNameAbbrev() {
-			return xdate.localeData.monthsShort[this.getUTCMonth()];
+		getUTCMonthNameAbbrev(): string {
+			return MwnDate.localeData.monthsShort[this.getUTCMonth()];
 		}
 
-		/** @return {string} */
-		getMonthName() {
-			return xdate.localeData.months[this.getMonth()];
+		getMonthName(): string {
+			return MwnDate.localeData.months[this.getMonth()];
 		}
 
-		/** @return {string} */
-		getMonthNameAbbrev() {
-			return xdate.localeData.monthsShort[this.getMonth()];
+		getMonthNameAbbrev(): string {
+			return MwnDate.localeData.monthsShort[this.getMonth()];
 		}
 
-		/** @return {string} */
-		getUTCDayName() {
-			return xdate.localeData.days[this.getUTCDay()];
+		getUTCDayName(): string {
+			return MwnDate.localeData.days[this.getUTCDay()];
 		}
 
-		/** @return {string} */
-		getUTCDayNameAbbrev() {
-			return xdate.localeData.daysShort[this.getUTCDay()];
+		getUTCDayNameAbbrev(): string {
+			return MwnDate.localeData.daysShort[this.getUTCDay()];
 		}
 
-		/** @return {string} */
-		getDayName() {
-			return xdate.localeData.days[this.getDay()];
+		getDayName(): string {
+			return MwnDate.localeData.days[this.getDay()];
 		}
 
-		/** @return {string} */
-		getDayNameAbbrev() {
-			return xdate.localeData.daysShort[this.getDay()];
+		getDayNameAbbrev(): string {
+			return MwnDate.localeData.daysShort[this.getDay()];
 		}
 
 		/**
@@ -103,9 +92,9 @@ module.exports = function(bot) {
 		 * @param {number} number - should be an integer
 		 * @param {string} unit
 		 * @throws {Error} if invalid or unsupported unit is given
-		 * @returns {xdate}
+		 * @returns {MwnDate}
 		 */
-		add(number, unit) {
+		add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate {
 			// mapping time units with getter/setter function names
 			const unitMap = {
 				seconds: 'Seconds',
@@ -129,9 +118,9 @@ module.exports = function(bot) {
 		 * @param {number} number - should be an integer
 		 * @param {string} unit
 		 * @throws {Error} if invalid or unsupported unit is given
-		 * @returns {xdate}
+		 * @returns {MwnDate}
 		 */
-		subtract(number, unit) {
+		subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate {
 			return this.add(-number, unit);
 		}
 
@@ -143,17 +132,17 @@ module.exports = function(bot) {
 		 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC.
 		 * @returns {string}
 		 */
-		format(formatstr, zone) {
+		format(formatstr: string, zone: number | 'utc' | 'system' = 'utc'): string {
 			if (!this.isValid()) {
 				return ''; // avoid bogus NaNs in output
 			}
-			let udate = this;
+			let udate: MwnDate = this;
 			// create a new date object that will contain the date to display as system time
 			if (!zone || zone === 'utc') {
-				udate = new xdate(this.getTime()).add(this.getTimezoneOffset(), 'minutes');
+				udate = new MwnDate(this.getTime()).add(this.getTimezoneOffset(), 'minutes');
 			} else if (typeof zone === 'number') {
 				// convert to utc, then add the utc offset given
-				udate = new xdate(this.getTime()).add(this.getTimezoneOffset() + zone, 'minutes');
+				udate = new MwnDate(this.getTime()).add(this.getTimezoneOffset() + zone, 'minutes');
 			}
 
 			const pad = function(num) {
@@ -196,96 +185,89 @@ module.exports = function(bot) {
 		 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC
 		 * @returns {string}
 		 */
-		calendar(zone) {
+		calendar(zone: number | 'utc' | 'system' = 'utc'): string {
 			// Zero out the hours, minutes, seconds and milliseconds - keeping only the date;
 			// find the difference. Note that setHours() returns the same thing as getTime().
 			const dateDiff = (new Date().setHours(0, 0, 0, 0) -
 				new Date(this).setHours(0, 0, 0, 0)) / 8.64e7;
 			switch (true) {
 				case dateDiff === 0:
-					return this.format(xdate.localeData.relativeTimes.thisDay, zone);
+					return this.format(MwnDate.localeData.relativeTimes.thisDay, zone);
 				case dateDiff === 1:
-					return this.format(xdate.localeData.relativeTimes.prevDay, zone);
+					return this.format(MwnDate.localeData.relativeTimes.prevDay, zone);
 				case dateDiff > 0 && dateDiff < 7:
-					return this.format(xdate.localeData.relativeTimes.pastWeek, zone);
+					return this.format(MwnDate.localeData.relativeTimes.pastWeek, zone);
 				case dateDiff === -1:
-					return this.format(xdate.localeData.relativeTimes.nextDay, zone);
+					return this.format(MwnDate.localeData.relativeTimes.nextDay, zone);
 				case dateDiff < 0 && dateDiff > -7:
-					return this.format(xdate.localeData.relativeTimes.thisWeek, zone);
+					return this.format(MwnDate.localeData.relativeTimes.thisWeek, zone);
 				default:
-					return this.format(xdate.localeData.relativeTimes.other, zone);
+					return this.format(MwnDate.localeData.relativeTimes.other, zone);
 			}
+		}
+
+		static localeData = {
+			months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+			monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+			days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+			daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+			relativeTimes: {
+				thisDay: '[Today at] h:mm A',
+				prevDay: '[Yesterday at] h:mm A',
+				nextDay: '[Tomorrow at] h:mm A',
+				thisWeek: 'dddd [at] h:mm A',
+				pastWeek: '[Last] dddd [at] h:mm A',
+				other: 'YYYY-MM-DD'
+			}
+		}
+
+		// TODO: allow easier i18n
+		static loadLocaleData(data) {
+			MwnDate.localeData = data;
+		}
+
+		/**
+		 * Get month name from month number (1-indexed)
+		 */
+		static getMonthName(monthNum: number): string {
+			return MwnDate.localeData.months[monthNum - 1];
+		}
+
+		/**
+		 * Get abbreviated month name from month number (1-indexed)
+		 */
+		static getMonthNameAbbrev(monthNum: number): string {
+			return MwnDate.localeData.monthsShort[monthNum - 1];
+		}
+
+		/**
+		 * Get day name from day number (1-indexed, starting from Sunday)
+		 */
+		static getDayName(dayNum: number): string {
+			return MwnDate.localeData.days[dayNum - 1];
+		}
+
+		/**
+		 * Get abbreviated day name from day number (1-indexed, starting from Sunday)
+		 */
+		static getDayNameAbbrev(dayNum: number): string {
+			return MwnDate.localeData.daysShort[dayNum - 1];
 		}
 
 	}
 
 	// Tweak set* methods (setHours, setUTCMinutes, etc) so that they
-	// return the modified xdate object rather than the seconds-since-epoch
+	// return the modified MwnDate object rather than the seconds-since-epoch
 	// representation which is what JS Date() gives
 	Object.getOwnPropertyNames(Date.prototype).filter(f => f.startsWith('set')).forEach(func => {
-		let proxy = xdate.prototype[func];
-		xdate.prototype[func] = function(...args) {
+		let proxy = MwnDate.prototype[func];
+		MwnDate.prototype[func] = function(...args) {
 			proxy.call(this, ...args);
 			return this;
 		};
 	});
 
-	xdate.localeData = {
-		months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-		monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-		days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-		daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-		relativeTimes: {
-			thisDay: '[Today at] h:mm A',
-			prevDay: '[Yesterday at] h:mm A',
-			nextDay: '[Tomorrow at] h:mm A',
-			thisWeek: 'dddd [at] h:mm A',
-			pastWeek: '[Last] dddd [at] h:mm A',
-			other: 'YYYY-MM-DD'
-		}
-	};
-
-	// TODO: allow easier i18n
-	xdate.loadLocaleData = function(data) {
-		xdate.localeData = data;
-	};
-
-	/**
-	 * Get month name from month number (1-indexed)
-	 * @param {number} monthNum
-	 * @returns {string}
-	 */
-	xdate.getMonthName = function(monthNum) {
-		return xdate.localeData.months[monthNum - 1];
-	};
-
-	/**
-	 * Get abbreviated month name from month number (1-indexed)
-	 * @param {number} monthNum
-	 * @returns {string}
-	 */
-	xdate.getMonthNameAbbrev = function(monthNum) {
-		return xdate.localeData.monthsShort[monthNum - 1];
-	};
-
-	/**
-	 * Get day name from day number (1-indexed, starting from Sunday)
-	 * @param {number} dayNum
-	 * @returns {string}
-	 */
-	xdate.getDayName = function(dayNum) {
-		return xdate.localeData.days[dayNum - 1];
-	};
-
-	/**
-	 * Get abbreviated day name from day number (1-indexed, starting from Sunday)
-	 * @param {number} dayNum
-	 * @returns {string}
-	 */
-	xdate.getDayNameAbbrev = function(dayNum) {
-		return xdate.localeData.daysShort[dayNum - 1];
-	};
-
-	return xdate;
+	return MwnDate;
 
 };
+

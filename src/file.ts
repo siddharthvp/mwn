@@ -1,4 +1,6 @@
-module.exports = function(bot) {
+import type {mwn} from './bot'
+
+module.exports = function (bot: mwn) {
 
 	class File extends bot.page {
 
@@ -6,7 +8,7 @@ module.exports = function(bot) {
 		 * @constructor
 		 * @param {string} name - name of the file
 		 */
-		constructor(name) {
+		constructor(name: string) {
 			super(name, 6);
 			if (this.namespace !== 6) {
 				throw new Error('not a file');
@@ -20,8 +22,8 @@ module.exports = function(bot) {
 		 * underscores instead of spaces. For example, the title "File:Example_image.svg"
 		 * will be returned as "Example_image".
 		 */
-		getName() {
-			var ext = this.getExtension();
+		getName(): string {
+			let ext = this.getExtension();
 			if ( ext === null ) {
 				return this.getMain();
 			}
@@ -35,7 +37,7 @@ module.exports = function(bot) {
 		 * of underscores. For example, the title "File:Example_image.svg" will be returned
 		 * as "Example image".
 		 */
-		getNameText () {
+		getNameText (): string {
 			return this.getName().replace( /_/g, ' ' );
 		}
 
@@ -46,7 +48,7 @@ module.exports = function(bot) {
 		 * @returns {Promise<Object[]>} - resolved with array of { pageid: 32434,
 		 * ns: 0, title: 'Main Page', redirect: false } like objects.
 		 */
-		usages(options) {
+		usages(options): Promise<{pageid: number, title: string, redirect: boolean}> {
 			return bot.request(Object.assign({
 				"action": "query",
 				"prop": "fileusage",
@@ -59,7 +61,7 @@ module.exports = function(bot) {
 
 		// TODO: Add wrapper for prop=imageinfo
 
-		download(localname) {
+		download(localname: string) {
 			return bot.download(this.toString(), localname);
 		}
 
@@ -67,4 +69,4 @@ module.exports = function(bot) {
 
 	return File;
 
-};
+}

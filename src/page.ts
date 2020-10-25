@@ -1,12 +1,16 @@
-module.exports = function(bot) {
+import type {mwn, Title} from './bot'
+
+module.exports = function (bot: mwn) {
 
 	class Page extends bot.title {
+		data: any
 
-		constructor(arg) {
-			if (arg instanceof bot.title) {
-				super(arg.title, arg.namespace);
+		constructor(title: Title | string, namespace?: number) {
+			// bot property is set by mwn#page() method
+			if (title instanceof bot.title) {
+				super(title.title, title.namespace);
 			} else {
-				super(...arguments);
+				super(title, namespace);
 			}
 			this.data = {};
 		}
@@ -14,14 +18,14 @@ module.exports = function(bot) {
 		/**
 		 * @override
 		 */
-		getTalkPage() {
+		getTalkPage(): Page {
 			return new Page(super.getTalkPage());
 		}
 
 		/**
 		 * @override
 		 */
-		getSubjectPage() {
+		getSubjectPage(): Page {
 			return new Page(super.getSubjectPage());
 		}
 
@@ -29,9 +33,8 @@ module.exports = function(bot) {
 
 		/**
 		 * Get page wikitext
-		 * @returns {Promise<string>}
-		 * */
-		text() {
+		 */
+		text(): Promise<string> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -47,7 +50,7 @@ module.exports = function(bot) {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { sortkey: '...', category: '...', hidden: true }
 		 */
-		categories() {
+		categories(): Promise<{sortkey: string, category: string, hidden: boolean}> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -60,7 +63,7 @@ module.exports = function(bot) {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { ns: 10, title: 'Template:Cite web', exists: true }
 		 */
-		templates() {
+		templates(): Promise<{ns: number, title: string, exists: boolean}> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -73,7 +76,7 @@ module.exports = function(bot) {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { ns: 0, title: 'Main Page', exists: true }
 		 */
-		links() {
+		links(): Promise<{ns: number, title: string, exists: boolean}> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -86,7 +89,7 @@ module.exports = function(bot) {
 		 * Get list of pages linking to this page
 		 * @returns {Promise<String[]>}
 		 */
-		backlinks() {
+		backlinks(): Promise<string[]> {
 			return bot.continuedQuery({
 				"action": "query",
 				"prop": "linkshere",
@@ -107,7 +110,7 @@ module.exports = function(bot) {
 		 * Get list of pages transcluding this page
 		 * @returns {Promise<String[]>}
 		 */
-		transclusions() { 
+		transclusions(): Promise<string[]> {
 			return bot.continuedQuery({
 				"action": "query",
 				"prop": "transcludedin",
@@ -129,7 +132,7 @@ module.exports = function(bot) {
 		 * Returns list of images on the page
 		 * @returns {Promise<String[]>} - array elements don't include File: prefix
 		 */
-		images() {
+		images(): Promise<string[]> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -141,7 +144,7 @@ module.exports = function(bot) {
 		 * Returns list of external links on the page
 		 * @returns {Promise<String[]>}
 		 */
-		externallinks() {
+		externallinks(): Promise<string[]> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -153,7 +156,7 @@ module.exports = function(bot) {
 		 * Returns list of subpages of the page
 		 * @returns {Promise<String[]>}
 		 */
-		subpages(options) {
+		subpages(options?: any): Promise<string[]> {
 			return bot.request(Object.assign({
 				"action": "query",
 				"list": "allpages",
@@ -169,7 +172,7 @@ module.exports = function(bot) {
 		 * Check if page is redirect or not
 		 * @returns {Promise<boolean>}
 		 */
-		isRedirect() {
+		isRedirect(): Promise<boolean> {
 			return this.getRedirectTarget().then(target => {
 				return this.toText() !== target;
 			});
@@ -180,11 +183,11 @@ module.exports = function(bot) {
 		 * Returns the same page name if the page is not a redirect.
 		 * @returns {Promise<string>}
 		 */
-		getRedirectTarget() {
+		getRedirectTarget(): Promise<string> {
 			if (this.data.text) {
 				var target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
 				if (!target) {
-					return this.toText();
+					return Promise.resolve(this.toText());
 				}
 				return Promise.resolve(new bot.title(target[1]).toText());
 			}
@@ -206,7 +209,7 @@ module.exports = function(bot) {
 		 * Get username of the page creator
 		 * @returns {Promise<string>}
 		 */
-		getCreator() {
+		getCreator(): Promise<string> {
 			return bot.request({
 				action: 'query',
 				titles: this.toString(),
@@ -227,7 +230,7 @@ module.exports = function(bot) {
 		 * Get username of the last deleting admin (or null)
 		 * @returns {Promise<string>}
 		 */
-		getDeletingAdmin() {
+		getDeletingAdmin(): Promise<string> {
 			return bot.request({
 				action: "query",
 				list: "logevents",
@@ -246,9 +249,9 @@ module.exports = function(bot) {
 		/**
 		 * Get short description, either the local one (for English Wikipedia)
 		 * or the one from wikidata.
-		 * @param {Object} customOptions 
+		 * @param {Object} customOptions
 		 */
-		getDescription(customOptions) {
+		getDescription(customOptions: any) { // ApiParams
 			return bot.request({
 				action: 'query',
 				prop: 'description',
@@ -273,7 +276,7 @@ module.exports = function(bot) {
 		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
 		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
 		 */
-		history(props, limit, customOptions) {
+		history(props: revisionprop[] | revisionprop, limit: number = 50, customOptions?: any): Promise<object[]> {
 			return bot.request(Object.assign({
 				"action": "query",
 				"prop": "revisions",
@@ -300,8 +303,8 @@ module.exports = function(bot) {
 		 * log entries, eg. { ns: '0', title: 'Main Page', type: 'delete', user: 'Example',
 		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
 		 */
-		logs(props, limit, type, customOptions) {
-			var logtypeObj = {};
+		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: any) {
+			var logtypeObj: any = {};
 			if (type) {
 				if (type.includes('/')) {
 					logtypeObj.leaction = type;
@@ -309,13 +312,15 @@ module.exports = function(bot) {
 					logtypeObj.letype = type;
 				}
 			}
-			return bot.request(Object.assign({
+			return bot.request({
 				"action": "query",
 				"list": "logevents",
+				...logtypeObj,
 				"leprop": props || "title|type|user|timestamp|comment",
 				"letitle": this.toString(),
-				"lelimit": limit || 50
-			}, logtypeObj, customOptions)).then(data => {
+				"lelimit": limit || 50,
+				...customOptions
+			}).then(data => {
 				return data.query.logevents;
 			});
 		}
@@ -325,34 +330,33 @@ module.exports = function(bot) {
 		/**** Post operations *****/
 		// Defined in bot.js
 
-		edit(transform) {
+		edit(transform: ((rev: {content: string, timestamp: string}) => string | object)) {
 			return bot.edit(this.toString(), transform);
 		}
 
-		save(text, summary, options) {
+		save(text: string, summary?: string, options?: any) {
 			return bot.save(this.toString(), text, summary, options);
 		}
 
-		newSection(header, message, additionalParams) {
+		newSection(header: string, message: string, additionalParams?: any) {
 			return bot.newSection(this.toString(), header, message, additionalParams);
 		}
 
-		move(target, summary, options) {
+		move(target: string, summary: string, options?: any) {
 			return bot.move(this.toString(), target, summary, options);
 		}
 
-		delete(summary, options) {
+		delete(summary: string, options?: any) {
 			return bot.delete(this.toString(), summary, options);
 		}
 
-		undelete(summary, options) {
+		undelete(summary: string, options?: any) {
 			return bot.undelete(this.toString(), summary, options);
 		}
 
-		purge(options) {
+		purge(options?: any) {
 			return bot.purge(this.toString(), options);
 		}
-
 
 	}
 
@@ -360,15 +364,9 @@ module.exports = function(bot) {
 
 };
 
-// Type definitions for JSDocs
 
-/**
- * @typedef {"content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
- * "size"  | "tags" | "userid" | "contentmodel"} revisionprop
- */
+type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
+	"size"  | "tags" | "userid" | "contentmodel"
 
-
-/**
- * @typedef {"type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" |
- * "ids" | "tags" | "userid"} logprop
- */
+type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
+	"tags" | "userid"

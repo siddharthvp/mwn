@@ -30,35 +30,327 @@
  *
  */
 
-'use strict';
+import axios = require('axios');
+import tough = require('tough-cookie');
+import axiosCookieJarSupport = require('axios-cookiejar-support');
+axiosCookieJarSupport.default(axios);
+import formData = require('form-data');
+import OAuth = require('oauth-1.0a');
+import http = require('http');
+import https = require('https');
 
-const axios = require('axios');
-const tough = require('tough-cookie');
-const axiosCookieJarSupport = require('axios-cookiejar-support').default;
-axiosCookieJarSupport(axios);
-const formData = require('form-data');
-const OAuth = require('oauth-1.0a');
-const http = require('http');
-const https = require('https');
-
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const semlog = require('semlog');
+import fs = require('fs');
+import path = require('path');
+import crypto = require('crypto');
+import semlog = require('semlog');
 const log = semlog.log;
 
-const Title = require('./title');
-const Xdate = require('./date');
-const Page = require('./page');
-const Wikitext = require('./wikitext');
-const User = require('./user');
-const Category = require('./category');
-const File = require('./file');
-const Stream = require('./eventstream');
+const MwnDate = require('./date');
+const MwnTitle = require('./title');
+const MwnPage = require('./page');
+const MwnWikitext = require('./wikitext');
+const MwnUser = require('./user');
+const MwnCategory = require('./category');
+const MwnFile = require('./file');
+const MwnStream = require('./eventstream');
 const static_utils = require('./static_utils');
 
-class mwn {
+import type {AxiosRequestConfig} from 'axios';
+import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
 
+type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
+	"size"  | "tags" | "userid" | "contentmodel"
+type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
+	"tags" | "userid"
+
+// The interfaces corresponding to the nested classes appear below.
+// The declarations need to be duplicated here because TypeScript doesn't really support
+// nested classes.
+export interface Title {
+	title: string
+	namespace: number
+	fragment: string
+	getNamespaceId(): number
+	getMain(): string
+	getMainText(): string
+	getPrefixedDb(): string
+	getPrefixedText(): string
+	getFragment(): string | null
+	isTalkPage(): boolean
+	getTalkPage(): Title | null
+	getSubjectPage(): Title | null
+	canHaveTalkPage(): boolean
+	getExtension(): string | null
+	getDotExtension(): string
+	toString(): string
+	toText(): string
+}
+export interface Page extends Title {
+	data: any
+	getTalkPage(): Page
+	getSubjectPage(): Page
+	text(): Promise<string>
+	categories(): Promise<{ sortkey: string, category: string, hidden: boolean }>
+	templates(): Promise<{ ns: number, title: string, exists: boolean }>
+	links(): Promise<{ ns: number, title: string, exists: boolean }>
+	backlinks(): Promise<string[]>
+	transclusions(): Promise<string[]>
+	images(): Promise<string[]>
+	externallinks(): Promise<string[]>
+	subpages(options?: any): Promise<string[]>
+	isRedirect(): Promise<boolean>
+	getRedirectTarget(): Promise<string>
+	isRedirect(): Promise<boolean>
+	getRedirectTarget(): Promise<string>
+	getCreator(): Promise<string>
+	getDeletingAdmin(): Promise<string>
+	getDescription(customOptions?: any)
+	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: any): Promise<object[]>
+	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: any): Promise<object[]>
+	edit(transform: ((rev: {content: string, timestamp: string}) => string | object))
+	save(text: string, summary?: string, options?: any)
+	newSection(header: string, message: string, additionalParams?: any)
+	move(target: string, summary: string, options?: any)
+	delete(summary: string, options?: any)
+	undelete(summary: string, options?: any)
+	purge(options?: any)
+}
+export interface File extends Page {
+	getName(): string
+	getNameText (): string
+	usages(options): Promise<{pageid: number, title: string, redirect: boolean}>
+	download(localname: string)
+}
+export interface Category extends Page {
+	members(options: any): Promise<{pageid: number, ns: number, title: string}>
+	pages(options: any): Promise<{pageid: number, ns: number, title: string}>
+	subcats(options: any): Promise<{pageid: number, ns: number, title: string}>
+	files(options: any): Promise<{pageid: number, ns: number, title: string}>
+}
+export interface Stream {
+	addListener(action, filter: any)
+}
+export interface User extends Title {
+	username: string
+	constructor(name: string)
+	userpage: Page
+	talkpage: Page
+	// get userpage(): Page // XXX
+	// get talkpage(): Page
+	contribs(options): Promise<any[]>
+	logs(options): Promise<any[]>
+	info(props): Promise<any>
+	globalinfo(props): Promise<any>
+	sendMessage(header: string, message: string)
+	email(subject: string, message: string): Promise<any>
+	block(options): Promise<any>
+	unblock(options): Promise<any>
+}
+export interface Wikitext {
+	text: string
+	links: Array<PageLink>
+	templates: Array<Template>
+	files: Array<FileLink>
+	categories: Array<CategoryLink>
+	sections: Array<Section>
+
+	parseLinks(): void
+	parseTemplates(config: TemplateConfig): Template[]
+	removeEntity(entity: Link | Template)
+	parseSections(): Section[]
+	unbind(prefix: string, postfix: string): void
+	rebind(): string
+	getText(): string
+	apiParse(options): Promise<string>
+}
+export interface XDate extends Date {
+	isValid(): boolean
+	isBefore(date: Date | XDate): boolean
+	isAfter(date: Date | XDate): boolean
+	getUTCMonthName(): string
+	getUTCMonthNameAbbrev(): string
+	getMonthName(): string
+	getMonthNameAbbrev(): string
+	getUTCDayName(): string
+	getUTCDayNameAbbrev(): string
+	getDayName(): string
+	getDayNameAbbrev(): string
+	add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): XDate
+	subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): XDate
+	format(formatstr: string, zone?: number | 'utc' | 'system'): string
+	calendar(zone?: number | 'utc' | 'system'): string
+}
+
+export interface MwnOptions {
+	silent?: boolean
+	apiUrl?: string
+	userAgent?: string
+	username?: string
+	password?: string
+	OAuthCredentials?: {
+		consumerToken: string,
+		consumerSecret: string,
+		accessToken: string,
+		accessSecret: string
+	}
+	hasApiHighLimit?: boolean
+	maxRetries?: number
+	retryPause?: number
+	shutoff?: {
+		intervalDuration?: number
+		page?: string
+		condition?: RegExp | ((text: string) => boolean)
+		onShutoff?: ((text: string) => void)
+	}
+	defaultParams?: ApiParams
+	suppressAPIWarnings?: boolean
+	editConfig?: editConfigType
+	suppressInvalidDateWarning?: boolean;
+	semlog?: object
+}
+
+type editConfigType = {
+	conflictRetries?: number
+	suppressNochangeWarning?: boolean
+	exclusionRegex?: RegExp
+}
+
+type ApiParams = any
+
+type ApiResponse = any
+
+export interface ApiPage {
+	title: string
+	missing?: boolean
+	invalid?: boolean
+	revisions: ApiRevision[]
+}
+
+export interface ApiRevision {
+   content: string
+   timestamp: string
+   slots?: {
+	   main: {
+		   content: string
+		   timestamp: string
+	   }
+   }
+}
+
+type ApiEditResponse = { // fix
+	title: string
+	nochange?: boolean
+	oldrevid: number
+	newrevid: number
+}
+
+
+
+export class mwn {
+
+	/**
+	 * Bot instance Login State
+	 * Is received from the MW Login API and contains token, userid, etc.
+	 */
+	state: object
+
+	/**
+	 * Bot instance is logged in or not
+	 */
+	loggedIn: boolean
+
+	/**
+	 * Bot instance's edit token.
+	 */
+	csrfToken: string
+
+	/**
+	 * Default options.
+	 * Should be immutable
+	 */
+	readonly defaultOptions: MwnOptions
+
+	options: MwnOptions
+
+	cookieJar: tough.CookieJar
+
+	static requestDefaults: AxiosRequestConfig
+
+	requestOptions: AxiosRequestConfig
+
+	shutoff: {
+		state: boolean
+		hook: ReturnType<typeof setInterval>
+	}
+
+	static Error: Function
+
+	static log: Function
+
+	oauth: OAuth
+
+	usingOAuth: boolean
+
+	title: {
+		new (title: string, namespace?: number): Title
+		idNameMap: {
+			[namespaceId: number]: string
+		}
+		nameIdMap: {
+			[namespaceName: string]: number
+		}
+		legaltitlechars: string
+		caseSensitiveNamespaces: Array<number>
+
+		processNamespaceData(json: {
+			query: {
+				general: { legaltitlechars: string }
+				namespaces: { name: string, id: number, canonical: boolean, case: string }[]
+				namespacealiases: { alias: string, id: number }[]
+			}
+		})
+		checkData()
+		newFromText(title: string, namespace?: number): Title | null
+		makeTitle(namespace: number, title: string): Title | null
+		isTalkNamespace(namespaceId: number): boolean
+		phpCharToUpper(chr: string): string
+	}
+	page: {
+		new (title: string, namespace?: number): Page
+	}
+	file: {
+		new (title: string): File
+	}
+	category: {
+		new (title: string): Category
+	}
+	stream: {
+		new (streams: string | string[], config: {
+			userAgent: string
+			since?: Date | XDate | string
+			onopen?: (() => void)
+			onerror?: ((evt: MessageEvent) => void)
+		}): Stream
+
+		recentchange(filter, action)
+	}
+	date: {
+		new (...args: any[]): XDate
+		loadLocaleData(data)
+		getMonthName(monthNum: number): string
+		getMonthNameAbbrev(monthNum: number): string
+		getDayName(dayNum: number): string
+		getDayNameAbbrev(dayNum: number): string
+	}
+	wikitext: {
+		new (text: string): Wikitext
+		parseTemplates(wikitext: string, config: TemplateConfig): Template[]
+		parseTable(text): {[column: string]: string}[]
+		parseSections(text): Section[]
+	}
+	user: {
+		new (username: string): User
+	}
 
 	/***************** CONSTRUCTOR ********************/
 
@@ -69,37 +361,21 @@ class mwn {
 	 *
 	 * @param {Object} [customOptions] - Custom options
 	 */
-	constructor(customOptions) {
+	constructor(customOptions?: MwnOptions) {
 
-		/**
-		 * Bot instance Login State
-		 * Is received from the MW Login API and contains token, userid, etc.
-		 *
-		 * @type {object}
-		 */
 		this.state = {};
-
-		/**
-		 * Bot instance is logged in or not
-		 *
-		 * @type {boolean}
-		 */
 		this.loggedIn = false;
 
 		/**
 		 * Bot instance's edit token. Initially set as an invalid token string
 		 * so that the badtoken handling logic is invoked if the token is
 		 * not set before a query is sent.
-		 *
-		 * @type {string}
 		 */
 		this.csrfToken = '%notoken%';
 
 		/**
 		 * Default options.
 		 * Should be immutable
-		 *
-		 * @type {object}
 		 */
 		this.defaultOptions = {
 			// suppress messages, except for error messages and warnings
@@ -123,9 +399,6 @@ class mwn {
 				accessSecret: null
 			},
 
-			// does your account have apihighlimits right? Yes for bots and sysops
-			hasApiHighLimit: true,
-
 			// max number of times to retry the same request on errors due to
 			// maxlag, wiki being in readonly mode, and other transient errors
 			maxRetries: 3,
@@ -133,17 +406,7 @@ class mwn {
 			// milliseconds to pause before retrying after a transient error
 			retryPause: 5000,
 
-			// for emergency-shutoff compliance: shutdown bot if the text of the
-			// shutoffPage doesn't meet the shutoffRegex
-			// XXX: not implemented
-			// shutoffPage: null,
-			// shutoffRegex: /^\s*$/,
-
-			/**
-			 * Bot emergency shutoff options
-			 * @type {{condition: RegExp | Function, page: string,
-			 * intervalDuration: number, onShutoff: Function}}
-			 */
+			// Bot emergency shutoff options
 			shutoff: {
 				intervalDuration: 10000,
 				page: null,
@@ -219,49 +482,22 @@ class mwn {
 			hook: null
 		};
 
-		/**
-		 * Title class associated with the bot instance
-		 */
-		this.title = Title(this);
-
-		/**
-		 * Date class
-		 */
-		this.date = Xdate(this);
-
-		/**
-		 * Page class associated with bot instance
-		 */
-		this.page = Page(this);
-
-		/**
-		 * Wikitext class associated with the bot instance
-		 */
-		this.wikitext = Wikitext(this);
-
-		/**
-		 * User class associated with the bot instance
-		 */
-		this.user = User(this);
-
-		/**
-		 * Category class associated with the bot instance
-		 */
-		this.category = Category(this);
-
-		/**
-		 * File class associated with the bot instance
-		 */
-		this.file = File(this);
-
-		/**
-		 * Sub-class for the EventStreams API
-		 */
-		this.stream = Stream(mwn, this);
-
 		// set up any semlog options
 		semlog.updateConfig(this.options.semlog || {});
+
+		/**
+		 * Classes associated with the bot instance
+		 */
+		this.title = MwnTitle(this);
+		this.page = MwnPage(this);
+		this.category = MwnCategory(this);
+		this.file = MwnFile(this);
+		this.user = MwnUser(this);
+		this.wikitext = MwnWikitext(this);
+		this.stream = MwnStream(this, mwn);
+		this.date = MwnDate(this);
 	}
+
 
 	/**
 	 * Initialize a bot object. Login to the wiki and fetch editing tokens.
@@ -270,7 +506,7 @@ class mwn {
 	 * username and password or the OAuth credentials
 	 * @returns {Promise<mwn>} bot object
 	 */
-	static async init(config) {
+	static async init(config: MwnOptions): Promise<mwn> {
 		const bot = new mwn(config);
 		if (bot._usingOAuth()) {
 			bot.initOAuth();
@@ -287,7 +523,7 @@ class mwn {
 	 *
 	 * @param {Object} customOptions
 	 */
-	setOptions(customOptions) {
+	setOptions(customOptions: MwnOptions) {
 		this.options = mergeDeep1(this.options, customOptions);
 	}
 
@@ -297,17 +533,15 @@ class mwn {
 	 *
 	 * @param {string} apiUrl - API url to MediaWiki, e.g. https://en.wikipedia.org/w/api.php
 	 */
-	setApiUrl(apiUrl) {
+	setApiUrl(apiUrl: string) {
 		this.options.apiUrl = apiUrl;
 	}
 
 	/**
 	 * Sets and overwrites the raw request options, used by the axios library
 	 * See https://www.npmjs.com/package/axios
-	 *
-	 * @param {Object} customRequestOptions
 	 */
-	setRequestOptions(customRequestOptions) {
+	setRequestOptions(customRequestOptions: AxiosRequestConfig) {
 		return mergeDeep1(this.requestOptions, customRequestOptions);
 	}
 
@@ -315,7 +549,7 @@ class mwn {
 	 * Set the default parameters to be sent in API calls.
 	 * @param {Object} params - default parameters
 	 */
-	setDefaultParams(params) {
+	setDefaultParams(params: ApiParams) {
 		this.options.defaultParams = merge(this.options.defaultParams, params);
 	}
 
@@ -324,7 +558,7 @@ class mwn {
 	 * Required for WMF wikis.
 	 * @param {string} userAgent
 	 */
-	setUserAgent(userAgent) {
+	setUserAgent(userAgent: string) {
 		this.options.userAgent = userAgent;
 	}
 
@@ -332,7 +566,7 @@ class mwn {
 	 * @private
 	 * Determine if we're going to use OAuth for authentication
 	 */
-	_usingOAuth() {
+	_usingOAuth(): boolean {
 		const creds = this.options.OAuthCredentials;
 		if (typeof creds !== 'object') {
 			return false;
@@ -377,10 +611,8 @@ class mwn {
 	/**
 	 * @private
 	 * Get OAuth Authorization header
-	 * @param {Object} params
-	 * @returns {Object}
 	 */
-	makeOAuthHeader(params) {
+	makeOAuthHeader(params: OAuth.RequestOptions): OAuth.Header {
 		return this.oauth.toHeader(this.oauth.authorize(params, {
 			key: this.options.OAuthCredentials.accessToken,
 			secret: this.options.OAuthCredentials.accessSecret
@@ -393,12 +625,8 @@ class mwn {
 	/**
 	 * Executes a raw request
 	 * Uses the axios library
-	 *
-	 * @param {Object} requestOptions
-	 *
-	 * @returns {Promise}
 	 */
-	rawRequest(requestOptions) {
+	rawRequest(requestOptions: AxiosRequestConfig): Promise<any> {
 
 		if (!requestOptions.url) {
 			const err = new mwn.Error({
@@ -423,13 +651,8 @@ class mwn {
 	/**
 	 * Executes a request with the ability to use custom parameters and custom
 	 * request options
-	 *
-	 * @param {Object} params - API call parameters
-	 * @param {Object} [customRequestOptions={}] - custom axios request options
-	 *
-	 * @returns {Promise<Object>}
 	 */
-	async request(params, customRequestOptions = {}) {
+	async request(params: ApiParams, customRequestOptions: AxiosRequestConfig = {}): Promise<any> {
 
 		if (this.shutoff.state) {
 			return this.rejectWithError({
@@ -671,12 +894,13 @@ class mwn {
 	 *
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 *
-	 * @param {Object} [loginOptions] - object containing the apiUrl, username,
-	 * and password
-	 *
 	 * @returns {Promise}
 	 */
-	login(loginOptions) {
+	login(loginOptions?: {
+		username?: string
+		password?: string
+		apiUrl?: string
+	}) {
 
 		this.options = merge(this.options, loginOptions);
 
@@ -748,9 +972,8 @@ class mwn {
 
 	/**
 	 * Log out of the account
-	 * @returns {Promise<void>}
 	 */
-	logout() {
+	logout(): Promise<void> {
 		return this.request({
 			action: 'logout',
 			token: this.csrfToken
@@ -768,7 +991,7 @@ class mwn {
 	 * where mwn needs to be used without logging in.
 	 * @returns {Promise<void>}
 	 */
-	getSiteInfo() {
+	getSiteInfo(): Promise<void> {
 		return this.request({
 			action: 'query',
 			meta: 'siteinfo',
@@ -782,7 +1005,7 @@ class mwn {
 	 * Get tokens and saves them in this.state
 	 * @returns {Promise<void>}
 	 */
-	getTokens() {
+	getTokens(): Promise<void> {
 		return this.request({
 			action: 'query',
 			meta: 'tokens',
@@ -809,7 +1032,7 @@ class mwn {
 	 * This is only compatible with MW >= 1.24
 	 * @returns {Promise<string>}
 	 */
-	getCsrfToken() {
+	getCsrfToken(): Promise<string> {
 		return this.getTokens().then(() => this.csrfToken);
 	}
 
@@ -817,7 +1040,7 @@ class mwn {
 	 * Get the tokens and siteinfo in one request
 	 * @returns {Promise<void>}
 	 */
-	getTokensAndSiteInfo() {
+	getTokensAndSiteInfo(): Promise<void> {
 		return this.request({
 			action: 'query',
 			meta: 'siteinfo|tokens',
@@ -844,7 +1067,7 @@ class mwn {
 	 * @param {string} action - API action parameter
 	 * @returns {Promise<string>}
 	 */
-	getTokenType(action) {
+	getTokenType(action): Promise<string> {
 		return this.request({
 			action: 'paraminfo',
 			modules: action
@@ -859,7 +1082,7 @@ class mwn {
 	 * @param [loginOptions]
 	 * @returns {Promise<void>}
 	 */
-	loginGetToken(loginOptions) {
+	loginGetToken(loginOptions?: any): Promise<void> {
 		return this.login(loginOptions).then(() => {
 			return this.getTokens();
 		});
@@ -869,7 +1092,7 @@ class mwn {
 	 * Get the wiki's server time
 	 * @returns {Promise<string>}
 	 */
-	getServerTime() {
+	getServerTime(): Promise<string> {
 		return this.request({
 			action: 'query',
 			curtimestamp: 1
@@ -883,7 +1106,7 @@ class mwn {
 	 * @param {string} title - page title
 	 * @returns {Promise<Object>} parsed JSON object
 	 */
-	parseJsonPage(title) {
+	parseJsonPage(title: string): Promise<any> {
 		return this.read(title).then(data => {
 			try {
 				return JSON.parse(data.revisions[0].content);
@@ -895,13 +1118,13 @@ class mwn {
 
 	/**
 	 * Enable bot emergency shutoff
-	 * @param {Object} [shutoffOptions]
-	 * @config {string} [page]
-	 * @config {number} [intervalDuration]
-	 * @config {RegExp | Function} [condition]
-	 * @config {Function} [onShutoff]
 	 */
-	enableEmergencyShutoff(shutoffOptions) {
+	enableEmergencyShutoff(shutoffOptions?: {
+		page?: string
+		intervalDuration?: number
+		condition?: RegExp | ((text: string) => boolean)
+		onShutoff?: ((text: string) => void)
+	}): void {
 		Object.assign(this.options.shutoff, shutoffOptions);
 
 		this.shutoff.hook = setInterval(async () => {
@@ -931,28 +1154,6 @@ class mwn {
 	/***************** HELPER FUNCTIONS ******************/
 
 	/**
-	 * @typedef {{
-	 *      content: string,
-	 *      timestamp: string,
-	 *      slots?: {
-	 *          main: {
-	 *              content: string,
-	 *              timestamp: string
-	 *          }
-	 *      }
-	 * }} ApiRevision
-	 */
-
-	/**
-	 * @typedef {{
-	 *      title: string,
-	 *      missing?: boolean,
-	 *      invalid?: boolean,
-	 *      revisions: ApiRevision[]
-	 * }} ApiPage
-	 */
-
-	/**
 	 * Reads the content and and meta-data of one (or many) pages.
 	 * Content from the "main" slot is copied over to every revision object
 	 * for easier referencing (`pg.revisions[0].content` can be used instead of
@@ -963,7 +1164,7 @@ class mwn {
 	 * @param {Object} [options]
 	 * @returns {Promise<ApiPage>}
 	 */
-	read(titles, options) {
+	read(titles: string | string[] | number | number[], options?: ApiParams): Promise<ApiPage | ApiPage[]> {
 		return this.massQuery({
 			action: 'query',
 			...makeTitles(titles),
@@ -972,7 +1173,7 @@ class mwn {
 			rvslots: 'main',
 			redirects: '1',
 			...options
-		}, typeof titles[0] === 'number' ? 'pageids' : 'titles').then(jsons => {
+		}, typeof titles[0] === 'number' ? 'pageids' : 'titles').then((jsons: Array<ApiResponse>) => {
 			let data = jsons.reduce((data, json) => {
 				json.query.pages.forEach(pg => {
 					if (pg.revisions) {
@@ -987,7 +1188,7 @@ class mwn {
 		});
 	}
 
-	async *readGen(titles, options) {
+	async *readGen(titles: string[], options?: ApiParams) {
 		let massQueryResponses = this.massQueryGen({
 			action: 'query',
 			...makeTitles(titles),
@@ -1030,7 +1231,10 @@ class mwn {
 	* per-page exclusion compliance.
 	* @return {Promise<Object>} Edit API response
 	*/
-	edit(title, transform, editConfig) {
+	edit(title: string | number,
+		 transform: ((rev: {content: string, timestamp: string}) => string | ApiParams),
+		 editConfig?: editConfigType): Promise<ApiEditResponse> {
+
 		editConfig = editConfig || this.options.editConfig;
 
 		let basetimestamp, curtimestamp;
@@ -1117,7 +1321,7 @@ class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	save(title, content, summary, options) {
+	save(title: string | number, content: string, summary?: string, options?: ApiParams): Promise<ApiEditResponse> {
 		return this.request(merge({
 			action: 'edit',
 			text: content,
@@ -1137,7 +1341,7 @@ class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	create(title, content, summary, options) {
+	create(title: string, content: string, summary?: string, options?: ApiParams): Promise<ApiEditResponse> {
 		return this.request(merge({
 			action: 'edit',
 			title: String(title),
@@ -1156,9 +1360,8 @@ class mwn {
 	 * @param {string} header
 	 * @param {string} message wikitext message
 	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
-	 * @return {Promise}
 	 */
-	newSection(title, header, message, additionalParams) {
+	newSection(title: string | number, header: string, message: string, additionalParams?: ApiParams): Promise<ApiEditResponse> {
 		return this.request(merge({
 			action: 'edit',
 			section: 'new',
@@ -1178,7 +1381,7 @@ class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	delete(title, summary, options) {
+	delete(title: string | number, summary: string, options?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'delete',
 			reason: summary,
@@ -1195,7 +1398,7 @@ class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	undelete(title, summary, options) {
+	undelete(title: string, summary: string, options?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'undelete',
 			title: String(title),
@@ -1211,9 +1414,8 @@ class mwn {
 	 * @param {string}  totitle
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
-	 * @returns {Promise}
 	 */
-	move(fromtitle, totitle, summary, options) {
+	move(fromtitle: string, totitle: string, summary: string, options?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'move',
 			from: fromtitle,
@@ -1232,7 +1434,7 @@ class mwn {
 	 *   redirects, sectionpreview.  prop should not be overridden.
 	 * @return {Promise<string>}
 	 */
-	parseWikitext(content, additionalParams) {
+	parseWikitext(content: string, additionalParams?: ApiParams): Promise<string> {
 		return this.request(merge({
 			text: String(content),
 			formatversion: 2,
@@ -1251,7 +1453,7 @@ class mwn {
 	 *   redirects, sectionpreview.  prop should not be overridden.
 	 * @return {Promise<string>}
 	 */
-	parseTitle(title, additionalParams) {
+	parseTitle(title: string, additionalParams?: ApiParams): Promise<string> {
 		return this.request(merge({
 			page: String(title),
 			formatversion: 2,
@@ -1272,7 +1474,7 @@ class mwn {
 	 * @param {object} options
 	 * @returns {Promise<Object>}
 	 */
-	upload(filepath, title, text, options) {
+	upload(filepath: string, title: string, text: string, options?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'upload',
 			file: {
@@ -1307,7 +1509,7 @@ class mwn {
 	 * @param {Object} options
 	 * @returns {Promise<Object>}
 	 */
-	uploadFromUrl(url, title, text, options) {
+	uploadFromUrl(url: string, title: string, text: string, options?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'upload',
 			url: url,
@@ -1334,7 +1536,7 @@ class mwn {
 	 * defaults to current directory with same file name as on the wiki.
 	 * @returns {Promise<void>}
 	 */
-	download(file, localname) {
+	download(file: string | number, localname: string): Promise<void> {
 		return this.request(merge({
 			action: 'query',
 			prop: 'imageinfo',
@@ -1353,7 +1555,7 @@ class mwn {
 	 * defaults to current directory with same file name as that of the web image.
 	 * @returns {Promise<void>}
 	 */
-	downloadFromUrl(url, localname) {
+	downloadFromUrl(url: string, localname: string): Promise<void> {
 		return this.rawRequest({
 			method: 'get',
 			url: url,
@@ -1371,7 +1573,7 @@ class mwn {
 	 * @param {Object} [params] Additional parameters
 	 * @return {Promise}
 	 */
-	rollback(page, user, params) {
+	rollback(page: string | number, user: string, params?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'rollback',
 			user: user,
@@ -1388,7 +1590,7 @@ class mwn {
 	 * @param {Object} options
 	 * @returns {Promise}
 	 */
-	purge(titles, options) {
+	purge(titles: string[] | string | number[] | number, options?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'purge',
 		}, makeTitles(titles), options)).then(data => data.purge);
@@ -1401,7 +1603,7 @@ class mwn {
 	 *
 	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
 	 */
-	getPagesByPrefix(prefix, otherParams) {
+	getPagesByPrefix(prefix: string, otherParams?: ApiParams): Promise<string[]> {
 		const title = this.title.newFromText(prefix);
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
@@ -1423,7 +1625,7 @@ class mwn {
 	 * @param {Object} [otherParams]
 	 * @returns {Promise<string[]>}
 	 */
-	getPagesInCategory(category, otherParams) {
+	getPagesInCategory(category: string, otherParams?: ApiParams): Promise<string[]> {
 		const title = this.title.newFromText(category, 14);
 		return this.request(merge({
 			"action": "query",
@@ -1442,7 +1644,8 @@ class mwn {
 	 * @param {Object} otherParams
 	 * @returns {Promise<Object>}
 	 */
-	search(searchTerm, limit, props, otherParams) {
+	search(searchTerm: string, limit: number, props: ("size" | "timestamp" | "worcount" | "snippet" | "redirectitle" | "sectiontitle" |
+		"redirectsnippet" | "titlesnippet" | "sectionsnippet" | "categorysnippet")[], otherParams?: ApiParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'query',
 			list: 'search',
@@ -1464,7 +1667,7 @@ class mwn {
 	 * @param {number} [limit=10] - limit on the maximum number of API calls to go through
 	 * @returns {Promise<Object[]>} - resolved with an array of responses of individual calls.
 	 */
-	continuedQuery(query, limit=10) {
+	continuedQuery(query?: ApiParams, limit: number = 10): Promise<ApiResponse[]> {
 		let responses = [];
 		let callApi = (query, count) => {
 			return this.request(query).then(response => {
@@ -1489,7 +1692,7 @@ class mwn {
 	 * @param {number} [limit=10]
 	 * @yields {Object} a single page of the response
 	 */
-	async *continuedQueryGen(query, limit=10) {
+	async *continuedQueryGen(query?: ApiParams, limit: number=10) {
 		let response = { continue: {} };
 		for (let i = 0; i < limit; i++) {
 			if (response.continue) {
@@ -1530,7 +1733,7 @@ class mwn {
 	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have
 	 * settled, with the array of responses.
 	 */
-	massQuery(query, batchFieldName='titles') {
+	massQuery(query?: ApiParams, batchFieldName='titles'): Promise<ApiResponse[]> {
 		let batchValues = query[batchFieldName];
 		const limit = this.options.hasApiHighLimit ? 500 : 50;
 		const numBatches = Math.ceil(batchValues.length / limit);
@@ -1571,7 +1774,7 @@ class mwn {
 	 * @param {string} [batchFieldName=titles]
 	 * @param {number} [batchSize]
 	 */
-	async *massQueryGen(query, batchFieldName='titles', batchSize) {
+	async *massQueryGen(query: ApiParams, batchFieldName: string = 'titles', batchSize?: number) {
 		let batchValues = query[batchFieldName];
 		const limit = batchSize || this.options.hasApiHighLimit ? 500 : 50;
 		const batches = arrayChunk(batchValues, limit);
@@ -1598,7 +1801,7 @@ class mwn {
 	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
 	 * { failures: [ ...list of failed items... ] }
 	 */
-	batchOperation(list, worker, concurrency=5, retries=0) {
+	batchOperation<T>(list: T[], worker: ((item: T, index: number) => Promise<any>), concurrency = 5, retries = 0): Promise<{failures: T[]}> {
 		let counts = {
 			successes: 0,
 			failures: 0
@@ -1693,7 +1896,7 @@ class mwn {
 	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
 	 * { failures: [ ...list of failed items... ] }
 	 */
-	seriesBatchOperation(list, worker, delay=5000, retries=0) {
+	seriesBatchOperation<T>(list: T[], worker: ((item: T, index: number) => Promise<any>), delay=5000, retries=0): Promise<{counts: any, failures: T[]}> {
 		let counts = {
 			successes: 0,
 			failures: 0
@@ -1716,7 +1919,7 @@ class mwn {
 		};
 
 		return new Promise((resolve) => {
-			const trigger = (idx) => {
+			const trigger = (idx: number) => {
 				if (list[idx] === undefined) { // reached the end
 					if (counts.failures !== 0 && retries > 0) {
 						return resolve(this.seriesBatchOperation(failures, worker, delay, retries - 1));
@@ -1754,7 +1957,7 @@ class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	askQuery(query, apiUrl, customRequestOptions) {
+	askQuery(query: string, apiUrl: string, customRequestOptions?: AxiosRequestConfig): Promise<any> {
 
 		apiUrl = apiUrl || this.options.apiUrl;
 
@@ -1783,7 +1986,7 @@ class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	sparqlQuery(query, endpointUrl, customRequestOptions) {
+	sparqlQuery(query: string, endpointUrl: string, customRequestOptions?: AxiosRequestConfig): Promise<any> {
 
 		endpointUrl = endpointUrl || this.options.apiUrl;
 
@@ -1806,7 +2009,7 @@ class mwn {
 	 * @param {string[]} models
 	 * @param {string[]|number[]|string|number} revisions  ID(s)
 	 */
-	oresQueryRevisions(endpointUrl, models, revisions) {
+	oresQueryRevisions(endpointUrl: string, models: string[], revisions: string[] | number[] | string | number): Promise<any> {
 		let response = {};
 		const chunks = arrayChunk(
 			(revisions instanceof Array) ? revisions : [revisions],
@@ -1834,10 +2037,8 @@ class mwn {
 	 * This API has a throttling of 2000 requests a day.
 	 * Supported for EN, DE, ES, EU, TR Wikipedias only
 	 * @see https://api.wikiwho.net/
-	 * @param {string} title
-	 * @returns {Promise<{totalBytes: number, users: ({id: number, name: string, bytes: number, percent: number})[]}>}
 	 */
-	async queryAuthors(title) {
+	async queryAuthors(title: string): Promise<{ totalBytes: number; users: ({ id: number; name: string; bytes: number; percent: number; })[]; }> {
 		let langcodematch = this.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
 		if (!langcodematch || !langcodematch[1]) {
 			throw new Error('WikiWho API is not supported for bot API url. Re-check.');
@@ -1856,9 +2057,16 @@ class mwn {
 		const tokens = Object.values(json.revisions[0])[0].tokens;
 
 		let data = {
-				totalBytes: 0,
-				users: []
-			}, userdata = {};
+			totalBytes: 0,
+			users: []
+		};
+		let userdata: {
+			[editor: string]: {
+				name?: number
+				bytes: number
+				percent?: number
+			}
+		} = {};
 
 		for (let token of tokens) {
 			data.totalBytes += token.str.length;
@@ -1907,7 +2115,7 @@ class mwn {
 	* Promisified version of setTimeout
 	* @param {number} duration - of sleep in milliseconds
 	*/
-	sleep(duration) {
+	sleep(duration: number): Promise<void> {
 		return new Promise(resolve => {
 			setTimeout(resolve, duration);
 		});
@@ -1919,16 +2127,24 @@ class mwn {
 	 * @param {string} errorCode
 	 * @returns {Promise<mwn.Error>}
 	 */
-	rejectWithErrorCode(errorCode) {
+	rejectWithErrorCode(errorCode: string): Promise<mwn.Error> {
 		return Promise.reject(new mwn.Error({
 			code: errorCode
 		}));
 	}
 
-	rejectWithError(errorConfig) {
+	rejectWithError(errorConfig: MwnErrorConfig): Promise<mwn.Error> {
 		return Promise.reject(new mwn.Error(errorConfig));
 	}
 
+}
+
+type MwnErrorConfig = {
+	code: string,
+	info?: string,
+	response?: Object,
+	request?: Object,
+	disableRetry?: boolean
 }
 
 mwn.requestDefaults = {
@@ -1944,9 +2160,6 @@ mwn.requestDefaults = {
 };
 
 mwn.Error = class MwnError extends Error {
-	/**
-	 * @typedef {{code: string, info?: string, response?: Object, request?: Object, disableRetry?: boolean}} errorData
-	 */
 
 	/**
 	 * @param {errorData} config
@@ -2063,5 +2276,3 @@ const makeTitle = function(page) {
 		return { title: String(page) };
 	}
 };
-
-module.exports = mwn;

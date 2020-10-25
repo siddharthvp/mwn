@@ -7,14 +7,16 @@
  * Definitions of some private functions used
  */
 
-var rawurlencode = function( str ) {
+import type {Title} from "./bot";
+
+const rawurlencode = function(str: string ) {
 	return encodeURIComponent( String( str ) )
 		.replace( /!/g, '%21' ).replace( /'/g, '%27' ).replace( /\(/g, '%28' )
 		.replace( /\)/g, '%29' ).replace( /\*/g, '%2A' ).replace( /~/g, '%7E' );
 };
 
-var isIPv4Address = function( address, allowBlock ) {
-	var block,
+const isIPv4Address = function( address: string, allowBlock?: boolean ) {
+	let block,
 		RE_IP_BYTE = '(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|0?[0-9]?[0-9])',
 		RE_IP_ADD = '(?:' + RE_IP_BYTE + '\\.){3}' + RE_IP_BYTE;
 	if ( typeof address !== 'string' ) {
@@ -24,8 +26,8 @@ var isIPv4Address = function( address, allowBlock ) {
 	return ( new RegExp( '^' + RE_IP_ADD + block + '$' ).test( address ) );
 };
 
-var isIPv6Address = function( address, allowBlock ) {
-	var block, RE_IPV6_ADD;
+const isIPv6Address = function( address: string, allowBlock?: boolean ) {
+	let block, RE_IPV6_ADD;
 	if ( typeof address !== 'string' ) {
 		return false;
 	}
@@ -66,26 +68,26 @@ module.exports = {
 
 	/**
 	 * Get wikitext for a new link
-	 * @param {string|bot.title} target
-	 * @param {string} [displaytext]
+	 * @param target
+	 * @param [displaytext]
 	 */
-	link: function(target, displaytext) {
-		if (typeof target.toText === 'function') {
-			return '[[' + target.toText() +
-				(target.fragment ? '#' + target.fragment : '') +
-				(displaytext ? '|' + displaytext : '') +
-				']]';
+	link: function(target: string | Title, displaytext?: string) {
+		if (typeof target === 'string') {
+			return '[[' + target + (displaytext ? '|' + displaytext : '') + ']]';
 		}
-		return '[[' + target + (displaytext ? '|' + displaytext : '') + ']]';
+		return '[[' + target.toText() +
+			(target.fragment ? '#' + target.fragment : '') +
+			(displaytext ? '|' + displaytext : '') +
+			']]';
 	},
 
 	/**
 	 * Get wikitext for a template usage
-	 * @param {string|bot.title} title
-	 * @param {Object} [parameters] - template parameters as object
+	 * @param title
+	 * @param [parameters={}] - template parameters as object
 	 */
-	template: function(title, parameters) {
-		if (typeof title.toText === 'function') {
+	template: function(title: string | Title, parameters: {[parameter: string]: string} = {}) {
+		if (typeof title !== 'string') {
 			if (title.namespace === 10) {
 				title = title.getMainText(); // skip namespace name for templates
 			} else if (title.namespace === 0) {
@@ -105,6 +107,9 @@ module.exports = {
 	},
 
 	table: class table {
+		text: string
+		multiline: boolean
+
 		/**
 		 * @param {Object} [config={}]
 		 * @config {boolean} plain - plain table without borders (default: false)
@@ -114,8 +119,13 @@ module.exports = {
 		 * this causes no visual changes, but the wikitext representation is different.
 		 * This is more reliable. (default: true)
 		 */
-		constructor(config = {}) {
-			var classes = [];
+		constructor(config: {
+			plain?: boolean
+			sortable?: boolean
+			style?: string
+			multiline?: boolean
+		} = {}) {
+			let classes = [];
 			if (!config.plain) {
 				classes.push('wikitable');
 			}
@@ -135,7 +145,7 @@ module.exports = {
 			this.text += '\n';
 		}
 
-		_makecell(cell, isHeader) {
+		_makecell(cell: string | {[attribute: string]: string}, isHeader?: boolean) {
 			if (typeof cell === 'object') {
 				let text = isHeader ? `scope="col"` : ``;
 				for (let [key, value] of Object.entries(cell)) {
@@ -151,9 +161,9 @@ module.exports = {
 		}
 		/**
 		 * Add the headers
-		 * @param {string[]} headers - array of header items
+		 * @param headers - array of header items
 		 */
-		addHeaders(headers) {
+		addHeaders(headers: (string | {[attribute: string]: string})[]) {
 			this.text += `|-\n`; // row separator
 			if (this.multiline) {
 				this.text += headers.map(e => `! ${this._makecell(e, true)} \n`).join('');
@@ -164,10 +174,10 @@ module.exports = {
 
 		/**
 		 * Add a row to the table
-		 * @param {string[]} fields - array of items on the row,
-		 * @param {Object} [attributes={}] - row attributes
+		 * @param fields - array of items on the row,
+		 * @param attributes - row attributes
 		 */
-		addRow(fields, attributes = {}) {
+		addRow(fields: string[], attributes: {[attribute: string]: string} = {}) {
 			let attributetext = '';
 			Object.entries(attributes).forEach(([key, value]) => {
 				attributetext += ` ${key}="${value}"`;
@@ -176,12 +186,12 @@ module.exports = {
 			if (this.multiline) {
 				this.text += fields.map(e => `| ${this._makecell(e)} \n`).join('');
 			} else {
-				this.text += `| ` + fields.map(this._makecell).join(' || ') + '\n';
+				this.text += `| ` + fields.map(f => this._makecell(f)).join(' || ') + '\n';
 			}
 		}
 
-		/** @returns {string} the final table wikitext */
-		getText() {
+		/** Returns the final table wikitext */
+		getText(): string {
 			return this.text + `|}`; // add the table closing tag and return
 		}
 	},
@@ -195,7 +205,7 @@ module.exports = {
 		 * @param {string} str String to escape
 		 * @return {string} Escaped string
 		 */
-		escapeRegExp: function( str ) {
+		escapeRegExp: function( str: string ): string {
 			// eslint-disable-next-line no-useless-escape
 			return str.replace( /([\\{}()|.?*+\-^$\[\]])/g, '\\$1' );
 		},
@@ -209,7 +219,7 @@ module.exports = {
 		 * @param {string} s - The string to escape
 		 * @return {string} HTML
 		 */
-		escapeHtml: function( s ) {
+		escapeHtml: function( s: string ): string {
 			return s.replace( /['"<>&]/g, function escapeCallback( s ) {
 				switch ( s ) {
 					case '\'':
@@ -244,7 +254,7 @@ module.exports = {
 		 * @param {string} str String to be encoded.
 		 * @return {string} Encoded string
 		 */
-		wikiUrlencode: function( str ) {
+		wikiUrlencode: function( str: string ): string {
 			return rawurlencode( str )
 				.replace( /%20/g, '_' )
 				// wfUrlencode replacements
@@ -283,7 +293,7 @@ module.exports = {
 		 * @param {boolean} [allowBlock=false] True if a block of IPs should be allowed
 		 * @return {boolean}
 		 */
-		isIPAddress: function( address, allowBlock ) {
+		isIPAddress: function( address: string, allowBlock?: boolean ) {
 			return isIPv4Address( address, allowBlock ) ||
 				isIPv6Address( address, allowBlock );
 		}

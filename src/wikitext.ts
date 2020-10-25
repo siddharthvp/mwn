@@ -1,23 +1,179 @@
-module.exports = function (bot) {
+/**
+ * Class for some basic wikitext parsing, involving
+ * links, files, categories, templates and simple tables
+ * and sections.
+ *
+ * For more advanced and sophisticated wikitext parsing, use
+ * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
+ * implemented in python (which you can use within node.js using
+ * the child_process interface). However, mwparserfromhell doesn't
+ * recognize localised namespaces and wiki-specific configs.
+ *
+ * This class is for methods for parsing wikitext, for the
+ * static methods for creating wikitext, see static_utils.js.
+ */
+
+import type {mwn} from "./bot";
+
+export interface Link {
+	wikitext: string
+	target: string
+}
+
+export interface PageLink extends Link {
+	displaytext: string
+}
+
+export interface FileLink extends Link {
+	props: string
+}
+
+export interface CategoryLink extends Link {
+	sortkey: string
+}
+
+export interface Section {
+	level: number
+	header: string
+	index: number
+	content?: string
+}
+
+export interface TemplateConfig {
+	recursive: boolean
+	namePredicate: ((name: string) => boolean)
+	templatePredicate: ((template: Template) => boolean)
+	count: number
+}
+
+
+// Adapted from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
+// by Evad37 (cc-by-sa-3.0/GFDL)
+// TODO: expand from evad37/xfdcloser
+/**
+ * @class
+ * Represents the wikitext of template transclusion. Used by #parseTemplates.
+ * @prop {string} name Name of the template
+ * @prop {string} wikitext Full wikitext of the transclusion
+ * @prop {Object[]} parameters Parameters used in the translcusion, in order, of form:
+		{
+			name: {string|number} parameter name, or position for unnamed parameters,
+			value: {string} Wikitext passed to the parameter (whitespace trimmed),
+			wikitext: {string} Full wikitext (including leading pipe, parameter name/equals sign (if applicable), value, and any whitespace)
+		}
+ */
+export class Template {
+	wikitext: string
+	parameters: Array<Parameter>
+	name: string
 
 	/**
-	 * Class for some basic wikitext parsing, involving
-	 * links, files, categories, templates and simple tables
-	 * and sections.
-	 *
-	 * For more advanced and sophisticated wikitext parsing, use
-	 * mwparserfromhell <https://github.com/earwig/mwparserfromhell>
-	 * implemented in python (which you can use within node.js using
-	 * the child_process interface). However, mwparserfromhell doesn't
-	 * recognize localised namespaces and wiki-specific configs.
-	 *
-	 * This class is for methods for parsing wikitext, for the
-	 * static methods for creating wikitext, see static_utils.js.
+	 * @param {String} wikitext Wikitext of a template transclusion,
+	 * starting with '{{' and ending with '}}'.
 	 */
-	class Wikitext {
+	constructor(wikitext: string) {
+		this.wikitext = wikitext;
+		this.parameters = [];
+	}
+	addParam(name: string, val: string, wikitext: string) {
+		this.parameters.push(new Parameter(name, val, wikitext));
+	}
+	getParam(paramName: string | number): Parameter {
+		return this.parameters.find(p => {
+			return p.name == paramName; // == is intentional
+		});
+	}
+	getValue(paramName: string | number): string | null {
+		let param = this.getParam(paramName);
+		return param ? param.value : null;
+	}
+	setName(name: string) {
+		name = name.trim();
+		this.name = name[0] ? (name[0].toUpperCase() + name.slice(1)) : name;
+	}
+}
 
-		/** @param {string} wikitext */
-		constructor(wikitext) {
+export class Parameter {
+	name: string
+	value: string
+	wikitext: string
+
+	constructor(name: string, val: string, wikitext: string) {
+		this.name = name;
+		this.value = val;
+		this.wikitext = '|' + wikitext;
+	}
+}
+
+// export declare class wikitext {
+// 	text: string
+// 	links: Array<PageLink>
+// 	templates: Array<Template>
+// 	files: Array<FileLink>
+// 	categories: Array<CategoryLink>
+// 	sections: Array<Section>
+// 	private unbinder: {
+// 		counter: number
+// 		history: {
+// 			[replaced: string]: string
+// 		}
+// 		prefix: string
+// 		postfix: string
+// 	}
+//
+// 	constructor(wikitext: string)
+// 	parseLinks(): void
+// 	parseTemplates(config: TemplateConfig): Template[]
+// 	removeEntity(entity: Link | Template)
+// 	parseSections(): Section[]
+// 	unbind(prefix: string, postfix: string)
+// 	rebind()
+// 	getText()
+// 	apiParse(options)
+//
+// 	static parseTemplates(wikitext: string, config: TemplateConfig): Template[]
+// 	static parseTable(text: string): any
+// 	static parseSections(text: string): Section[]
+// }
+
+// export interface wikitext {
+// 	text: string
+// 	links: Array<PageLink>
+// 	templates: Array<Template>
+// 	files: Array<FileLink>
+// 	categories: Array<CategoryLink>
+// 	sections: Array<Section>
+//
+// 	parseLinks(): void
+// 	parseTemplates(config: TemplateConfig): Template[]
+// 	removeEntity(entity: Link | Template)
+// 	parseSections(): Section[]
+// 	unbind(prefix: string, postfix: string): void
+// 	rebind(): string
+// 	getText(): string
+// 	apiParse(options): Promise<string>
+// }
+
+module.exports = function (bot: mwn) {
+
+	class Wikitext {
+		text: string
+		links: Array<PageLink>
+		templates: Array<Template>
+		files: Array<FileLink>
+		categories: Array<CategoryLink>
+		sections: Section[]
+
+		private unbinder: {
+			counter: number
+			history: {
+				[replaced: string]: string
+			}
+			prefix: string
+			postfix: string
+		};
+
+		constructor(wikitext: string) {
 			if (typeof wikitext !== 'string') {
 				throw new Error('non-string constructor for wikitext class');
 			}
@@ -25,7 +181,7 @@ module.exports = function (bot) {
 		}
 
 		/** Parse links, file usages and categories from the wikitext */
-		parseLinks() {
+		parseLinks(): void {
 			this.links = [];
 			this.files = [];
 			this.categories = [];
@@ -50,7 +206,7 @@ module.exports = function (bot) {
 
 		/**
 		 * Parses templates from wikitext.
-	 	 * Returns an array of Template objects
+		 * Returns an array of Template objects
 		 * var templates = parseTemplates("Hello {{foo |Bar|baz=qux |2=loremipsum|3=}} world");
 		 *  console.log(templates[0]); // gives:
 			{
@@ -75,7 +231,7 @@ module.exports = function (bot) {
 		 * @config {number} count - max number of templates to be parsed.
 		 * @returns {Template[]}
 		 */
-		parseTemplates(config) {
+		parseTemplates(config: TemplateConfig): Template[] {
 			return this.templates = Wikitext.parseTemplates(this.text, config);
 		}
 
@@ -87,7 +243,7 @@ module.exports = function (bot) {
 		/**
 		 * @inheritdoc
 		 */
-		static parseTemplates(wikitext, config) {
+		static parseTemplates(wikitext: string, config: TemplateConfig): Template[] {
 			config = config || {
 				recursive: false,
 				namePredicate: null,
@@ -187,7 +343,7 @@ module.exports = function (bot) {
 		 * @param {Object|Template} entity - anything with a wikitext attribute
 		 * and end index
 		 */
-		removeEntity(entity) {
+		removeEntity(entity: Link | Template) {
 			this.text = this.text.replace(entity.wikitext, '');
 		}
 
@@ -207,7 +363,7 @@ module.exports = function (bot) {
 		 * @param {string} prefix
 		 * @param {string} postfix
 		 */
-		unbind(prefix, postfix) {
+		unbind(prefix: string, postfix: string): void {
 			if (!this.unbinder) {
 				this.unbinder = {
 					counter: 0,
@@ -227,9 +383,8 @@ module.exports = function (bot) {
 
 		/**
 		 * Rebind after unbinding.
-		 * @returns {string} The output
 		 */
-		rebind() {
+		rebind(): string {
 			let content = this.text;
 			for (let [current, replacement] of Object.entries(this.unbinder.history)) {
 				content = content.replace(current, replacement);
@@ -238,8 +393,8 @@ module.exports = function (bot) {
 			return this.text;
 		}
 
-		/** Get the updated text  @returns {string} */
-		getText() {
+		/** Get the updated text */
+		getText(): string {
 			return this.text;
 		}
 
@@ -249,7 +404,7 @@ module.exports = function (bot) {
 		 * @param {Object} [options] - additional API options
 		 * @returns {Promise}
 		 */
-		apiParse(options) {
+		apiParse(options): Promise<string> {
 			return bot.parseWikitext(this.text, options);
 		}
 
@@ -270,7 +425,7 @@ module.exports = function (bot) {
 		 * @returns {Object[]} - each object in the returned array represents a row,
 		 * with its keys being column names, and values the cell content
 		 */
-		static parseTable(text) {
+		static parseTable(text): {[column: string]: string}[] {
 			text = text.trim();
 			const indexOfRawPipe = function (text) {
 
@@ -357,7 +512,7 @@ module.exports = function (bot) {
 		 * Content *includes* the equal signs and the header.
 		 * The top is represented as level 1, with header `null`.
 		 */
-		parseSections() {
+		parseSections(): Section[] {
 			return this.sections = Wikitext.parseSections(this.text);
 		}
 
@@ -366,9 +521,9 @@ module.exports = function (bot) {
 		/**
 		 * @inheritdoc
 		 */
-		static parseSections(text) {
+		static parseSections(text): Section[] {
 			const rgx = /^(=+)(.*?)\1/mg;
-			let sections = [{
+			let sections: Section[] = [{
 				level: 1,
 				header: null,
 				index: 0
@@ -435,53 +590,6 @@ module.exports = function (bot) {
 		});
 	};
 
-	// Adapted from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
-	// by Evad37 (cc-by-sa-3.0/GFDL)
-	/**
-	 * @class
-	 * Represents the wikitext of template transclusion. Used by #parseTemplates.
-	 * @prop {string} name Name of the template
-	 * @prop {string} wikitext Full wikitext of the transclusion
-	 * @prop {Object[]} parameters Parameters used in the translcusion, in order, of form:
-		{
-			name: {string|number} parameter name, or position for unnamed parameters,
-			value: {string} Wikitext passed to the parameter (whitespace trimmed),
-			wikitext: {string} Full wikitext (including leading pipe, parameter name/equals sign (if applicable), value, and any whitespace)
-		}
-	*/
-	class Template {
-
-		/**
-		 * @param {String} wikitext Wikitext of a template transclusion,
-		 * starting with '{{' and ending with '}}'.
-		 */
-		constructor(wikitext) {
-			this.wikitext = wikitext;
-			this.parameters = [];
-		}
-		addParam(name, val, wikitext) {
-			this.parameters.push({
-				'name': name,
-				'value': val,
-				'wikitext': '|' + wikitext
-			});
-		}
-		getParam(paramName) {
-			return this.parameters.find(p => {
-				return p.name == paramName; // == is intentional
-			});
-		}
-		getValue(paramName) {
-			let param = this.getParam(paramName);
-			return param ? param.value : null;
-		}
-		setName(name) {
-			name = name.trim();
-			this.name = name[0] ? (name[0].toUpperCase() + name.slice(1)) : name;
-			this.nameTitle = bot.title.newFromText(name, 10);
-		}
-	}
-
 	/**
 	 * @param {string} text - template wikitext without braces, with the pipes in
 	 * nested templates replaced by \x01
@@ -489,7 +597,7 @@ module.exports = function (bot) {
 	 * @param {Function} [templatePredicate]
 	 * @returns {Template}
 	 */
-	const processTemplateText = function (text, namePredicate, templatePredicate) {
+	const processTemplateText = function (text: string, namePredicate, templatePredicate) {
 
 		// eslint-disable-next-line no-control-regex
 		const template = new Template('{{' + text.replace(/\x01/g, '|') + '}}');
@@ -544,7 +652,7 @@ module.exports = function (bot) {
 		return template;
 	};
 
-	const strReplaceAt = function (string, index, char) {
+	const strReplaceAt = function (string: string, index: number, char: string): string {
 		return string.slice(0, index) + char + string.slice(index + 1);
 	};
 

@@ -8,7 +8,9 @@
  *
  */
 
-module.exports = function (bot) {
+import type {mwn} from "./bot";
+
+module.exports = function (bot: mwn) {
 
 	var NS_MAIN = 0;
 	var NS_TALK = 1;
@@ -16,41 +18,60 @@ module.exports = function (bot) {
 
 	class Title {
 
-		static processNamespaceData(json) {
+		static idNameMap: {
+			[namespaceId: number]: string
+		}
+		static nameIdMap: {
+			[namespaceName: string]: number
+		}
+		static legaltitlechars: string
+		static caseSensitiveNamespaces: Array<number>
+
+		static processNamespaceData(json: {
+			query: {
+				general: { legaltitlechars: string }
+				namespaces: { name: string, id: number, canonical: boolean, case: string }[]
+				namespacealiases: { alias: string, id: number }[]
+			}
+		}) {
 
 			var namespaceNorm = ns => (ns || '').toLowerCase().replace(/ /g, '_');
 
 			// Analog of mw.config.get('wgFormattedNamespaces')
-			bot.title.idNameMap = {};
+			Title.idNameMap = {};
 
-			// Analog of mw.config.get('wgNamespaceIds')
-			bot.title.nameIdMap = {};
+			// Analag of mw.config.get('wgNamespaceIds')
+			Title.nameIdMap = {};
 
 			Object.values(json.query.namespaces).forEach(ns => {
-				bot.title.idNameMap[ns.id] = ns.name;
-				bot.title.nameIdMap[namespaceNorm(ns.name)] = ns.id;
-				bot.title.nameIdMap[namespaceNorm(ns.canonical)] = ns.id;
+				Title.idNameMap[ns.id] = ns.name;
+				Title.nameIdMap[namespaceNorm(ns.name)] = ns.id;
+				Title.nameIdMap[namespaceNorm(ns.canonical)] = ns.id;
 			});
 			json.query.namespacealiases.forEach(ns => {
-				bot.title.nameIdMap[namespaceNorm(ns.alias)] = ns.id;
+				Title.nameIdMap[namespaceNorm(ns.alias)] = ns.id;
 			});
 
 			// Analog of mw.config.get('wgLegalTitleChars')
-			bot.title.legaltitlechars = json.query.general.legaltitlechars;
+			Title.legaltitlechars = json.query.general.legaltitlechars;
 
 			// Analog of mw.config.get('wgCaseSensitiveNamespaces')
-			bot.title.caseSensitiveNamespaces = Object.values(json.query.namespaces)
+			Title.caseSensitiveNamespaces = Object.values(json.query.namespaces)
 				.filter(ns => ns.case === 'case-sensitive')
 				.map(ns => ns.id);
 		}
 
 		static checkData() {
-			if (!bot.title.nameIdMap || !bot.title.idNameMap || !bot.title.legaltitlechars) {
+			if (!Title.nameIdMap || !Title.idNameMap || !Title.legaltitlechars) {
 				throw new Error('namespace data unavailable: run getSiteInfo() or login() first on the mwn object');
 			}
 		}
 
-		constructor( title, namespace ) {
+		namespace: number
+		title: string
+		fragment: string
+
+		constructor( title: string, namespace?: number ) {
 			var parsed = parse( title, namespace );
 			if ( !parsed ) {
 				throw new Error( 'Unable to parse title' );
@@ -64,10 +85,8 @@ module.exports = function (bot) {
 		 * Get the namespace number
 		 *
 		 * Example: 6 for "File:Example_image.svg".
-		 *
-		 * @return {number}
 		 */
-		getNamespaceId() {
+		getNamespaceId(): number {
 			return this.namespace;
 		}
 
@@ -76,10 +95,8 @@ module.exports = function (bot) {
 		 *
 		 * Example: "File:" for "File:Example_image.svg".
 		 * In #NS_MAIN this is '', otherwise namespace name plus ':'
-		 *
-		 * @return {string}
 		 */
-		getNamespacePrefix() {
+		getNamespacePrefix(): string {
 			return getNamespacePrefix( this.namespace );
 		}
 
@@ -87,12 +104,10 @@ module.exports = function (bot) {
 		 * Get the main page name
 		 *
 		 * Example: "Example_image.svg" for "File:Example_image.svg".
-		 *
-		 * @return {string}
 		 */
-		getMain() {
+		getMain(): string {
 			if (
-				bot.title.caseSensitiveNamespaces.indexOf( this.namespace ) !== -1 ||
+				Title.caseSensitiveNamespaces.indexOf( this.namespace ) !== -1 ||
 				!this.title.length
 			) {
 				return this.title;
@@ -102,12 +117,9 @@ module.exports = function (bot) {
 
 		/**
 		 * Get the main page name (transformed by #text)
-		 *
 		 * Example: "Example image.svg" for "File:Example_image.svg".
-		 *
-		 * @return {string}
 		 */
-		getMainText() {
+		getMainText(): string {
 			return this.getMain().replace( /_/g, ' ' );
 		}
 
@@ -116,10 +128,8 @@ module.exports = function (bot) {
 		 *
 		 * Example: "File:Example_image.svg".
 		 * Most useful for API calls, anything that must identify the "title".
-		 *
-		 * @return {string}
 		 */
-		getPrefixedDb() {
+		getPrefixedDb(): string {
 			return this.getNamespacePrefix() + this.getMain();
 		}
 
@@ -127,10 +137,8 @@ module.exports = function (bot) {
 		 * Get the full page name (transformed by #text)
 		 *
 		 * Example: "File:Example image.svg" for "File:Example_image.svg".
-		 *
-		 * @return {string}
 		 */
-		getPrefixedText() {
+		getPrefixedText(): string {
 			return ( this.getPrefixedDb() ).replace( /_/g, ' ' );
 		}
 
@@ -139,28 +147,23 @@ module.exports = function (bot) {
 		 *
 		 * Note that this method (by design) does not include the hash character and
 		 * the value is not url encoded.
-		 *
-		 * @return {string|null}
 		 */
-		getFragment() {
+		getFragment(): string | null {
 			return this.fragment;
 		}
 
 		/**
 		 * Check if the title is in a talk namespace
-		 *
-		 * @return {boolean} The title is in a talk namespace
 		 */
-		isTalkPage() {
+		isTalkPage(): boolean {
 			return Title.isTalkNamespace( this.getNamespaceId() );
 		}
 
 		/**
 		 * Get the title for the associated talk page
-		 *
-		 * @return {Title|null} The title for the associated talk page, null if not available
+		 * Returns null if not available
 		 */
-		getTalkPage() {
+		getTalkPage(): Title | null {
 			if ( !this.canHaveTalkPage() ) {
 				return null;
 			}
@@ -171,31 +174,25 @@ module.exports = function (bot) {
 
 		/**
 		 * Get the title for the subject page of a talk page
-		 *
-		 * @return {Title|null} The title for the subject page of a talk page, null
-		 * if not available
+		 * Returns null if not available
 		 */
-		getSubjectPage() {
+		getSubjectPage(): Title | null {
 			return this.isTalkPage() ?
 				Title.makeTitle( this.getNamespaceId() - 1, this.getMainText() ) :
 				this;
 		}
 
 		/**
-		 * Check the the title can have an associated talk page
-		 *
-		 * @return {boolean} The title can have an associated talk page
+		 * Check if the title can have an associated talk page
 		 */
-		canHaveTalkPage() {
+		canHaveTalkPage(): boolean {
 			return this.getNamespaceId() >= NS_MAIN;
 		}
 
 		/**
 		 * Get the extension of the page name (if any)
-		 *
-		 * @return {string|null} Name extension or null if there is none
 		 */
-		getExtension() {
+		getExtension(): string | null {
 			var lastDot = this.title.lastIndexOf( '.' );
 			if ( lastDot === -1 ) {
 				return null;
@@ -207,13 +204,85 @@ module.exports = function (bot) {
 		 * Shortcut for appendable string to form the main page name.
 		 *
 		 * Returns a string like ".json", or "" if no extension.
-		 *
-		 * @return {string}
 		 */
-		getDotExtension() {
+		getDotExtension(): string {
 			var ext = this.getExtension();
 			return ext === null ? '' : '.' + ext;
 		}
+
+		/**
+		 * Constructor for Title objects with a null return instead of an exception for invalid titles.
+		 *
+		 * Note that `namespace` is the **default** namespace only, and can be overridden by a namespace
+		 * prefix in `title`. If you do not want this behavior, use #makeTitle. See #constructor for
+		 * details.
+		 * @return {Title|null} A valid Title object or null if the title is invalid
+		 */
+		static newFromText(title: string, namespace: number = 0): Title | null {
+			var t, parsed = parse( title, namespace );
+			if ( !parsed ) {
+				return null;
+			}
+			t = Object.create( Title.prototype );
+			t.namespace = parsed.namespace;
+			t.title = parsed.title;
+			t.fragment = parsed.fragment;
+			return t;
+		}
+
+
+		/**
+		 * Constructor for Title objects with predefined namespace.
+		 *
+		 * Unlike #newFromText or #constructor, this function doesn't allow the given `namespace` to be
+		 * overridden by a namespace prefix in `title`. See #constructor for details about this behavior.
+		 *
+		 * The single exception to this is when `namespace` is 0, indicating the main namespace. The
+		 * function behaves like #newFromText in that case.
+		 * @return {Title|null} A valid Title object or null if the title is invalid
+		 */
+		static makeTitle(namespace: number, title: string): Title | null {
+			return Title.newFromText( getNamespacePrefix( namespace ) + title );
+		}
+
+		/**
+		 * Check if a given namespace is a talk namespace
+		 */
+		static isTalkNamespace(namespaceId: number): boolean {
+			return !!( namespaceId > NS_MAIN && namespaceId % 2 );
+		}
+
+		/**
+		 * PHP's strtoupper differs from String.toUpperCase in a number of cases (T147646).
+		 *
+		 * @param {string} chr Unicode character
+		 * @return {string} Unicode character, in upper case, according to the same rules as in PHP
+		 */
+		static phpCharToUpper(chr: string): string {
+			if ( toUpperMap[ chr ] === '' ) {
+				// Optimisation: When the override is to keep the character unchanged,
+				// we use an empty string in JSON. This reduces the data by 50%.
+				return chr;
+			}
+			return toUpperMap[ chr ] || chr.toUpperCase();
+		}
+
+		/**
+		 * @alias #getPrefixedDb
+		 * @method
+		 */
+		toString(): string {
+			return this.getPrefixedDb();
+		}
+
+		/**
+		 * @alias #getPrefixedText
+		 * @method
+		 */
+		toText(): string {
+			return this.getPrefixedText();
+		}
+
 
 	}
 
@@ -221,7 +290,7 @@ module.exports = function (bot) {
 	 * Private members
 	 */
 
-	var parse = function(title, defaultNamespace) {
+	var parse = function(title: string, defaultNamespace?: number) {
 		Title.checkData();
 
 		var namespace, m, id, i, fragment;
@@ -351,13 +420,13 @@ module.exports = function (bot) {
 
 	};
 
-	var getNamespacePrefix = function ( namespace ) {
+	var getNamespacePrefix = function ( namespace: number ) {
 		return namespace === NS_MAIN ?
 			'' :
-			( bot.title.idNameMap[ namespace ].replace( / /g, '_' ) + ':' );
+			( Title.idNameMap[ namespace ].replace( / /g, '_' ) + ':' );
 	};
 
-	var getNsIdByName = function ( ns ) {
+	var getNsIdByName = function ( ns: string ) {
 		var id;
 		// Don't cast non-strings to strings, because null or undefined should not result in
 		// returning the id of a potential namespace called "Null:" (e.g. on null.example.org/wiki)
@@ -366,7 +435,7 @@ module.exports = function (bot) {
 			return false;
 		}
 
-		id = bot.title.nameIdMap[ ns.toLowerCase() ];
+		id = Title.nameIdMap[ ns.toLowerCase() ];
 		if ( id === undefined ) {
 			return false;
 		}
@@ -374,96 +443,13 @@ module.exports = function (bot) {
 	};
 
 	// From https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.String.js
-	var byteLength = function( str ) {
+	var byteLength = function( str: string ) {
 		return str
 			.replace( /[\u0080-\u07FF\uD800-\uDFFF]/g, '**' )
 			.replace( /[\u0800-\uD7FF\uE000-\uFFFF]/g, '***' )
 			.length;
 	};
 
-	/**
-	 * Static members
-	 */
-
-	/**
-	 * Constructor for Title objects with a null return instead of an exception for invalid titles.
-	 *
-	 * Note that `namespace` is the **default** namespace only, and can be overridden by a namespace
-	 * prefix in `title`. If you do not want this behavior, use #makeTitle. See #constructor for
-	 * details.
-	 *
-	 * @static
-	 * @param {string} title
-	 * @param {number} [namespace=NS_MAIN] Default namespace
-	 * @return {Title|null} A valid Title object or null if the title is invalid
-	 */
-	Title.newFromText = function ( title, namespace ) {
-		var t, parsed = parse( title, namespace );
-		if ( !parsed ) {
-			return null;
-		}
-		t = Object.create( Title.prototype );
-		t.namespace = parsed.namespace;
-		t.title = parsed.title;
-		t.fragment = parsed.fragment;
-		return t;
-	};
-
-
-	/**
-	 * Constructor for Title objects with predefined namespace.
-	 *
-	 * Unlike #newFromText or #constructor, this function doesn't allow the given `namespace` to be
-	 * overridden by a namespace prefix in `title`. See #constructor for details about this behavior.
-	 *
-	 * The single exception to this is when `namespace` is 0, indicating the main namespace. The
-	 * function behaves like #newFromText in that case.
-	 *
-	 * @static
-	 * @param {number} namespace Namespace to use for the title
-	 * @param {string} title
-	 * @return {Title|null} A valid Title object or null if the title is invalid
-	 */
-	Title.makeTitle = function ( namespace, title ) {
-		return Title.newFromText( getNamespacePrefix( namespace ) + title );
-	};
-
-	/**
-	 * Check if a given namespace is a talk namespace
-	 *
-	 * @param {number} namespaceId Namespace ID
-	 * @return {boolean} Namespace is a talk namespace
-	 */
-	Title.isTalkNamespace = function ( namespaceId ) {
-		return !!( namespaceId > NS_MAIN && namespaceId % 2 );
-	};
-
-	/**
-	 * @alias #getPrefixedDb
-	 * @method
-	 */
-	Title.prototype.toString = Title.prototype.getPrefixedDb;
-
-	/**
-	 * @alias #getPrefixedText
-	 * @method
-	 */
-	Title.prototype.toText = Title.prototype.getPrefixedText;
-
-	/**
-	 * PHP's strtoupper differs from String.toUpperCase in a number of cases (T147646).
-	 *
-	 * @param {string} chr Unicode character
-	 * @return {string} Unicode character, in upper case, according to the same rules as in PHP
-	 */
-	Title.phpCharToUpper = function ( chr ) {
-		if ( toUpperMap[ chr ] === '' ) {
-			// Optimisation: When the override is to keep the character unchanged,
-			// we use an empty string in JSON. This reduces the data by 50%.
-			return chr;
-		}
-		return toUpperMap[ chr ] || chr.toUpperCase();
-	};
 
 	// XXX: put this in a separate file, like in mw.Title source code?
 	var toUpperMap = {
@@ -1271,6 +1257,6 @@ module.exports = function (bot) {
 		"𞥃": ""
 	};
 
-
 	return Title;
+
 };

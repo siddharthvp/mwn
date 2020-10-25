@@ -1,11 +1,11 @@
 /** Base file used in tests */
 
-const mwn = require('../src/bot');
+const {mwn} = require('../build/bot');
 const log = require('semlog').log;
 const crypto = require('crypto');
 
 const chai = require('chai');
-const expect = chai.expect; 
+const expect = chai.expect;
 const assert = require('assert');
 
 const loginCredentials = require('./mocking/loginCredentials.js');

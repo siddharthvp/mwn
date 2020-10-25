@@ -1,19 +1,20 @@
-const EventSource = require('eventsource');
 
-module.exports = function (mwn, bot) {
+import EventSource = require('eventsource');
+import type {mwn, XDate} from './bot';
+
+module.exports = function (bot: mwn, mwn) {
 
 	class EventStream extends EventSource {
 
 		/**
 		 * Access the Wikimedia EventStreams API
 		 * @see https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams
-		 * @param {string|string[]} streams
-		 * @param {Object} [config={}]
-		 * @config {string|Date} since
-		 * @config {Function} onopen
-		 * @config {Function} onerror
 		 */
-		constructor(streams, config = {}) {
+		constructor(streams: string | string[], config: {
+			since?: Date | XDate | string
+			onopen?: (() => void)
+			onerror?: ((evt: MessageEvent) => void)
+		} = {}) {
 			if (Array.isArray(streams)) {
 				streams = streams.join(',');
 			}
@@ -28,8 +29,8 @@ module.exports = function (mwn, bot) {
 			this.onopen = config.onopen || function () {
 				mwn.log(`[S] Opened eventsource connection for ${streams} stream(s)`);
 			};
-			this.onerror = config.onerror || function (err) {
-				mwn.log(`[W] event source encountered error: ${err}`);
+			this.onerror = config.onerror || function (evt) {
+				mwn.log(`[W] event source encountered error: ${evt}`);
 			};
 
 		}
@@ -51,7 +52,7 @@ module.exports = function (mwn, bot) {
 					return true;
 				};
 
-			this.onmessage = function(event) {
+			this.onmessage = function(event: {data: string}) {
 				let data = JSON.parse(event.data);
 				if (!filterer(data)) {
 					return;
@@ -76,5 +77,4 @@ module.exports = function (mwn, bot) {
 	}
 
 	return EventStream;
-
 };

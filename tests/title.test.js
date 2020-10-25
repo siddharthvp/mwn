@@ -3,7 +3,7 @@
  *
  */
 
-const mwn = require('../src/bot');
+const {mwn} = require('./test_base');
 const bot = new mwn();
 const Title = bot.title;
 

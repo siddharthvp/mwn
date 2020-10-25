@@ -1,28 +1,25 @@
-module.exports = function(bot) {
+import type {mwn, Page} from "./bot";
+
+module.exports = function(bot: mwn) {
 
 	class User {
+		username: string
 
 		/**
 		 * @constructor
 		 * @param {string} name - username
 		 */
-		constructor(name) {
+		constructor(name: string) {
 			this.username = name;
 		}
 
-		/**
-		 * @returns {bot.page}
-		 */
-		get userpage() {
+		get userpage(): Page {
 			// User: namespace name will work across all MW sites
 			// as it is a canonical namespace name
 			return new bot.page('User:' + this.username);
 		}
 
-		/**
-		 * @returns {bot.page}
-		 */
-		get talkpage() {
+		get talkpage(): Page {
 			return new bot.page('User talk:' + this.username);
 		}
 
@@ -33,7 +30,7 @@ module.exports = function(bot) {
 		 * @param {Object} options - additional API options
 		 * @returns {Promise<Object[]>}
 		 */
-		contribs(options) {
+		contribs(options): Promise<any[]> {
 			return bot.request(Object.assign({
 				action: 'query',
 				list: 'usercontribs',
@@ -48,7 +45,7 @@ module.exports = function(bot) {
 		 * @param {Object} options - additional API options
 		 * @returns {Promise<Object[]>}
 		 */
-		logs(options) {
+		logs(options): Promise<any[]> {
 			return bot.request(Object.assign({
 				action: 'query',
 				list: 'logevents',
@@ -62,7 +59,7 @@ module.exports = function(bot) {
 		 * @param {Array} props - properties to fetch
 		 * @returns {Promise<Object>}
 		 */
-		info(props) {
+		info(props): Promise<any> {
 			return bot.request({
 				action: 'query',
 				list: 'users',
@@ -76,7 +73,7 @@ module.exports = function(bot) {
 		 * Get global user info for wikis with CentralAuth
 		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props
 		 */
-		globalinfo(props) {
+		globalinfo(props): Promise<any> {
 			return bot.request({
 				"action": "query",
 				"meta": "globaluserinfo",
@@ -93,18 +90,15 @@ module.exports = function(bot) {
 		 * @param {string} message
 		 * @returns {Promise}
 		 */
-		sendMessage(header, message) {
+		sendMessage(header: string, message: string) {
 			return this.talkpage.newSection(header, message);
 		}
 
 
 		/**
 		 * Send the user an email
-		 * @param {string} subject
-		 * @param {string} message
-		 * @returns {Promise}
 		 */
-		email(subject, message) {
+		email(subject: string, message: string): Promise<any> {
 			return bot.request({
 				action: 'emailuser',
 				target: this.username,
@@ -118,7 +112,7 @@ module.exports = function(bot) {
 		 * Block the user
 		 * @param {Object} options - additional API options
 		 */
-		block(options) {
+		block(options): Promise<any> {
 			return bot.request(Object.assign({
 				action: 'block',
 				user: this.username,
@@ -130,7 +124,7 @@ module.exports = function(bot) {
 		 * Unblock the user
 		 * @param {Object} options - additional API options
 		 */
-		unblock(options) {
+		unblock(options): Promise<any> {
 			return bot.request(Object.assign({
 				action: 'unblock',
 				user: this.username,
