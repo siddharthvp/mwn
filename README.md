@@ -208,7 +208,8 @@ bot.upload('File title', '/path/to/file', 'comment', customParams);
 #### Direct calls
 
 #### request(query)
-Directly query the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options. You can create and test your queries in the [API sandbox](https://www.mediawiki.org/wiki/Special:ApiSandbox).
+Directly query the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options. You can create and test your queries in the [`API sandbox`](https://www.mediawiki.org/wiki/Special:ApiSandbox). Be sure to set formatversion: 2 in the options for format=json!
+
 Example: get all images used on the article Foo
 ```js
 bot.request({
@@ -242,7 +243,25 @@ bot.continuedQuery({
 });
 ```
 
-##### massQuery(query, nameOfBatchField, hasApiHighLimit)
+A simpler way is to use `bot.continuedQueryGen` which is an [asynchronous generator](https://javascript.info/async-iterators-generators). 
+```js
+var activeusers = [];
+for await (let json of bot.continuedQueryGen({
+    "action": "query",
+    "list": "allusers",
+    "auactiveusers": 1,
+    "aulimit": "max"
+})) {
+    let users = json.query.allusers.map(user => user.name);
+    activeusers = activeusers.concat(users);
+}
+``` 
+
+Use of `continuedQueryGen` is recommended for several reasons:
+- If there are a large number of calls involved, continuedQuery will fetch the results of all the API calls before it begins to do anything with the results. `continuedQueryGen` gets the result of each API call and processes them one at a time.
+- Since making multiple API calls can take some time. you can add logging statements to know the number of the API calls that have gone through.
+
+##### massQuery(query, nameOfBatchField, batchSize)
 MediaWiki sets a limit of 500 (50 for non-bots) on the number of pages that can be queried in a single API call. To query more than that, the `massQuery` function can be used, which splits the page list into batches of 500 and sends individual queries and returns a promise resolved with the array of all individual API call responses.
 
 Example: get the protection status of a large number of pages:

@@ -63,6 +63,10 @@ type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcommen
 type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
 	"tags" | "userid"
 
+interface RawRequestParams extends AxiosRequestConfig {
+	retryNumber?: number
+}
+
 // The interfaces corresponding to the nested classes appear below.
 // The declarations need to be duplicated here because TypeScript doesn't really support
 // nested classes.
@@ -97,54 +101,53 @@ export interface Page extends Title {
 	transclusions(): Promise<string[]>
 	images(): Promise<string[]>
 	externallinks(): Promise<string[]>
-	subpages(options?: any): Promise<string[]>
+	subpages(options?: ApiParams): Promise<string[]>
 	isRedirect(): Promise<boolean>
 	getRedirectTarget(): Promise<string>
 	isRedirect(): Promise<boolean>
 	getRedirectTarget(): Promise<string>
 	getCreator(): Promise<string>
 	getDeletingAdmin(): Promise<string>
-	getDescription(customOptions?: any)
+	getDescription(customOptions?: any): Promise<string>
 	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: any): Promise<object[]>
 	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: any): Promise<object[]>
-	edit(transform: ((rev: {content: string, timestamp: string}) => string | object))
-	save(text: string, summary?: string, options?: any)
-	newSection(header: string, message: string, additionalParams?: any)
-	move(target: string, summary: string, options?: any)
-	delete(summary: string, options?: any)
-	undelete(summary: string, options?: any)
-	purge(options?: any)
+	edit(transform: ((rev: {content: string, timestamp: string}) => string | object)): Promise<any>
+	save(text: string, summary?: string, options?: any): Promise<any>
+	newSection(header: string, message: string, additionalParams?: any): Promise<any>
+	move(target: string, summary: string, options?: any): Promise<any>
+	delete(summary: string, options?: any): Promise<any>
+	undelete(summary: string, options?: any): Promise<any>
+	purge(options?: any): Promise<any>
 }
 export interface File extends Page {
 	getName(): string
 	getNameText (): string
-	usages(options): Promise<{pageid: number, title: string, redirect: boolean}>
-	download(localname: string)
+	usages(options: ApiParams): Promise<{pageid: number, title: string, redirect: boolean}>
+	download(localname: string): void
 }
 export interface Category extends Page {
-	members(options: any): Promise<{pageid: number, ns: number, title: string}>
-	pages(options: any): Promise<{pageid: number, ns: number, title: string}>
-	subcats(options: any): Promise<{pageid: number, ns: number, title: string}>
-	files(options: any): Promise<{pageid: number, ns: number, title: string}>
+	members(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
+	pages(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
+	subcats(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
+	files(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
 }
 export interface Stream {
-	addListener(action, filter: any)
+	addListener(action: ((data: any) => any), filter: any): void
 }
 export interface User extends Title {
 	username: string
-	constructor(name: string)
 	userpage: Page
 	talkpage: Page
 	// get userpage(): Page // XXX
 	// get talkpage(): Page
-	contribs(options): Promise<any[]>
-	logs(options): Promise<any[]>
-	info(props): Promise<any>
-	globalinfo(props): Promise<any>
-	sendMessage(header: string, message: string)
+	contribs(options: ApiParams): Promise<any[]>
+	logs(options: ApiParams): Promise<any[]>
+	info(props: ApiParams): Promise<any>
+	globalinfo(props: string | string[]): Promise<any>
+	sendMessage(header: string, message: string): Promise<any>
 	email(subject: string, message: string): Promise<any>
-	block(options): Promise<any>
-	unblock(options): Promise<any>
+	block(options: ApiParams): Promise<any>
+	unblock(options: ApiParams): Promise<any>
 }
 export interface Wikitext {
 	text: string
@@ -156,12 +159,12 @@ export interface Wikitext {
 
 	parseLinks(): void
 	parseTemplates(config: TemplateConfig): Template[]
-	removeEntity(entity: Link | Template)
+	removeEntity(entity: Link | Template): void
 	parseSections(): Section[]
 	unbind(prefix: string, postfix: string): void
 	rebind(): string
 	getText(): string
-	apiParse(options): Promise<string>
+	apiParse(options: ApiParams): Promise<string>
 }
 export interface XDate extends Date {
 	isValid(): boolean
@@ -273,9 +276,9 @@ export class mwn {
 
 	cookieJar: tough.CookieJar
 
-	static requestDefaults: AxiosRequestConfig
+	static requestDefaults: RawRequestParams
 
-	requestOptions: AxiosRequestConfig
+	requestOptions: RawRequestParams
 
 	shutoff: {
 		state: boolean
@@ -309,8 +312,8 @@ export class mwn {
 				namespaces: { name: string, id: number, canonical: boolean, case: string }[]
 				namespacealiases: { alias: string, id: number }[]
 			}
-		})
-		checkData()
+		}): void
+		checkData(): void
 		newFromText(title: string, namespace?: number): Title | null
 		makeTitle(namespace: number, title: string): Title | null
 		isTalkNamespace(namespaceId: number): boolean
@@ -333,11 +336,11 @@ export class mwn {
 			onerror?: ((evt: MessageEvent) => void)
 		}): Stream
 
-		recentchange(filter, action)
+		recentchange(filter: any, action: ((data: any) => any)): Stream
 	}
 	date: {
 		new (...args: any[]): XDate
-		loadLocaleData(data)
+		loadLocaleData(data: any): void
 		getMonthName(monthNum: number): string
 		getMonthNameAbbrev(monthNum: number): string
 		getDayName(dayNum: number): string
@@ -346,8 +349,8 @@ export class mwn {
 	wikitext: {
 		new (text: string): Wikitext
 		parseTemplates(wikitext: string, config: TemplateConfig): Template[]
-		parseTable(text): {[column: string]: string}[]
-		parseSections(text): Section[]
+		parseTable(text: string): {[column: string]: string}[]
+		parseSections(text: string): Section[]
 	}
 	user: {
 		new (username: string): User
@@ -542,7 +545,7 @@ export class mwn {
 	 * Sets and overwrites the raw request options, used by the axios library
 	 * See https://www.npmjs.com/package/axios
 	 */
-	setRequestOptions(customRequestOptions: AxiosRequestConfig) {
+	setRequestOptions(customRequestOptions: RawRequestParams) {
 		return mergeDeep1(this.requestOptions, customRequestOptions);
 	}
 
@@ -627,7 +630,7 @@ export class mwn {
 	 * Executes a raw request
 	 * Uses the axios library
 	 */
-	rawRequest(requestOptions: AxiosRequestConfig): Promise<any> {
+	rawRequest(requestOptions: RawRequestParams): Promise<any> {
 
 		if (!requestOptions.url) {
 			const err = new mwn.Error({
@@ -653,7 +656,7 @@ export class mwn {
 	 * Executes a request with the ability to use custom parameters and custom
 	 * request options
 	 */
-	async request(params: ApiParams, customRequestOptions: AxiosRequestConfig = {}): Promise<any> {
+	async request(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<any> {
 
 		if (this.shutoff.state) {
 			return this.rejectWithError({
@@ -664,7 +667,7 @@ export class mwn {
 
 		params = merge(this.options.defaultParams, params);
 
-		const getOrPost = function (data) {
+		const getOrPost = function (data: ApiParams) {
 			if (data.action === 'query') {
 				return 'get';
 			}
@@ -674,7 +677,7 @@ export class mwn {
 			return 'post';
 		};
 
-		let requestOptions = mergeDeep1({
+		let requestOptions: RawRequestParams = mergeDeep1({
 			url: this.options.apiUrl,
 			method: getOrPost(params),
 
@@ -875,7 +878,7 @@ export class mwn {
 	}
 
 	/** @private */
-	dieWithError(response, requestOptions) {
+	dieWithError(response: any, requestOptions: RawRequestParams) {
 		let errorData = Object.assign(response.error, {
 			// Enhance error object with additional information:
 			// the full response
@@ -1076,7 +1079,7 @@ export class mwn {
 	 * @param {string} action - API action parameter
 	 * @returns {Promise<string>}
 	 */
-	getTokenType(action): Promise<string> {
+	getTokenType(action: string): Promise<string> {
 		return this.request({
 			action: 'paraminfo',
 			modules: action
@@ -1104,7 +1107,7 @@ export class mwn {
 	getServerTime(): Promise<string> {
 		return this.request({
 			action: 'query',
-			curtimestamp: 1
+			curtimestamp: true
 		}).then(data => {
 			return data.curtimestamp;
 		});
@@ -1174,19 +1177,21 @@ export class mwn {
 	 * @returns {Promise<ApiPage>}
 	 */
 	read(titles: string | string[] | number | number[], options?: ApiParams): Promise<ApiPage | ApiPage[]> {
+		let pages = Array.isArray(titles) ? titles : [ titles ];
+		let batchFieldName = typeof pages[0] === 'number' ? 'pageids' : 'titles';
 		return this.massQuery({
 			action: 'query',
 			...makeTitles(titles),
 			prop: 'revisions',
 			rvprop: 'content|timestamp',
 			rvslots: 'main',
-			redirects: '1',
+			redirects: true,
 			...options
-		}, typeof titles[0] === 'number' ? 'pageids' : 'titles').then((jsons: Array<ApiResponse>) => {
+		}, batchFieldName).then((jsons: Array<ApiResponse>) => {
 			let data = jsons.reduce((data, json) => {
-				json.query.pages.forEach(pg => {
+				json.query.pages.forEach((pg: ApiPage) => {
 					if (pg.revisions) {
-						pg.revisions.forEach(rev => {
+						pg.revisions.forEach((rev: ApiRevision) => {
 							Object.assign(rev, rev.slots.main);
 						});
 					}
@@ -1204,7 +1209,7 @@ export class mwn {
 			prop: 'revisions',
 			rvprop: 'content|timestamp',
 			rvslots: 'main',
-			redirects: '1',
+			redirects: true,
 			...options
 		}, typeof titles[0] === 'number' ? 'pageids' : 'titles');
 
@@ -1212,7 +1217,7 @@ export class mwn {
 			if (response && response.query && response.query.pages) {
 				for (let pg of response.query.pages) {
 					if (pg.revisions) {
-						pg.revisions.forEach(rev => {
+						pg.revisions.forEach((rev: ApiRevision) => {
 							Object.assign(rev, rev.slots.main);
 						});
 					}
@@ -1246,7 +1251,7 @@ export class mwn {
 
 		editConfig = editConfig || this.options.editConfig;
 
-		let basetimestamp, curtimestamp;
+		let basetimestamp: string, curtimestamp: string;
 
 		return this.request({
 			action: 'query',
@@ -1299,8 +1304,8 @@ export class mwn {
 				formatversion: '2',
 				basetimestamp: basetimestamp,
 				starttimestamp: curtimestamp,
-				nocreate: 1,
-				bot: 1,
+				nocreate: true,
+				bot: true,
 				token: this.csrfToken,
 				...editParams
 			});
@@ -1335,7 +1340,7 @@ export class mwn {
 			action: 'edit',
 			text: content,
 			summary: summary,
-			bot: 1,
+			bot: true,
 			token: this.csrfToken
 		}, makeTitle(title), options)).then(data => data.edit);
 	}
@@ -1356,8 +1361,8 @@ export class mwn {
 			title: String(title),
 			text: content,
 			summary: summary,
-			createonly: 1,
-			bot: 1,
+			createonly: true,
+			bot: true,
 			token: this.csrfToken
 		}, options)).then(data => data.edit);
 	}
@@ -1376,7 +1381,7 @@ export class mwn {
 			section: 'new',
 			summary: header,
 			text: message,
-			bot: 1,
+			bot: true,
 			token: this.csrfToken
 		}, makeTitle(title), additionalParams)).then(data => data.edit);
 	}
@@ -1430,7 +1435,7 @@ export class mwn {
 			from: fromtitle,
 			to: totitle,
 			reason: summary,
-			movetalk: 1,
+			movetalk: true,
 			token: this.csrfToken
 		}, options)).then(data => data.move);
 	}
@@ -1492,7 +1497,7 @@ export class mwn {
 			},
 			filename: title,
 			text: text,
-			ignorewarnings: '1',
+			ignorewarnings: true,
 			token: this.csrfToken
 		}, options), {
 			headers: {
@@ -1524,7 +1529,7 @@ export class mwn {
 			url: url,
 			filename: title || path.basename(url),
 			text: text,
-			ignorewarnings: '1',
+			ignorewarnings: true,
 			token: this.csrfToken
 		}, options)).then(data => {
 			if (data.upload.warnings) {
@@ -1751,7 +1756,7 @@ export class mwn {
 		}
 		let responses = new Array(numBatches);
 		return new Promise((resolve) => {
-			const sendQuery = (idx) => {
+			const sendQuery = (idx: number) => {
 				if (idx === numBatches) {
 					return resolve(responses);
 				}
@@ -1810,7 +1815,7 @@ export class mwn {
 		let incrementSuccesses = () => {
 			counts.successes++;
 		};
-		const incrementFailures = (idx) => {
+		const incrementFailures = (idx: number) => {
 			counts.failures++;
 			failures.push(list[idx]);
 		};
@@ -1825,7 +1830,7 @@ export class mwn {
 		const numBatches = Math.ceil(list.length / concurrency);
 
 		return new Promise((resolve) => {
-			const sendBatch = (batchIdx) => {
+			const sendBatch = (batchIdx: number) => {
 
 				// Last batch
 				if (batchIdx === numBatches - 1) {
@@ -1905,7 +1910,7 @@ export class mwn {
 		const incrementSuccesses = () => {
 			counts.successes++;
 		};
-		const incrementFailures = (idx) => {
+		const incrementFailures = (idx: number) => {
 			counts.failures++;
 			failures.push(list[idx]);
 		};
@@ -1957,7 +1962,7 @@ export class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	askQuery(query: string, apiUrl: string, customRequestOptions?: AxiosRequestConfig): Promise<any> {
+	askQuery(query: string, apiUrl: string, customRequestOptions?: RawRequestParams): Promise<any> {
 
 		apiUrl = apiUrl || this.options.apiUrl;
 
@@ -1986,7 +1991,7 @@ export class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	sparqlQuery(query: string, endpointUrl: string, customRequestOptions?: AxiosRequestConfig): Promise<any> {
+	sparqlQuery(query: string, endpointUrl: string, customRequestOptions?: RawRequestParams): Promise<any> {
 
 		endpointUrl = endpointUrl || this.options.apiUrl;
 
@@ -2195,13 +2200,13 @@ mwn.log = log;
 /**** Private utilities ****/
 
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
-const ispromise = function (obj) {
+const ispromise = function (obj: any) {
 	return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
 		typeof obj.then === 'function';
 };
 
 /** Check whether an object is plain object, from https://github.com/sindresorhus/is-plain-obj/blob/master/index.js */
-const isplainobject = function (value) {
+const isplainobject = function (value: any) {
 	if (Object.prototype.toString.call(value) !== '[object Object]') {
 		return false;
 	}
@@ -2217,7 +2222,7 @@ const isplainobject = function (value) {
  * objects, the value on the rightmost one will be kept in the output.
  * @returns {Object} - Merged object
  */
-const merge = function(...objects) {
+const merge = function(...objects: object[]) {
 	// {} used as first parameter as this object is mutated by default
 	return Object.assign({}, ...objects);
 };
@@ -2230,7 +2235,7 @@ const merge = function(...objects) {
  * @param {...Object} objects - any number of objects
  * @returns {Object}
  */
-const mergeDeep1 = function(...objects) {
+const mergeDeep1 = function(...objects: object[]) {
 	let args = [...objects].filter(e => e); // skip null/undefined values
 	for (let options of args.slice(1)) {
 		for (let [key, val] of Object.entries(options)) {
@@ -2250,7 +2255,7 @@ const mergeDeep1 = function(...objects) {
  * @param {Array} arr
  * @param {number} size
  */
-const arrayChunk = function(arr, size) {
+const arrayChunk = function(arr: any[], size: number) {
 	const numChunks = Math.ceil(arr.length / size);
 	let result = new Array(numChunks);
 	for (let i=0; i<numChunks; i++) {
@@ -2259,17 +2264,17 @@ const arrayChunk = function(arr, size) {
 	return result;
 };
 
-const makeTitles = function(pages) {
-	pages = Array.isArray(pages) ? pages : [ pages ];
-	if (typeof pages[0] === 'number') {
-		return { pageids: pages };
+const makeTitles = function(pages: string | string[] | number | number[]) {
+	let pagesArray = Array.isArray(pages) ? pages : [ pages ];
+	if (typeof pagesArray[0] === 'number') {
+		return { pageids: pagesArray };
 	} else {
 		// .join casts array elements to strings and then joins
-		return { titles: pages };
+		return { titles: pagesArray };
 	}
 };
 
-const makeTitle = function(page) {
+const makeTitle = function(page: string | number) {
 	if (typeof page === 'number') {
 		return { pageid: page };
 	} else {

@@ -6,7 +6,8 @@
 		"allowJs": true,
 		"checkJs": true,
 		"declaration": true,
-		"types": ["node"]
+		"types": ["node", "mocha"],
+		"noImplicitAny": true
 	},
-	"include": ["./src/**/*"]
+	"include": ["./src/**/*", "./tests/ts/*"]
 }

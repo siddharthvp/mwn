@@ -250,6 +250,7 @@ module.exports = function (bot: mwn) {
 		 * Get short description, either the local one (for English Wikipedia)
 		 * or the one from wikidata.
 		 * @param {Object} customOptions
+		 * @returns {Promise<string>}
 		 */
 		getDescription(customOptions: any) { // ApiParams
 			return bot.request({
