@@ -193,7 +193,6 @@ export interface MwnOptions {
 		accessToken: string,
 		accessSecret: string
 	}
-	hasApiHighLimit?: boolean
 	maxRetries?: number
 	retryPause?: number
 	shutoff?: {
@@ -282,6 +281,8 @@ export class mwn {
 		state: boolean
 		hook: ReturnType<typeof setInterval>
 	}
+
+	hasApiHighLimit: boolean
 
 	static Error: Function
 
@@ -1008,9 +1009,10 @@ export class mwn {
 	getTokens(): Promise<void> {
 		return this.request({
 			action: 'query',
-			meta: 'tokens',
-			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
-		}).then((response) => {
+			meta: 'tokens|userinfo',
+			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
+			uiprop: 'rights'
+		}).then((response: ApiResponse) => {
 			// console.log('getTokens response:', response);
 			if (response.query && response.query.tokens) {
 				this.csrfToken = response.query.tokens.csrftoken;
@@ -1022,6 +1024,9 @@ export class mwn {
 					response
 				});
 				return Promise.reject(err);
+			}
+			if (response.query.userinfo.rights.includes('apihighlimit')) {
+				this.hasApiHighLimit = true;
 			}
 		});
 	}
@@ -1043,11 +1048,15 @@ export class mwn {
 	getTokensAndSiteInfo(): Promise<void> {
 		return this.request({
 			action: 'query',
-			meta: 'siteinfo|tokens',
+			meta: 'siteinfo|tokens|userinfo',
 			siprop: 'general|namespaces|namespacealiases',
+			uiprop: 'rights',
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
-		}).then(response => {
+		}).then((response: ApiResponse) => {
 			this.title.processNamespaceData(response);
+			if (response.query.userinfo.rights.includes('apihighlimit')) {
+				this.hasApiHighLimit = true;
+			}
 			if (response.query && response.query.tokens) {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
@@ -1721,11 +1730,6 @@ export class mwn {
 	 * The API calls are made via POST instead of GET to avoid potential 414 (URI
 	 * too long) errors.
 	 *
-	 * This assumes that the user has the apihighlimits user right, available to bots
-	 * and sysops by default. If your account does not have the right, you MUST set
-	 * `hasApiHighLimit` false using bot.setOptions() or in the bot constructor, failing
-	 * which you'll get `toomanyvalues` API error.
-	 *
 	 * @param {Object} query - the query object, the multi-input field should
 	 * be an array
 	 * @param {string} [batchFieldName=titles] - the name of the multi-input field
@@ -1735,7 +1739,7 @@ export class mwn {
 	 */
 	massQuery(query?: ApiParams, batchFieldName='titles'): Promise<ApiResponse[]> {
 		let batchValues = query[batchFieldName];
-		const limit = this.options.hasApiHighLimit ? 500 : 50;
+		const limit = this.hasApiHighLimit ? 500 : 50;
 		const numBatches = Math.ceil(batchValues.length / limit);
 		let batches = new Array(numBatches);
 		for (let i = 0; i < numBatches - 1; i++) {
@@ -1755,10 +1759,6 @@ export class mwn {
 				this.request(query, { method: 'post' }).then(response => {
 					responses[idx] = response;
 				}, err => {
-					if (err.code === 'toomanyvalues') {
-						throw new Error(`[mwn] Your account doesn't have apihighlimit right.` +
-							` Set the option hasApiHighLimit as false`);
-					}
 					responses[idx] = err;
 				}).finally(() => {
 					sendQuery(idx + 1);
@@ -1776,7 +1776,7 @@ export class mwn {
 	 */
 	async *massQueryGen(query: ApiParams, batchFieldName: string = 'titles', batchSize?: number) {
 		let batchValues = query[batchFieldName];
-		const limit = batchSize || this.options.hasApiHighLimit ? 500 : 50;
+		const limit = batchSize || this.hasApiHighLimit ? 500 : 50;
 		const batches = arrayChunk(batchValues, limit);
 		const numBatches = batches.length;
 
