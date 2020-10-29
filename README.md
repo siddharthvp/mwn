@@ -74,6 +74,19 @@ bot.initOAuth(); // does not involve an API call
 // Any errors in authentication will surface when the first actual API call is made
 ```
 
+A more complete constructor syntax:
+```js
+const bot = new mwn({
+    apiUrl: 'https://en.wikipedia.org/w/api.php',
+    username: 'YourBotUsername',
+    password: 'YourBotPassword',
+
+    userAgent: 'myCoolToolName 1.0 ([[link to bot user page or tool documentation]])',
+    defaultParams: {
+        assert: 'user' // API parameter to ensure we're logged in 
+    }
+});
+```
 
 Set default parameters to be sent to be included in every API request:
 ```js

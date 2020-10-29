@@ -1,4 +1,11 @@
 import type {mwn, Title} from './bot'
+import {
+	ApiDeleteParams,
+	ApiEditPageParams,
+	ApiMoveParams, ApiPurgeParams,
+	ApiQueryLogEventsParams, ApiUndeleteParams,
+	WikibaseClientApiDescriptionParams
+} from "./api_params";
 
 module.exports = function (bot: mwn) {
 
@@ -252,7 +259,7 @@ module.exports = function (bot: mwn) {
 		 * @param {Object} customOptions
 		 * @returns {Promise<string>}
 		 */
-		getDescription(customOptions: any) { // ApiParams
+		getDescription(customOptions: WikibaseClientApiDescriptionParams) { // ApiParams
 			return bot.request({
 				action: 'query',
 				prop: 'description',
@@ -304,7 +311,7 @@ module.exports = function (bot: mwn) {
 		 * log entries, eg. { ns: '0', title: 'Main Page', type: 'delete', user: 'Example',
 		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
 		 */
-		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: any) {
+		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams) {
 			var logtypeObj: any = {};
 			if (type) {
 				if (type.includes('/')) {
@@ -331,31 +338,31 @@ module.exports = function (bot: mwn) {
 		/**** Post operations *****/
 		// Defined in bot.js
 
-		edit(transform: ((rev: {content: string, timestamp: string}) => string | object)) {
+		edit(transform: ((rev: {content: string, timestamp: string}) => string | ApiEditPageParams)) {
 			return bot.edit(this.toString(), transform);
 		}
 
-		save(text: string, summary?: string, options?: any) {
+		save(text: string, summary?: string, options?: ApiEditPageParams) {
 			return bot.save(this.toString(), text, summary, options);
 		}
 
-		newSection(header: string, message: string, additionalParams?: any) {
+		newSection(header: string, message: string, additionalParams?: ApiEditPageParams) {
 			return bot.newSection(this.toString(), header, message, additionalParams);
 		}
 
-		move(target: string, summary: string, options?: any) {
+		move(target: string, summary: string, options?: ApiMoveParams) {
 			return bot.move(this.toString(), target, summary, options);
 		}
 
-		delete(summary: string, options?: any) {
+		delete(summary: string, options?: ApiDeleteParams) {
 			return bot.delete(this.toString(), summary, options);
 		}
 
-		undelete(summary: string, options?: any) {
+		undelete(summary: string, options?: ApiUndeleteParams) {
 			return bot.undelete(this.toString(), summary, options);
 		}
 
-		purge(options?: any) {
+		purge(options?: ApiPurgeParams) {
 			return bot.purge(this.toString(), options);
 		}
 

@@ -57,6 +57,13 @@ const static_utils = require('./static_utils');
 
 import type {AxiosRequestConfig} from 'axios';
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
+import type {
+	ApiDeleteParams,
+	ApiEditPageParams, ApiMoveParams,
+	ApiParseParams, ApiPurgeParams,
+	ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams,
+	ApiUndeleteParams, ApiUploadParams
+} from "./api_params";
 
 type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
 	"size"  | "tags" | "userid" | "contentmodel"
@@ -101,7 +108,7 @@ export interface Page extends Title {
 	transclusions(): Promise<string[]>
 	images(): Promise<string[]>
 	externallinks(): Promise<string[]>
-	subpages(options?: ApiParams): Promise<string[]>
+	subpages(options?: ApiQueryAllPagesParams): Promise<string[]>
 	isRedirect(): Promise<boolean>
 	getRedirectTarget(): Promise<string>
 	isRedirect(): Promise<boolean>
@@ -164,7 +171,7 @@ export interface Wikitext {
 	unbind(prefix: string, postfix: string): void
 	rebind(): string
 	getText(): string
-	apiParse(options: ApiParams): Promise<string>
+	apiParse(options: ApiParseParams): Promise<string>
 }
 export interface XDate extends Date {
 	isValid(): boolean
@@ -217,7 +224,12 @@ type editConfigType = {
 	exclusionRegex?: RegExp
 }
 
-type ApiParams = any
+type ApiParams = {
+	[param: string]: string | string[] | boolean | number | number[] | {
+		stream: ReadableStream
+		name: string
+	}
+}
 
 type ApiResponse = any
 
@@ -254,7 +266,7 @@ export class mwn {
 	 * Bot instance Login State
 	 * Is received from the MW Login API and contains token, userid, etc.
 	 */
-	state: object
+	state: any
 
 	/**
 	 * Bot instance is logged in or not
@@ -730,7 +742,7 @@ export class mwn {
 				// use multipart/form-data
 				let form = new formData();
 				for (let [key, val] of Object.entries(params)) {
-					if (val.stream) {
+					if (val instanceof Object && 'stream' in val) { // TypeScript facepalm
 						form.append(key, val.stream, val.name);
 					} else {
 						form.append(key, val);
@@ -754,7 +766,7 @@ export class mwn {
 				// use application/x-www-form-urlencoded (default)
 				// requestOptions.data = params;
 				requestOptions.data = Object.entries(params).map(([key, val]) => {
-					return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+					return encodeURIComponent(key) + '=' + encodeURIComponent(val as string);
 				}).join('&');
 			}
 		} else {
@@ -793,7 +805,7 @@ export class mwn {
 
 			const refreshTokenAndRetry = () => {
 				return Promise.all(
-					[this.getTokenType(params.action), this.getTokens()]
+					[this.getTokenType(params.action as string), this.getTokens()]
 				).then(([tokentype]) => {
 					if (!tokentype || !this.state[tokentype + 'token']) {
 						return this.dieWithError(response, requestOptions);
@@ -1246,7 +1258,7 @@ export class mwn {
 	* @return {Promise<Object>} Edit API response
 	*/
 	edit(title: string | number,
-		 transform: ((rev: {content: string, timestamp: string}) => string | ApiParams),
+		 transform: ((rev: {content: string, timestamp: string}) => string | ApiEditPageParams),
 		 editConfig?: editConfigType): Promise<ApiEditResponse> {
 
 		editConfig = editConfig || this.options.editConfig;
@@ -1335,7 +1347,7 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	save(title: string | number, content: string, summary?: string, options?: ApiParams): Promise<ApiEditResponse> {
+	save(title: string | number, content: string, summary?: string, options?: ApiEditPageParams): Promise<ApiEditResponse> {
 		return this.request(merge({
 			action: 'edit',
 			text: content,
@@ -1355,7 +1367,7 @@ export class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	create(title: string, content: string, summary?: string, options?: ApiParams): Promise<ApiEditResponse> {
+	create(title: string, content: string, summary?: string, options?: ApiEditPageParams): Promise<ApiEditResponse> {
 		return this.request(merge({
 			action: 'edit',
 			title: String(title),
@@ -1375,7 +1387,7 @@ export class mwn {
 	 * @param {string} message wikitext message
 	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
 	 */
-	newSection(title: string | number, header: string, message: string, additionalParams?: ApiParams): Promise<ApiEditResponse> {
+	newSection(title: string | number, header: string, message: string, additionalParams?: ApiEditPageParams): Promise<ApiEditResponse> {
 		return this.request(merge({
 			action: 'edit',
 			section: 'new',
@@ -1395,7 +1407,7 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	delete(title: string | number, summary: string, options?: ApiParams): Promise<ApiResponse> {
+	delete(title: string | number, summary: string, options?: ApiDeleteParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'delete',
 			reason: summary,
@@ -1412,7 +1424,7 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	undelete(title: string, summary: string, options?: ApiParams): Promise<ApiResponse> {
+	undelete(title: string, summary: string, options?: ApiUndeleteParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'undelete',
 			title: String(title),
@@ -1429,7 +1441,7 @@ export class mwn {
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
 	 */
-	move(fromtitle: string, totitle: string, summary: string, options?: ApiParams): Promise<ApiResponse> {
+	move(fromtitle: string, totitle: string, summary: string, options?: ApiMoveParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'move',
 			from: fromtitle,
@@ -1448,7 +1460,7 @@ export class mwn {
 	 *   redirects, sectionpreview.  prop should not be overridden.
 	 * @return {Promise<string>}
 	 */
-	parseWikitext(content: string, additionalParams?: ApiParams): Promise<string> {
+	parseWikitext(content: string, additionalParams?: ApiParseParams): Promise<string> {
 		return this.request(merge({
 			text: String(content),
 			formatversion: 2,
@@ -1467,7 +1479,7 @@ export class mwn {
 	 *   redirects, sectionpreview.  prop should not be overridden.
 	 * @return {Promise<string>}
 	 */
-	parseTitle(title: string, additionalParams?: ApiParams): Promise<string> {
+	parseTitle(title: string, additionalParams?: ApiParseParams): Promise<string> {
 		return this.request(merge({
 			page: String(title),
 			formatversion: 2,
@@ -1488,7 +1500,7 @@ export class mwn {
 	 * @param {object} options
 	 * @returns {Promise<Object>}
 	 */
-	upload(filepath: string, title: string, text: string, options?: ApiParams): Promise<ApiResponse> {
+	upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'upload',
 			file: {
@@ -1523,7 +1535,7 @@ export class mwn {
 	 * @param {Object} options
 	 * @returns {Promise<Object>}
 	 */
-	uploadFromUrl(url: string, title: string, text: string, options?: ApiParams): Promise<ApiResponse> {
+	uploadFromUrl(url: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'upload',
 			url: url,
@@ -1587,7 +1599,7 @@ export class mwn {
 	 * @param {Object} [params] Additional parameters
 	 * @return {Promise}
 	 */
-	rollback(page: string | number, user: string, params?: ApiParams): Promise<ApiResponse> {
+	rollback(page: string | number, user: string, params?: ApiRollbackParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'rollback',
 			user: user,
@@ -1604,7 +1616,7 @@ export class mwn {
 	 * @param {Object} options
 	 * @returns {Promise}
 	 */
-	purge(titles: string[] | string | number[] | number, options?: ApiParams): Promise<ApiResponse> {
+	purge(titles: string[] | string | number[] | number, options?: ApiPurgeParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'purge',
 		}, makeTitles(titles), options)).then(data => data.purge);
@@ -1617,7 +1629,7 @@ export class mwn {
 	 *
 	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
 	 */
-	getPagesByPrefix(prefix: string, otherParams?: ApiParams): Promise<string[]> {
+	getPagesByPrefix(prefix: string, otherParams?: ApiQueryAllPagesParams): Promise<string[]> {
 		const title = this.title.newFromText(prefix);
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
@@ -1639,7 +1651,7 @@ export class mwn {
 	 * @param {Object} [otherParams]
 	 * @returns {Promise<string[]>}
 	 */
-	getPagesInCategory(category: string, otherParams?: ApiParams): Promise<string[]> {
+	getPagesInCategory(category: string, otherParams?: ApiQueryCategoryMembersParams): Promise<string[]> {
 		const title = this.title.newFromText(category, 14);
 		return this.request(merge({
 			"action": "query",
@@ -1658,8 +1670,9 @@ export class mwn {
 	 * @param {Object} otherParams
 	 * @returns {Promise<Object>}
 	 */
-	search(searchTerm: string, limit: number, props: ("size" | "timestamp" | "worcount" | "snippet" | "redirectitle" | "sectiontitle" |
-		"redirectsnippet" | "titlesnippet" | "sectionsnippet" | "categorysnippet")[], otherParams?: ApiParams): Promise<ApiResponse> {
+	search(searchTerm: string, limit: number, props: ("size" | "timestamp" | "worcount" |
+		"snippet" | "redirectitle" | "sectiontitle" | "redirectsnippet" | "titlesnippet" |
+		"sectionsnippet" | "categorysnippet")[], otherParams?: ApiQuerySearchParams): Promise<ApiResponse> {
 		return this.request(merge({
 			action: 'query',
 			list: 'search',
