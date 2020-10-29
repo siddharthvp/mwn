@@ -30,7 +30,8 @@
  *
  */
 
-import axios = require('axios');
+import axios, {AxiosRequestConfig} from 'axios';
+
 import tough = require('tough-cookie');
 import axiosCookieJarSupport = require('axios-cookiejar-support');
 axiosCookieJarSupport.default(axios);
@@ -42,8 +43,9 @@ import https = require('https');
 import fs = require('fs');
 import path = require('path');
 import crypto = require('crypto');
-import semlog = require('semlog');
-const log = semlog.log;
+
+const semlog = require('semlog');
+const log: ((data: any) => void) = semlog.log;
 
 const MwnDate = require('./date');
 const MwnTitle = require('./title');
@@ -55,7 +57,8 @@ const MwnFile = require('./file');
 const MwnStream = require('./eventstream');
 const static_utils = require('./static_utils');
 
-import type {AxiosRequestConfig} from 'axios';
+import {MwnError, MwnErrorConfig} from "./error";
+
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
 import type {
 	ApiDeleteParams,
@@ -299,10 +302,6 @@ export class mwn {
 
 	hasApiHighLimit: boolean
 
-	static Error: Function
-
-	static log: Function
-
 	oauth: OAuth
 
 	usingOAuth: boolean
@@ -367,6 +366,10 @@ export class mwn {
 	user: {
 		new (username: string): User
 	}
+
+	static Error = MwnError
+
+	static log = log
 
 	/***************** CONSTRUCTOR ********************/
 
@@ -1757,6 +1760,9 @@ export class mwn {
 	 */
 	massQuery(query?: ApiParams, batchFieldName='titles'): Promise<ApiResponse[]> {
 		let batchValues = query[batchFieldName];
+		if (!Array.isArray(batchValues)) {
+			throw new Error(`massQuery: batch field in query must be an array`);
+		}
 		const limit = this.hasApiHighLimit ? 500 : 50;
 		const numBatches = Math.ceil(batchValues.length / limit);
 		let batches = new Array(numBatches);
@@ -1794,6 +1800,9 @@ export class mwn {
 	 */
 	async *massQueryGen(query: ApiParams, batchFieldName: string = 'titles', batchSize?: number) {
 		let batchValues = query[batchFieldName];
+		if (!Array.isArray(batchValues)) {
+			throw new Error(`massQuery: batch field in query must be an array`);
+		}
 		const limit = batchSize || this.hasApiHighLimit ? 500 : 50;
 		const batches = arrayChunk(batchValues, limit);
 		const numBatches = batches.length;
@@ -2145,24 +2154,16 @@ export class mwn {
 	 * @param {string} errorCode
 	 * @returns {Promise<mwn.Error>}
 	 */
-	rejectWithErrorCode(errorCode: string): Promise<mwn.Error> {
+	rejectWithErrorCode(errorCode: string): Promise<MwnError> {
 		return Promise.reject(new mwn.Error({
 			code: errorCode
 		}));
 	}
 
-	rejectWithError(errorConfig: MwnErrorConfig): Promise<mwn.Error> {
+	rejectWithError(errorConfig: MwnErrorConfig): Promise<MwnError> {
 		return Promise.reject(new mwn.Error(errorConfig));
 	}
 
-}
-
-type MwnErrorConfig = {
-	code: string,
-	info?: string,
-	response?: Object,
-	request?: Object,
-	disableRetry?: boolean
 }
 
 mwn.requestDefaults = {
@@ -2177,34 +2178,8 @@ mwn.requestDefaults = {
 	timeout: 60000, // 60 seconds
 };
 
-mwn.Error = class MwnError extends Error {
-
-	/**
-	 * @param {errorData} config
-	 */
-	constructor(config) {
-		// If it's an mwn internal error, don't put the error code (begins with "mwn")
-		// in the error message
-		const code = (!config.code || config.code.startsWith('mwn')) ? '' : config.code + ': ';
-		const info = config.info || '';
-		super(code + info);
-		Object.assign(this, config);
-	}
-};
-
-mwn.Error.MissingPage = class extends mwn.Error {
-	constructor(config) {
-		super({
-			code: 'missingarticle',
-			info: 'Page does not exist',
-			...config
-		});
-	}
-};
-
 // Bind static utilities
 Object.assign(mwn, static_utils);
-
 
 // Expose semlog
 mwn.log = log;
@@ -2213,19 +2188,19 @@ mwn.log = log;
 /**** Private utilities ****/
 
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
-const ispromise = function (obj: any) {
+function ispromise(obj: any) {
 	return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
 		typeof obj.then === 'function';
-};
+}
 
 /** Check whether an object is plain object, from https://github.com/sindresorhus/is-plain-obj/blob/master/index.js */
-const isplainobject = function (value: any) {
+function isplainobject(value: any) {
 	if (Object.prototype.toString.call(value) !== '[object Object]') {
 		return false;
 	}
 	const prototype = Object.getPrototypeOf(value);
 	return prototype === null || prototype === Object.prototype;
-};
+}
 
 /**
  * Simple wrapper around Object.assign to merge objects. null and undefined
@@ -2235,10 +2210,10 @@ const isplainobject = function (value: any) {
  * objects, the value on the rightmost one will be kept in the output.
  * @returns {Object} - Merged object
  */
-const merge = function(...objects: object[]) {
+function merge(...objects: object[]) {
 	// {} used as first parameter as this object is mutated by default
 	return Object.assign({}, ...objects);
-};
+}
 
 /**
  * Merge objects deeply to 1 level. Object properties like params, data,
@@ -2248,7 +2223,7 @@ const merge = function(...objects: object[]) {
  * @param {...Object} objects - any number of objects
  * @returns {Object}
  */
-const mergeDeep1 = function(...objects: object[]) {
+function mergeDeep1(...objects: object[]) {
 	let args = [...objects].filter(e => e); // skip null/undefined values
 	for (let options of args.slice(1)) {
 		for (let [key, val] of Object.entries(options)) {
@@ -2262,35 +2237,35 @@ const mergeDeep1 = function(...objects: object[]) {
 		}
 	}
 	return args[0];
-};
+}
 
 /**
  * @param {Array} arr
  * @param {number} size
  */
-const arrayChunk = function(arr: any[], size: number) {
+function arrayChunk(arr: any[], size: number) {
 	const numChunks = Math.ceil(arr.length / size);
 	let result = new Array(numChunks);
 	for (let i=0; i<numChunks; i++) {
 		result[i] = arr.slice(i * size, (i + 1) * size);
 	}
 	return result;
-};
+}
 
-const makeTitles = function(pages: string | string[] | number | number[]) {
-	let pagesArray = Array.isArray(pages) ? pages : [ pages ];
+function makeTitles(pages: string | string[] | number | number[]): {titles: string[]} | {pageids: number[]} {
+	let pagesArray = Array.isArray(pages) ? pages : [pages];
 	if (typeof pagesArray[0] === 'number') {
-		return { pageids: pagesArray };
+		return {pageids: pagesArray as number[]};
 	} else {
 		// .join casts array elements to strings and then joins
-		return { titles: pagesArray };
+		return {titles: pagesArray as string[]};
 	}
-};
+}
 
-const makeTitle = function(page: string | number) {
+function makeTitle(page: string | number): {title: string} | {pageid: number} {
 	if (typeof page === 'number') {
 		return { pageid: page };
 	} else {
 		return { title: String(page) };
 	}
-};
+}
