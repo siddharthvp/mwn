@@ -2,20 +2,19 @@
  * Static functions on mwn
  */
 
+import type {Title} from "./bot";
 
 /*
  * Definitions of some private functions used
  */
 
-import type {Title} from "./bot";
-
-const rawurlencode = function(str: string ) {
+function rawurlencode(str: string ) {
 	return encodeURIComponent( String( str ) )
 		.replace( /!/g, '%21' ).replace( /'/g, '%27' ).replace( /\(/g, '%28' )
 		.replace( /\)/g, '%29' ).replace( /\*/g, '%2A' ).replace( /~/g, '%7E' );
-};
+}
 
-const isIPv4Address = function( address: string, allowBlock?: boolean ) {
+function isIPv4Address( address: string, allowBlock?: boolean ) {
 	let block,
 		RE_IP_BYTE = '(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|0?[0-9]?[0-9])',
 		RE_IP_ADD = '(?:' + RE_IP_BYTE + '\\.){3}' + RE_IP_BYTE;
@@ -24,9 +23,9 @@ const isIPv4Address = function( address: string, allowBlock?: boolean ) {
 	}
 	block = allowBlock ? '(?:\\/(?:3[0-2]|[12]?\\d))?' : '';
 	return ( new RegExp( '^' + RE_IP_ADD + block + '$' ).test( address ) );
-};
+}
 
-const isIPv6Address = function( address: string, allowBlock?: boolean ) {
+function isIPv6Address( address: string, allowBlock?: boolean ) {
 	let block, RE_IPV6_ADD;
 	if ( typeof address !== 'string' ) {
 		return false;
@@ -62,9 +61,9 @@ const isIPv6Address = function( address: string, allowBlock?: boolean ) {
 		/::/.test( address ) &&
 		!/::.*::/.test( address )
 	);
-};
+}
 
-module.exports = {
+export default {
 
 	/**
 	 * Get wikitext for a new link

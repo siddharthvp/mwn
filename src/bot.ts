@@ -32,21 +32,23 @@
 
 import axios, {AxiosRequestConfig} from 'axios';
 
-import tough = require('tough-cookie');
-import axiosCookieJarSupport = require('axios-cookiejar-support');
-axiosCookieJarSupport.default(axios);
-import formData = require('form-data');
-import OAuth = require('oauth-1.0a');
-import http = require('http');
-import https = require('https');
-
 import fs = require('fs');
 import path = require('path');
 import crypto = require('crypto');
 
+import tough = require('tough-cookie');
+import formData = require('form-data');
+import OAuth = require('oauth-1.0a');
+import http = require('http');
+import https = require('https');
+import axiosCookieJarSupport = require('axios-cookiejar-support');
+axiosCookieJarSupport.default(axios);
+
 const semlog = require('semlog');
 const log: ((data: any) => void) = semlog.log;
 
+// Nested classes of mwn
+// Typescript-style imports won't work for these
 const MwnDate = require('./date');
 const MwnTitle = require('./title');
 const MwnPage = require('./page');
@@ -55,9 +57,9 @@ const MwnUser = require('./user');
 const MwnCategory = require('./category');
 const MwnFile = require('./file');
 const MwnStream = require('./eventstream');
-const static_utils = require('./static_utils');
 
 import {MwnError, MwnErrorConfig} from "./error";
+import static_utils from './static_utils'
 
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
 import type {
@@ -68,12 +70,12 @@ import type {
 	ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
 
-type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
+export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
 	"size"  | "tags" | "userid" | "contentmodel"
-type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
+export type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
 	"tags" | "userid"
 
-interface RawRequestParams extends AxiosRequestConfig {
+export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number
 }
 
@@ -255,10 +257,14 @@ export interface ApiRevision {
 }
 
 type ApiEditResponse = { // fix
+	result: string
+	pageid: number
 	title: string
+	contentmodel: string
 	nochange?: boolean
 	oldrevid: number
 	newrevid: number
+	newtimestamp: string
 }
 
 
@@ -291,7 +297,17 @@ export class mwn {
 
 	cookieJar: tough.CookieJar
 
-	static requestDefaults: RawRequestParams
+	static requestDefaults: RawRequestParams = {
+		headers: {
+			'Accept-Encoding': 'gzip'
+		},
+
+		// keep-alive pools and reuses TCP connections, for better performance
+		httpAgent: new http.Agent({ keepAlive: true }),
+		httpsAgent: new https.Agent({ keepAlive: true }),
+
+		timeout: 60000, // 60 seconds
+	}
 
 	requestOptions: RawRequestParams
 
@@ -369,7 +385,14 @@ export class mwn {
 
 	static Error = MwnError
 
+	// Expose semlog
 	static log = log
+
+	static link = static_utils.link
+	static template = static_utils.template
+	static table = static_utils.table
+
+	static util = static_utils.util
 
 	/***************** CONSTRUCTOR ********************/
 
@@ -389,6 +412,7 @@ export class mwn {
 		 * Bot instance's edit token. Initially set as an invalid token string
 		 * so that the badtoken handling logic is invoked if the token is
 		 * not set before a query is sent.
+		 * @type {string}
 		 */
 		this.csrfToken = '%notoken%';
 
@@ -462,7 +486,6 @@ export class mwn {
 		/**
 		 * Actual, current options of the bot instance
 		 * Mix of the default options, the custom options and later changes
-		 *
 		 * @type {Object}
 		 */
 		if (typeof customOptions === 'string') {
@@ -477,7 +500,6 @@ export class mwn {
 
 		/**
 		 * Cookie jar for the bot instance - holds session and login cookies
-		 *
 		 * @type {tough.CookieJar}
 		 */
 		this.cookieJar = new tough.CookieJar();
@@ -485,7 +507,6 @@ export class mwn {
 		/**
 		 * Request options for the axios library.
 		 * Change the defaults using setRequestOptions()
-		 *
 		 * @type {Object}
 		 */
 		this.requestOptions = mergeDeep1({
@@ -539,7 +560,6 @@ export class mwn {
 
 	/**
 	 * Set and overwrite mwn options
-	 *
 	 * @param {Object} customOptions
 	 */
 	setOptions(customOptions: MwnOptions) {
@@ -549,7 +569,6 @@ export class mwn {
 	/**
 	 * Sets the API URL for MediaWiki requests
 	 * This can be uses instead of a login, if no actions are used that require login.
-	 *
 	 * @param {string} apiUrl - API url to MediaWiki, e.g. https://en.wikipedia.org/w/api.php
 	 */
 	setApiUrl(apiUrl: string) {
@@ -644,6 +663,8 @@ export class mwn {
 	/**
 	 * Executes a raw request
 	 * Uses the axios library
+	 * @param {Object} requestOptions
+	 * @returns {Promise}
 	 */
 	rawRequest(requestOptions: RawRequestParams): Promise<any> {
 
@@ -670,6 +691,9 @@ export class mwn {
 	/**
 	 * Executes a request with the ability to use custom parameters and custom
 	 * request options
+	 * @param {Object} params
+	 * @param {Object} [customRequestOptions={}]
+	 * @returns {Promise}
 	 */
 	async request(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<any> {
 
@@ -910,9 +934,7 @@ export class mwn {
 
 	/**
 	 * Executes a Login
-	 *
 	 * @see https://www.mediawiki.org/wiki/API:Login
-	 *
 	 * @returns {Promise}
 	 */
 	login(loginOptions?: {
@@ -991,6 +1013,7 @@ export class mwn {
 
 	/**
 	 * Log out of the account
+	 * @returns {Promise<void>}
 	 */
 	logout(): Promise<void> {
 		return this.request({
@@ -1105,7 +1128,6 @@ export class mwn {
 
 	/**
 	 * Combines Login  with getCsrfToken
-	 *
 	 * @param [loginOptions]
 	 * @returns {Promise<void>}
 	 */
@@ -1185,7 +1207,6 @@ export class mwn {
 	 * Content from the "main" slot is copied over to every revision object
 	 * for easier referencing (`pg.revisions[0].content` can be used instead of
 	 * `pg.revisions[0].slots.main.content`).
-	 *
 	 *
 	 * @param {string|string[]|number|number[]} titles - for multiple pages use an array
 	 * @param {Object} [options]
@@ -2166,25 +2187,6 @@ export class mwn {
 
 }
 
-mwn.requestDefaults = {
-	headers: {
-		'Accept-Encoding': 'gzip'
-	},
-
-	// keep-alive pools and reuses TCP connections, for better performance
-	httpAgent: new http.Agent({ keepAlive: true }),
-	httpsAgent: new https.Agent({ keepAlive: true }),
-
-	timeout: 60000, // 60 seconds
-};
-
-// Bind static utilities
-Object.assign(mwn, static_utils);
-
-// Expose semlog
-mwn.log = log;
-
-
 /**** Private utilities ****/
 
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
@@ -2210,7 +2212,7 @@ function isplainobject(value: any) {
  * objects, the value on the rightmost one will be kept in the output.
  * @returns {Object} - Merged object
  */
-function merge(...objects: object[]) {
+function merge(...objects: any[]) {
 	// {} used as first parameter as this object is mutated by default
 	return Object.assign({}, ...objects);
 }
@@ -2223,7 +2225,7 @@ function merge(...objects: object[]) {
  * @param {...Object} objects - any number of objects
  * @returns {Object}
  */
-function mergeDeep1(...objects: object[]) {
+function mergeDeep1(...objects: any[]) {
 	let args = [...objects].filter(e => e); // skip null/undefined values
 	for (let options of args.slice(1)) {
 		for (let [key, val] of Object.entries(options)) {

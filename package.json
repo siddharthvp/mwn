@@ -2,9 +2,10 @@
 	"name": "mwn",
 	"version": "0.8.0",
 	"description": "MediaWiki bot framework for Node.js",
-	"main": "./src/bot.js",
+	"main": "./build/bot.js",
 	"scripts": {
 		"bump": "node bump-version.js",
+		"build": "npx tsc",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coverage": "nyc report --reporter=text-lcov | coveralls",
 		"test-ts": "ts-mocha -p tsconfig.json tests/ts/*"

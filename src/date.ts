@@ -145,8 +145,8 @@ module.exports = function (bot: mwn) {
 				udate = new MwnDate(this.getTime()).add(this.getTimezoneOffset() + zone, 'minutes');
 			}
 
-			const pad = function(num) {
-				return num < 10 ? '0' + num : num;
+			const pad = function(num: number) {
+				return String(num < 10 ? '0' + num : num);
 			};
 			const h24 = udate.getHours(), m = udate.getMinutes(), s = udate.getSeconds();
 			const D = udate.getDate(), M = udate.getMonth() + 1, Y = udate.getFullYear();
