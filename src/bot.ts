@@ -1937,26 +1937,31 @@ export class mwn {
 	/**
 	 * Execute an asynchronous function on a number of pages (or other arbitrary items)
 	 * sequentially, with a time delay between actions.
-	 * Using this with delay=0 is same as using ApiBatchOperation with batchSize=1
+	 * Using this with delay=0 is same as using batchOperation with batchSize=1
+	 * Use of seriesBatchOperation() is not recommended for MediaWiki API actions. Use the
+	 * normal mwn methods with async-await in a for loop. The request() method has the better
+	 * retry functionality (only network errors are retried, other errors are unlikely to go
+	 * away on retries).
 	 * @param {Array} list
 	 * @param {Function} worker - must return a promise
 	 * @param {number} [delay=5000] - number of milliseconds of delay
 	 * @param {number} [retries=0] - max number of times failing actions should be retried.
 	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
-	 * { failures: [ ...list of failed items... ] }
+	 * { failures: { failed item: error, failed item2: error2, ... } }
 	 */
-	seriesBatchOperation<T>(list: T[], worker: ((item: T, index: number) => Promise<any>), delay=5000, retries=0): Promise<{counts: any, failures: T[]}> {
+	async seriesBatchOperation<T>(list: T[], worker: ((item: T, index: number) => Promise<any>),
+	delay=5000, retries=0): Promise<{failures: {[item: string]: Error}}> {
 		let counts = {
 			successes: 0,
 			failures: 0
 		};
-		let failures = [];
+		let failures: ({item: T, err: Error}[]) = [];
 		const incrementSuccesses = () => {
 			counts.successes++;
 		};
-		const incrementFailures = (idx: number) => {
+		const incrementFailures = (item: T, err: Error) => {
 			counts.failures++;
-			failures.push(list[idx]);
+			failures.push({item, err});
 		};
 		const updateStatusText = () => {
 			const percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
@@ -1967,29 +1972,32 @@ export class mwn {
 			}
 		};
 
-		return new Promise((resolve) => {
-			const trigger = (idx: number) => {
-				if (list[idx] === undefined) { // reached the end
-					if (counts.failures !== 0 && retries > 0) {
-						return resolve(this.seriesBatchOperation(failures, worker, delay, retries - 1));
-					} else {
-						return resolve({ counts, failures });
-					}
+		let worklist = list;
+		for (let r = 0; r <= retries; r++) {
+			if (r !== 0) {
+				if (counts.failures === 0) {
+					break;
 				}
-				const promise = worker(list[idx], idx);
-				if (!ispromise(promise)) {
-					throw new Error('seriesBatchOperation worker function must return a promise');
+				worklist = failures.map(f => f.item);
+				failures = [];
+				counts.successes = 0, counts.failures = 0;
+			}
+			for (let idx = 0; idx < worklist.length; idx++) {
+				await worker(worklist[idx], idx).then(incrementSuccesses, function (err) {
+					incrementFailures(worklist[idx], err);
+				});
+				updateStatusText();
+				if (delay !== 0) {
+					await this.sleep(delay);
 				}
-				promise.then(incrementSuccesses, incrementFailures.bind(null, idx))
-					.finally(function() {
-						updateStatusText();
-						setTimeout(function() {
-							trigger(idx + 1);
-						}, delay);
-					});
-			};
-			trigger(0);
-		});
+			}
+		}
+
+		let errors: {[item: string]: Error} = {};
+		for (let {item, err} of failures) {
+			errors[String(item)] = err;
+		}
+		return { failures: errors };
 	}
 
 

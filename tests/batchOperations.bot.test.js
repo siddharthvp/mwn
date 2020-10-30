@@ -85,10 +85,8 @@ describe('batch operations', function() {
 					}
 				}, idx * 10);
 			});
-		}, 3).then((res) => {
-			expect(res.counts.successes).to.equal(15);
-			expect(res.counts.failures).to.equal(5);
-			expect(res.failures).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
+		}, 4).then((res) => {
+			expect(Object.keys(res.failures)).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
 			done();
 		});
 	});
@@ -107,7 +105,9 @@ describe('batch operations', function() {
 				}, idx * 10);
 			});
 		}, 3, 1).then((res) => {
-			expect(res.failures).to.deep.equal(['a', 'q']);
+			// first round failures: a, e, i, m, q
+			// second round failures: a, q
+			expect(Object.keys(res.failures)).to.deep.equal(['a', 'q']);
 			done();
 		});
 	});
@@ -126,7 +126,7 @@ describe('batch operations', function() {
 				}, idx * 10);
 			});
 		}, 3, 2).then((res) => {
-			expect(res.failures).to.deep.equal(['a']);
+			expect(Object.keys(res.failures)).to.deep.equal(['a']);
 			done();
 		});
 	});
