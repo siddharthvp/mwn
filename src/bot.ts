@@ -69,11 +69,12 @@ import type {
 	ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams,
 	ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
+import type {recentchangeProps} from "./eventstream";
 
 export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
 	"size"  | "tags" | "userid" | "contentmodel"
-export type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
-	"tags" | "userid"
+export type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment"
+	| "ids" | "tags" | "userid"
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number
@@ -144,7 +145,7 @@ export interface Category extends Page {
 	files(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
 }
 export interface Stream {
-	addListener(action: ((data: any) => any), filter: any): void
+	addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void
 }
 export interface User extends Title {
 	username: string
@@ -363,7 +364,8 @@ export class mwn {
 			onerror?: ((evt: MessageEvent) => void)
 		}): Stream
 
-		recentchange(filter: any, action: ((data: any) => any)): Stream
+		recentchange(filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
+							action: ((data: recentchangeProps) => void)): Stream
 	}
 	date: {
 		new (...args: any[]): XDate
@@ -669,13 +671,12 @@ export class mwn {
 	rawRequest(requestOptions: RawRequestParams): Promise<any> {
 
 		if (!requestOptions.url) {
-			const err = new mwn.Error({
+			return this.rejectWithError({
 				code: 'mwn_nourl',
 				info: 'No URL provided for API request!',
 				disableRetry: true,
 				request: requestOptions
 			});
-			return Promise.reject(err);
 		}
 		return axios(mergeDeep1({}, mwn.requestDefaults, {
 			method: 'get',
@@ -823,11 +824,11 @@ export class mwn {
 				if (params.format !== 'json') {
 					throw new Error('must use format=json');
 				}
-				return Promise.reject(new mwn.Error({
+				return this.rejectWithError({
 					code: 'invalidjson',
 					info: 'No valid JSON response',
 					response: response
-				}));
+				});
 			}
 
 			const refreshTokenAndRetry = () => {

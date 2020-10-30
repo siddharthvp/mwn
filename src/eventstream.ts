@@ -1,8 +1,18 @@
 
 import EventSource = require('eventsource');
-import type {mwn, XDate} from './bot';
+import type {mwn as Mwn, XDate} from './bot';
 
-module.exports = function (bot: mwn, mwn) {
+export type recentchangeProps = {
+	wiki: string,
+	type: ("edit"|"log"|"new"|"categorize"),
+	title: string,
+	namespace: number,
+	user: string,
+	bot: boolean,
+	minor: boolean
+}
+
+module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 
 	class EventStream extends EventSource {
 
@@ -40,7 +50,7 @@ module.exports = function (bot: mwn, mwn) {
 		 * @param {Function} action
 		 * @param {Function | Object} [filter={}]
 		 */
-		addListener(action, filter = {}) {
+		addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any = {}): void {
 			let filterer = typeof filter === 'function' ?
 				filter :
 				function(data) {
@@ -68,7 +78,8 @@ module.exports = function (bot: mwn, mwn) {
 		 * user: string, bot: boolean, minor: boolean} | Function} filter
 		 * @param {Function} action
 		 */
-		static recentchange(filter, action) {
+		static recentchange(filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
+							action: ((data: recentchangeProps) => void)): EventStream {
 			let stream = new EventStream('recentchange');
 			stream.addListener(action, filter);
 			return stream;
