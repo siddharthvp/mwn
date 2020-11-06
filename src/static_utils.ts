@@ -2,7 +2,7 @@
  * Static functions on mwn
  */
 
-import type {Title} from "./bot";
+import type {MwnTitle} from "./bot";
 
 /*
  * Definitions of some private functions used
@@ -70,7 +70,7 @@ export default {
 	 * @param target
 	 * @param [displaytext]
 	 */
-	link: function(target: string | Title, displaytext?: string) {
+	link: function(target: string | MwnTitle, displaytext?: string) {
 		if (typeof target === 'string') {
 			return '[[' + target + (displaytext ? '|' + displaytext : '') + ']]';
 		}
@@ -85,7 +85,7 @@ export default {
 	 * @param title
 	 * @param [parameters={}] - template parameters as object
 	 */
-	template: function(title: string | Title, parameters: {[parameter: string]: string} = {}) {
+	template: function(title: string | MwnTitle, parameters: {[parameter: string]: string} = {}) {
 		if (typeof title !== 'string') {
 			if (title.namespace === 10) {
 				title = title.getMainText(); // skip namespace name for templates

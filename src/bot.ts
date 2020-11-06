@@ -49,38 +49,28 @@ const log: ((data: any) => void) = semlog.log;
 
 // Nested classes of mwn
 // Typescript-style imports won't work for these
-const MwnDate = require('./date');
-const MwnTitle = require('./title');
-const MwnPage = require('./page');
-const MwnWikitext = require('./wikitext');
-const MwnUser = require('./user');
-const MwnCategory = require('./category');
-const MwnFile = require('./file');
-const MwnStream = require('./eventstream');
+const XDate = require('./date');
+const Title = require('./title');
+const Page = require('./page');
+const Wikitext = require('./wikitext');
+const User = require('./user');
+const Category = require('./category');
+const File = require('./file');
+const Stream = require('./eventstream');
 
 import {MwnError, MwnErrorConfig} from "./error";
 import static_utils from './static_utils'
 
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
 import type {
-	ApiDeleteParams,
-	ApiEditPageParams,
-	ApiMoveParams,
-	ApiParseParams,
-	ApiPurgeParams,
-	ApiQueryAllPagesParams,
-	ApiQueryCategoryMembersParams,
-	ApiQuerySearchParams,
-	ApiRollbackParams,
-	ApiUndeleteParams,
-	ApiUploadParams,
-	ApiEmailUserParams,
-	ApiQueryRevisionsParams,
-	ApiQueryLogEventsParams,
+	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
+	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
+	ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams,
+	ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams,
+	ApiQueryBacklinkspropParams, ApiQueryCategoriesParams,
 	ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
 } from "./api_params";
 import type {recentchangeProps} from "./eventstream";
-import {ApiQueryBacklinkspropParams, ApiQueryCategoriesParams} from "./api_params";
 
 export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
 	"size"  | "tags" | "userid" | "contentmodel"
@@ -94,7 +84,7 @@ export interface RawRequestParams extends AxiosRequestConfig {
 // The interfaces corresponding to the nested classes appear below.
 // The declarations need to be duplicated here because TypeScript doesn't really support
 // nested classes.
-export interface Title {
+export interface MwnTitle {
 	title: string
 	namespace: number
 	fragment: string
@@ -105,18 +95,18 @@ export interface Title {
 	getPrefixedText(): string
 	getFragment(): string | null
 	isTalkPage(): boolean
-	getTalkPage(): Title | null
-	getSubjectPage(): Title | null
+	getTalkPage(): MwnTitle | null
+	getSubjectPage(): MwnTitle | null
 	canHaveTalkPage(): boolean
 	getExtension(): string | null
 	getDotExtension(): string
 	toString(): string
 	toText(): string
 }
-export interface Page extends Title {
+export interface MwnPage extends MwnTitle {
 	data: any
-	getTalkPage(): Page
-	getSubjectPage(): Page
+	getTalkPage(): MwnPage
+	getSubjectPage(): MwnPage
 	text(): Promise<string>
 	categories(): Promise<{ sortkey: string, category: string, hidden: boolean }>
 	templates(): Promise<{ ns: number, title: string, exists: boolean }>
@@ -143,27 +133,27 @@ export interface Page extends Title {
 	undelete(summary: string, options?: ApiUndeleteParams): Promise<any>
 	purge(options?: ApiPurgeParams): Promise<any>
 }
-export interface File extends Page {
+export interface MwnFile extends MwnPage {
 	getName(): string
 	getNameText (): string
 	usages(options?: ApiQueryBacklinkspropParams): Promise<{pageid: number, title: string, redirect: boolean}>
 	download(localname: string): void
 }
-export interface Category extends Page {
+export interface MwnCategory extends MwnPage {
 	members(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
 	pages(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
 	subcats(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
 	files(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
 }
-export interface Stream {
+export interface MwnStream {
 	addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void
 }
-export interface User extends Title {
+export interface MwnUser extends MwnTitle {
 	username: string
-	userpage: Page
-	talkpage: Page
-	// get userpage(): Page // XXX
-	// get talkpage(): Page
+	userpage: MwnPage
+	talkpage: MwnPage
+	// get userpage(): MwnPage // XXX
+	// get talkpage(): MwnPage
 	contribs(options?: ApiQueryUserContribsParams): Promise<any[]>
 	logs(options?: ApiQueryLogEventsParams): Promise<any[]>
 	info(props?: string | string[]): Promise<any>
@@ -173,7 +163,7 @@ export interface User extends Title {
 	block(options: ApiBlockParams): Promise<any>
 	unblock(options: ApiUnblockParams): Promise<any>
 }
-export interface Wikitext {
+export interface MwnWikitext {
 	text: string
 	links: Array<PageLink>
 	templates: Array<Template>
@@ -190,10 +180,10 @@ export interface Wikitext {
 	getText(): string
 	apiParse(options: ApiParseParams): Promise<string>
 }
-export interface XDate extends Date {
+export interface MwnDate extends Date {
 	isValid(): boolean
-	isBefore(date: Date | XDate): boolean
-	isAfter(date: Date | XDate): boolean
+	isBefore(date: Date | MwnDate): boolean
+	isAfter(date: Date | MwnDate): boolean
 	getUTCMonthName(): string
 	getUTCMonthNameAbbrev(): string
 	getMonthName(): string
@@ -202,8 +192,8 @@ export interface XDate extends Date {
 	getUTCDayNameAbbrev(): string
 	getDayName(): string
 	getDayNameAbbrev(): string
-	add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): XDate
-	subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): XDate
+	add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate
+	subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate
 	format(formatstr: string, zone?: number | 'utc' | 'system'): string
 	calendar(zone?: number | 'utc' | 'system'): string
 }
@@ -335,7 +325,7 @@ export class mwn {
 	usingOAuth: boolean
 
 	title: {
-		new (title: string, namespace?: number): Title
+		new (title: string, namespace?: number): MwnTitle
 		idNameMap: {
 			[namespaceId: number]: string
 		}
@@ -353,33 +343,33 @@ export class mwn {
 			}
 		}): void
 		checkData(): void
-		newFromText(title: string, namespace?: number): Title | null
-		makeTitle(namespace: number, title: string): Title | null
+		newFromText(title: string, namespace?: number): MwnTitle | null
+		makeTitle(namespace: number, title: string): MwnTitle | null
 		isTalkNamespace(namespaceId: number): boolean
 		phpCharToUpper(chr: string): string
 	}
 	page: {
-		new (title: string, namespace?: number): Page
+		new (title: string, namespace?: number): MwnPage
 	}
 	file: {
-		new (title: string): File
+		new (title: string): MwnFile
 	}
 	category: {
-		new (title: string): Category
+		new (title: string): MwnCategory
 	}
 	stream: {
 		new (streams: string | string[], config: {
 			userAgent: string
-			since?: Date | XDate | string
+			since?: Date | MwnDate | string
 			onopen?: (() => void)
 			onerror?: ((evt: MessageEvent) => void)
-		}): Stream
+		}): MwnStream
 
 		recentchange(filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
-							action: ((data: recentchangeProps) => void)): Stream
+							action: ((data: recentchangeProps) => void)): MwnStream
 	}
 	date: {
-		new (...args: any[]): XDate
+		new (...args: any[]): MwnDate
 		loadLocaleData(data: any): void
 		getMonthName(monthNum: number): string
 		getMonthNameAbbrev(monthNum: number): string
@@ -387,13 +377,13 @@ export class mwn {
 		getDayNameAbbrev(dayNum: number): string
 	}
 	wikitext: {
-		new (text: string): Wikitext
+		new (text: string): MwnWikitext
 		parseTemplates(wikitext: string, config: TemplateConfig): Template[]
 		parseTable(text: string): {[column: string]: string}[]
 		parseSections(text: string): Section[]
 	}
 	user: {
-		new (username: string): User
+		new (username: string): MwnUser
 	}
 
 	static Error = MwnError
@@ -541,14 +531,14 @@ export class mwn {
 		/**
 		 * Classes associated with the bot instance
 		 */
-		this.title = MwnTitle(this);
-		this.page = MwnPage(this);
-		this.category = MwnCategory(this);
-		this.file = MwnFile(this);
-		this.user = MwnUser(this);
-		this.wikitext = MwnWikitext(this);
-		this.stream = MwnStream(this, mwn);
-		this.date = MwnDate(this);
+		this.title = Title(this);
+		this.page = Page(this);
+		this.category = Category(this);
+		this.file = File(this);
+		this.user = User(this);
+		this.wikitext = Wikitext(this);
+		this.stream = Stream(this, mwn);
+		this.date = XDate(this);
 	}
 
 
@@ -963,7 +953,7 @@ export class mwn {
 
 		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
 
-		// Fetch login token, also at the same time, fetch info about namespaces for Title
+		// Fetch login token, also at the same time, fetch info about namespaces for MwnTitle
 		return this.request({
 			action: 'query',
 			meta: 'tokens|siteinfo',
@@ -1277,7 +1267,7 @@ export class mwn {
 
 	// adapted from mw.Api().edit
 	/**
-	* @param {string|number|Title} title - Page title or page ID or Title object
+	* @param {string|number|MwnTitle} title - Page title or page ID or MwnTitle object
 	* @param {Function} transform - Callback that prepares the edit. It takes one
 	* argument that is an { content: 'string: page content', timestamp: 'string:
 	* time of last edit' } object. This function should return an object with
@@ -1630,7 +1620,7 @@ export class mwn {
 	/**
 	 * Convenience method for `action=rollback`.
 	 *
-	 * @param {string|number} page - page title or page id as number or Title object
+	 * @param {string|number} page - page title or page id as number or MwnTitle object
 	 * @param {string} user
 	 * @param {Object} [params] Additional parameters
 	 * @return {Promise}

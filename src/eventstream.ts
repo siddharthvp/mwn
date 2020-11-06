@@ -1,6 +1,6 @@
 
 import EventSource = require('eventsource');
-import type {mwn as Mwn, XDate} from './bot';
+import type {mwn as Mwn, MwnDate} from './bot';
 
 export type recentchangeProps = {
 	wiki: string,
@@ -21,7 +21,7 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 		 * @see https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams
 		 */
 		constructor(streams: string | string[], config: {
-			since?: Date | XDate | string
+			since?: Date | MwnDate | string
 			onopen?: (() => void)
 			onerror?: ((evt: MessageEvent) => void)
 		} = {}) {

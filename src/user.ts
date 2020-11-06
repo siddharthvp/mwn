@@ -1,4 +1,4 @@
-import type {mwn, Page} from "./bot";
+import type {mwn, MwnPage} from "./bot";
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
@@ -20,13 +20,13 @@ module.exports = function(bot: mwn) {
 			this.username = name;
 		}
 
-		get userpage(): Page {
+		get userpage(): MwnPage {
 			// User: namespace name will work across all MW sites
 			// as it is a canonical namespace name
 			return new bot.page('User:' + this.username);
 		}
 
-		get talkpage(): Page {
+		get talkpage(): MwnPage {
 			return new bot.page('User talk:' + this.username);
 		}
 

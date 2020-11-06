@@ -1,4 +1,4 @@
-import type {mwn, Title} from './bot'
+import type {mwn, MwnTitle} from './bot'
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -12,7 +12,7 @@ module.exports = function (bot: mwn) {
 	class Page extends bot.title {
 		data: any
 
-		constructor(title: Title | string, namespace?: number) {
+		constructor(title: MwnTitle | string, namespace?: number) {
 			// bot property is set by mwn#page() method
 			if (title instanceof bot.title) {
 				super(title.title, title.namespace);
