@@ -28,7 +28,7 @@ describe('batch operations', function() {
 				}, idx * 10);
 			});
 		}, 7).then((res) => {
-			expect(res.failures).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
+			expect(Object.keys(res.failures)).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
 			done();
 		});
 	});
@@ -47,7 +47,7 @@ describe('batch operations', function() {
 				}, idx * 10);
 			});
 		}, 7, 1).then((res) => {
-			expect(res.failures).to.deep.equal(['a', 'q']);
+			expect(Object.keys(res.failures)).to.deep.equal(['a', 'q']);
 			done();
 		});
 	});
@@ -66,7 +66,7 @@ describe('batch operations', function() {
 				}, idx * 10);
 			});
 		}, 7, 2).then((res) => {
-			expect(res.failures).to.deep.equal(['a']);
+			expect(Object.keys(res.failures)).to.deep.equal(['a']);
 			done();
 		});
 	});

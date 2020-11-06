@@ -3,6 +3,7 @@
 		"outDir": "./build",
 		"target": "es2018",
 		"module": "CommonJS",
+		"allowJs": true,
 		"declaration": true,
 		"types": ["node", "mocha"],
 		"noImplicitAny": true

@@ -1850,18 +1850,24 @@ export class mwn {
 	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
 	 * { failures: [ ...list of failed items... ] }
 	 */
-	batchOperation<T>(list: T[], worker: ((item: T, index: number) => Promise<any>), concurrency = 5, retries = 0): Promise<{failures: T[]}> {
+	batchOperation<T>(
+		list: T[],
+		worker: ((item: T, index: number) => Promise<any>),
+		concurrency = 5,
+		retries = 0
+	): Promise<{failures: { [item: string]: Error }}> {
+
 		let counts = {
 			successes: 0,
 			failures: 0
 		};
-		let failures = [];
+		let failures: ({item: T, error: Error})[] = [];
 		let incrementSuccesses = () => {
 			counts.successes++;
 		};
-		const incrementFailures = (idx: number) => {
+		const incrementFailures = (item: T, error: Error) => {
 			counts.failures++;
-			failures.push(list[idx]);
+			failures.push({item, error});
 		};
 		const updateStatusText = () => {
 			const percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
@@ -1897,17 +1903,22 @@ export class mwn {
 						finalBatchSettledPromises[i] = new Promise((resolve) => {
 							return finalBatchPromises[i].then(resolve, resolve);
 						});
-						finalBatchPromises[i].then(incrementSuccesses, incrementFailures.bind(null, idx))
-							.finally(function() {
-								updateStatusText();
-								finalBatchSettledPromises[i] = Promise.resolve();
-							});
+						finalBatchPromises[i].then(incrementSuccesses, (err: Error) => {
+							incrementFailures(list[idx], err);
+						}).finally(function() {
+							updateStatusText();
+							finalBatchSettledPromises[i] = Promise.resolve();
+						});
 					}
 					Promise.all(finalBatchSettledPromises).then(() => {
 						if (counts.failures !== 0 && retries > 0) {
-							resolve(this.batchOperation(failures, worker, concurrency, retries - 1));
+							resolve(this.batchOperation(failures.map(f => f.item), worker, concurrency, retries - 1));
 						} else {
-							resolve({ failures });
+							let keyedFailuresObject: {[item: string]: Error} = {};
+							for (let {item, error} of failures) {
+								keyedFailuresObject[String(item)] = error;
+							}
+							resolve({ failures: keyedFailuresObject });
 						}
 					});
 					return;
@@ -1920,7 +1931,9 @@ export class mwn {
 					if (!ispromise(promise)) {
 						throw new Error('batchOperation worker function must return a promise');
 					}
-					promise.then(incrementSuccesses, incrementFailures.bind(null, idx)).finally(() => {
+					promise.then(incrementSuccesses, (err: Error) => {
+						incrementFailures(list[idx], err);
+					}).finally(() => {
 						updateStatusText();
 						// last item in batch: trigger the next batch's API calls
 						if (i === concurrency - 1) {
@@ -1949,8 +1962,13 @@ export class mwn {
 	 * @returns {Promise<Object>} - resolved when all API calls have finished, with object
 	 * { failures: { failed item: error, failed item2: error2, ... } }
 	 */
-	async seriesBatchOperation<T>(list: T[], worker: ((item: T, index: number) => Promise<any>),
-	delay=5000, retries=0): Promise<{failures: {[item: string]: Error}}> {
+	async seriesBatchOperation<T>(
+		list: T[],
+		worker: ((item: T, index: number) => Promise<any>),
+		delay=5000,
+		retries=0
+	): Promise<{failures: {[item: string]: Error}}> {
+
 		let counts = {
 			successes: 0,
 			failures: 0
@@ -2098,7 +2116,7 @@ export class mwn {
 	async queryAuthors(title: string): Promise<{ totalBytes: number; users: ({ id: number; name: string; bytes: number; percent: number; })[]; }> {
 		let langcodematch = this.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
 		if (!langcodematch || !langcodematch[1]) {
-			throw new Error('WikiWho API is not supported for bot API url. Re-check.');
+			throw new Error('WikiWho API is not supported for bot API URL. Re-check.');
 		}
 
 		let json;
