@@ -1,4 +1,5 @@
 import type {mwn} from './bot';
+import {ApiQueryCategoriesParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
 
@@ -23,13 +24,14 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 0, title: 'Main Page' }
 		 */
-		members(options: any): Promise<{pageid: number, ns: number, title: string}> {
-			return bot.request(Object.assign({
+		members(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}> {
+			return bot.request({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
-				"cmlimit": "max"
-			}, options)).then(data => data.query.categorymembers);
+				"cmlimit": "max",
+				...options
+			}).then(data => data.query.categorymembers);
 		}
 
 		/**
@@ -38,14 +40,15 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 0, title: 'Main Page' }
 		 */
-		pages(options: any): Promise<{pageid: number, ns: number, title: string}> {
-			return bot.request(Object.assign({
+		pages(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}> {
+			return bot.request({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
 				"cmtype": "page",
-				"cmlimit": "max"
-			}, options)).then(data => data.query.categorymembers);
+				"cmlimit": "max",
+				...options
+			}).then(data => data.query.categorymembers);
 		}
 
 		/**
@@ -54,14 +57,15 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
 		 */
-		subcats(options: any): Promise<{pageid: number, ns: number, title: string}> {
-			return bot.request(Object.assign({
+		subcats(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}> {
+			return bot.request({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
 				"cmtype": "subcat",
-				"cmlimit": "max"
-			}, options)).then(data => data.query.categorymembers);
+				"cmlimit": "max",
+				...options
+			}).then(data => data.query.categorymembers);
 		}
 
 		/**
@@ -70,14 +74,15 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 		 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
 		 */
-		files(options: any): Promise<{pageid: number, ns: number, title: string}> {
-			return bot.request(Object.assign({
+		files(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}> {
+			return bot.request({
 				"action": "query",
 				"list": "categorymembers",
 				"cmtitle": "Category:" + this.title,
 				"cmtype": "file",
-				"cmlimit": "max"
-			}, options)).then(data => data.query.categorymembers);
+				"cmlimit": "max",
+				...options
+			}).then(data => data.query.categorymembers);
 		}
 
 	}

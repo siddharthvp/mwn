@@ -1,9 +1,9 @@
 import type {mwn, Title} from './bot'
-import {
+import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
-	ApiMoveParams, ApiPurgeParams,
-	ApiQueryLogEventsParams, ApiUndeleteParams,
+	ApiMoveParams, ApiPurgeParams, ApiQueryAllPagesParams,
+	ApiQueryLogEventsParams, ApiQueryRevisionsParams, ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams
 } from "./api_params";
 
@@ -163,14 +163,15 @@ module.exports = function (bot: mwn) {
 		 * Returns list of subpages of the page
 		 * @returns {Promise<String[]>}
 		 */
-		subpages(options?: any): Promise<string[]> {
-			return bot.request(Object.assign({
+		subpages(options?: ApiQueryAllPagesParams): Promise<string[]> {
+			return bot.request({
 				"action": "query",
 				"list": "allpages",
 				"apprefix": this.title + '/',
 				"apnamespace": this.namespace,
-				"aplimit": "max"
-			}, options)).then((data) => {
+				"aplimit": "max",
+				...options
+			}).then((data) => {
 				return data.query.allpages.map(pg => pg.title);
 			});
 		}
@@ -284,14 +285,15 @@ module.exports = function (bot: mwn) {
 		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
 		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
 		 */
-		history(props: revisionprop[] | revisionprop, limit: number = 50, customOptions?: any): Promise<object[]> {
-			return bot.request(Object.assign({
+		history(props: revisionprop[] | revisionprop, limit: number = 50, customOptions?: ApiQueryRevisionsParams): Promise<object[]> {
+			return bot.request({
 				"action": "query",
 				"prop": "revisions",
 				"titles": this.toString(),
 				"rvprop": props || "ids|timestamp|flags|comment|user",
-				"rvlimit": limit || 50
-			}, customOptions)).then(data => {
+				"rvlimit": limit || 50,
+				...customOptions
+			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
 					return bot.rejectWithErrorCode('missingarticle');

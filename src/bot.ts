@@ -64,12 +64,23 @@ import static_utils from './static_utils'
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
 import type {
 	ApiDeleteParams,
-	ApiEditPageParams, ApiMoveParams,
-	ApiParseParams, ApiPurgeParams,
-	ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams,
-	ApiUndeleteParams, ApiUploadParams
+	ApiEditPageParams,
+	ApiMoveParams,
+	ApiParseParams,
+	ApiPurgeParams,
+	ApiQueryAllPagesParams,
+	ApiQueryCategoryMembersParams,
+	ApiQuerySearchParams,
+	ApiRollbackParams,
+	ApiUndeleteParams,
+	ApiUploadParams,
+	ApiEmailUserParams,
+	ApiQueryRevisionsParams,
+	ApiQueryLogEventsParams,
+	ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
 } from "./api_params";
 import type {recentchangeProps} from "./eventstream";
+import {ApiQueryBacklinkspropParams, ApiQueryCategoriesParams} from "./api_params";
 
 export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
 	"size"  | "tags" | "userid" | "contentmodel"
@@ -122,27 +133,27 @@ export interface Page extends Title {
 	getCreator(): Promise<string>
 	getDeletingAdmin(): Promise<string>
 	getDescription(customOptions?: any): Promise<string>
-	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: any): Promise<object[]>
-	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: any): Promise<object[]>
+	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: ApiQueryRevisionsParams): Promise<object[]>
+	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams): Promise<object[]>
 	edit(transform: ((rev: {content: string, timestamp: string}) => string | object)): Promise<any>
-	save(text: string, summary?: string, options?: any): Promise<any>
-	newSection(header: string, message: string, additionalParams?: any): Promise<any>
-	move(target: string, summary: string, options?: any): Promise<any>
-	delete(summary: string, options?: any): Promise<any>
-	undelete(summary: string, options?: any): Promise<any>
-	purge(options?: any): Promise<any>
+	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>
+	newSection(header: string, message: string, additionalParams?: ApiEditPageParams): Promise<any>
+	move(target: string, summary: string, options?: ApiMoveParams): Promise<any>
+	delete(summary: string, options?: ApiDeleteParams): Promise<any>
+	undelete(summary: string, options?: ApiUndeleteParams): Promise<any>
+	purge(options?: ApiPurgeParams): Promise<any>
 }
 export interface File extends Page {
 	getName(): string
 	getNameText (): string
-	usages(options: ApiParams): Promise<{pageid: number, title: string, redirect: boolean}>
+	usages(options?: ApiQueryBacklinkspropParams): Promise<{pageid: number, title: string, redirect: boolean}>
 	download(localname: string): void
 }
 export interface Category extends Page {
-	members(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
-	pages(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
-	subcats(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
-	files(options: ApiParams): Promise<{pageid: number, ns: number, title: string}>
+	members(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
+	pages(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
+	subcats(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
+	files(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
 }
 export interface Stream {
 	addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void
@@ -153,14 +164,14 @@ export interface User extends Title {
 	talkpage: Page
 	// get userpage(): Page // XXX
 	// get talkpage(): Page
-	contribs(options: ApiParams): Promise<any[]>
-	logs(options: ApiParams): Promise<any[]>
-	info(props: ApiParams): Promise<any>
-	globalinfo(props: string | string[]): Promise<any>
+	contribs(options?: ApiQueryUserContribsParams): Promise<any[]>
+	logs(options?: ApiQueryLogEventsParams): Promise<any[]>
+	info(props?: string | string[]): Promise<any>
+	globalinfo(props?: ("groups"|"rights"|"merged"|"unattached"|"editcount")[]): Promise<any>
 	sendMessage(header: string, message: string): Promise<any>
-	email(subject: string, message: string): Promise<any>
-	block(options: ApiParams): Promise<any>
-	unblock(options: ApiParams): Promise<any>
+	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any>
+	block(options: ApiBlockParams): Promise<any>
+	unblock(options: ApiUnblockParams): Promise<any>
 }
 export interface Wikitext {
 	text: string
@@ -230,7 +241,7 @@ type editConfigType = {
 	exclusionRegex?: RegExp
 }
 
-type ApiParams = {
+export type ApiParams = {
 	[param: string]: string | string[] | boolean | number | number[] | {
 		stream: ReadableStream
 		name: string

@@ -1,4 +1,5 @@
 import type {mwn} from './bot'
+import {ApiQueryBacklinkspropParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
 
@@ -37,7 +38,7 @@ module.exports = function (bot: mwn) {
 		 * of underscores. For example, the title "File:Example_image.svg" will be returned
 		 * as "Example image".
 		 */
-		getNameText (): string {
+		getNameText(): string {
 			return this.getName().replace( /_/g, ' ' );
 		}
 
@@ -48,13 +49,14 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - resolved with array of { pageid: 32434,
 		 * ns: 0, title: 'Main Page', redirect: false } like objects.
 		 */
-		usages(options): Promise<{pageid: number, title: string, redirect: boolean}> {
-			return bot.request(Object.assign({
+		usages(options?: ApiQueryBacklinkspropParams): Promise<{ pageid: number, title: string, redirect: boolean }> {
+			return bot.request({
 				"action": "query",
 				"prop": "fileusage",
 				"titles": this.toString(),
-				"fuprop": "pageid|title|redirect"
-			}, options)).then(data => {
+				"fuprop": "pageid|title|redirect",
+				...options
+			}).then(data => {
 				return data.query.pages[0].fileusage || [];
 			});
 		}

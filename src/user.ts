@@ -1,4 +1,11 @@
 import type {mwn, Page} from "./bot";
+import type {
+	ApiBlockParams,
+	ApiEmailUserParams,
+	ApiQueryLogEventsParams,
+	ApiQueryUserContribsParams,
+	ApiUnblockParams
+} from "./api_params";
 
 module.exports = function(bot: mwn) {
 
@@ -30,13 +37,14 @@ module.exports = function(bot: mwn) {
 		 * @param {Object} options - additional API options
 		 * @returns {Promise<Object[]>}
 		 */
-		contribs(options): Promise<any[]> {
-			return bot.request(Object.assign({
+		contribs(options?: ApiQueryUserContribsParams): Promise<any[]> {
+			return bot.request({
 				action: 'query',
 				list: 'usercontribs',
 				ucuser: this.username,
-				uclimit: 'max'
-			}, options)).then(data => data.query.usercontribs);
+				uclimit: 'max',
+				...options
+			}).then(data => data.query.usercontribs);
 		}
 
 
@@ -45,13 +53,14 @@ module.exports = function(bot: mwn) {
 		 * @param {Object} options - additional API options
 		 * @returns {Promise<Object[]>}
 		 */
-		logs(options): Promise<any[]> {
-			return bot.request(Object.assign({
+		logs(options?: ApiQueryLogEventsParams): Promise<any[]> {
+			return bot.request({
 				action: 'query',
 				list: 'logevents',
 				leuser: this.username,
-				lelimit: 'max'
-			}, options)).then(data => data.query.logevents);
+				lelimit: 'max',
+				...options
+			}).then(data => data.query.logevents);
 		}
 
 		/**
@@ -59,7 +68,7 @@ module.exports = function(bot: mwn) {
 		 * @param {Array} props - properties to fetch
 		 * @returns {Promise<Object>}
 		 */
-		info(props): Promise<any> {
+		info(props?: string | string[]): Promise<any> {
 			return bot.request({
 				action: 'query',
 				list: 'users',
@@ -73,7 +82,7 @@ module.exports = function(bot: mwn) {
 		 * Get global user info for wikis with CentralAuth
 		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props
 		 */
-		globalinfo(props): Promise<any> {
+		globalinfo(props?: ("groups"|"rights"|"merged"|"unattached"|"editcount")[]): Promise<any> {
 			return bot.request({
 				"action": "query",
 				"meta": "globaluserinfo",
@@ -98,13 +107,14 @@ module.exports = function(bot: mwn) {
 		/**
 		 * Send the user an email
 		 */
-		email(subject: string, message: string): Promise<any> {
+		email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any> {
 			return bot.request({
 				action: 'emailuser',
 				target: this.username,
 				subject: subject,
 				text: message,
-				token: bot.csrfToken
+				token: bot.csrfToken,
+				...options
 			}).then(data => data.emailuser);
 		}
 
@@ -112,24 +122,26 @@ module.exports = function(bot: mwn) {
 		 * Block the user
 		 * @param {Object} options - additional API options
 		 */
-		block(options): Promise<any> {
-			return bot.request(Object.assign({
+		block(options: ApiBlockParams): Promise<any> {
+			return bot.request({
 				action: 'block',
 				user: this.username,
-				token: bot.csrfToken
-			}, options)).then(data => data.block);
+				token: bot.csrfToken,
+				...options
+			}).then(data => data.block);
 		}
 
 		/**
 		 * Unblock the user
 		 * @param {Object} options - additional API options
 		 */
-		unblock(options): Promise<any> {
-			return bot.request(Object.assign({
+		unblock(options: ApiUnblockParams): Promise<any> {
+			return bot.request({
 				action: 'unblock',
 				user: this.username,
-				token: bot.csrfToken
-			}, options)).then(data => data.unblock);
+				token: bot.csrfToken,
+				...options
+			}).then(data => data.unblock);
 		}
 
 	}
