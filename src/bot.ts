@@ -232,7 +232,7 @@ type editConfigType = {
 }
 
 export type ApiParams = {
-	[param: string]: string | string[] | boolean | number | number[] | {
+	[param: string]: string | string[] | boolean | number | number[] | MwnDate | {
 		stream: ReadableStream
 		name: string
 	}
@@ -748,6 +748,8 @@ export class mwn {
 				delete params[key];
 			} else if (val === true) {
 				params[key] = '1'; // booleans cause error with multipart/form-data requests
+			} else if (val instanceof Date) {
+				params[key] = val.toISOString()
 			} else if (String(params[key]).length > MULTIPART_THRESHOLD) {
 				// use multipart/form-data if there are large fields, for better performance
 				hasLongFields = true;
@@ -1742,10 +1744,10 @@ export class mwn {
 	 * Generator to iterate through API response continuations.
 	 * @generator
 	 * @param {Object} query
-	 * @param {number} [limit=10]
+	 * @param {number} [limit=Infinity]
 	 * @yields {Object} a single page of the response
 	 */
-	async *continuedQueryGen(query?: ApiParams, limit: number=10) {
+	async *continuedQueryGen(query?: ApiParams, limit = Infinity) {
 		let response = { continue: {} };
 		for (let i = 0; i < limit; i++) {
 			if (response.continue) {

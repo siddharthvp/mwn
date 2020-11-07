@@ -217,7 +217,7 @@ declare type editConfigType = {
     exclusionRegex?: RegExp;
 };
 export declare type ApiParams = {
-    [param: string]: string | string[] | boolean | number | number[] | {
+    [param: string]: string | string[] | boolean | number | number[] | MwnDate | {
         stream: ReadableStream;
         name: string;
     };
@@ -744,7 +744,7 @@ export declare class mwn {
      * Generator to iterate through API response continuations.
      * @generator
      * @param {Object} query
-     * @param {number} [limit=10]
+     * @param {number} [limit=Infinity]
      * @yields {Object} a single page of the response
      */
     continuedQueryGen(query?: ApiParams, limit?: number): AsyncGenerator<{
