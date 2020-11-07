@@ -71,6 +71,7 @@ import type {
 	ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
 } from "./api_params";
 import type {recentchangeProps} from "./eventstream";
+import type {LogEvent, UserContribution} from "./user";
 
 export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
 	"size"  | "tags" | "userid" | "contentmodel"
@@ -154,8 +155,10 @@ export interface MwnUser extends MwnTitle {
 	talkpage: MwnPage
 	// get userpage(): MwnPage // XXX
 	// get talkpage(): MwnPage
-	contribs(options?: ApiQueryUserContribsParams): Promise<any[]>
-	logs(options?: ApiQueryLogEventsParams): Promise<any[]>
+	contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]>
+	contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution>
+	logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>
+	logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>
 	info(props?: string | string[]): Promise<any>
 	globalinfo(props?: ("groups"|"rights"|"merged"|"unattached"|"editcount")[]): Promise<any>
 	sendMessage(header: string, message: string): Promise<any>

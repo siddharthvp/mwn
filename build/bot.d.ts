@@ -35,6 +35,7 @@ import { MwnError, MwnErrorConfig } from "./error";
 import type { Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section } from "./wikitext";
 import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams, ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams, ApiQueryBacklinkspropParams, ApiQueryCategoriesParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams } from "./api_params";
 import type { recentchangeProps } from "./eventstream";
+import type { LogEvent, UserContribution } from "./user";
 export declare type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" | "size" | "tags" | "userid" | "contentmodel";
 export declare type logprop = "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" | "tags" | "userid";
 export interface RawRequestParams extends AxiosRequestConfig {
@@ -143,8 +144,10 @@ export interface MwnUser extends MwnTitle {
     username: string;
     userpage: MwnPage;
     talkpage: MwnPage;
-    contribs(options?: ApiQueryUserContribsParams): Promise<any[]>;
-    logs(options?: ApiQueryLogEventsParams): Promise<any[]>;
+    contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]>;
+    contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution>;
+    logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
+    logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>;
     info(props?: string | string[]): Promise<any>;
     globalinfo(props?: ("groups" | "rights" | "merged" | "unattached" | "editcount")[]): Promise<any>;
     sendMessage(header: string, message: string): Promise<any>;

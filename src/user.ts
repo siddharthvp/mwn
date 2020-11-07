@@ -7,6 +7,36 @@ import type {
 	ApiUnblockParams
 } from "./api_params";
 
+export type UserContribution = {
+	userid: number
+	user: string
+	pageid: number
+	revid: number
+	parentid: number
+	ns: number
+	title: string
+	timestamp: string
+	new: boolean
+	minor: boolean
+	top: boolean
+	comment: string
+	size: number
+}
+
+export type LogEvent = {
+	logid: number
+	ns: number
+	title: string
+	pageid: number
+	logpage: number
+	params: any
+	type: string
+	action: string
+	user: string
+	timestamp: string
+	comment: string
+}
+
 module.exports = function(bot: mwn) {
 
 	class User {
@@ -37,7 +67,7 @@ module.exports = function(bot: mwn) {
 		 * @param {Object} options - additional API options
 		 * @returns {Promise<Object[]>}
 		 */
-		contribs(options?: ApiQueryUserContribsParams): Promise<any[]> {
+		contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]> {
 			return bot.request({
 				action: 'query',
 				list: 'usercontribs',
@@ -47,13 +77,27 @@ module.exports = function(bot: mwn) {
 			}).then(data => data.query.usercontribs);
 		}
 
+		async *contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution> {
+			let continuedQuery = bot.continuedQueryGen({
+				action: 'query',
+				list: 'usercontribs',
+				ucuser: this.username,
+				uclimit: 'max',
+				...options
+			});
+			for await (let json of continuedQuery) {
+				for (let edit of json.query.usercontribs) {
+					yield edit;
+				}
+			}
+		}
 
 		/**
 		 * Get user's recent log actions
 		 * @param {Object} options - additional API options
 		 * @returns {Promise<Object[]>}
 		 */
-		logs(options?: ApiQueryLogEventsParams): Promise<any[]> {
+		logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]> {
 			return bot.request({
 				action: 'query',
 				list: 'logevents',
@@ -61,6 +105,21 @@ module.exports = function(bot: mwn) {
 				lelimit: 'max',
 				...options
 			}).then(data => data.query.logevents);
+		}
+
+		async *logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent> {
+			let continuedQuery = bot.continuedQueryGen({
+				action: 'query',
+				list: 'logevents',
+				leuser: this.username,
+				lelimit: 'max',
+				...options
+			});
+			for await (let json of continuedQuery) {
+				for (let action of json.query.logevents) {
+					yield action;
+				}
+			}
 		}
 
 		/**

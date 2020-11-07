@@ -32,6 +32,20 @@ module.exports = function (bot) {
                 ...options
             }).then(data => data.query.usercontribs);
         }
+        async *contribsGen(options) {
+            let continuedQuery = bot.continuedQueryGen({
+                action: 'query',
+                list: 'usercontribs',
+                ucuser: this.username,
+                uclimit: 'max',
+                ...options
+            });
+            for await (let json of continuedQuery) {
+                for (let edit of json.query.usercontribs) {
+                    yield edit;
+                }
+            }
+        }
         /**
          * Get user's recent log actions
          * @param {Object} options - additional API options
@@ -45,6 +59,20 @@ module.exports = function (bot) {
                 lelimit: 'max',
                 ...options
             }).then(data => data.query.logevents);
+        }
+        async *logsGen(options) {
+            let continuedQuery = bot.continuedQueryGen({
+                action: 'query',
+                list: 'logevents',
+                leuser: this.username,
+                lelimit: 'max',
+                ...options
+            });
+            for await (let json of continuedQuery) {
+                for (let action of json.query.logevents) {
+                    yield action;
+                }
+            }
         }
         /**
          * Get public information about the user
