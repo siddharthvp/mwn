@@ -1,4 +1,4 @@
-import {mwn, Title, Page} from '../../src/bot';
+import {mwn} from '../../src/bot';
 import loginCredentials = require('../mocking/loginCredentials');
 
 import {expect} from 'chai';
