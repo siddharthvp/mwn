@@ -53,7 +53,7 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 		addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any = {}): void {
 			let filterer = typeof filter === 'function' ?
 				filter :
-				function(data) {
+				function(data: any) {
 					for (let key of Object.keys(filter)) {
 						if (data[key] !== filter[key]) {
 							return false;

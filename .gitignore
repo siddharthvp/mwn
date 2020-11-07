@@ -4,3 +4,4 @@ local.js
 tests/mocking/.auth.json
 /coveralls.yml
 /.nyc_output/
+.idea/*

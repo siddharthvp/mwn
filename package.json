@@ -6,6 +6,7 @@
 	"scripts": {
 		"bump": "node bump-version.js",
 		"build": "npx tsc",
+		"commit": "npm run build && git commit",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coverage": "nyc report --reporter=text-lcov | coveralls",
 		"test-ts": "ts-mocha -p tsconfig.json tests/ts/*"

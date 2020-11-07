@@ -7,7 +7,10 @@ describe('bot emergency shutoff', async function() {
 	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', loginBefore);
-	after('logs out', logoutAfter);
+	after('logs out', function () {
+		logoutAfter();
+		bot.shutoff.state = false;
+	});
 
 	it('set shutoff=true on non-matching regex', async function () {
 		bot.enableEmergencyShutoff({
