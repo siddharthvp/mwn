@@ -13,11 +13,12 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type {mwn} from "./bot";
+import type {mwn, MwnTitle} from "./bot";
+import type {ApiParseParams} from "./api_params";
 
 export interface Link {
 	wikitext: string
-	target: string
+	target: MwnTitle
 }
 
 export interface PageLink extends Link {
@@ -65,7 +66,7 @@ export interface TemplateConfig {
 export class Template {
 	wikitext: string
 	parameters: Array<Parameter>
-	name: string
+	name: string | number
 
 	/**
 	 * @param {String} wikitext Wikitext of a template transclusion,
@@ -75,7 +76,7 @@ export class Template {
 		this.wikitext = wikitext;
 		this.parameters = [];
 	}
-	addParam(name: string, val: string, wikitext: string) {
+	addParam(name: string | number, val: string, wikitext: string) {
 		this.parameters.push(new Parameter(name, val, wikitext));
 	}
 	getParam(paramName: string | number): Parameter {
@@ -94,65 +95,16 @@ export class Template {
 }
 
 export class Parameter {
-	name: string
+	name: string | number
 	value: string
 	wikitext: string
 
-	constructor(name: string, val: string, wikitext: string) {
+	constructor(name: string | number, val: string, wikitext: string) {
 		this.name = name;
 		this.value = val;
 		this.wikitext = '|' + wikitext;
 	}
 }
-
-// export declare class wikitext {
-// 	text: string
-// 	links: Array<PageLink>
-// 	templates: Array<Template>
-// 	files: Array<FileLink>
-// 	categories: Array<CategoryLink>
-// 	sections: Array<Section>
-// 	private unbinder: {
-// 		counter: number
-// 		history: {
-// 			[replaced: string]: string
-// 		}
-// 		prefix: string
-// 		postfix: string
-// 	}
-//
-// 	constructor(wikitext: string)
-// 	parseLinks(): void
-// 	parseTemplates(config: TemplateConfig): Template[]
-// 	removeEntity(entity: Link | Template)
-// 	parseSections(): Section[]
-// 	unbind(prefix: string, postfix: string)
-// 	rebind()
-// 	getText()
-// 	apiParse(options)
-//
-// 	static parseTemplates(wikitext: string, config: TemplateConfig): Template[]
-// 	static parseTable(text: string): any
-// 	static parseSections(text: string): Section[]
-// }
-
-// export interface wikitext {
-// 	text: string
-// 	links: Array<PageLink>
-// 	templates: Array<Template>
-// 	files: Array<FileLink>
-// 	categories: Array<CategoryLink>
-// 	sections: Array<Section>
-//
-// 	parseLinks(): void
-// 	parseTemplates(config: TemplateConfig): Template[]
-// 	removeEntity(entity: Link | Template)
-// 	parseSections(): Section[]
-// 	unbind(prefix: string, postfix: string): void
-// 	rebind(): string
-// 	getText(): string
-// 	apiParse(options): Promise<string>
-// }
 
 module.exports = function (bot: mwn) {
 
@@ -402,9 +354,9 @@ module.exports = function (bot: mwn) {
 		 * Parse the text using the API.
 		 * @see https://www.mediawiki.org/wiki/API:Parsing_wikitext
 		 * @param {Object} [options] - additional API options
-		 * @returns {Promise}
+		 * @returns {Promise<string>}
 		 */
-		apiParse(options): Promise<string> {
+		apiParse(options?: ApiParseParams): Promise<string> {
 			return bot.parseWikitext(this.text, options);
 		}
 
@@ -425,9 +377,9 @@ module.exports = function (bot: mwn) {
 		 * @returns {Object[]} - each object in the returned array represents a row,
 		 * with its keys being column names, and values the cell content
 		 */
-		static parseTable(text): {[column: string]: string}[] {
+		static parseTable(text: string): {[column: string]: string}[] {
 			text = text.trim();
-			const indexOfRawPipe = function (text) {
+			const indexOfRawPipe = function (text: string) {
 
 				// number of unclosed brackets
 				let tlevel = 0,
@@ -462,7 +414,7 @@ module.exports = function (bot: mwn) {
 			let [header, ...rows] = text.split(/^\|-/m).map(r => r.trim());
 
 			// remove cell attributes, extracts data
-			const extractData = (cell) => {
+			const extractData = (cell: string) => {
 				return cell.slice(indexOfRawPipe(cell) + 1).trim();
 			};
 
@@ -521,7 +473,7 @@ module.exports = function (bot: mwn) {
 		/**
 		 * @inheritdoc
 		 */
-		static parseSections(text): Section[] {
+		static parseSections(text: string): Section[] {
 			const rgx = /^(=+)(.*?)\1/mg;
 			let sections: Section[] = [{
 				level: 1,
@@ -554,7 +506,7 @@ module.exports = function (bot: mwn) {
 		}
 	}
 
-	const processLink = function (self, startIdx, endIdx) {
+	function processLink(self: Wikitext, startIdx: number, endIdx: number) {
 		let linktext = self.text.slice(startIdx, endIdx + 1);
 		let [target, displaytext] = linktext.slice(2, -2).split('|');
 		let noSortkey = false;
@@ -588,7 +540,7 @@ module.exports = function (bot: mwn) {
 			target: title,
 			displaytext: displaytext
 		});
-	};
+	}
 
 	/**
 	 * @param {string} text - template wikitext without braces, with the pipes in
@@ -597,7 +549,11 @@ module.exports = function (bot: mwn) {
 	 * @param {Function} [templatePredicate]
 	 * @returns {Template}
 	 */
-	const processTemplateText = function (text: string, namePredicate, templatePredicate) {
+	function processTemplateText(
+		text: string,
+		namePredicate: ((name: string | number) => boolean),
+		templatePredicate: ((template: Template) => boolean)
+	) {
 
 		// eslint-disable-next-line no-control-regex
 		const template = new Template('{{' + text.replace(/\x01/g, '|') + '}}');
@@ -650,11 +606,11 @@ module.exports = function (bot: mwn) {
 		}
 
 		return template;
-	};
+	}
 
-	const strReplaceAt = function (string: string, index: number, char: string): string {
+	function strReplaceAt(string: string, index: number, char: string): string {
 		return string.slice(0, index) + char + string.slice(index + 1);
-	};
+	}
 
 	return Wikitext;
 

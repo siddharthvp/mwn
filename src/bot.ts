@@ -59,7 +59,7 @@ const File = require('./file');
 const Stream = require('./eventstream');
 
 import {MwnError, MwnErrorConfig} from "./error";
-import static_utils from './static_utils'
+import static_utils from './static_utils';
 
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
 import type {
