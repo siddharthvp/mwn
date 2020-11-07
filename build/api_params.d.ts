@@ -1,4 +1,4 @@
-import { MwnDate } from "./bot";
+import type { MwnDate } from "./bot";
 declare type timestamp = MwnDate | string;
 declare type namespace = number;
 declare type limit = number | 'max';

@@ -553,7 +553,7 @@ export declare class mwn {
      * @returns {Promise<ApiPage>}
      */
     read(titles: string | string[] | number | number[], options?: ApiParams): Promise<ApiPage | ApiPage[]>;
-    readGen(titles: string[], options?: ApiParams): AsyncGenerator<any, void, unknown>;
+    readGen(titles: string[], options?: ApiParams): AsyncGenerator<ApiPage>;
     /**
     * @param {string|number|MwnTitle} title - Page title or page ID or MwnTitle object
     * @param {Function} transform - Callback that prepares the edit. It takes one
@@ -750,9 +750,7 @@ export declare class mwn {
      * @param {number} [limit=Infinity]
      * @yields {Object} a single page of the response
      */
-    continuedQueryGen(query?: ApiParams, limit?: number): AsyncGenerator<{
-        continue: {};
-    }, void, unknown>;
+    continuedQueryGen(query?: ApiParams, limit?: number): AsyncGenerator<ApiResponse>;
     /**
      * Function for using API action=query with more than 50/500 items in multi-
      * input fields.
@@ -786,7 +784,7 @@ export declare class mwn {
      * @param {string} [batchFieldName=titles]
      * @param {number} [batchSize]
      */
-    massQueryGen(query: ApiParams, batchFieldName?: string, batchSize?: number): AsyncGenerator<any, void, unknown>;
+    massQueryGen(query: ApiParams, batchFieldName?: string, batchSize?: number): AsyncGenerator<ApiResponse>;
     /**
      * Execute an asynchronous function on a large number of pages (or other arbitrary
      * items). Designed for working with promises.

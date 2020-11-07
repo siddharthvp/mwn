@@ -1245,7 +1245,7 @@ export class mwn {
 		});
 	}
 
-	async *readGen(titles: string[], options?: ApiParams) {
+	async *readGen(titles: string[], options?: ApiParams): AsyncGenerator<ApiPage> {
 		let massQueryResponses = this.massQueryGen({
 			action: 'query',
 			...makeTitles(titles),
@@ -1750,7 +1750,7 @@ export class mwn {
 	 * @param {number} [limit=Infinity]
 	 * @yields {Object} a single page of the response
 	 */
-	async *continuedQueryGen(query?: ApiParams, limit = Infinity) {
+	async *continuedQueryGen(query?: ApiParams, limit = Infinity): AsyncGenerator<ApiResponse>  {
 		let response = { continue: {} };
 		for (let i = 0; i < limit; i++) {
 			if (response.continue) {
@@ -1826,7 +1826,7 @@ export class mwn {
 	 * @param {string} [batchFieldName=titles]
 	 * @param {number} [batchSize]
 	 */
-	async *massQueryGen(query: ApiParams, batchFieldName: string = 'titles', batchSize?: number) {
+	async *massQueryGen(query: ApiParams, batchFieldName: string = 'titles', batchSize?: number): AsyncGenerator<ApiResponse> {
 		let batchValues = query[batchFieldName];
 		if (!Array.isArray(batchValues)) {
 			throw new Error(`massQuery: batch field in query must be an array`);

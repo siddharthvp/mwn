@@ -6,7 +6,7 @@
 
 Development status: Unstable. Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
-Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. 
+Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. You can learn about these by looking through the source code. 
 
 Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions can be automatically retried. 
 
@@ -51,6 +51,19 @@ If you're migrating from mwbot, note that:
 - If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
 
 ### Documentation
+
+Importing mwn:
+
+In JavaScript:
+```js
+const {mwn} = require('mwn');
+```
+Note: Prior to mwn v0.8.0, import was via `const mwn = require('mwn');`
+
+In TypeScript: 
+```ts
+import {mwn} from 'mwn';
+```
 
 Create a new bot instance:
 ```js
@@ -206,11 +219,6 @@ bot.parseWikitext('Input wikitext', additonalOptions);
 Parse the contents of a given page
 ```js
 bot.parseTitle('Page name', additionalOptions);
-```
-
-Rollback a user:
-```js
-bot.rollback('Page title', 'user', additionalOptions);
 ```
 
 Upload a file from your system to the wiki:

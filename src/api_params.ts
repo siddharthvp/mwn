@@ -1,4 +1,4 @@
-import {MwnDate} from "./bot";
+import type {MwnDate} from "./bot";
 
 type timestamp = MwnDate | string
 type namespace = number
