@@ -856,7 +856,7 @@ class mwn {
             rvslots: 'main',
             formatversion: '2',
             curtimestamp: true
-        }).then(data => {
+        }).then((data) => {
             let page, revision, revisionContent;
             if (!data.query || !data.query.pages) {
                 return this.rejectWithErrorCode('unknown');
@@ -866,7 +866,7 @@ class mwn {
                 return this.rejectWithErrorCode('invalidtitle');
             }
             if (page.missing) {
-                return this.rejectWithErrorCode('nocreate-missing');
+                return Promise.reject(new mwn.Error.MissingPage());
             }
             revision = page.revisions[0];
             try {

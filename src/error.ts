@@ -22,8 +22,8 @@ export class MwnError extends Error {
 	static MissingPage = class MwnErrorMissingPage extends MwnError {
 		constructor(config: Partial<MwnErrorConfig> = {}) {
 			super({
-				code: 'missingarticle',
-				info: 'Page does not exist',
+				code: 'missingtitle',
+				info: 'The page you specified doesn\'t exist.',
 				...config
 			});
 		}

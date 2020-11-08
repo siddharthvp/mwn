@@ -18,8 +18,8 @@ exports.MwnError = MwnError;
 MwnError.MissingPage = class MwnErrorMissingPage extends MwnError {
     constructor(config = {}) {
         super({
-            code: 'missingarticle',
-            info: 'Page does not exist',
+            code: 'missingtitle',
+            info: 'The page you specified doesn\'t exist.',
             ...config
         });
     }

@@ -1290,7 +1290,8 @@ export class mwn {
 	*/
 	edit(title: string | number,
 		 transform: ((rev: {content: string, timestamp: string}) => string | ApiEditPageParams),
-		 editConfig?: editConfigType): Promise<ApiEditResponse> {
+		 editConfig?: editConfigType
+	): Promise<ApiEditResponse> {
 
 		editConfig = editConfig || this.options.editConfig;
 
@@ -1304,7 +1305,7 @@ export class mwn {
 			rvslots: 'main',
 			formatversion: '2',
 			curtimestamp: true
-		}).then(data => {
+		}).then((data: ApiResponse) => {
 			let page, revision, revisionContent;
 			if (!data.query || !data.query.pages) {
 				return this.rejectWithErrorCode('unknown');
@@ -1314,7 +1315,7 @@ export class mwn {
 				return this.rejectWithErrorCode('invalidtitle');
 			}
 			if (page.missing) {
-				return this.rejectWithErrorCode('nocreate-missing');
+				return Promise.reject(new mwn.Error.MissingPage());
 			}
 			revision = page.revisions[0];
 			try {
@@ -2289,7 +2290,7 @@ function arrayChunk(arr: any[], size: number) {
 	return result;
 }
 
-function makeTitles(pages: string | string[] | number | number[]): {titles: string[]} | {pageids: number[]} {
+function makeTitles(pages: string | string[] | number | number[] | MwnTitle | MwnTitle[]): {titles: string[]} | {pageids: number[]} {
 	let pagesArray = Array.isArray(pages) ? pages : [pages];
 	if (typeof pagesArray[0] === 'number') {
 		return {pageids: pagesArray as number[]};
@@ -2299,7 +2300,7 @@ function makeTitles(pages: string | string[] | number | number[]): {titles: stri
 	}
 }
 
-function makeTitle(page: string | number): {title: string} | {pageid: number} {
+function makeTitle(page: string | number | MwnTitle): {title: string} | {pageid: number} {
 	if (typeof page === 'number') {
 		return { pageid: page };
 	} else {

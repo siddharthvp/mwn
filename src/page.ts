@@ -1,3 +1,5 @@
+import {MwnError} from "./error";
+
 import type {mwn, MwnTitle} from './bot'
 import type {
 	ApiDeleteParams,
@@ -107,7 +109,7 @@ module.exports = function (bot: mwn) {
 				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
 				var page = pages[0];
 				if (page.missing) {
-					return bot.rejectWithErrorCode('missingarticle');
+					return Promise.reject(new MwnError.MissingPage());
 				}
 				return page.linkshere.map(pg => pg.title);
 			});
@@ -128,7 +130,7 @@ module.exports = function (bot: mwn) {
 				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
 				var page = pages[0];
 				if (page.missing) {
-					return bot.rejectWithErrorCode('missingarticle');
+					return Promise.reject(new MwnError.MissingPage());
 				}
 				return page.transcludedin.map(pg => pg.title);
 			});
@@ -206,7 +208,7 @@ module.exports = function (bot: mwn) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					return bot.rejectWithErrorCode('missingarticle');
+					return Promise.reject(new MwnError.MissingPage());
 				}
 				return page.title;
 			});
@@ -228,7 +230,7 @@ module.exports = function (bot: mwn) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					return bot.rejectWithErrorCode('missingarticle');
+					return Promise.reject(new MwnError.MissingPage());
 				}
 				return page.revisions[0].user;
 			});
@@ -269,7 +271,7 @@ module.exports = function (bot: mwn) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					return bot.rejectWithErrorCode('missingarticle');
+					return Promise.reject(new MwnError.MissingPage());
 				}
 				return data.query.pages[0].description;
 			});
@@ -296,7 +298,7 @@ module.exports = function (bot: mwn) {
 			}).then(data => {
 				var page = data.query.pages[0];
 				if (page.missing) {
-					return bot.rejectWithErrorCode('missingarticle');
+					return Promise.reject(new MwnError.MissingPage());
 				}
 				return data.query.pages[0].revisions;
 			});

@@ -8,5 +8,8 @@
 		"noImplicitAny": true,
 		"newLine": "lf"
 	},
-	"include": ["./src/**/*"]
+	"include": ["./src/**/*"],
+	"ts-node": {
+		"logError": true
+	}
 }

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const error_1 = require("./error");
 module.exports = function (bot) {
     class Page extends bot.title {
         constructor(title, namespace) {
@@ -89,7 +90,7 @@ module.exports = function (bot) {
                 var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
                 var page = pages[0];
                 if (page.missing) {
-                    return bot.rejectWithErrorCode('missingarticle');
+                    return Promise.reject(new error_1.MwnError.MissingPage());
                 }
                 return page.linkshere.map(pg => pg.title);
             });
@@ -109,7 +110,7 @@ module.exports = function (bot) {
                 var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
                 var page = pages[0];
                 if (page.missing) {
-                    return bot.rejectWithErrorCode('missingarticle');
+                    return Promise.reject(new error_1.MwnError.MissingPage());
                 }
                 return page.transcludedin.map(pg => pg.title);
             });
@@ -181,7 +182,7 @@ module.exports = function (bot) {
             }).then(data => {
                 var page = data.query.pages[0];
                 if (page.missing) {
-                    return bot.rejectWithErrorCode('missingarticle');
+                    return Promise.reject(new error_1.MwnError.MissingPage());
                 }
                 return page.title;
             });
@@ -201,7 +202,7 @@ module.exports = function (bot) {
             }).then(data => {
                 var page = data.query.pages[0];
                 if (page.missing) {
-                    return bot.rejectWithErrorCode('missingarticle');
+                    return Promise.reject(new error_1.MwnError.MissingPage());
                 }
                 return page.revisions[0].user;
             });
@@ -240,7 +241,7 @@ module.exports = function (bot) {
             }).then(data => {
                 var page = data.query.pages[0];
                 if (page.missing) {
-                    return bot.rejectWithErrorCode('missingarticle');
+                    return Promise.reject(new error_1.MwnError.MissingPage());
                 }
                 return data.query.pages[0].description;
             });
@@ -266,7 +267,7 @@ module.exports = function (bot) {
             }).then(data => {
                 var page = data.query.pages[0];
                 if (page.missing) {
-                    return bot.rejectWithErrorCode('missingarticle');
+                    return Promise.reject(new error_1.MwnError.MissingPage());
                 }
                 return data.query.pages[0].revisions;
             });
