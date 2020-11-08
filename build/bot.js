@@ -1282,6 +1282,9 @@ class mwn {
                 response = await this.request(merge(query, response.continue));
                 yield response;
             }
+            else {
+                break;
+            }
         }
     }
     /**

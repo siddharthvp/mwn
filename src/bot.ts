@@ -1756,6 +1756,8 @@ export class mwn {
 			if (response.continue) {
 				response = await this.request(merge(query, response.continue));
 				yield response;
+			} else {
+				break;
 			}
 		}
 	}
