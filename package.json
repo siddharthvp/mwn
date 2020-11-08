@@ -1,8 +1,9 @@
 {
 	"name": "mwn",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"description": "MediaWiki bot framework for Node.js",
 	"main": "./build/bot.js",
+	"types": "./build/bot.d.ts",
 	"scripts": {
 		"bump": "node bump-version.js",
 		"build": "npx tsc",
@@ -24,7 +25,8 @@
 	},
 	"homepage": "https://github.com/siddharthvp/mwn#readme",
 	"files": [
-		"src/"
+		"src/",
+		"build/"
 	],
 	"dependencies": {
 		"@types/eventsource": "^1.1.4",
