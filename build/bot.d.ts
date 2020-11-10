@@ -33,7 +33,7 @@ import tough = require('tough-cookie');
 import OAuth = require('oauth-1.0a');
 import { MwnError, MwnErrorConfig } from "./error";
 import type { Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section } from "./wikitext";
-import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams, ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams, ApiQueryBacklinkspropParams, ApiQueryCategoriesParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams } from "./api_params";
+import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams, ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams, ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams } from "./api_params";
 import type { recentchangeProps } from "./eventstream";
 import type { LogEvent, UserContribution } from "./user";
 export declare type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" | "size" | "tags" | "userid" | "contentmodel";
@@ -116,22 +116,22 @@ export interface MwnFile extends MwnPage {
     download(localname: string): void;
 }
 export interface MwnCategory extends MwnPage {
-    members(options?: ApiQueryCategoriesParams): Promise<{
+    members(options?: ApiQueryCategoryMembersParams): Promise<{
         pageid: number;
         ns: number;
         title: string;
     }>;
-    pages(options?: ApiQueryCategoriesParams): Promise<{
+    pages(options?: ApiQueryCategoryMembersParams): Promise<{
         pageid: number;
         ns: number;
         title: string;
     }>;
-    subcats(options?: ApiQueryCategoriesParams): Promise<{
+    subcats(options?: ApiQueryCategoryMembersParams): Promise<{
         pageid: number;
         ns: number;
         title: string;
     }>;
-    files(options?: ApiQueryCategoriesParams): Promise<{
+    files(options?: ApiQueryCategoryMembersParams): Promise<{
         pageid: number;
         ns: number;
         title: string;
@@ -225,7 +225,7 @@ export declare type ApiParams = {
         name: string;
     };
 };
-declare type ApiResponse = any;
+export declare type ApiResponse = any;
 export interface ApiPage {
     title: string;
     missing?: boolean;

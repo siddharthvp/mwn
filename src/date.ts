@@ -94,18 +94,11 @@ module.exports = function (bot: mwn) {
 		 * @throws {Error} if invalid or unsupported unit is given
 		 * @returns {MwnDate}
 		 */
-		add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate {
-			// mapping time units with getter/setter function names
-			const unitMap = {
-				seconds: 'Seconds',
-				minutes: 'Minutes',
-				hours: 'Hours',
-				days: 'Date',
-				months: 'Month',
-				years: 'FullYear'
-			};
+		add(number: number, unit: timeUnit): MwnDate {
+			// @ts-ignore
 			let unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
 			if (unitNorm) {
+				// @ts-ignore
 				this['set' + unitNorm](this['get' + unitNorm]() + number);
 				return this;
 			}
@@ -266,6 +259,18 @@ module.exports = function (bot: mwn) {
 			return this;
 		};
 	});
+
+	// mapping time units with getter/setter function names for add and subtract
+	const unitMap = {
+		seconds: 'Seconds',
+		minutes: 'Minutes',
+		hours: 'Hours',
+		days: 'Date',
+		months: 'Month',
+		years: 'FullYear'
+	}
+	// plural or singular keys of unitMap
+	type timeUnit  = keyof typeof unitMap | 'second' | 'minute' | 'hour' | 'day' | 'month' | 'year'
 
 	return MwnDate;
 

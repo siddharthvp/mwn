@@ -79,17 +79,10 @@ module.exports = function (bot) {
          * @returns {MwnDate}
          */
         add(number, unit) {
-            // mapping time units with getter/setter function names
-            const unitMap = {
-                seconds: 'Seconds',
-                minutes: 'Minutes',
-                hours: 'Hours',
-                days: 'Date',
-                months: 'Month',
-                years: 'FullYear'
-            };
+            // @ts-ignore
             let unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
             if (unitNorm) {
+                // @ts-ignore
                 this['set' + unitNorm](this['get' + unitNorm]() + number);
                 return this;
             }
@@ -236,5 +229,14 @@ module.exports = function (bot) {
             return this;
         };
     });
+    // mapping time units with getter/setter function names for add and subtract
+    const unitMap = {
+        seconds: 'Seconds',
+        minutes: 'Minutes',
+        hours: 'Hours',
+        days: 'Date',
+        months: 'Month',
+        years: 'FullYear'
+    };
     return MwnDate;
 };

@@ -35,14 +35,7 @@ module.exports = function (bot) {
          * { pageid: 324234, ns: 0, title: 'Main Page' }
          */
         pages(options) {
-            return bot.request({
-                "action": "query",
-                "list": "categorymembers",
-                "cmtitle": "Category:" + this.title,
-                "cmtype": "page",
-                "cmlimit": "max",
-                ...options
-            }).then(data => data.query.categorymembers);
+            return this.members({ "cmtype": ["page"], ...options });
         }
         /**
          * Get all subcategories of the category
@@ -51,14 +44,7 @@ module.exports = function (bot) {
          * { pageid: 324234, ns: 14, title: 'Category:Living people' }
          */
         subcats(options) {
-            return bot.request({
-                "action": "query",
-                "list": "categorymembers",
-                "cmtitle": "Category:" + this.title,
-                "cmtype": "subcat",
-                "cmlimit": "max",
-                ...options
-            }).then(data => data.query.categorymembers);
+            return this.members({ "cmtype": ["subcat"], ...options });
         }
         /**
          * Get all files in the category
@@ -67,14 +53,7 @@ module.exports = function (bot) {
          * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
          */
         files(options) {
-            return bot.request({
-                "action": "query",
-                "list": "categorymembers",
-                "cmtitle": "Category:" + this.title,
-                "cmtype": "file",
-                "cmlimit": "max",
-                ...options
-            }).then(data => data.query.categorymembers);
+            return this.members({ "cmtype": ["file"], ...options });
         }
     }
     return Category;

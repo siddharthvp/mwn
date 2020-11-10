@@ -67,8 +67,7 @@ import type {
 	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
 	ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams,
 	ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams,
-	ApiQueryBacklinkspropParams, ApiQueryCategoriesParams,
-	ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
+	ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
 } from "./api_params";
 import type {recentchangeProps} from "./eventstream";
 import type {LogEvent, UserContribution} from "./user";
@@ -141,10 +140,10 @@ export interface MwnFile extends MwnPage {
 	download(localname: string): void
 }
 export interface MwnCategory extends MwnPage {
-	members(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
-	pages(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
-	subcats(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
-	files(options?: ApiQueryCategoriesParams): Promise<{pageid: number, ns: number, title: string}>
+	members(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
+	pages(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
+	subcats(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
+	files(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
 }
 export interface MwnStream {
 	addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void
@@ -241,7 +240,7 @@ export type ApiParams = {
 	}
 }
 
-type ApiResponse = any
+export type ApiResponse = any
 
 export interface ApiPage {
 	title: string
