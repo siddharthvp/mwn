@@ -13,7 +13,7 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type {mwn, MwnTitle} from "./bot";
+import type {mwn, MwnTitle, MwnWikitext} from "./bot";
 import type {ApiParseParams} from "./api_params";
 
 export interface Link {
@@ -108,7 +108,7 @@ export class Parameter {
 
 module.exports = function (bot: mwn) {
 
-	class Wikitext {
+	class Wikitext implements MwnWikitext {
 		text: string
 		links: Array<PageLink>
 		templates: Array<Template>

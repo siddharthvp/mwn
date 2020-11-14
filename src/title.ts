@@ -8,7 +8,7 @@
  *
  */
 
-import type {mwn} from "./bot";
+import type {mwn, MwnTitle} from "./bot";
 
 module.exports = function (bot: mwn) {
 
@@ -16,7 +16,7 @@ module.exports = function (bot: mwn) {
 	var NS_TALK = 1;
 	var NS_SPECIAL = -1;
 
-	class Title {
+	class Title implements MwnTitle {
 
 		static idNameMap: {
 			[namespaceId: number]: string

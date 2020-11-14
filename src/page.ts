@@ -1,6 +1,6 @@
 import {MwnError} from "./error";
 
-import type {mwn, MwnTitle} from './bot'
+import type {mwn, MwnTitle, MwnPage} from './bot'
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -9,9 +9,14 @@ import type {
 	WikibaseClientApiDescriptionParams
 } from "./api_params";
 
+export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
+	"size"  | "tags" | "userid" | "contentmodel"
+export type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment"
+	| "ids" | "tags" | "userid"
+
 module.exports = function (bot: mwn) {
 
-	class Page extends bot.title {
+	class Page extends bot.title implements MwnPage {
 		data: any
 
 		constructor(title: MwnTitle | string, namespace?: number) {
@@ -375,10 +380,3 @@ module.exports = function (bot: mwn) {
 	return Page;
 
 };
-
-
-type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
-	"size"  | "tags" | "userid" | "contentmodel"
-
-type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" |
-	"tags" | "userid"

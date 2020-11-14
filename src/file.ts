@@ -1,9 +1,9 @@
-import type {mwn} from './bot'
+import type {mwn, MwnFile} from './bot'
 import {ApiQueryBacklinkspropParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
 
-	class File extends bot.page {
+	class File extends bot.page implements MwnFile {
 
 		/**
 		 * @constructor

@@ -1,9 +1,9 @@
-import type {mwn} from './bot';
+import type {mwn, MwnCategory} from './bot';
 import {ApiQueryCategoryMembersParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
 
-	class Category extends bot.page {
+	class Category extends bot.page implements MwnCategory {
 
 		/**
 		 * @constructor

@@ -1,4 +1,4 @@
-import type {mwn, MwnPage} from "./bot";
+import type {mwn, MwnPage, MwnUser} from "./bot";
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
@@ -39,7 +39,7 @@ export type LogEvent = {
 
 module.exports = function(bot: mwn) {
 
-	class User {
+	class User implements MwnUser {
 		username: string
 
 		/**

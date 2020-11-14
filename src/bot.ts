@@ -62,6 +62,11 @@ import {MwnError, MwnErrorConfig} from "./error";
 import static_utils from './static_utils';
 
 import type {Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section} from "./wikitext";
+import type {revisionprop, logprop} from './page';
+import type {LogEvent, UserContribution} from "./user";
+import type {recentchangeProps} from "./eventstream";
+import type {timeUnit} from "./date";
+
 import type {
 	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
 	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
@@ -69,13 +74,6 @@ import type {
 	ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams,
 	ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
 } from "./api_params";
-import type {recentchangeProps} from "./eventstream";
-import type {LogEvent, UserContribution} from "./user";
-
-export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" |
-	"size"  | "tags" | "userid" | "contentmodel"
-export type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment"
-	| "ids" | "tags" | "userid"
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number
@@ -148,7 +146,7 @@ export interface MwnCategory extends MwnPage {
 export interface MwnStream {
 	addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void
 }
-export interface MwnUser extends MwnTitle {
+export interface MwnUser {
 	username: string
 	userpage: MwnPage
 	talkpage: MwnPage
@@ -194,8 +192,8 @@ export interface MwnDate extends Date {
 	getUTCDayNameAbbrev(): string
 	getDayName(): string
 	getDayNameAbbrev(): string
-	add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate
-	subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate
+	add(number: number, unit: timeUnit): MwnDate
+	subtract(number: number, unit: timeUnit): MwnDate
 	format(formatstr: string, zone?: number | 'utc' | 'system'): string
 	calendar(zone?: number | 'utc' | 'system'): string
 }

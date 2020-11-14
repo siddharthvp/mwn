@@ -1,4 +1,4 @@
-import type {mwn} from "./bot";
+import type {mwn, MwnDate as XDate} from "./bot";
 
 /**
  * Wrapper around the native JS Date() for ease of
@@ -8,7 +8,7 @@ import type {mwn} from "./bot";
 
 module.exports = function (bot: mwn) {
 
-	class MwnDate extends Date {
+	class MwnDate extends Date implements XDate {
 
 		/**
 		 * Create a date object. MediaWiki timestamp format is also acceptable,
@@ -113,7 +113,7 @@ module.exports = function (bot: mwn) {
 		 * @throws {Error} if invalid or unsupported unit is given
 		 * @returns {MwnDate}
 		 */
-		subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days'| 'months' | 'years'): MwnDate {
+		subtract(number: number, unit: timeUnit): MwnDate {
 			return this.add(-number, unit);
 		}
 
@@ -260,19 +260,19 @@ module.exports = function (bot: mwn) {
 		};
 	});
 
-	// mapping time units with getter/setter function names for add and subtract
-	const unitMap = {
-		seconds: 'Seconds',
-		minutes: 'Minutes',
-		hours: 'Hours',
-		days: 'Date',
-		months: 'Month',
-		years: 'FullYear'
-	}
-	// plural or singular keys of unitMap
-	type timeUnit  = keyof typeof unitMap | 'second' | 'minute' | 'hour' | 'day' | 'month' | 'year'
-
 	return MwnDate;
 
 };
+
+// mapping time units with getter/setter function names for add and subtract
+const unitMap = {
+	seconds: 'Seconds',
+	minutes: 'Minutes',
+	hours: 'Hours',
+	days: 'Date',
+	months: 'Month',
+	years: 'FullYear'
+}
+// plural or singular keys of unitMap
+export type timeUnit  = keyof typeof unitMap | 'second' | 'minute' | 'hour' | 'day' | 'month' | 'year'
 

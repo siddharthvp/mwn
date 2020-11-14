@@ -1,6 +1,6 @@
 
 import EventSource = require('eventsource');
-import type {mwn as Mwn, MwnDate} from './bot';
+import type {mwn as Mwn, MwnDate, MwnStream} from './bot';
 
 export type recentchangeProps = {
 	wiki: string,
@@ -14,7 +14,7 @@ export type recentchangeProps = {
 
 module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 
-	class EventStream extends EventSource {
+	class EventStream extends EventSource implements MwnStream {
 
 		/**
 		 * Access the Wikimedia EventStreams API
