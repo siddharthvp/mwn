@@ -47,10 +47,10 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 
 		/**
 		 * Register a function to trigger for every message data from the source.
-		 * @param {Function} action
 		 * @param {Function | Object} [filter={}]
+		 * @param {Function} action
 		 */
-		addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any = {}): void {
+		addListener(filter: ((data: any) => boolean) | any = {}, action: (data: any) => void): void {
 			let filterer = typeof filter === 'function' ?
 				filter :
 				function(data: any) {
@@ -81,7 +81,7 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 		static recentchange(filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
 							action: ((data: recentchangeProps) => void)): EventStream {
 			let stream = new EventStream('recentchange');
-			stream.addListener(action, filter);
+			stream.addListener(filter, action);
 			return stream;
 		}
 

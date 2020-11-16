@@ -33,10 +33,10 @@ export interface Section {
     content?: string;
 }
 export interface TemplateConfig {
-    recursive: boolean;
-    namePredicate: ((name: string) => boolean);
-    templatePredicate: ((template: Template) => boolean);
-    count: number;
+    recursive?: boolean;
+    namePredicate?: ((name: string) => boolean);
+    templatePredicate?: ((template: Template) => boolean);
+    count?: number;
 }
 /**
  * @class

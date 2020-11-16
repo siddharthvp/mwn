@@ -33,11 +33,11 @@ import tough = require('tough-cookie');
 import OAuth = require('oauth-1.0a');
 import { MwnError, MwnErrorConfig } from "./error";
 import type { Link, CategoryLink, FileLink, PageLink, Template, TemplateConfig, Section } from "./wikitext";
-import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams, ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams, ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams } from "./api_params";
-import type { recentchangeProps } from "./eventstream";
+import type { revisionprop, logprop } from './page';
 import type { LogEvent, UserContribution } from "./user";
-export declare type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" | "ids" | "flags" | "size" | "tags" | "userid" | "contentmodel";
-export declare type logprop = "type" | "user" | "comment" | "details" | "timestamp" | "title" | "parsedcomment" | "ids" | "tags" | "userid";
+import type { recentchangeProps } from "./eventstream";
+import type { timeUnit } from "./date";
+import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams, ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams, ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams } from "./api_params";
 export interface RawRequestParams extends AxiosRequestConfig {
     retryNumber?: number;
 }
@@ -138,9 +138,9 @@ export interface MwnCategory extends MwnPage {
     }>;
 }
 export interface MwnStream {
-    addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void;
+    addListener(filter: ((data: any) => boolean) | any, action: (data: any) => void): void;
 }
-export interface MwnUser extends MwnTitle {
+export interface MwnUser {
     username: string;
     userpage: MwnPage;
     talkpage: MwnPage;
@@ -183,8 +183,8 @@ export interface MwnDate extends Date {
     getUTCDayNameAbbrev(): string;
     getDayName(): string;
     getDayNameAbbrev(): string;
-    add(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days' | 'months' | 'years'): MwnDate;
-    subtract(number: number, unit: 'seconds' | 'minutes' | 'hours' | 'days' | 'months' | 'years'): MwnDate;
+    add(number: number, unit: timeUnit): MwnDate;
+    subtract(number: number, unit: timeUnit): MwnDate;
     format(formatstr: string, zone?: number | 'utc' | 'system'): string;
     calendar(zone?: number | 'utc' | 'system'): string;
 }
@@ -326,7 +326,6 @@ export declare class mwn {
     };
     stream: {
         new (streams: string | string[], config: {
-            userAgent: string;
             since?: Date | MwnDate | string;
             onopen?: (() => void);
             onerror?: ((evt: MessageEvent) => void);
@@ -552,7 +551,8 @@ export declare class mwn {
      * @param {Object} [options]
      * @returns {Promise<ApiPage>}
      */
-    read(titles: string | string[] | number | number[], options?: ApiParams): Promise<ApiPage | ApiPage[]>;
+    read(titles: string | number | MwnTitle, options?: ApiParams): Promise<ApiPage>;
+    read(titles: string[] | number[] | MwnTitle[], options?: ApiParams): Promise<ApiPage[]>;
     readGen(titles: string[], options?: ApiParams): AsyncGenerator<ApiPage>;
     /**
     * @param {string|number|MwnTitle} title - Page title or page ID or MwnTitle object

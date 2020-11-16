@@ -229,14 +229,14 @@ module.exports = function (bot) {
             return this;
         };
     });
-    // mapping time units with getter/setter function names for add and subtract
-    const unitMap = {
-        seconds: 'Seconds',
-        minutes: 'Minutes',
-        hours: 'Hours',
-        days: 'Date',
-        months: 'Month',
-        years: 'FullYear'
-    };
     return MwnDate;
+};
+// mapping time units with getter/setter function names for add and subtract
+const unitMap = {
+    seconds: 'Seconds',
+    minutes: 'Minutes',
+    hours: 'Hours',
+    days: 'Date',
+    months: 'Month',
+    years: 'FullYear'
 };

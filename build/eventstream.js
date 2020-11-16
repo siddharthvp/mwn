@@ -26,10 +26,10 @@ module.exports = function (bot, mwn) {
         }
         /**
          * Register a function to trigger for every message data from the source.
-         * @param {Function} action
          * @param {Function | Object} [filter={}]
+         * @param {Function} action
          */
-        addListener(action, filter = {}) {
+        addListener(filter = {}, action) {
             let filterer = typeof filter === 'function' ?
                 filter :
                 function (data) {
@@ -57,7 +57,7 @@ module.exports = function (bot, mwn) {
          */
         static recentchange(filter, action) {
             let stream = new EventStream('recentchange');
-            stream.addListener(action, filter);
+            stream.addListener(filter, action);
             return stream;
         }
     }

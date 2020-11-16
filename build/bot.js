@@ -768,17 +768,6 @@ class mwn {
     disableEmergencyShutoff() {
         clearInterval(this.shutoff.hook);
     }
-    /***************** HELPER FUNCTIONS ******************/
-    /**
-     * Reads the content and and meta-data of one (or many) pages.
-     * Content from the "main" slot is copied over to every revision object
-     * for easier referencing (`pg.revisions[0].content` can be used instead of
-     * `pg.revisions[0].slots.main.content`).
-     *
-     * @param {string|string[]|number|number[]} titles - for multiple pages use an array
-     * @param {Object} [options]
-     * @returns {Promise<ApiPage>}
-     */
     read(titles, options) {
         let pages = Array.isArray(titles) ? titles : [titles];
         let batchFieldName = typeof pages[0] === 'number' ? 'pageids' : 'titles';

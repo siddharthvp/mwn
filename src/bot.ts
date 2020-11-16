@@ -144,7 +144,7 @@ export interface MwnCategory extends MwnPage {
 	files(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
 }
 export interface MwnStream {
-	addListener(action: ((data: any) => void), filter: ((data: any) => boolean) | any): void
+	addListener(filter: ((data: any) => boolean) | any, action: (data: any) => void): void
 }
 export interface MwnUser {
 	username: string
@@ -359,7 +359,6 @@ export class mwn {
 	}
 	stream: {
 		new (streams: string | string[], config: {
-			userAgent: string
 			since?: Date | MwnDate | string
 			onopen?: (() => void)
 			onerror?: ((evt: MessageEvent) => void)
@@ -1216,7 +1215,9 @@ export class mwn {
 	 * @param {Object} [options]
 	 * @returns {Promise<ApiPage>}
 	 */
-	read(titles: string | string[] | number | number[], options?: ApiParams): Promise<ApiPage | ApiPage[]> {
+	read(titles: string | number | MwnTitle, options?: ApiParams): Promise<ApiPage>
+	read(titles: string[] | number[] | MwnTitle[], options?: ApiParams): Promise<ApiPage[]>
+	read(titles: any, options?: any): any {
 		let pages = Array.isArray(titles) ? titles : [ titles ];
 		let batchFieldName = typeof pages[0] === 'number' ? 'pageids' : 'titles';
 		return this.massQuery({
