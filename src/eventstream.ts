@@ -29,7 +29,7 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 				streams = streams.join(',');
 			}
 
-			let since = config.since ? `?since=${new bot.date(config.since).format('YYYYMMDDHHmmss')}` : '';
+			let since = config.since ? `?since=${new bot.date(config.since).toISOString()}` : '';
 			super(`https://stream.wikimedia.org/v2/stream/${streams}${since}`, {
 				headers: {
 					'User-Agent': bot.options.userAgent

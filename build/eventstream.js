@@ -11,7 +11,7 @@ module.exports = function (bot, mwn) {
             if (Array.isArray(streams)) {
                 streams = streams.join(',');
             }
-            let since = config.since ? `?since=${new bot.date(config.since).format('YYYYMMDDHHmmss')}` : '';
+            let since = config.since ? `?since=${new bot.date(config.since).toISOString()}` : '';
             super(`https://stream.wikimedia.org/v2/stream/${streams}${since}`, {
                 headers: {
                     'User-Agent': bot.options.userAgent
