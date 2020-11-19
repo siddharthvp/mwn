@@ -126,7 +126,8 @@ exports.default = {
             this.text += '\n';
         }
         _makecell(cell, isHeader) {
-            if (typeof cell === 'object') {
+            // typeof null is also object!
+            if (cell && typeof cell === 'object') {
                 let text = isHeader ? `scope="col"` : ``;
                 for (let [key, value] of Object.entries(cell)) {
                     if (key === 'label') {
@@ -137,7 +138,7 @@ exports.default = {
                 text += ` | ${cell.label}`;
                 return text;
             }
-            return cell;
+            return String(cell);
         }
         /**
          * Add the headers
