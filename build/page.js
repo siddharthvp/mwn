@@ -272,6 +272,21 @@ module.exports = function (bot) {
                 return data.query.pages[0].revisions;
             });
         }
+        async *historyGen(props, customOptions) {
+            let continuedQuery = bot.continuedQueryGen({
+                "action": "query",
+                "prop": "revisions",
+                "titles": this.toString(),
+                "rvprop": props || "ids|timestamp|flags|comment|user",
+                "rvlimit": 50,
+                ...customOptions
+            });
+            for await (let json of continuedQuery) {
+                for (let edit of json.query.pages[0].revisions) {
+                    yield edit;
+                }
+            }
+        }
         /**
          * Get the page logs.
          * @param {logprop[]} props - data about log entries to fetch

@@ -309,6 +309,22 @@ module.exports = function (bot: mwn) {
 			});
 		}
 
+		async *historyGen(props: revisionprop[] | revisionprop, customOptions?: ApiQueryRevisionsParams): AsyncGenerator<object> {
+			let continuedQuery = bot.continuedQueryGen({
+				"action": "query",
+				"prop": "revisions",
+				"titles": this.toString(),
+				"rvprop": props || "ids|timestamp|flags|comment|user",
+				"rvlimit": 50,
+				...customOptions
+			});
+			for await (let json of continuedQuery) {
+				for (let edit of json.query.pages[0].revisions) {
+					yield edit;
+				}
+			}
+		}
+
 		/**
 		 * Get the page logs.
 		 * @param {logprop[]} props - data about log entries to fetch
