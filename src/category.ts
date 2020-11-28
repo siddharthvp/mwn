@@ -1,4 +1,4 @@
-import type {mwn, MwnCategory} from './bot';
+import type {mwn, MwnCategory, MwnTitle} from './bot';
 import {ApiQueryCategoryMembersParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
@@ -9,7 +9,7 @@ module.exports = function (bot: mwn) {
 		 * @constructor
 		 * @param {string} name - name of the category
 		 */
-		constructor(name: string) {
+		constructor(name: MwnTitle | string) {
 			super(name, 14);
 			if (this.namespace !== 14) {
 				throw new Error('not a category page');

@@ -1,4 +1,4 @@
-import type {mwn, MwnFile} from './bot'
+import type {mwn, MwnFile, MwnTitle} from './bot'
 import {ApiQueryBacklinkspropParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
@@ -9,7 +9,7 @@ module.exports = function (bot: mwn) {
 		 * @constructor
 		 * @param {string} name - name of the file
 		 */
-		constructor(name: string) {
+		constructor(name: MwnTitle | string) {
 			super(name, 6);
 			if (this.namespace !== 6) {
 				throw new Error('not a file');

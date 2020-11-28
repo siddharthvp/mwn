@@ -349,13 +349,13 @@ export class mwn {
 		phpCharToUpper(chr: string): string
 	}
 	page: {
-		new (title: string, namespace?: number): MwnPage
+		new (title: MwnTitle | string, namespace?: number): MwnPage
 	}
 	file: {
-		new (title: string): MwnFile
+		new (title: MwnTitle | string): MwnFile
 	}
 	category: {
-		new (title: string): MwnCategory
+		new (title: MwnTitle | string): MwnCategory
 	}
 	stream: {
 		new (streams: string | string[], config: {
