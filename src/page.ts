@@ -64,7 +64,7 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { sortkey: '...', category: '...', hidden: true }
 		 */
-		categories(): Promise<{sortkey: string, category: string, hidden: boolean}> {
+		categories(): Promise<{sortkey: string, category: string, hidden: boolean}[]> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -77,7 +77,7 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { ns: 10, title: 'Template:Cite web', exists: true }
 		 */
-		templates(): Promise<{ns: number, title: string, exists: boolean}> {
+		templates(): Promise<{ns: number, title: string, exists: boolean}[]> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),
@@ -90,7 +90,7 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { ns: 0, title: 'Main Page', exists: true }
 		 */
-		links(): Promise<{ns: number, title: string, exists: boolean}> {
+		links(): Promise<{ns: number, title: string, exists: boolean}[]> {
 			return bot.request({
 				"action": "parse",
 				"page": this.toString(),

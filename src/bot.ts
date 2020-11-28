@@ -106,9 +106,9 @@ export interface MwnPage extends MwnTitle {
 	getTalkPage(): MwnPage
 	getSubjectPage(): MwnPage
 	text(): Promise<string>
-	categories(): Promise<{ sortkey: string, category: string, hidden: boolean }>
-	templates(): Promise<{ ns: number, title: string, exists: boolean }>
-	links(): Promise<{ ns: number, title: string, exists: boolean }>
+	categories(): Promise<{ sortkey: string, category: string, hidden: boolean }[]>
+	templates(): Promise<{ ns: number, title: string, exists: boolean }[]>
+	links(): Promise<{ ns: number, title: string, exists: boolean }[]>
 	backlinks(): Promise<string[]>
 	transclusions(): Promise<string[]>
 	images(): Promise<string[]>
@@ -134,14 +134,14 @@ export interface MwnPage extends MwnTitle {
 export interface MwnFile extends MwnPage {
 	getName(): string
 	getNameText (): string
-	usages(options?: ApiQueryBacklinkspropParams): Promise<{pageid: number, title: string, redirect: boolean}>
+	usages(options?: ApiQueryBacklinkspropParams): Promise<{pageid: number, title: string, redirect: boolean}[]>
 	download(localname: string): void
 }
 export interface MwnCategory extends MwnPage {
-	members(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
-	pages(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
-	subcats(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
-	files(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}>
+	members(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
+	pages(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
+	subcats(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
+	files(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
 }
 export interface MwnStream {
 	addListener(filter: ((data: any) => boolean) | any, action: (data: any) => void): void

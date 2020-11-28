@@ -49,7 +49,7 @@ module.exports = function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - resolved with array of { pageid: 32434,
 		 * ns: 0, title: 'Main Page', redirect: false } like objects.
 		 */
-		usages(options?: ApiQueryBacklinkspropParams): Promise<{ pageid: number, title: string, redirect: boolean }> {
+		usages(options?: ApiQueryBacklinkspropParams): Promise<{ pageid: number, title: string, redirect: boolean }[]> {
 			return bot.request({
 				"action": "query",
 				"prop": "fileusage",

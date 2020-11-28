@@ -21,7 +21,8 @@ module.exports = function (bot, mwn) {
                 mwn.log(`[S] Opened eventsource connection for ${streams} stream(s)`);
             };
             this.onerror = config.onerror || function (evt) {
-                mwn.log(`[W] event source encountered error: ${evt}`);
+                mwn.log(`[W] event source encountered error:`);
+                mwn.log(evt);
             };
         }
         /**

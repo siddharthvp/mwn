@@ -35,12 +35,12 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 					'User-Agent': bot.options.userAgent
 				}
 			});
-
 			this.onopen = config.onopen || function () {
 				mwn.log(`[S] Opened eventsource connection for ${streams} stream(s)`);
 			};
 			this.onerror = config.onerror || function (evt) {
-				mwn.log(`[W] event source encountered error: ${evt}`);
+				mwn.log(`[W] event source encountered error:`);
+				mwn.log(evt);
 			};
 
 		}
