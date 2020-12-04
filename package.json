@@ -7,6 +7,7 @@
 	"scripts": {
 		"bump": "node bump-version.js",
 		"build": "npx tsc",
+		"test-readonly": "cd tests && npx mocha bot.test.js batchOperations.bot.test.js category.test.js date.test.js file.test.js page.test.js title.test.js wikitext.test.js",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coverage": "nyc report --reporter=text-lcov | coveralls",
 		"test-ts": "ts-mocha -p tsconfig.json tests/ts/*"

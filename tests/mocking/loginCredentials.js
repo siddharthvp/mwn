@@ -1,4 +1,6 @@
-const realCredentials = require('./.auth.json');
+const realCredentials = process.env.AUTH_JSON ?
+	JSON.parse(process.env.AUTH_JSON) :
+	require('./.auth.json');
 
 module.exports = {
 	"account1": {
