@@ -10,10 +10,10 @@ describe('Category', async function() {
 	let category;
 
 	it('category constructor', function() {
-		var cat = new bot.category('Category:Xyz');
+		let cat = new bot.category('Category:Xyz');
 		expect(cat.title === 'Xyz' && cat.namespace === 14).to.be.ok;
 		category = new bot.category('Category:User_en-2');
-		var badCatConstruction = function() {
+		let badCatConstruction = function() {
 			new bot.category('Template:Abc');
 		};
 		expect(badCatConstruction).to.throw('not a category page');
@@ -22,18 +22,18 @@ describe('Category', async function() {
 	});
 
 	it('category members', function () {
-		category.members().then(pgs => {
+		return category.members().then(pgs => {
 			expect(pgs).to.be.instanceOf(Array);
 			expect(pgs).to.be.of.length.gte(3);
-			expect(pgs[0]).to.be.a('string');
+			expect(pgs[0].title).to.be.a('string');
 		});
 	});
 
 	it('category pages', function () {
-		category.pages().then(pgs => {
+		return category.pages().then(pgs => {
 			expect(pgs).to.be.instanceOf(Array);
 			expect(pgs).to.be.of.length.gte(3);
-			expect(pgs[0]).to.be.a('string');
+			expect(pgs[0].title).to.be.a('string');
 		});
 	});
 

@@ -9,13 +9,13 @@ describe('File', async function() {
 
 
 	it('file constructor', function() {
-		var file = new bot.file('file:Xyz');
+		let file = new bot.file('file:Xyz');
 		expect(file.title === 'Xyz' && file.namespace === 6).to.be.ok;
-		var badFileConstruction = function() {
+		let badFileConstruction = function() {
 			new bot.file('Template:Abc');
 		};
 		expect(badFileConstruction).to.throw('not a file');
-		var fileWithoutNs = new bot.file('Fridawulfa');
+		let fileWithoutNs = new bot.file('Fridawulfa');
 		expect(fileWithoutNs.namespace).to.equal(6);
 	});
 
