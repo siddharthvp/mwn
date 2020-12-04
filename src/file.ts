@@ -1,4 +1,4 @@
-import type {mwn, MwnFile, MwnTitle} from './bot'
+import type {mwn, MwnFile, MwnTitle} from './bot';
 import {ApiQueryBacklinkspropParams} from "./api_params";
 
 module.exports = function (bot: mwn) {
@@ -71,4 +71,4 @@ module.exports = function (bot: mwn) {
 
 	return File;
 
-}
+};

@@ -1,8 +1,8 @@
 export type MwnErrorConfig = {
 	code: string,
 	info?: string,
-	response?: Object,
-	request?: Object,
+	response?: Record<string, unknown>,
+	request?: Record<string, unknown>,
 	disableRetry?: boolean
 }
 

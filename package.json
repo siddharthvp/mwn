@@ -11,10 +11,7 @@
 		"coverage": "nyc report --reporter=text-lcov | coveralls",
 		"test-ts": "ts-mocha -p tsconfig.json tests/ts/*"
 	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/siddharthvp/mwn"
-	},
+	"repository": "git+https://github.com/siddharthvp/mwn.git",
 	"keywords": [
 		"wikipedia-bot"
 	],
@@ -43,6 +40,8 @@
 	"devDependencies": {
 		"@types/chai": "^4.2.14",
 		"@types/mocha": "^8.0.3",
+		"@typescript-eslint/eslint-plugin": "^4.9.0",
+		"@typescript-eslint/parser": "^4.9.0",
 		"chai": "^4.2.0",
 		"coveralls": "^3.1.0",
 		"eslint": "^6.8.0",

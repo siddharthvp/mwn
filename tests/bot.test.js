@@ -1,6 +1,7 @@
 'use strict';
 
 const { mwn, bot, log, expect, assert, loginBefore, logoutAfter} = require('./test_base');
+const fs = require('fs');
 
 describe('mwn', async function() {
 	this.timeout(5000);
@@ -34,7 +35,7 @@ describe('mwn', async function() {
 
 	it('correctly gets site info', function(done) {
 
-		// unset them to check if they'll correct reset
+		// unset them to check if they'll correctly reset
 		bot.title.nameIdMap = null;
 		bot.title.idNameMap = null;
 		bot.title.legaltitlechars = null;
@@ -54,14 +55,14 @@ describe('mwn', async function() {
 	it('gets the server time', function(done) {
 		bot.getServerTime().then(time => {
 			expect(time).to.be.a('string');
-			var dateobj = new Date(time);
+			let dateobj = new Date(time);
 			expect(dateobj.getTime()).to.not.be.NaN;
 			done();
 		});
 	});
 
 	it('parses a JSON page', async function() {
-		var jsonpage = await bot.parseJsonPage('Test JSONL page');
+		let jsonpage = await bot.parseJsonPage('Test JSONL page');
 		expect(jsonpage).to.be.a('object');
 		expect(jsonpage).to.have.all.keys('a');
 		expect(jsonpage.a).to.equal('b');
@@ -113,7 +114,7 @@ describe('mwn', async function() {
 
 	it('successfully reads apilimit+ pages with read', function(done) {
 		this.timeout(10000);
-		var arr = [];
+		let arr = [];
 		for (let i=1; i<=60; i++) {
 			arr.push(`page${i}`);
 		}
@@ -151,7 +152,7 @@ describe('mwn', async function() {
 	});
 
 	it('title methods work', function() {
-		var title = new bot.title('prOJEcT:Xyz');
+		let title = new bot.title('prOJEcT:Xyz');
 		expect(title.toText()).to.equal('Wikipedia:Xyz');
 	});
 
@@ -163,12 +164,12 @@ describe('mwn', async function() {
 		});
 	});
 
-	const fs = require('fs');
-	var fileTitle = 'File:Example demo image.png';
+	let fileTitle = 'File:Example demo image.png';
 
 	it('downloads an image from title without local name specified', function(done) {
-		bot.download(fileTitle).then(function() {
-			var expectedTitle = 'Example demo image.png';
+		bot.download(fileTitle).then(async () => {
+			let expectedTitle = 'Example demo image.png';
+			await bot.sleep(2000); // wait for download to complete
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
 			fs.unlinkSync(expectedTitle); // delete the file
 			done();
@@ -176,8 +177,9 @@ describe('mwn', async function() {
 	});
 
 	it('downloads an image from title with local name specified', function(done) {
-		bot.download(fileTitle, 'download-test.png').then(function() {
-			var expectedTitle = 'download-test.png';
+		bot.download(fileTitle, 'download-test.png').then(async () => {
+			let expectedTitle = 'download-test.png';
+			await bot.sleep(2000);
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
 			fs.unlinkSync(expectedTitle);
 			done();
@@ -192,10 +194,11 @@ describe('mwn', async function() {
 			prop: 'imageinfo',
 			iiprop: 'url'
 		}).then(data => {
-			var url = data.query.pages[0].imageinfo[0].url;
+			let url = data.query.pages[0].imageinfo[0].url;
 			return bot.downloadFromUrl(url);
-		}).then(() => {
-			var expectedTitle = 'Example_demo_image.png';
+		}).then(async () => {
+			let expectedTitle = 'Example_demo_image.png';
+			await bot.sleep(2000);
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
 			fs.unlinkSync(expectedTitle);
 			done();
@@ -231,8 +234,8 @@ describe('mwn', async function() {
 		});
 	});
 
-	it.skip('rejects to upload a non-existing file with upload()', function(done) {
-		bot.upload(false, __dirname + '/mocking/NonExistingImage.png').catch((e) => {
+	it('rejects to upload a non-existing file with upload()', function(done) {
+		bot.upload(__dirname + '/mocking/NonExistingImage.png', 'Title', 'Some text').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('ENOENT');
 			done();

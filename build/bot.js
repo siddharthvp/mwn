@@ -402,7 +402,7 @@ class mwn {
                 requestOptions.headers = await new Promise((resolve, reject) => {
                     form.getLength((err, length) => {
                         if (err) {
-                            reject('Failed to get length of stream: ' + err);
+                            reject(err);
                         }
                         resolve({
                             ...requestOptions.headers,
@@ -522,7 +522,6 @@ class mwn {
             return Promise.reject(error);
         });
     }
-    /** @private */
     dieWithError(response, requestOptions) {
         let errorData = Object.assign(response.error, {
             // Enhance error object with additional information:
@@ -1060,7 +1059,7 @@ class mwn {
      * @returns {Promise<Object>}
      */
     upload(filepath, title, text, options) {
-        return this.request(merge({
+        return this.request({
             action: 'upload',
             file: {
                 stream: fs.createReadStream(filepath),
@@ -1069,8 +1068,9 @@ class mwn {
             filename: title,
             text: text,
             ignorewarnings: true,
-            token: this.csrfToken
-        }, options), {
+            token: this.csrfToken,
+            ...options
+        }, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

@@ -748,7 +748,7 @@ export class mwn {
 			} else if (val === true) {
 				params[key] = '1'; // booleans cause error with multipart/form-data requests
 			} else if (val instanceof Date) {
-				params[key] = val.toISOString()
+				params[key] = val.toISOString();
 			} else if (String(params[key]).length > MULTIPART_THRESHOLD) {
 				// use multipart/form-data if there are large fields, for better performance
 				hasLongFields = true;
@@ -782,7 +782,7 @@ export class mwn {
 				requestOptions.headers = await new Promise((resolve, reject) => {
 					form.getLength((err, length) => {
 						if (err) {
-							reject('Failed to get length of stream: ' + err);
+							reject(err);
 						}
 						resolve({
 							...requestOptions.headers,
@@ -919,8 +919,7 @@ export class mwn {
 
 	}
 
-	/** @private */
-	dieWithError(response: any, requestOptions: RawRequestParams) {
+	private dieWithError(response: ApiResponse, requestOptions: RawRequestParams): Promise<never> {
 		let errorData = Object.assign(response.error, {
 			// Enhance error object with additional information:
 			// the full response
@@ -944,7 +943,7 @@ export class mwn {
 		username?: string
 		password?: string
 		apiUrl?: string
-	}) {
+	}): Promise<ApiResponse> {
 
 		this.options = merge(this.options, loginOptions);
 
@@ -1134,7 +1133,7 @@ export class mwn {
 	 * @param [loginOptions]
 	 * @returns {Promise<void>}
 	 */
-	loginGetToken(loginOptions?: any): Promise<void> {
+	loginGetToken(loginOptions?: MwnOptions): Promise<void> {
 		return this.login(loginOptions).then(() => {
 			return this.getTokens();
 		});
@@ -1199,7 +1198,7 @@ export class mwn {
 	 * Disable emergency shutoff detection.
 	 * Use this only if it was ever enabled.
 	 */
-	disableEmergencyShutoff() {
+	disableEmergencyShutoff(): void {
 		clearInterval(this.shutoff.hook);
 	}
 
@@ -1531,7 +1530,7 @@ export class mwn {
 	 * @returns {Promise<Object>}
 	 */
 	upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
-		return this.request(merge({
+		return this.request({
 			action: 'upload',
 			file: {
 				stream: fs.createReadStream(filepath),
@@ -1540,8 +1539,9 @@ export class mwn {
 			filename: title,
 			text: text,
 			ignorewarnings: true,
-			token: this.csrfToken
-		}, options), {
+			token: this.csrfToken,
+			...options
+		}, {
 			headers: {
 				'Content-Type': 'multipart/form-data'
 			}

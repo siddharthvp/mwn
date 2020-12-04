@@ -461,8 +461,7 @@ export declare class mwn {
      * @returns {Promise}
      */
     request(params: ApiParams, customRequestOptions?: RawRequestParams): Promise<any>;
-    /** @private */
-    dieWithError(response: any, requestOptions: RawRequestParams): Promise<never>;
+    private dieWithError;
     /************** CORE FUNCTIONS *******************/
     /**
      * Executes a Login
@@ -473,7 +472,7 @@ export declare class mwn {
         username?: string;
         password?: string;
         apiUrl?: string;
-    }): Promise<any>;
+    }): Promise<ApiResponse>;
     /**
      * Log out of the account
      * @returns {Promise<void>}
@@ -514,7 +513,7 @@ export declare class mwn {
      * @param [loginOptions]
      * @returns {Promise<void>}
      */
-    loginGetToken(loginOptions?: any): Promise<void>;
+    loginGetToken(loginOptions?: MwnOptions): Promise<void>;
     /**
      * Get the wiki's server time
      * @returns {Promise<string>}
