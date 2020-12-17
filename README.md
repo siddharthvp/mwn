@@ -27,7 +27,7 @@ npm install		# install dependencies
 
 
 #### Node version
-mwn is written with Node.js 13 in hand. While everything may still work in older versions of Node, you can consider upgrading to Node.js 13. If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), you can install the latest node.js in your home directory, using:
+mwn is written in TypeScript v4. The repository contains JavaScript files compiled for ES2018 target, which corresponds to Node 10.x. If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. But you can install the latest version node to your home directory, using:
 ```sh
 npm install npm@latest     # update npm first to the latest version
 npm install n
