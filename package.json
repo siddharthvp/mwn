@@ -1,6 +1,6 @@
 {
 	"name": "mwn",
-	"version": "0.8.2",
+	"version": "0.8.3",
 	"description": "MediaWiki bot framework for Node.js",
 	"main": "./build/bot.js",
 	"types": "./build/bot.d.ts",
@@ -17,7 +17,7 @@
 		"wikipedia-bot"
 	],
 	"author": "Siddharth VP",
-	"license": "GPL-3.0-or-later",
+	"license": "LGPL-3.0-or-later",
 	"bugs": {
 		"url": "https://github.com/siddharthvp/mwn/issues"
 	},

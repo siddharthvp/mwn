@@ -328,3 +328,8 @@ bot.seriesBatchOperation(pageList, (page, idx) => {
 }, 5000, 2); // set the sleep duration in milliseconds as the third parameter, max number of retries for each action is set as the 4th parameter
 ```
 Note that `seriesBatchOperation` with delay=0 is same as `batchOperation` with concurrency=1.
+
+
+## Licensing
+
+**mwn** is released under GNU Lesser General Public License (LGPL) v3.0, since it borrows quite a bit of code from MediaWiki core (GPL v2). LGPL is a more permissive variant of the more popular GNU GPL. Unlike GPL, LPGL _allows_ the work to be used as a library in software not released under GPL-compatible licenses, and even in proprietary software. However, any derivatives of this library should also be released under LGPL or another GPL-compatible license. 
