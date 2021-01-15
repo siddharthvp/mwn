@@ -495,6 +495,21 @@ class mwn {
                                     return this.request(params, customRequestOptions);
                                 }
                             });
+                        case 'mwoauth-invalid-authorization':
+                            // Per https://phabricator.wikimedia.org/T106066, "Nonce already used" indicates
+                            // an upstream memcached/redis failure which is transient
+                            // Also handled in mwclient (https://github.com/mwclient/mwclient/pull/165/commits/d447c333e)
+                            // and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py) 
+                            // Some discussion in https://github.com/mwclient/mwclient/issues/164
+                            if (response.error.info.includes('Nonce already used')) {
+                                log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause / 1000} seconds`);
+                                return this.sleep(this.options.retryPause).then(() => {
+                                    return this.request(params, customRequestOptions);
+                                });
+                            }
+                            else {
+                                return this.dieWithError(response, requestOptions);
+                            }
                         default:
                             return this.dieWithError(response, requestOptions);
                     }
