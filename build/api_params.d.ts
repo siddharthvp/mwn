@@ -1,9 +1,10 @@
 import type { MwnDate } from "./bot";
 declare type timestamp = MwnDate | string;
+declare type expiry = string;
 declare type namespace = number;
 declare type limit = number | 'max';
 declare type password = string;
-declare type upload = any;
+declare type upload = File;
 export interface ApiParams {
     action?: string;
     format?: 'json' | 'jsonfm' | 'xml' | 'xmlfm' | 'php' | 'none';
@@ -24,24 +25,24 @@ export interface ApiParams {
     errorsuselocal?: boolean;
     centralauthtoken?: string;
 }
-export interface ApiAbuseFilterCheckMatchParams extends ApiParams {
+export interface AbuseFilterApiCheckMatchParams extends ApiParams {
     filter?: string;
     vars?: string;
     rcid?: number;
     logid?: number;
 }
-export interface ApiAbuseFilterCheckSyntaxParams extends ApiParams {
+export interface AbuseFilterApiCheckSyntaxParams extends ApiParams {
     filter?: string;
 }
-export interface ApiAbuseFilterEvalExpressionParams extends ApiParams {
+export interface AbuseFilterApiEvalExpressionParams extends ApiParams {
     expression?: string;
     prettyprint?: boolean;
 }
-export interface ApiAbuseFilterUnblockAutopromoteParams extends ApiParams {
+export interface AbuseFilterApiUnblockAutopromoteParams extends ApiParams {
     user?: string;
     token?: string;
 }
-export interface ApiAbuseLogPrivateDetailsParams extends ApiParams {
+export interface AbuseFilterApiAbuseLogPrivateDetailsParams extends ApiParams {
     logid?: number;
     reason?: string;
     token?: string;
@@ -62,6 +63,7 @@ export interface ApiBlockParams extends ApiParams {
     allowusertalk?: boolean;
     reblock?: boolean;
     watchuser?: boolean;
+    watchlistexpiry?: expiry;
     tags?: string | string[];
     partial?: boolean;
     pagerestrictions?: string | string[];
@@ -186,6 +188,20 @@ export interface ApiContentTranslationPublishParams extends ApiParams {
     cxversion?: number;
     token?: string;
 }
+export interface ContentTranslationActionApiSectionTranslationPublishParams extends ApiParams {
+    title?: string;
+    html?: string;
+    sourcelanguage?: string;
+    targetlanguage?: string;
+    sourcetitle?: string;
+    sourcerevid?: string;
+    sourcesectiontitle?: string;
+    targetsectiontitle?: string;
+    sectionnumber?: string;
+    captchaid?: string;
+    captchaword?: string;
+    token?: string;
+}
 export interface ApiContentTranslationSaveParams extends ApiParams {
     from?: string;
     to?: string;
@@ -217,6 +233,7 @@ export interface ApiDeleteParams extends ApiParams {
     tags?: string | string[];
     watch?: boolean;
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
+    watchlistexpiry?: expiry;
     unwatch?: boolean;
     oldimage?: string;
     token?: string;
@@ -226,12 +243,12 @@ export interface ApiDeleteGlobalAccountParams extends ApiParams {
     reason?: string;
     token?: string;
 }
-export interface MediaWikiExtensionDiscussionToolsApiDiscussionToolsParams extends ApiParams {
+export interface DiscussionToolsApiDiscussionToolsParams extends ApiParams {
     paction?: 'transcludedfrom';
     page?: string;
     oldid?: string;
 }
-export interface MediaWikiExtensionDiscussionToolsApiDiscussionToolsEditParams extends ApiParams {
+export interface DiscussionToolsApiDiscussionToolsEditParams extends ApiParams {
     paction?: 'addcomment' | 'addtopic';
     page?: string;
     token?: string;
@@ -262,7 +279,7 @@ export interface ApiEchoMuteParams extends ApiParams {
     unmute?: string | string[];
     token?: string;
 }
-export interface EchoPushApiApiEchoPushSubscriptionsParams extends ApiParams {
+export interface EchoPushApiEchoPushSubscriptionsParams extends ApiParams {
     command?: 'create' | 'delete';
     token?: string;
 }
@@ -286,6 +303,7 @@ export interface ApiEditPageParams extends ApiParams {
     watch?: boolean;
     unwatch?: boolean;
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
+    watchlistexpiry?: expiry;
     md5?: string;
     prependtext?: string;
     appendtext?: string;
@@ -298,7 +316,7 @@ export interface ApiEditPageParams extends ApiParams {
     captchaword?: string;
     captchaid?: string;
 }
-export interface MediaWikiMassMessageApiApiEditMassMessageListParams extends ApiParams {
+export interface MediaWikiMassMessageApiEditMassMessageListParams extends ApiParams {
     spamlist?: string;
     description?: string;
     add?: string | string[];
@@ -338,7 +356,7 @@ export interface ApiFeedContributionsParams extends ApiParams {
     namespace?: namespace;
     year?: number;
     month?: number;
-    tagfilter?: ('AWB' | 'Citing predatory open access journal' | 'End of page text' | 'External Link added to disambiguation page' | 'Extraneous formatting' | 'Image up for deletion on Commons' | 'Manual revert' | 'OAuth CID?: 21' | 'OAuth CID?: 60' | 'OAuth CID?: 64' | 'OAuth CID?: 67' | 'OAuth CID?: 76' | 'OAuth CID?: 85' | 'OAuth CID?: 99' | 'OAuth CID?: 115' | 'OAuth CID?: 142' | 'OAuth CID?: 144' | 'OAuth CID?: 150' | 'OAuth CID?: 151' | 'OAuth CID?: 154' | 'OAuth CID?: 159' | 'OAuth CID?: 194' | 'OAuth CID?: 206' | 'OAuth CID?: 211' | 'OAuth CID?: 212' | 'OAuth CID?: 218' | 'OAuth CID?: 236' | 'OAuth CID?: 239' | 'OAuth CID?: 251' | 'OAuth CID?: 252' | 'OAuth CID?: 259' | 'OAuth CID?: 261' | 'OAuth CID?: 263' | 'OAuth CID?: 274' | 'OAuth CID?: 278' | 'OAuth CID?: 285' | 'OAuth CID?: 297' | 'OAuth CID?: 306' | 'OAuth CID?: 314' | 'OAuth CID?: 320' | 'OAuth CID?: 376' | 'OAuth CID?: 410' | 'OAuth CID?: 429' | 'OAuth CID?: 473' | 'OAuth CID?: 540' | 'OAuth CID?: 542' | 'OAuth CID?: 543' | 'OAuth CID?: 563' | 'OAuth CID?: 593' | 'OAuth CID?: 612' | 'OAuth CID?: 628' | 'OAuth CID?: 651' | 'OAuth CID?: 670' | 'OAuth CID?: 678' | 'OAuth CID?: 679' | 'OAuth CID?: 817' | 'OAuth CID?: 860' | 'OAuth CID?: 861' | 'OAuth CID?: 874' | 'OAuth CID?: 951' | 'OAuth CID?: 1003' | 'OAuth CID?: 1013' | 'OAuth CID?: 1015' | 'OAuth CID?: 1024' | 'OAuth CID?: 1188' | 'OAuth CID?: 1224' | 'OAuth CID?: 1232' | 'OAuth CID?: 1261' | 'OAuth CID?: 1277' | 'OAuth CID?: 1352' | 'OAuth CID?: 1359' | 'OAuth CID?: 1365' | 'OAuth CID?: 1389' | 'OAuth CID?: 1413' | 'OAuth CID?: 1436' | 'OAuth CID?: 1452' | 'OAuth CID?: 1503' | 'OAuth CID?: 1566' | 'OAuth CID?: 1703' | 'OAuth CID?: 1745' | 'OAuth CID?: 1779' | 'OAuth CID?: 1784' | 'OAuth CID?: 1804' | 'OAuth CID?: 1805' | 'OAuth CID?: 1809' | 'OAuth CID?: 1841' | 'OAuth CID?: 1887' | 'OAuth CID?: 1904' | 'OAuth CID?: 2008' | 'Page creator removing CSD tag' | 'Possible disruption' | 'Possible self promotion in user or draftspace' | 'Possible self promotion in userspace' | 'Possible vandalism' | 'ProveIt edit' | 'Rapid reverts' | 'RedWarn' | 'STiki' | 'Section blanking' | 'WPCleaner' | 'WikiLoop Battlefield' | 'abusefilter-condition-limit' | 'adding email address' | 'advanced mobile edit' | 'android app edit' | 'autobiography' | 'bad external' | 'blanking' | 'bot trial' | 'campaign-external-machine-translation' | 'canned edit summary' | 'categories removed' | 'centralnotice' | 'centralnotice translation' | 'changing height or weight' | 'coi-spam' | 'congressedits' | 'contenttranslation' | 'contenttranslation-needcheck' | 'contenttranslation-v2' | 'de-userfying' | 'deprecated source' | 'disambiguation template removed' | 'discretionary' | 'discretionary sanctions alert' | 'discussiontools' | 'discussiontools-edit' | 'discussiontools-newtopic' | 'discussiontools-reply' | 'discussiontools-source' | 'discussiontools-visual' | 'editProtectedHelper' | 'extraneous markup' | 'huggle' | 'image template removal' | 'ios app edit' | 'large non-free file' | 'large plot addition' | 'large unwikified new article' | 'massmessage-delivery' | 'missing file added' | 'mobile app edit' | 'mobile edit' | 'mobile web edit' | 'mw-blank' | 'mw-changed-redirect-target' | 'mw-contentmodelchange' | 'mw-manual-revert' | 'mw-new-redirect' | 'mw-removed-redirect' | 'mw-replace' | 'mw-reverted' | 'mw-rollback' | 'mw-undo' | 'new user modifying archives' | 'non-English content' | 'nowiki added' | 'pagetriage' | 'possible birth date change' | 'possible cut and paste move' | 'possible libel or vandalism' | 'possible link spam' | 'possible unreferenced addition to BLP' | 'possible vandalism' | 'posted screed' | 'predatory' | 'reference list removal' | 'references removed' | 'removal of COI template' | 'removal of Category?:Living People' | 'removal of articles for deletion template' | 'removal of copyvio templates' | 'removal of speedy deletion templates' | 'reverting anti-vandal bot' | 'self-published-blog' | 'self-published source' | 'self-renaming and bad user talk moves' | 'shouting' | 'talk page blanking' | 'twinkle' | 'unsourced AFC submission' | 'unusual redirect' | 'userspace spam' | 'very short new article' | 'visualeditor' | 'visualeditor-needcheck' | 'visualeditor-switched' | 'visualeditor-wikitext' | 'wikilinks removed' | 'wikilove')[];
+    tagfilter?: string | string[];
     deletedonly?: boolean;
     toponly?: boolean;
     newonly?: boolean;
@@ -360,7 +378,7 @@ export interface ApiFeedRecentChangesParams extends ApiParams {
     hidepatrolled?: boolean;
     hidemyself?: boolean;
     hidecategorization?: boolean;
-    tagfilter?: string;
+    tagfilter?: string | string[];
     target?: string;
     showlinkedto?: boolean;
 }
@@ -499,7 +517,7 @@ export interface ApiManageTagsParams extends ApiParams {
     tags?: string | string[];
     token?: string;
 }
-export interface MediaWikiMassMessageApiApiMassMessageParams extends ApiParams {
+export interface MediaWikiMassMessageApiMassMessageParams extends ApiParams {
     spamlist?: string;
     subject?: string;
     message?: string;
@@ -515,7 +533,7 @@ export interface ApiMergeHistoryParams extends ApiParams {
     reason?: string;
     token?: string;
 }
-export interface MobileFrontendApiApiMobileViewParams extends ApiParams {
+export interface MobileFrontendApiMobileViewParams extends ApiParams {
     page?: string;
     redirect?: 'no' | 'yes';
     sections?: string;
@@ -542,13 +560,14 @@ export interface ApiMoveParams extends ApiParams {
     movesubpages?: boolean;
     noredirect?: boolean;
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
+    watchlistexpiry?: expiry;
     ignorewarnings?: boolean;
     tags?: string | string[];
     token?: string;
 }
 export interface ApiFormatNoneParams extends ApiParams {
 }
-export interface MediaWikiExtensionOATHAuthApiModuleApiOATHValidateParams extends ApiParams {
+export interface OATHAuthApiModuleApiOATHValidateParams extends ApiParams {
     user?: string;
     totp?: string;
     data?: string;
@@ -572,7 +591,7 @@ export interface ApiOptionsParams extends ApiParams {
     optionvalue?: string;
     token?: string;
 }
-export interface MediaWikiExtensionPageTriageApiApiPageTriageActionParams extends ApiParams {
+export interface PageTriageApiPageTriageActionParams extends ApiParams {
     pageid?: number;
     reviewed?: '0' | '1';
     enqueue?: boolean;
@@ -580,7 +599,7 @@ export interface MediaWikiExtensionPageTriageApiApiPageTriageActionParams extend
     note?: string;
     skipnotif?: boolean;
 }
-export interface MediaWikiExtensionPageTriageApiApiPageTriageListParams extends ApiParams {
+export interface PageTriageApiPageTriageListParams extends ApiParams {
     show_predicted_class_stub?: boolean;
     show_predicted_class_start?: boolean;
     show_predicted_class_c?: boolean;
@@ -616,7 +635,7 @@ export interface MediaWikiExtensionPageTriageApiApiPageTriageListParams extends 
     pageoffset?: number;
     dir?: 'newestfirst' | 'newestreview' | 'oldestfirst' | 'oldestreview';
 }
-export interface MediaWikiExtensionPageTriageApiApiPageTriageStatsParams extends ApiParams {
+export interface PageTriageApiPageTriageStatsParams extends ApiParams {
     show_predicted_class_stub?: boolean;
     show_predicted_class_start?: boolean;
     show_predicted_class_c?: boolean;
@@ -648,11 +667,11 @@ export interface MediaWikiExtensionPageTriageApiApiPageTriageStatsParams extends
     date_range_to?: timestamp;
     topreviewers?: string;
 }
-export interface MediaWikiExtensionPageTriageApiApiPageTriageTagCopyvioParams extends ApiParams {
+export interface PageTriageApiPageTriageTagCopyvioParams extends ApiParams {
     revid?: number;
     token?: string;
 }
-export interface MediaWikiExtensionPageTriageApiApiPageTriageTaggingParams extends ApiParams {
+export interface PageTriageApiPageTriageTaggingParams extends ApiParams {
     pageid?: number;
     token?: string;
     top?: string;
@@ -678,7 +697,7 @@ export interface ApiParseParams extends ApiParams {
     pageid?: number;
     redirects?: boolean;
     oldid?: number;
-    prop?: ('categories' | 'categorieshtml' | 'displaytitle' | 'encodedjsconfigvars' | 'externallinks' | 'headhtml' | 'images' | 'indicators' | 'iwlinks' | 'jsconfigvars' | 'langlinks' | 'limitreportdata' | 'limitreporthtml' | 'links' | 'modules' | 'parsetree' | 'parsewarnings' | 'properties' | 'revid' | 'sections' | 'templates' | 'text' | 'wikitext' | 'headitems')[];
+    prop?: ('categories' | 'categorieshtml' | 'displaytitle' | 'encodedjsconfigvars' | 'externallinks' | 'headhtml' | 'images' | 'indicators' | 'iwlinks' | 'jsconfigvars' | 'langlinks' | 'limitreportdata' | 'limitreporthtml' | 'links' | 'modules' | 'parsetree' | 'parsewarnings' | 'properties' | 'revid' | 'sections' | 'subtitle' | 'templates' | 'text' | 'wikitext' | 'headitems')[];
     wrapoutputclass?: string;
     pst?: boolean;
     onlypst?: boolean;
@@ -727,6 +746,7 @@ export interface ApiProtectParams extends ApiParams {
     cascade?: boolean;
     watch?: boolean;
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
+    watchlistexpiry?: expiry;
     token?: string;
 }
 export interface ApiPurgeParams extends ApiParams {
@@ -761,7 +781,7 @@ export interface ApiQueryParams extends ApiParams {
 export interface ApiFormatJsonParams extends ApiParams {
     wrappedhtml?: boolean;
 }
-export interface MediaWikiExtensionsReadingListsApiApiReadingListsParams extends ApiParams {
+export interface sReadingListsApiReadingListsParams extends ApiParams {
     command?: 'create' | 'createentry' | 'delete' | 'deleteentry' | 'setup' | 'teardown' | 'update';
     token?: string;
 }
@@ -781,9 +801,9 @@ export interface ApiResetPasswordParams extends ApiParams {
 }
 export interface ApiReviewParams extends ApiParams {
     revid?: string;
-    token?: string;
     comment?: string;
     unapprove?: boolean;
+    token?: string;
 }
 export interface ApiReviewActivityParams extends ApiParams {
     previd?: string;
@@ -810,6 +830,7 @@ export interface ApiRollbackParams extends ApiParams {
     summary?: string;
     markbot?: boolean;
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
+    watchlistexpiry?: expiry;
     token?: string;
 }
 export interface ApiRsdParams extends ApiParams {
@@ -858,7 +879,7 @@ export interface ApiSetPageLanguageParams extends ApiParams {
 export interface ApiShortenUrlParams extends ApiParams {
     url?: string;
 }
-export interface MediaWikiExtensionSiteMatrixApiSiteMatrixParams extends ApiParams {
+export interface SiteMatrixApiSiteMatrixParams extends ApiParams {
     type?: ('language' | 'special')[];
     state?: ('all' | 'closed' | 'fishbowl' | 'nonglobal' | 'private')[];
     langprop?: ('code' | 'dir' | 'localname' | 'name' | 'site')[];
@@ -875,8 +896,8 @@ export interface ApiStabilizeProtectParams extends ApiParams {
     reason?: string;
     watch?: string;
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
-    token?: string;
     title?: string;
+    token?: string;
 }
 export interface ApiStashEditParams extends ApiParams {
     title?: string;
@@ -890,12 +911,12 @@ export interface ApiStashEditParams extends ApiParams {
     baserevid?: number;
     token?: string;
 }
-export interface MediaWikiExtensionEventStreamConfigApiStreamConfigsParams extends ApiParams {
+export interface EventStreamConfigApiStreamConfigsParams extends ApiParams {
     streams?: string | string[];
     constraints?: string | string[];
     all_settings?: boolean;
 }
-export interface MediaWikiExtensionsSecurePollApiApiStrikeVoteParams extends ApiParams {
+export interface sSecurePollApiStrikeVoteParams extends ApiParams {
     option?: 'strike' | 'unstrike';
     reason?: string;
     voteid?: number;
@@ -969,6 +990,7 @@ export interface ApiUndeleteParams extends ApiParams {
     timestamps?: timestamp | timestamp[];
     fileids?: number | number[];
     watchlist?: 'nochange' | 'preferences' | 'unwatch' | 'watch';
+    watchlistexpiry?: expiry;
     token?: string;
 }
 export interface ApiRemoveAuthenticationDataParams extends ApiParams {
@@ -982,6 +1004,7 @@ export interface ApiUploadParams extends ApiParams {
     text?: string;
     watch?: boolean;
     watchlist?: 'nochange' | 'preferences' | 'watch';
+    watchlistexpiry?: expiry;
     ignorewarnings?: boolean;
     file?: upload;
     url?: string;
@@ -1047,6 +1070,7 @@ export interface ApiVisualEditorEditParams extends ApiParams {
 }
 export interface ApiWatchParams extends ApiParams {
     title?: string;
+    expiry?: expiry;
     unwatch?: boolean;
     continue?: string;
     titles?: string | string[];
@@ -1057,9 +1081,9 @@ export interface ApiWatchParams extends ApiParams {
     converttitles?: boolean;
     token?: string;
 }
-export interface MobileFrontendApiApiWebappManifestParams extends ApiParams {
+export interface MobileFrontendApiWebappManifestParams extends ApiParams {
 }
-export interface MediaWikiExtensionWebAuthnApiWebAuthnParams extends ApiParams {
+export interface WebAuthnApiWebAuthnParams extends ApiParams {
     func?: string;
     data?: string;
 }
@@ -1082,7 +1106,7 @@ export interface ApiFormatXmlParams extends ApiParams {
     xslt?: string;
     includexmlnamespace?: boolean;
 }
-export interface ApiQueryAbuseFiltersParams extends ApiQueryParams {
+export interface AbuseFilterApiQueryAbuseFiltersParams extends ApiQueryParams {
     abfstartid?: number;
     abfendid?: number;
     abfdir?: 'newer' | 'older';
@@ -1090,7 +1114,7 @@ export interface ApiQueryAbuseFiltersParams extends ApiQueryParams {
     abflimit?: limit;
     abfprop?: ('actions' | 'comments' | 'description' | 'hits' | 'id' | 'lasteditor' | 'lastedittime' | 'pattern' | 'private' | 'status')[];
 }
-export interface ApiQueryAbuseLogParams extends ApiQueryParams {
+export interface AbuseFilterApiQueryAbuseLogParams extends ApiQueryParams {
     afllogid?: number;
     aflstart?: timestamp;
     aflend?: timestamp;
@@ -1259,7 +1283,7 @@ export interface ApiQueryAllUsersParams extends ApiQueryParams {
     audir?: 'ascending' | 'descending';
     augroup?: ('abusefilter' | 'abusefilter-helper' | 'accountcreator' | 'autoreviewer' | 'bot' | 'bureaucrat' | 'checkuser' | 'confirmed' | 'copyviobot' | 'eventcoordinator' | 'extendedconfirmed' | 'extendedmover' | 'filemover' | 'founder' | 'import' | 'interface-admin' | 'ipblock-exempt' | 'massmessage-sender' | 'oversight' | 'patroller' | 'researcher' | 'reviewer' | 'rollbacker' | 'steward' | 'sysop' | 'templateeditor' | 'transwiki')[];
     auexcludegroup?: ('abusefilter' | 'abusefilter-helper' | 'accountcreator' | 'autoreviewer' | 'bot' | 'bureaucrat' | 'checkuser' | 'confirmed' | 'copyviobot' | 'eventcoordinator' | 'extendedconfirmed' | 'extendedmover' | 'filemover' | 'founder' | 'import' | 'interface-admin' | 'ipblock-exempt' | 'massmessage-sender' | 'oversight' | 'patroller' | 'researcher' | 'reviewer' | 'rollbacker' | 'steward' | 'sysop' | 'templateeditor' | 'transwiki')[];
-    aurights?: ('abusefilter-hidden-log' | 'abusefilter-hide-log' | 'abusefilter-log' | 'abusefilter-log-detail' | 'abusefilter-log-private' | 'abusefilter-modify' | 'abusefilter-modify-global' | 'abusefilter-modify-restricted' | 'abusefilter-privatedetails' | 'abusefilter-privatedetails-log' | 'abusefilter-revert' | 'abusefilter-view' | 'abusefilter-view-private' | 'apihighlimits' | 'applychangetags' | 'autoconfirmed' | 'autocreateaccount' | 'autopatrol' | 'autoreview' | 'autoreviewrestore' | 'bigdelete' | 'block' | 'blockemail' | 'bot' | 'browsearchive' | 'centralauth-lock' | 'centralauth-merge' | 'centralauth-oversight' | 'centralauth-rename' | 'centralauth-unmerge' | 'centralauth-usermerge' | 'changetags' | 'checkuser' | 'checkuser-log' | 'collectionsaveascommunitypage' | 'collectionsaveasuserpage' | 'createaccount' | 'createpage' | 'createpagemainns' | 'createtalk' | 'delete' | 'delete-redirect' | 'deletechangetags' | 'deletedhistory' | 'deletedtext' | 'deletelogentry' | 'deleterevision' | 'edit' | 'editautoreviewprotected' | 'editcontentmodel' | 'editeditorprotected' | 'editextendedsemiprotected' | 'editinterface' | 'editmyoptions' | 'editmyprivateinfo' | 'editmyusercss' | 'editmyuserjs' | 'editmyuserjson' | 'editmyuserjsredirect' | 'editmywatchlist' | 'editprotected' | 'editsemiprotected' | 'editsitecss' | 'editsitejs' | 'editsitejson' | 'editusercss' | 'edituserjs' | 'edituserjson' | 'extendedconfirmed' | 'flow-create-board' | 'flow-delete' | 'flow-edit-post' | 'flow-hide' | 'flow-suppress' | 'gadgets-definition-edit' | 'gadgets-edit' | 'globalblock' | 'globalblock-exempt' | 'globalblock-whitelist' | 'globalgroupmembership' | 'globalgrouppermissions' | 'gwtoolset' | 'hideuser' | 'import' | 'importupload' | 'ipblock-exempt' | 'manage-all-push-subscriptions' | 'managechangetags' | 'markbotedits' | 'massmessage' | 'mergehistory' | 'minoredit' | 'move' | 'move-categorypages' | 'move-rootuserpages' | 'move-subpages' | 'movefile' | 'movestable' | 'mwoauthmanageconsumer' | 'mwoauthmanagemygrants' | 'mwoauthproposeconsumer' | 'mwoauthsuppress' | 'mwoauthupdateownconsumer' | 'mwoauthviewprivate' | 'mwoauthviewsuppressed' | 'newsletter-create' | 'newsletter-delete' | 'newsletter-manage' | 'newsletter-restore' | 'nominornewtalk' | 'noratelimit' | 'nuke' | 'oathauth-api-all' | 'oathauth-disable-for-user' | 'oathauth-enable' | 'oathauth-verify-user' | 'oathauth-view-log' | 'override-antispoof' | 'override-export-depth' | 'pagelang' | 'pagetriage-copyvio' | 'patrol' | 'patrolmarks' | 'protect' | 'purge' | 'read' | 'renameuser' | 'reupload' | 'reupload-own' | 'reupload-shared' | 'review' | 'rollback' | 'securepoll-create-poll' | 'sendemail' | 'setmentor' | 'siteadmin' | 'skipcaptcha' | 'spamblacklistlog' | 'stablesettings' | 'suppressionlog' | 'suppressredirect' | 'suppressrevision' | 'tboverride' | 'tboverride-account' | 'templateeditor' | 'titleblacklistlog' | 'torunblocked' | 'transcode-reset' | 'transcode-status' | 'unblockself' | 'undelete' | 'unreviewedpages' | 'unwatchedpages' | 'upload' | 'upload_by_url' | 'urlshortener-create-url' | 'urlshortener-manage-url' | 'urlshortener-view-log' | 'usermerge' | 'userrights' | 'userrights-interwiki' | 'validate' | 'viewdeletedfile' | 'viewmyprivateinfo' | 'viewmywatchlist' | 'viewsuppressed' | 'vipsscaler-test' | 'writeapi')[];
+    aurights?: ('abusefilter-hidden-log' | 'abusefilter-hide-log' | 'abusefilter-log' | 'abusefilter-log-detail' | 'abusefilter-log-private' | 'abusefilter-modify' | 'abusefilter-modify-global' | 'abusefilter-modify-restricted' | 'abusefilter-privatedetails' | 'abusefilter-privatedetails-log' | 'abusefilter-revert' | 'abusefilter-view' | 'abusefilter-view-private' | 'apihighlimits' | 'applychangetags' | 'autoconfirmed' | 'autocreateaccount' | 'autopatrol' | 'autoreview' | 'autoreviewrestore' | 'bigdelete' | 'block' | 'blockemail' | 'bot' | 'browsearchive' | 'centralauth-createlocal' | 'centralauth-lock' | 'centralauth-merge' | 'centralauth-oversight' | 'centralauth-rename' | 'centralauth-unmerge' | 'centralauth-usermerge' | 'changetags' | 'checkuser' | 'checkuser-log' | 'collectionsaveascommunitypage' | 'collectionsaveasuserpage' | 'createaccount' | 'createpage' | 'createpagemainns' | 'createtalk' | 'delete' | 'delete-redirect' | 'deletechangetags' | 'deletedhistory' | 'deletedtext' | 'deletelogentry' | 'deleterevision' | 'edit' | 'editautoreviewprotected' | 'editcontentmodel' | 'editeditorprotected' | 'editextendedsemiprotected' | 'editinterface' | 'editmyoptions' | 'editmyprivateinfo' | 'editmyusercss' | 'editmyuserjs' | 'editmyuserjson' | 'editmyuserjsredirect' | 'editmywatchlist' | 'editprotected' | 'editsemiprotected' | 'editsitecss' | 'editsitejs' | 'editsitejson' | 'editusercss' | 'edituserjs' | 'edituserjson' | 'extendedconfirmed' | 'flow-create-board' | 'flow-delete' | 'flow-edit-post' | 'flow-hide' | 'flow-suppress' | 'gadgets-definition-edit' | 'gadgets-edit' | 'globalblock' | 'globalblock-exempt' | 'globalblock-whitelist' | 'globalgroupmembership' | 'globalgrouppermissions' | 'gwtoolset' | 'hideuser' | 'import' | 'importupload' | 'ipblock-exempt' | 'manage-all-push-subscriptions' | 'managechangetags' | 'markbotedits' | 'massmessage' | 'mergehistory' | 'minoredit' | 'move' | 'move-categorypages' | 'move-rootuserpages' | 'move-subpages' | 'movefile' | 'movestable' | 'mwoauthmanageconsumer' | 'mwoauthmanagemygrants' | 'mwoauthproposeconsumer' | 'mwoauthsuppress' | 'mwoauthupdateownconsumer' | 'mwoauthviewprivate' | 'mwoauthviewsuppressed' | 'newsletter-create' | 'newsletter-delete' | 'newsletter-manage' | 'newsletter-restore' | 'nominornewtalk' | 'noratelimit' | 'nuke' | 'oathauth-api-all' | 'oathauth-disable-for-user' | 'oathauth-enable' | 'oathauth-verify-user' | 'oathauth-view-log' | 'override-antispoof' | 'override-export-depth' | 'pagelang' | 'pagetriage-copyvio' | 'patrol' | 'patrolmarks' | 'protect' | 'purge' | 'read' | 'renameuser' | 'reupload' | 'reupload-own' | 'reupload-shared' | 'review' | 'rollback' | 'securepoll-create-poll' | 'sendemail' | 'setmentor' | 'siteadmin' | 'skipcaptcha' | 'spamblacklistlog' | 'stablesettings' | 'suppressionlog' | 'suppressredirect' | 'suppressrevision' | 'tboverride' | 'tboverride-account' | 'templateeditor' | 'titleblacklistlog' | 'torunblocked' | 'transcode-reset' | 'transcode-status' | 'unblockself' | 'undelete' | 'unreviewedpages' | 'unwatchedpages' | 'upload' | 'upload_by_url' | 'urlshortener-create-url' | 'urlshortener-manage-url' | 'urlshortener-view-log' | 'usermerge' | 'userrights' | 'userrights-interwiki' | 'validate' | 'viewdeletedfile' | 'viewmyprivateinfo' | 'viewmywatchlist' | 'viewsuppressed' | 'vipsscaler-test' | 'writeapi')[];
     auprop?: ('blockinfo' | 'centralids' | 'editcount' | 'groups' | 'implicitgroups' | 'registration' | 'rights')[];
     aulimit?: limit;
     auwitheditsonly?: boolean;
@@ -1398,8 +1422,8 @@ export interface ApiQueryContentTranslationSuggestionsParams extends ApiQueryPar
 export interface ApiQueryContributorsParams extends ApiQueryParams {
     pcgroup?: ('abusefilter' | 'abusefilter-helper' | 'accountcreator' | 'autoreviewer' | 'bot' | 'bureaucrat' | 'checkuser' | 'confirmed' | 'copyviobot' | 'eventcoordinator' | 'extendedconfirmed' | 'extendedmover' | 'filemover' | 'founder' | 'import' | 'interface-admin' | 'ipblock-exempt' | 'massmessage-sender' | 'oversight' | 'patroller' | 'researcher' | 'reviewer' | 'rollbacker' | 'steward' | 'sysop' | 'templateeditor' | 'transwiki')[];
     pcexcludegroup?: ('abusefilter' | 'abusefilter-helper' | 'accountcreator' | 'autoreviewer' | 'bot' | 'bureaucrat' | 'checkuser' | 'confirmed' | 'copyviobot' | 'eventcoordinator' | 'extendedconfirmed' | 'extendedmover' | 'filemover' | 'founder' | 'import' | 'interface-admin' | 'ipblock-exempt' | 'massmessage-sender' | 'oversight' | 'patroller' | 'researcher' | 'reviewer' | 'rollbacker' | 'steward' | 'sysop' | 'templateeditor' | 'transwiki')[];
-    pcrights?: ('abusefilter-hidden-log' | 'abusefilter-hide-log' | 'abusefilter-log' | 'abusefilter-log-detail' | 'abusefilter-log-private' | 'abusefilter-modify' | 'abusefilter-modify-global' | 'abusefilter-modify-restricted' | 'abusefilter-privatedetails' | 'abusefilter-privatedetails-log' | 'abusefilter-revert' | 'abusefilter-view' | 'abusefilter-view-private' | 'apihighlimits' | 'applychangetags' | 'autoconfirmed' | 'autocreateaccount' | 'autopatrol' | 'autoreview' | 'autoreviewrestore' | 'bigdelete' | 'block' | 'blockemail' | 'bot' | 'browsearchive' | 'centralauth-lock' | 'centralauth-merge' | 'centralauth-oversight' | 'centralauth-rename' | 'centralauth-unmerge' | 'centralauth-usermerge' | 'changetags' | 'checkuser' | 'checkuser-log' | 'collectionsaveascommunitypage' | 'collectionsaveasuserpage' | 'createaccount' | 'createpage' | 'createpagemainns' | 'createtalk' | 'delete' | 'delete-redirect' | 'deletechangetags' | 'deletedhistory' | 'deletedtext' | 'deletelogentry' | 'deleterevision' | 'edit' | 'editautoreviewprotected' | 'editcontentmodel' | 'editeditorprotected' | 'editextendedsemiprotected' | 'editinterface' | 'editmyoptions' | 'editmyprivateinfo' | 'editmyusercss' | 'editmyuserjs' | 'editmyuserjson' | 'editmyuserjsredirect' | 'editmywatchlist' | 'editprotected' | 'editsemiprotected' | 'editsitecss' | 'editsitejs' | 'editsitejson' | 'editusercss' | 'edituserjs' | 'edituserjson' | 'extendedconfirmed' | 'flow-create-board' | 'flow-delete' | 'flow-edit-post' | 'flow-hide' | 'flow-suppress' | 'gadgets-definition-edit' | 'gadgets-edit' | 'globalblock' | 'globalblock-exempt' | 'globalblock-whitelist' | 'globalgroupmembership' | 'globalgrouppermissions' | 'gwtoolset' | 'hideuser' | 'import' | 'importupload' | 'ipblock-exempt' | 'manage-all-push-subscriptions' | 'managechangetags' | 'markbotedits' | 'massmessage' | 'mergehistory' | 'minoredit' | 'move' | 'move-categorypages' | 'move-rootuserpages' | 'move-subpages' | 'movefile' | 'movestable' | 'mwoauthmanageconsumer' | 'mwoauthmanagemygrants' | 'mwoauthproposeconsumer' | 'mwoauthsuppress' | 'mwoauthupdateownconsumer' | 'mwoauthviewprivate' | 'mwoauthviewsuppressed' | 'newsletter-create' | 'newsletter-delete' | 'newsletter-manage' | 'newsletter-restore' | 'nominornewtalk' | 'noratelimit' | 'nuke' | 'oathauth-api-all' | 'oathauth-disable-for-user' | 'oathauth-enable' | 'oathauth-verify-user' | 'oathauth-view-log' | 'override-antispoof' | 'override-export-depth' | 'pagelang' | 'pagetriage-copyvio' | 'patrol' | 'patrolmarks' | 'protect' | 'purge' | 'read' | 'renameuser' | 'reupload' | 'reupload-own' | 'reupload-shared' | 'review' | 'rollback' | 'securepoll-create-poll' | 'sendemail' | 'setmentor' | 'siteadmin' | 'skipcaptcha' | 'spamblacklistlog' | 'stablesettings' | 'suppressionlog' | 'suppressredirect' | 'suppressrevision' | 'tboverride' | 'tboverride-account' | 'templateeditor' | 'titleblacklistlog' | 'torunblocked' | 'transcode-reset' | 'transcode-status' | 'unblockself' | 'undelete' | 'unreviewedpages' | 'unwatchedpages' | 'upload' | 'upload_by_url' | 'urlshortener-create-url' | 'urlshortener-manage-url' | 'urlshortener-view-log' | 'usermerge' | 'userrights' | 'userrights-interwiki' | 'validate' | 'viewdeletedfile' | 'viewmyprivateinfo' | 'viewmywatchlist' | 'viewsuppressed' | 'vipsscaler-test' | 'writeapi')[];
-    pcexcluderights?: ('abusefilter-hidden-log' | 'abusefilter-hide-log' | 'abusefilter-log' | 'abusefilter-log-detail' | 'abusefilter-log-private' | 'abusefilter-modify' | 'abusefilter-modify-global' | 'abusefilter-modify-restricted' | 'abusefilter-privatedetails' | 'abusefilter-privatedetails-log' | 'abusefilter-revert' | 'abusefilter-view' | 'abusefilter-view-private' | 'apihighlimits' | 'applychangetags' | 'autoconfirmed' | 'autocreateaccount' | 'autopatrol' | 'autoreview' | 'autoreviewrestore' | 'bigdelete' | 'block' | 'blockemail' | 'bot' | 'browsearchive' | 'centralauth-lock' | 'centralauth-merge' | 'centralauth-oversight' | 'centralauth-rename' | 'centralauth-unmerge' | 'centralauth-usermerge' | 'changetags' | 'checkuser' | 'checkuser-log' | 'collectionsaveascommunitypage' | 'collectionsaveasuserpage' | 'createaccount' | 'createpage' | 'createpagemainns' | 'createtalk' | 'delete' | 'delete-redirect' | 'deletechangetags' | 'deletedhistory' | 'deletedtext' | 'deletelogentry' | 'deleterevision' | 'edit' | 'editautoreviewprotected' | 'editcontentmodel' | 'editeditorprotected' | 'editextendedsemiprotected' | 'editinterface' | 'editmyoptions' | 'editmyprivateinfo' | 'editmyusercss' | 'editmyuserjs' | 'editmyuserjson' | 'editmyuserjsredirect' | 'editmywatchlist' | 'editprotected' | 'editsemiprotected' | 'editsitecss' | 'editsitejs' | 'editsitejson' | 'editusercss' | 'edituserjs' | 'edituserjson' | 'extendedconfirmed' | 'flow-create-board' | 'flow-delete' | 'flow-edit-post' | 'flow-hide' | 'flow-suppress' | 'gadgets-definition-edit' | 'gadgets-edit' | 'globalblock' | 'globalblock-exempt' | 'globalblock-whitelist' | 'globalgroupmembership' | 'globalgrouppermissions' | 'gwtoolset' | 'hideuser' | 'import' | 'importupload' | 'ipblock-exempt' | 'manage-all-push-subscriptions' | 'managechangetags' | 'markbotedits' | 'massmessage' | 'mergehistory' | 'minoredit' | 'move' | 'move-categorypages' | 'move-rootuserpages' | 'move-subpages' | 'movefile' | 'movestable' | 'mwoauthmanageconsumer' | 'mwoauthmanagemygrants' | 'mwoauthproposeconsumer' | 'mwoauthsuppress' | 'mwoauthupdateownconsumer' | 'mwoauthviewprivate' | 'mwoauthviewsuppressed' | 'newsletter-create' | 'newsletter-delete' | 'newsletter-manage' | 'newsletter-restore' | 'nominornewtalk' | 'noratelimit' | 'nuke' | 'oathauth-api-all' | 'oathauth-disable-for-user' | 'oathauth-enable' | 'oathauth-verify-user' | 'oathauth-view-log' | 'override-antispoof' | 'override-export-depth' | 'pagelang' | 'pagetriage-copyvio' | 'patrol' | 'patrolmarks' | 'protect' | 'purge' | 'read' | 'renameuser' | 'reupload' | 'reupload-own' | 'reupload-shared' | 'review' | 'rollback' | 'securepoll-create-poll' | 'sendemail' | 'setmentor' | 'siteadmin' | 'skipcaptcha' | 'spamblacklistlog' | 'stablesettings' | 'suppressionlog' | 'suppressredirect' | 'suppressrevision' | 'tboverride' | 'tboverride-account' | 'templateeditor' | 'titleblacklistlog' | 'torunblocked' | 'transcode-reset' | 'transcode-status' | 'unblockself' | 'undelete' | 'unreviewedpages' | 'unwatchedpages' | 'upload' | 'upload_by_url' | 'urlshortener-create-url' | 'urlshortener-manage-url' | 'urlshortener-view-log' | 'usermerge' | 'userrights' | 'userrights-interwiki' | 'validate' | 'viewdeletedfile' | 'viewmyprivateinfo' | 'viewmywatchlist' | 'viewsuppressed' | 'vipsscaler-test' | 'writeapi')[];
+    pcrights?: ('abusefilter-hidden-log' | 'abusefilter-hide-log' | 'abusefilter-log' | 'abusefilter-log-detail' | 'abusefilter-log-private' | 'abusefilter-modify' | 'abusefilter-modify-global' | 'abusefilter-modify-restricted' | 'abusefilter-privatedetails' | 'abusefilter-privatedetails-log' | 'abusefilter-revert' | 'abusefilter-view' | 'abusefilter-view-private' | 'apihighlimits' | 'applychangetags' | 'autoconfirmed' | 'autocreateaccount' | 'autopatrol' | 'autoreview' | 'autoreviewrestore' | 'bigdelete' | 'block' | 'blockemail' | 'bot' | 'browsearchive' | 'centralauth-createlocal' | 'centralauth-lock' | 'centralauth-merge' | 'centralauth-oversight' | 'centralauth-rename' | 'centralauth-unmerge' | 'centralauth-usermerge' | 'changetags' | 'checkuser' | 'checkuser-log' | 'collectionsaveascommunitypage' | 'collectionsaveasuserpage' | 'createaccount' | 'createpage' | 'createpagemainns' | 'createtalk' | 'delete' | 'delete-redirect' | 'deletechangetags' | 'deletedhistory' | 'deletedtext' | 'deletelogentry' | 'deleterevision' | 'edit' | 'editautoreviewprotected' | 'editcontentmodel' | 'editeditorprotected' | 'editextendedsemiprotected' | 'editinterface' | 'editmyoptions' | 'editmyprivateinfo' | 'editmyusercss' | 'editmyuserjs' | 'editmyuserjson' | 'editmyuserjsredirect' | 'editmywatchlist' | 'editprotected' | 'editsemiprotected' | 'editsitecss' | 'editsitejs' | 'editsitejson' | 'editusercss' | 'edituserjs' | 'edituserjson' | 'extendedconfirmed' | 'flow-create-board' | 'flow-delete' | 'flow-edit-post' | 'flow-hide' | 'flow-suppress' | 'gadgets-definition-edit' | 'gadgets-edit' | 'globalblock' | 'globalblock-exempt' | 'globalblock-whitelist' | 'globalgroupmembership' | 'globalgrouppermissions' | 'gwtoolset' | 'hideuser' | 'import' | 'importupload' | 'ipblock-exempt' | 'manage-all-push-subscriptions' | 'managechangetags' | 'markbotedits' | 'massmessage' | 'mergehistory' | 'minoredit' | 'move' | 'move-categorypages' | 'move-rootuserpages' | 'move-subpages' | 'movefile' | 'movestable' | 'mwoauthmanageconsumer' | 'mwoauthmanagemygrants' | 'mwoauthproposeconsumer' | 'mwoauthsuppress' | 'mwoauthupdateownconsumer' | 'mwoauthviewprivate' | 'mwoauthviewsuppressed' | 'newsletter-create' | 'newsletter-delete' | 'newsletter-manage' | 'newsletter-restore' | 'nominornewtalk' | 'noratelimit' | 'nuke' | 'oathauth-api-all' | 'oathauth-disable-for-user' | 'oathauth-enable' | 'oathauth-verify-user' | 'oathauth-view-log' | 'override-antispoof' | 'override-export-depth' | 'pagelang' | 'pagetriage-copyvio' | 'patrol' | 'patrolmarks' | 'protect' | 'purge' | 'read' | 'renameuser' | 'reupload' | 'reupload-own' | 'reupload-shared' | 'review' | 'rollback' | 'securepoll-create-poll' | 'sendemail' | 'setmentor' | 'siteadmin' | 'skipcaptcha' | 'spamblacklistlog' | 'stablesettings' | 'suppressionlog' | 'suppressredirect' | 'suppressrevision' | 'tboverride' | 'tboverride-account' | 'templateeditor' | 'titleblacklistlog' | 'torunblocked' | 'transcode-reset' | 'transcode-status' | 'unblockself' | 'undelete' | 'unreviewedpages' | 'unwatchedpages' | 'upload' | 'upload_by_url' | 'urlshortener-create-url' | 'urlshortener-manage-url' | 'urlshortener-view-log' | 'usermerge' | 'userrights' | 'userrights-interwiki' | 'validate' | 'viewdeletedfile' | 'viewmyprivateinfo' | 'viewmywatchlist' | 'viewsuppressed' | 'vipsscaler-test' | 'writeapi')[];
+    pcexcluderights?: ('abusefilter-hidden-log' | 'abusefilter-hide-log' | 'abusefilter-log' | 'abusefilter-log-detail' | 'abusefilter-log-private' | 'abusefilter-modify' | 'abusefilter-modify-global' | 'abusefilter-modify-restricted' | 'abusefilter-privatedetails' | 'abusefilter-privatedetails-log' | 'abusefilter-revert' | 'abusefilter-view' | 'abusefilter-view-private' | 'apihighlimits' | 'applychangetags' | 'autoconfirmed' | 'autocreateaccount' | 'autopatrol' | 'autoreview' | 'autoreviewrestore' | 'bigdelete' | 'block' | 'blockemail' | 'bot' | 'browsearchive' | 'centralauth-createlocal' | 'centralauth-lock' | 'centralauth-merge' | 'centralauth-oversight' | 'centralauth-rename' | 'centralauth-unmerge' | 'centralauth-usermerge' | 'changetags' | 'checkuser' | 'checkuser-log' | 'collectionsaveascommunitypage' | 'collectionsaveasuserpage' | 'createaccount' | 'createpage' | 'createpagemainns' | 'createtalk' | 'delete' | 'delete-redirect' | 'deletechangetags' | 'deletedhistory' | 'deletedtext' | 'deletelogentry' | 'deleterevision' | 'edit' | 'editautoreviewprotected' | 'editcontentmodel' | 'editeditorprotected' | 'editextendedsemiprotected' | 'editinterface' | 'editmyoptions' | 'editmyprivateinfo' | 'editmyusercss' | 'editmyuserjs' | 'editmyuserjson' | 'editmyuserjsredirect' | 'editmywatchlist' | 'editprotected' | 'editsemiprotected' | 'editsitecss' | 'editsitejs' | 'editsitejson' | 'editusercss' | 'edituserjs' | 'edituserjson' | 'extendedconfirmed' | 'flow-create-board' | 'flow-delete' | 'flow-edit-post' | 'flow-hide' | 'flow-suppress' | 'gadgets-definition-edit' | 'gadgets-edit' | 'globalblock' | 'globalblock-exempt' | 'globalblock-whitelist' | 'globalgroupmembership' | 'globalgrouppermissions' | 'gwtoolset' | 'hideuser' | 'import' | 'importupload' | 'ipblock-exempt' | 'manage-all-push-subscriptions' | 'managechangetags' | 'markbotedits' | 'massmessage' | 'mergehistory' | 'minoredit' | 'move' | 'move-categorypages' | 'move-rootuserpages' | 'move-subpages' | 'movefile' | 'movestable' | 'mwoauthmanageconsumer' | 'mwoauthmanagemygrants' | 'mwoauthproposeconsumer' | 'mwoauthsuppress' | 'mwoauthupdateownconsumer' | 'mwoauthviewprivate' | 'mwoauthviewsuppressed' | 'newsletter-create' | 'newsletter-delete' | 'newsletter-manage' | 'newsletter-restore' | 'nominornewtalk' | 'noratelimit' | 'nuke' | 'oathauth-api-all' | 'oathauth-disable-for-user' | 'oathauth-enable' | 'oathauth-verify-user' | 'oathauth-view-log' | 'override-antispoof' | 'override-export-depth' | 'pagelang' | 'pagetriage-copyvio' | 'patrol' | 'patrolmarks' | 'protect' | 'purge' | 'read' | 'renameuser' | 'reupload' | 'reupload-own' | 'reupload-shared' | 'review' | 'rollback' | 'securepoll-create-poll' | 'sendemail' | 'setmentor' | 'siteadmin' | 'skipcaptcha' | 'spamblacklistlog' | 'stablesettings' | 'suppressionlog' | 'suppressredirect' | 'suppressrevision' | 'tboverride' | 'tboverride-account' | 'templateeditor' | 'titleblacklistlog' | 'torunblocked' | 'transcode-reset' | 'transcode-status' | 'unblockself' | 'undelete' | 'unreviewedpages' | 'unwatchedpages' | 'upload' | 'upload_by_url' | 'urlshortener-create-url' | 'urlshortener-manage-url' | 'urlshortener-view-log' | 'usermerge' | 'userrights' | 'userrights-interwiki' | 'validate' | 'viewdeletedfile' | 'viewmyprivateinfo' | 'viewmywatchlist' | 'viewsuppressed' | 'vipsscaler-test' | 'writeapi')[];
     pclimit?: limit;
     pccontinue?: string;
 }
@@ -1595,7 +1619,7 @@ export interface ApiQueryGlobalUsageParams extends ApiQueryParams {
     guprop?: ('namespace' | 'pageid' | 'url')[];
     gulimit?: limit;
     gunamespace?: namespace | namespace[];
-    gusite?: ('aawiki' | 'aawikibooks' | 'aawiktionary' | 'abwiki' | 'abwiktionary' | 'acewiki' | 'advisorswiki' | 'advisorywiki' | 'adywiki' | 'afwiki' | 'afwikibooks' | 'afwikiquote' | 'afwiktionary' | 'akwiki' | 'akwikibooks' | 'akwiktionary' | 'alswiki' | 'alswikibooks' | 'alswikiquote' | 'alswiktionary' | 'amwiki' | 'amwikimedia' | 'amwikiquote' | 'amwiktionary' | 'angwiki' | 'angwikibooks' | 'angwikiquote' | 'angwikisource' | 'angwiktionary' | 'anwiki' | 'anwiktionary' | 'apiportalwiki' | 'arbcom_cswiki' | 'arbcom_dewiki' | 'arbcom_enwiki' | 'arbcom_fiwiki' | 'arbcom_nlwiki' | 'arbcom_ruwiki' | 'arcwiki' | 'arwiki' | 'arwikibooks' | 'arwikimedia' | 'arwikinews' | 'arwikiquote' | 'arwikisource' | 'arwikiversity' | 'arwiktionary' | 'arywiki' | 'arzwiki' | 'astwiki' | 'astwikibooks' | 'astwikiquote' | 'astwiktionary' | 'aswiki' | 'aswikibooks' | 'aswikisource' | 'aswiktionary' | 'atjwiki' | 'auditcomwiki' | 'avkwiki' | 'avwiki' | 'avwiktionary' | 'awawiki' | 'aywiki' | 'aywikibooks' | 'aywiktionary' | 'azbwiki' | 'azwiki' | 'azwikibooks' | 'azwikiquote' | 'azwikisource' | 'azwiktionary' | 'banwiki' | 'barwiki' | 'bat_smgwiki' | 'bawiki' | 'bawikibooks' | 'bclwiki' | 'bdwikimedia' | 'be_x_oldwiki' | 'betawikiversity' | 'bewiki' | 'bewikibooks' | 'bewikimedia' | 'bewikiquote' | 'bewikisource' | 'bewiktionary' | 'bgwiki' | 'bgwikibooks' | 'bgwikinews' | 'bgwikiquote' | 'bgwikisource' | 'bgwiktionary' | 'bhwiki' | 'bhwiktionary' | 'biwiki' | 'biwikibooks' | 'biwiktionary' | 'bjnwiki' | 'bmwiki' | 'bmwikibooks' | 'bmwikiquote' | 'bmwiktionary' | 'bnwiki' | 'bnwikibooks' | 'bnwikisource' | 'bnwikivoyage' | 'bnwiktionary' | 'boardgovcomwiki' | 'boardwiki' | 'bowiki' | 'bowikibooks' | 'bowiktionary' | 'bpywiki' | 'brwiki' | 'brwikimedia' | 'brwikiquote' | 'brwikisource' | 'brwiktionary' | 'bswiki' | 'bswikibooks' | 'bswikinews' | 'bswikiquote' | 'bswikisource' | 'bswiktionary' | 'bugwiki' | 'bxrwiki' | 'cawiki' | 'cawikibooks' | 'cawikimedia' | 'cawikinews' | 'cawikiquote' | 'cawikisource' | 'cawiktionary' | 'cbk_zamwiki' | 'cdowiki' | 'cebwiki' | 'cewiki' | 'chairwiki' | 'chapcomwiki' | 'checkuserwiki' | 'chowiki' | 'chrwiki' | 'chrwiktionary' | 'chwiki' | 'chwikibooks' | 'chwiktionary' | 'chywiki' | 'ckbwiki' | 'cnwikimedia' | 'collabwiki' | 'commonswiki' | 'cowiki' | 'cowikibooks' | 'cowikimedia' | 'cowikiquote' | 'cowiktionary' | 'crhwiki' | 'crwiki' | 'crwikiquote' | 'crwiktionary' | 'csbwiki' | 'csbwiktionary' | 'cswiki' | 'cswikibooks' | 'cswikinews' | 'cswikiquote' | 'cswikisource' | 'cswikiversity' | 'cswiktionary' | 'cuwiki' | 'cvwiki' | 'cvwikibooks' | 'cywiki' | 'cywikibooks' | 'cywikiquote' | 'cywikisource' | 'cywiktionary' | 'dawiki' | 'dawikibooks' | 'dawikiquote' | 'dawikisource' | 'dawiktionary' | 'dewiki' | 'dewikibooks' | 'dewikinews' | 'dewikiquote' | 'dewikisource' | 'dewikiversity' | 'dewikivoyage' | 'dewiktionary' | 'dinwiki' | 'diqwiki' | 'dkwikimedia' | 'donatewiki' | 'dsbwiki' | 'dtywiki' | 'dvwiki' | 'dvwiktionary' | 'dzwiki' | 'dzwiktionary' | 'ecwikimedia' | 'eewiki' | 'electcomwiki' | 'elwiki' | 'elwikibooks' | 'elwikinews' | 'elwikiquote' | 'elwikisource' | 'elwikiversity' | 'elwikivoyage' | 'elwiktionary' | 'emlwiki' | 'enwiki' | 'enwikibooks' | 'enwikinews' | 'enwikiquote' | 'enwikisource' | 'enwikiversity' | 'enwikivoyage' | 'enwiktionary' | 'eowiki' | 'eowikibooks' | 'eowikinews' | 'eowikiquote' | 'eowikisource' | 'eowiktionary' | 'eswiki' | 'eswikibooks' | 'eswikinews' | 'eswikiquote' | 'eswikisource' | 'eswikiversity' | 'eswikivoyage' | 'eswiktionary' | 'etwiki' | 'etwikibooks' | 'etwikimedia' | 'etwikiquote' | 'etwikisource' | 'etwiktionary' | 'euwiki' | 'euwikibooks' | 'euwikiquote' | 'euwikisource' | 'euwiktionary' | 'execwiki' | 'extwiki' | 'fawiki' | 'fawikibooks' | 'fawikinews' | 'fawikiquote' | 'fawikisource' | 'fawikivoyage' | 'fawiktionary' | 'fdcwiki' | 'ffwiki' | 'fiu_vrowiki' | 'fiwiki' | 'fiwikibooks' | 'fiwikimedia' | 'fiwikinews' | 'fiwikiquote' | 'fiwikisource' | 'fiwikiversity' | 'fiwikivoyage' | 'fiwiktionary' | 'fixcopyrightwiki' | 'fjwiki' | 'fjwiktionary' | 'foundationwiki' | 'fowiki' | 'fowikisource' | 'fowiktionary' | 'frpwiki' | 'frrwiki' | 'frwiki' | 'frwikibooks' | 'frwikinews' | 'frwikiquote' | 'frwikisource' | 'frwikiversity' | 'frwikivoyage' | 'frwiktionary' | 'furwiki' | 'fywiki' | 'fywikibooks' | 'fywiktionary' | 'gagwiki' | 'ganwiki' | 'gawiki' | 'gawikibooks' | 'gawikiquote' | 'gawiktionary' | 'gcrwiki' | 'gdwiki' | 'gdwiktionary' | 'gewikimedia' | 'glkwiki' | 'glwiki' | 'glwikibooks' | 'glwikiquote' | 'glwikisource' | 'glwiktionary' | 'gnwiki' | 'gnwikibooks' | 'gnwiktionary' | 'gomwiki' | 'gomwiktionary' | 'gorwiki' | 'gotwiki' | 'gotwikibooks' | 'grantswiki' | 'grwikimedia' | 'guwiki' | 'guwikibooks' | 'guwikiquote' | 'guwikisource' | 'guwiktionary' | 'gvwiki' | 'gvwiktionary' | 'hakwiki' | 'hawiki' | 'hawiktionary' | 'hawwiki' | 'hewiki' | 'hewikibooks' | 'hewikinews' | 'hewikiquote' | 'hewikisource' | 'hewikivoyage' | 'hewiktionary' | 'hifwiki' | 'hifwiktionary' | 'hiwiki' | 'hiwikibooks' | 'hiwikimedia' | 'hiwikiquote' | 'hiwikisource' | 'hiwikiversity' | 'hiwikivoyage' | 'hiwiktionary' | 'howiki' | 'hrwiki' | 'hrwikibooks' | 'hrwikiquote' | 'hrwikisource' | 'hrwiktionary' | 'hsbwiki' | 'hsbwiktionary' | 'htwiki' | 'htwikisource' | 'huwiki' | 'huwikibooks' | 'huwikinews' | 'huwikiquote' | 'huwikisource' | 'huwiktionary' | 'hywiki' | 'hywikibooks' | 'hywikiquote' | 'hywikisource' | 'hywiktionary' | 'hywwiki' | 'hzwiki' | 'iawiki' | 'iawikibooks' | 'iawiktionary' | 'id_internalwikimedia' | 'idwiki' | 'idwikibooks' | 'idwikimedia' | 'idwikiquote' | 'idwikisource' | 'idwiktionary' | 'iegcomwiki' | 'iewiki' | 'iewikibooks' | 'iewiktionary' | 'igwiki' | 'iiwiki' | 'ikwiki' | 'ikwiktionary' | 'ilowiki' | 'ilwikimedia' | 'incubatorwiki' | 'inhwiki' | 'internalwiki' | 'iowiki' | 'iowiktionary' | 'iswiki' | 'iswikibooks' | 'iswikiquote' | 'iswikisource' | 'iswiktionary' | 'itwiki' | 'itwikibooks' | 'itwikinews' | 'itwikiquote' | 'itwikisource' | 'itwikiversity' | 'itwikivoyage' | 'itwiktionary' | 'iuwiki' | 'iuwiktionary' | 'jamwiki' | 'jawiki' | 'jawikibooks' | 'jawikinews' | 'jawikiquote' | 'jawikisource' | 'jawikiversity' | 'jawikivoyage' | 'jawiktionary' | 'jbowiki' | 'jbowiktionary' | 'jvwiki' | 'jvwiktionary' | 'kaawiki' | 'kabwiki' | 'kawiki' | 'kawikibooks' | 'kawikiquote' | 'kawiktionary' | 'kbdwiki' | 'kbpwiki' | 'kgwiki' | 'kiwiki' | 'kjwiki' | 'kkwiki' | 'kkwikibooks' | 'kkwikiquote' | 'kkwiktionary' | 'klwiki' | 'klwiktionary' | 'kmwiki' | 'kmwikibooks' | 'kmwiktionary' | 'knwiki' | 'knwikibooks' | 'knwikiquote' | 'knwikisource' | 'knwiktionary' | 'koiwiki' | 'kowiki' | 'kowikibooks' | 'kowikinews' | 'kowikiquote' | 'kowikisource' | 'kowikiversity' | 'kowiktionary' | 'krcwiki' | 'krwiki' | 'krwikiquote' | 'kshwiki' | 'kswiki' | 'kswikibooks' | 'kswikiquote' | 'kswiktionary' | 'kuwiki' | 'kuwikibooks' | 'kuwikiquote' | 'kuwiktionary' | 'kvwiki' | 'kwwiki' | 'kwwikiquote' | 'kwwiktionary' | 'kywiki' | 'kywikibooks' | 'kywikiquote' | 'kywiktionary' | 'labswiki' | 'labtestwiki' | 'ladwiki' | 'lawiki' | 'lawikibooks' | 'lawikiquote' | 'lawikisource' | 'lawiktionary' | 'lbewiki' | 'lbwiki' | 'lbwikibooks' | 'lbwikiquote' | 'lbwiktionary' | 'legalteamwiki' | 'lezwiki' | 'lfnwiki' | 'lgwiki' | 'lijwiki' | 'lijwikisource' | 'liwiki' | 'liwikibooks' | 'liwikinews' | 'liwikiquote' | 'liwikisource' | 'liwiktionary' | 'lldwiki' | 'lmowiki' | 'lnwiki' | 'lnwikibooks' | 'lnwiktionary' | 'loginwiki' | 'lowiki' | 'lowiktionary' | 'lrcwiki' | 'ltgwiki' | 'ltwiki' | 'ltwikibooks' | 'ltwikiquote' | 'ltwikisource' | 'ltwiktionary' | 'lvwiki' | 'lvwikibooks' | 'lvwiktionary' | 'maiwiki' | 'maiwikimedia' | 'map_bmswiki' | 'mdfwiki' | 'mediawikiwiki' | 'metawiki' | 'mgwiki' | 'mgwikibooks' | 'mgwiktionary' | 'mhrwiki' | 'mhwiki' | 'mhwiktionary' | 'minwiki' | 'minwiktionary' | 'miwiki' | 'miwikibooks' | 'miwiktionary' | 'mkwiki' | 'mkwikibooks' | 'mkwikimedia' | 'mkwikisource' | 'mkwiktionary' | 'mlwiki' | 'mlwikibooks' | 'mlwikiquote' | 'mlwikisource' | 'mlwiktionary' | 'mnwiki' | 'mnwikibooks' | 'mnwiktionary' | 'mnwwiki' | 'movementroleswiki' | 'mowiki' | 'mowiktionary' | 'mrjwiki' | 'mrwiki' | 'mrwikibooks' | 'mrwikiquote' | 'mrwikisource' | 'mrwiktionary' | 'mswiki' | 'mswikibooks' | 'mswiktionary' | 'mtwiki' | 'mtwiktionary' | 'muswiki' | 'mwlwiki' | 'mxwikimedia' | 'myvwiki' | 'mywiki' | 'mywikibooks' | 'mywiktionary' | 'mznwiki' | 'nahwiki' | 'nahwikibooks' | 'nahwiktionary' | 'napwiki' | 'napwikisource' | 'nawiki' | 'nawikibooks' | 'nawikiquote' | 'nawiktionary' | 'nds_nlwiki' | 'ndswiki' | 'ndswikibooks' | 'ndswikiquote' | 'ndswiktionary' | 'newiki' | 'newikibooks' | 'newiktionary' | 'newwiki' | 'ngwiki' | 'ngwikimedia' | 'nlwiki' | 'nlwikibooks' | 'nlwikimedia' | 'nlwikinews' | 'nlwikiquote' | 'nlwikisource' | 'nlwikivoyage' | 'nlwiktionary' | 'nnwiki' | 'nnwikiquote' | 'nnwiktionary' | 'noboard_chapterswikimedia' | 'nostalgiawiki' | 'novwiki' | 'nowiki' | 'nowikibooks' | 'nowikimedia' | 'nowikinews' | 'nowikiquote' | 'nowikisource' | 'nowiktionary' | 'nqowiki' | 'nrmwiki' | 'nsowiki' | 'nvwiki' | 'nycwikimedia' | 'nywiki' | 'nzwikimedia' | 'ocwiki' | 'ocwikibooks' | 'ocwiktionary' | 'officewiki' | 'olowiki' | 'ombudsmenwiki' | 'omwiki' | 'omwiktionary' | 'orwiki' | 'orwikisource' | 'orwiktionary' | 'oswiki' | 'otrs_wikiwiki' | 'outreachwiki' | 'pa_uswikimedia' | 'pagwiki' | 'pamwiki' | 'papwiki' | 'pawiki' | 'pawikibooks' | 'pawikisource' | 'pawiktionary' | 'pcdwiki' | 'pdcwiki' | 'pflwiki' | 'pihwiki' | 'piwiki' | 'piwiktionary' | 'plwiki' | 'plwikibooks' | 'plwikimedia' | 'plwikinews' | 'plwikiquote' | 'plwikisource' | 'plwikivoyage' | 'plwiktionary' | 'pmswiki' | 'pmswikisource' | 'pnbwiki' | 'pnbwiktionary' | 'pntwiki' | 'projectcomwiki' | 'pswiki' | 'pswikibooks' | 'pswikivoyage' | 'pswiktionary' | 'ptwiki' | 'ptwikibooks' | 'ptwikimedia' | 'ptwikinews' | 'ptwikiquote' | 'ptwikisource' | 'ptwikiversity' | 'ptwikivoyage' | 'ptwiktionary' | 'punjabiwikimedia' | 'qualitywiki' | 'quwiki' | 'quwikibooks' | 'quwikiquote' | 'quwiktionary' | 'rmwiki' | 'rmwikibooks' | 'rmwiktionary' | 'rmywiki' | 'rnwiki' | 'rnwiktionary' | 'roa_rupwiki' | 'roa_rupwiktionary' | 'roa_tarawiki' | 'romdwikimedia' | 'rowiki' | 'rowikibooks' | 'rowikinews' | 'rowikiquote' | 'rowikisource' | 'rowikivoyage' | 'rowiktionary' | 'rswikimedia' | 'ruewiki' | 'ruwiki' | 'ruwikibooks' | 'ruwikimedia' | 'ruwikinews' | 'ruwikiquote' | 'ruwikisource' | 'ruwikiversity' | 'ruwikivoyage' | 'ruwiktionary' | 'rwwiki' | 'rwwiktionary' | 'sahwiki' | 'sahwikiquote' | 'sahwikisource' | 'satwiki' | 'sawiki' | 'sawikibooks' | 'sawikiquote' | 'sawikisource' | 'sawiktionary' | 'scnwiki' | 'scnwiktionary' | 'scowiki' | 'scwiki' | 'scwiktionary' | 'sdwiki' | 'sdwikinews' | 'sdwiktionary' | 'searchcomwiki' | 'sewiki' | 'sewikibooks' | 'sewikimedia' | 'sgwiki' | 'sgwiktionary' | 'shnwiki' | 'shnwiktionary' | 'shwiki' | 'shwiktionary' | 'shywiktionary' | 'simplewiki' | 'simplewikibooks' | 'simplewikiquote' | 'simplewiktionary' | 'siwiki' | 'siwikibooks' | 'siwiktionary' | 'skwiki' | 'skwikibooks' | 'skwikiquote' | 'skwikisource' | 'skwiktionary' | 'slwiki' | 'slwikibooks' | 'slwikiquote' | 'slwikisource' | 'slwikiversity' | 'slwiktionary' | 'smnwiki' | 'smwiki' | 'smwiktionary' | 'snwiki' | 'snwiktionary' | 'sourceswiki' | 'sowiki' | 'sowiktionary' | 'spcomwiki' | 'specieswiki' | 'sqwiki' | 'sqwikibooks' | 'sqwikinews' | 'sqwikiquote' | 'sqwiktionary' | 'srnwiki' | 'srwiki' | 'srwikibooks' | 'srwikinews' | 'srwikiquote' | 'srwikisource' | 'srwiktionary' | 'sswiki' | 'sswiktionary' | 'stewardwiki' | 'stqwiki' | 'strategywiki' | 'stwiki' | 'stwiktionary' | 'suwiki' | 'suwikibooks' | 'suwikiquote' | 'suwiktionary' | 'svwiki' | 'svwikibooks' | 'svwikinews' | 'svwikiquote' | 'svwikisource' | 'svwikiversity' | 'svwikivoyage' | 'svwiktionary' | 'swwiki' | 'swwikibooks' | 'swwiktionary' | 'sysop_itwiki' | 'szlwiki' | 'szywiki' | 'tawiki' | 'tawikibooks' | 'tawikinews' | 'tawikiquote' | 'tawikisource' | 'tawiktionary' | 'tcywiki' | 'techconductwiki' | 'tenwiki' | 'test2wiki' | 'testcommonswiki' | 'testwiki' | 'testwikidatawiki' | 'tetwiki' | 'tewiki' | 'tewikibooks' | 'tewikiquote' | 'tewikisource' | 'tewiktionary' | 'tgwiki' | 'tgwikibooks' | 'tgwiktionary' | 'thankyouwiki' | 'thwiki' | 'thwikibooks' | 'thwikinews' | 'thwikiquote' | 'thwikisource' | 'thwiktionary' | 'tiwiki' | 'tiwiktionary' | 'tkwiki' | 'tkwikibooks' | 'tkwikiquote' | 'tkwiktionary' | 'tlwiki' | 'tlwikibooks' | 'tlwiktionary' | 'tnwiki' | 'tnwiktionary' | 'towiki' | 'towiktionary' | 'tpiwiki' | 'tpiwiktionary' | 'transitionteamwiki' | 'trwiki' | 'trwikibooks' | 'trwikimedia' | 'trwikinews' | 'trwikiquote' | 'trwikisource' | 'trwiktionary' | 'tswiki' | 'tswiktionary' | 'ttwiki' | 'ttwikibooks' | 'ttwikiquote' | 'ttwiktionary' | 'tumwiki' | 'twwiki' | 'twwiktionary' | 'tyvwiki' | 'tywiki' | 'uawikimedia' | 'udmwiki' | 'ugwiki' | 'ugwikibooks' | 'ugwikiquote' | 'ugwiktionary' | 'ukwiki' | 'ukwikibooks' | 'ukwikimedia' | 'ukwikinews' | 'ukwikiquote' | 'ukwikisource' | 'ukwikivoyage' | 'ukwiktionary' | 'urwiki' | 'urwikibooks' | 'urwikiquote' | 'urwiktionary' | 'usabilitywiki' | 'uzwiki' | 'uzwikibooks' | 'uzwikiquote' | 'uzwiktionary' | 'vecwiki' | 'vecwikisource' | 'vecwiktionary' | 'vepwiki' | 'vewiki' | 'vewikimedia' | 'viwiki' | 'viwikibooks' | 'viwikiquote' | 'viwikisource' | 'viwikivoyage' | 'viwiktionary' | 'vlswiki' | 'votewiki' | 'vowiki' | 'vowikibooks' | 'vowikiquote' | 'vowiktionary' | 'warwiki' | 'wawiki' | 'wawikibooks' | 'wawiktionary' | 'wbwikimedia' | 'wg_enwiki' | 'wikidatawiki' | 'wikimania2005wiki' | 'wikimania2006wiki' | 'wikimania2007wiki' | 'wikimania2008wiki' | 'wikimania2009wiki' | 'wikimania2010wiki' | 'wikimania2011wiki' | 'wikimania2012wiki' | 'wikimania2013wiki' | 'wikimania2014wiki' | 'wikimania2015wiki' | 'wikimania2016wiki' | 'wikimania2017wiki' | 'wikimania2018wiki' | 'wikimaniateamwiki' | 'wikimaniawiki' | 'wowiki' | 'wowikiquote' | 'wowiktionary' | 'wuuwiki' | 'xalwiki' | 'xhwiki' | 'xhwikibooks' | 'xhwiktionary' | 'xmfwiki' | 'yiwiki' | 'yiwikisource' | 'yiwiktionary' | 'yowiki' | 'yowikibooks' | 'yowiktionary' | 'yuewiktionary' | 'zawiki' | 'zawikibooks' | 'zawikiquote' | 'zawiktionary' | 'zeawiki' | 'zerowiki' | 'zh_classicalwiki' | 'zh_min_nanwiki' | 'zh_min_nanwikibooks' | 'zh_min_nanwikiquote' | 'zh_min_nanwikisource' | 'zh_min_nanwiktionary' | 'zh_yuewiki' | 'zhwiki' | 'zhwikibooks' | 'zhwikinews' | 'zhwikiquote' | 'zhwikisource' | 'zhwikiversity' | 'zhwikivoyage' | 'zhwiktionary' | 'zuwiki' | 'zuwikibooks' | 'zuwiktionary')[];
+    gusite?: ('aawiki' | 'aawikibooks' | 'aawiktionary' | 'abwiki' | 'abwiktionary' | 'acewiki' | 'advisorswiki' | 'advisorywiki' | 'adywiki' | 'afwiki' | 'afwikibooks' | 'afwikiquote' | 'afwiktionary' | 'akwiki' | 'akwikibooks' | 'akwiktionary' | 'alswiki' | 'alswikibooks' | 'alswikiquote' | 'alswiktionary' | 'amwiki' | 'amwikimedia' | 'amwikiquote' | 'amwiktionary' | 'angwiki' | 'angwikibooks' | 'angwikiquote' | 'angwikisource' | 'angwiktionary' | 'anwiki' | 'anwiktionary' | 'apiportalwiki' | 'arbcom_cswiki' | 'arbcom_dewiki' | 'arbcom_enwiki' | 'arbcom_fiwiki' | 'arbcom_nlwiki' | 'arbcom_ruwiki' | 'arcwiki' | 'arwiki' | 'arwikibooks' | 'arwikimedia' | 'arwikinews' | 'arwikiquote' | 'arwikisource' | 'arwikiversity' | 'arwiktionary' | 'arywiki' | 'arzwiki' | 'astwiki' | 'astwikibooks' | 'astwikiquote' | 'astwiktionary' | 'aswiki' | 'aswikibooks' | 'aswikisource' | 'aswiktionary' | 'atjwiki' | 'auditcomwiki' | 'avkwiki' | 'avwiki' | 'avwiktionary' | 'awawiki' | 'aywiki' | 'aywikibooks' | 'aywiktionary' | 'azbwiki' | 'azwiki' | 'azwikibooks' | 'azwikiquote' | 'azwikisource' | 'azwiktionary' | 'banwiki' | 'barwiki' | 'bat_smgwiki' | 'bawiki' | 'bawikibooks' | 'bclwiki' | 'bdwikimedia' | 'be_x_oldwiki' | 'betawikiversity' | 'bewiki' | 'bewikibooks' | 'bewikimedia' | 'bewikiquote' | 'bewikisource' | 'bewiktionary' | 'bgwiki' | 'bgwikibooks' | 'bgwikinews' | 'bgwikiquote' | 'bgwikisource' | 'bgwiktionary' | 'bhwiki' | 'bhwiktionary' | 'biwiki' | 'biwikibooks' | 'biwiktionary' | 'bjnwiki' | 'bmwiki' | 'bmwikibooks' | 'bmwikiquote' | 'bmwiktionary' | 'bnwiki' | 'bnwikibooks' | 'bnwikisource' | 'bnwikivoyage' | 'bnwiktionary' | 'boardgovcomwiki' | 'boardwiki' | 'bowiki' | 'bowikibooks' | 'bowiktionary' | 'bpywiki' | 'brwiki' | 'brwikimedia' | 'brwikiquote' | 'brwikisource' | 'brwiktionary' | 'bswiki' | 'bswikibooks' | 'bswikinews' | 'bswikiquote' | 'bswikisource' | 'bswiktionary' | 'bugwiki' | 'bxrwiki' | 'cawiki' | 'cawikibooks' | 'cawikimedia' | 'cawikinews' | 'cawikiquote' | 'cawikisource' | 'cawiktionary' | 'cbk_zamwiki' | 'cdowiki' | 'cebwiki' | 'cewiki' | 'chairwiki' | 'chapcomwiki' | 'checkuserwiki' | 'chowiki' | 'chrwiki' | 'chrwiktionary' | 'chwiki' | 'chwikibooks' | 'chwiktionary' | 'chywiki' | 'ckbwiki' | 'cnwikimedia' | 'collabwiki' | 'commonswiki' | 'cowiki' | 'cowikibooks' | 'cowikimedia' | 'cowikiquote' | 'cowiktionary' | 'crhwiki' | 'crwiki' | 'crwikiquote' | 'crwiktionary' | 'csbwiki' | 'csbwiktionary' | 'cswiki' | 'cswikibooks' | 'cswikinews' | 'cswikiquote' | 'cswikisource' | 'cswikiversity' | 'cswiktionary' | 'cuwiki' | 'cvwiki' | 'cvwikibooks' | 'cywiki' | 'cywikibooks' | 'cywikiquote' | 'cywikisource' | 'cywiktionary' | 'dawiki' | 'dawikibooks' | 'dawikiquote' | 'dawikisource' | 'dawiktionary' | 'dewiki' | 'dewikibooks' | 'dewikinews' | 'dewikiquote' | 'dewikisource' | 'dewikiversity' | 'dewikivoyage' | 'dewiktionary' | 'dinwiki' | 'diqwiki' | 'dkwikimedia' | 'donatewiki' | 'dsbwiki' | 'dtywiki' | 'dvwiki' | 'dvwiktionary' | 'dzwiki' | 'dzwiktionary' | 'ecwikimedia' | 'eewiki' | 'electcomwiki' | 'elwiki' | 'elwikibooks' | 'elwikinews' | 'elwikiquote' | 'elwikisource' | 'elwikiversity' | 'elwikivoyage' | 'elwiktionary' | 'emlwiki' | 'enwiki' | 'enwikibooks' | 'enwikinews' | 'enwikiquote' | 'enwikisource' | 'enwikiversity' | 'enwikivoyage' | 'enwiktionary' | 'eowiki' | 'eowikibooks' | 'eowikinews' | 'eowikiquote' | 'eowikisource' | 'eowikivoyage' | 'eowiktionary' | 'eswiki' | 'eswikibooks' | 'eswikinews' | 'eswikiquote' | 'eswikisource' | 'eswikiversity' | 'eswikivoyage' | 'eswiktionary' | 'etwiki' | 'etwikibooks' | 'etwikimedia' | 'etwikiquote' | 'etwikisource' | 'etwiktionary' | 'euwiki' | 'euwikibooks' | 'euwikiquote' | 'euwikisource' | 'euwiktionary' | 'execwiki' | 'extwiki' | 'fawiki' | 'fawikibooks' | 'fawikinews' | 'fawikiquote' | 'fawikisource' | 'fawikivoyage' | 'fawiktionary' | 'fdcwiki' | 'ffwiki' | 'fiu_vrowiki' | 'fiwiki' | 'fiwikibooks' | 'fiwikimedia' | 'fiwikinews' | 'fiwikiquote' | 'fiwikisource' | 'fiwikiversity' | 'fiwikivoyage' | 'fiwiktionary' | 'fixcopyrightwiki' | 'fjwiki' | 'fjwiktionary' | 'foundationwiki' | 'fowiki' | 'fowikisource' | 'fowiktionary' | 'frpwiki' | 'frrwiki' | 'frwiki' | 'frwikibooks' | 'frwikinews' | 'frwikiquote' | 'frwikisource' | 'frwikiversity' | 'frwikivoyage' | 'frwiktionary' | 'furwiki' | 'fywiki' | 'fywikibooks' | 'fywiktionary' | 'gagwiki' | 'ganwiki' | 'gawiki' | 'gawikibooks' | 'gawikiquote' | 'gawiktionary' | 'gcrwiki' | 'gdwiki' | 'gdwiktionary' | 'gewikimedia' | 'glkwiki' | 'glwiki' | 'glwikibooks' | 'glwikiquote' | 'glwikisource' | 'glwiktionary' | 'gnwiki' | 'gnwikibooks' | 'gnwiktionary' | 'gomwiki' | 'gomwiktionary' | 'gorwiki' | 'gotwiki' | 'gotwikibooks' | 'grantswiki' | 'grwikimedia' | 'guwiki' | 'guwikibooks' | 'guwikiquote' | 'guwikisource' | 'guwiktionary' | 'gvwiki' | 'gvwiktionary' | 'hakwiki' | 'hawiki' | 'hawiktionary' | 'hawwiki' | 'hewiki' | 'hewikibooks' | 'hewikinews' | 'hewikiquote' | 'hewikisource' | 'hewikivoyage' | 'hewiktionary' | 'hifwiki' | 'hifwiktionary' | 'hiwiki' | 'hiwikibooks' | 'hiwikimedia' | 'hiwikiquote' | 'hiwikisource' | 'hiwikiversity' | 'hiwikivoyage' | 'hiwiktionary' | 'howiki' | 'hrwiki' | 'hrwikibooks' | 'hrwikiquote' | 'hrwikisource' | 'hrwiktionary' | 'hsbwiki' | 'hsbwiktionary' | 'htwiki' | 'htwikisource' | 'huwiki' | 'huwikibooks' | 'huwikinews' | 'huwikiquote' | 'huwikisource' | 'huwiktionary' | 'hywiki' | 'hywikibooks' | 'hywikiquote' | 'hywikisource' | 'hywiktionary' | 'hywwiki' | 'hzwiki' | 'iawiki' | 'iawikibooks' | 'iawiktionary' | 'id_internalwikimedia' | 'idwiki' | 'idwikibooks' | 'idwikimedia' | 'idwikiquote' | 'idwikisource' | 'idwiktionary' | 'iegcomwiki' | 'iewiki' | 'iewikibooks' | 'iewiktionary' | 'igwiki' | 'iiwiki' | 'ikwiki' | 'ikwiktionary' | 'ilowiki' | 'ilwikimedia' | 'incubatorwiki' | 'inhwiki' | 'internalwiki' | 'iowiki' | 'iowiktionary' | 'iswiki' | 'iswikibooks' | 'iswikiquote' | 'iswikisource' | 'iswiktionary' | 'itwiki' | 'itwikibooks' | 'itwikinews' | 'itwikiquote' | 'itwikisource' | 'itwikiversity' | 'itwikivoyage' | 'itwiktionary' | 'iuwiki' | 'iuwiktionary' | 'jamwiki' | 'jawiki' | 'jawikibooks' | 'jawikinews' | 'jawikiquote' | 'jawikisource' | 'jawikiversity' | 'jawikivoyage' | 'jawiktionary' | 'jbowiki' | 'jbowiktionary' | 'jvwiki' | 'jvwiktionary' | 'kaawiki' | 'kabwiki' | 'kawiki' | 'kawikibooks' | 'kawikiquote' | 'kawiktionary' | 'kbdwiki' | 'kbpwiki' | 'kgwiki' | 'kiwiki' | 'kjwiki' | 'kkwiki' | 'kkwikibooks' | 'kkwikiquote' | 'kkwiktionary' | 'klwiki' | 'klwiktionary' | 'kmwiki' | 'kmwikibooks' | 'kmwiktionary' | 'knwiki' | 'knwikibooks' | 'knwikiquote' | 'knwikisource' | 'knwiktionary' | 'koiwiki' | 'kowiki' | 'kowikibooks' | 'kowikinews' | 'kowikiquote' | 'kowikisource' | 'kowikiversity' | 'kowiktionary' | 'krcwiki' | 'krwiki' | 'krwikiquote' | 'kshwiki' | 'kswiki' | 'kswikibooks' | 'kswikiquote' | 'kswiktionary' | 'kuwiki' | 'kuwikibooks' | 'kuwikiquote' | 'kuwiktionary' | 'kvwiki' | 'kwwiki' | 'kwwikiquote' | 'kwwiktionary' | 'kywiki' | 'kywikibooks' | 'kywikiquote' | 'kywiktionary' | 'labswiki' | 'labtestwiki' | 'ladwiki' | 'lawiki' | 'lawikibooks' | 'lawikiquote' | 'lawikisource' | 'lawiktionary' | 'lbewiki' | 'lbwiki' | 'lbwikibooks' | 'lbwikiquote' | 'lbwiktionary' | 'legalteamwiki' | 'lezwiki' | 'lfnwiki' | 'lgwiki' | 'lijwiki' | 'lijwikisource' | 'liwiki' | 'liwikibooks' | 'liwikinews' | 'liwikiquote' | 'liwikisource' | 'liwiktionary' | 'lldwiki' | 'lmowiki' | 'lnwiki' | 'lnwikibooks' | 'lnwiktionary' | 'loginwiki' | 'lowiki' | 'lowiktionary' | 'lrcwiki' | 'ltgwiki' | 'ltwiki' | 'ltwikibooks' | 'ltwikiquote' | 'ltwikisource' | 'ltwiktionary' | 'lvwiki' | 'lvwikibooks' | 'lvwiktionary' | 'madwiki' | 'maiwiki' | 'maiwikimedia' | 'map_bmswiki' | 'mdfwiki' | 'mediawikiwiki' | 'metawiki' | 'mgwiki' | 'mgwikibooks' | 'mgwiktionary' | 'mhrwiki' | 'mhwiki' | 'mhwiktionary' | 'minwiki' | 'minwiktionary' | 'miwiki' | 'miwikibooks' | 'miwiktionary' | 'mkwiki' | 'mkwikibooks' | 'mkwikimedia' | 'mkwikisource' | 'mkwiktionary' | 'mlwiki' | 'mlwikibooks' | 'mlwikiquote' | 'mlwikisource' | 'mlwiktionary' | 'mnwiki' | 'mnwikibooks' | 'mnwiktionary' | 'mnwwiki' | 'movementroleswiki' | 'mowiki' | 'mowiktionary' | 'mrjwiki' | 'mrwiki' | 'mrwikibooks' | 'mrwikiquote' | 'mrwikisource' | 'mrwiktionary' | 'mswiki' | 'mswikibooks' | 'mswiktionary' | 'mtwiki' | 'mtwiktionary' | 'muswiki' | 'mwlwiki' | 'mxwikimedia' | 'myvwiki' | 'mywiki' | 'mywikibooks' | 'mywiktionary' | 'mznwiki' | 'nahwiki' | 'nahwikibooks' | 'nahwiktionary' | 'napwiki' | 'napwikisource' | 'nawiki' | 'nawikibooks' | 'nawikiquote' | 'nawiktionary' | 'nds_nlwiki' | 'ndswiki' | 'ndswikibooks' | 'ndswikiquote' | 'ndswiktionary' | 'newiki' | 'newikibooks' | 'newiktionary' | 'newwiki' | 'ngwiki' | 'ngwikimedia' | 'nlwiki' | 'nlwikibooks' | 'nlwikimedia' | 'nlwikinews' | 'nlwikiquote' | 'nlwikisource' | 'nlwikivoyage' | 'nlwiktionary' | 'nnwiki' | 'nnwikiquote' | 'nnwiktionary' | 'noboard_chapterswikimedia' | 'nostalgiawiki' | 'novwiki' | 'nowiki' | 'nowikibooks' | 'nowikimedia' | 'nowikinews' | 'nowikiquote' | 'nowikisource' | 'nowiktionary' | 'nqowiki' | 'nrmwiki' | 'nsowiki' | 'nvwiki' | 'nycwikimedia' | 'nywiki' | 'nzwikimedia' | 'ocwiki' | 'ocwikibooks' | 'ocwiktionary' | 'officewiki' | 'olowiki' | 'ombudsmenwiki' | 'omwiki' | 'omwiktionary' | 'orwiki' | 'orwikisource' | 'orwiktionary' | 'oswiki' | 'otrs_wikiwiki' | 'outreachwiki' | 'pa_uswikimedia' | 'pagwiki' | 'pamwiki' | 'papwiki' | 'pawiki' | 'pawikibooks' | 'pawikisource' | 'pawiktionary' | 'pcdwiki' | 'pdcwiki' | 'pflwiki' | 'pihwiki' | 'piwiki' | 'piwiktionary' | 'plwiki' | 'plwikibooks' | 'plwikimedia' | 'plwikinews' | 'plwikiquote' | 'plwikisource' | 'plwikivoyage' | 'plwiktionary' | 'pmswiki' | 'pmswikisource' | 'pnbwiki' | 'pnbwiktionary' | 'pntwiki' | 'projectcomwiki' | 'pswiki' | 'pswikibooks' | 'pswikivoyage' | 'pswiktionary' | 'ptwiki' | 'ptwikibooks' | 'ptwikimedia' | 'ptwikinews' | 'ptwikiquote' | 'ptwikisource' | 'ptwikiversity' | 'ptwikivoyage' | 'ptwiktionary' | 'punjabiwikimedia' | 'qualitywiki' | 'quwiki' | 'quwikibooks' | 'quwikiquote' | 'quwiktionary' | 'rmwiki' | 'rmwikibooks' | 'rmwiktionary' | 'rmywiki' | 'rnwiki' | 'rnwiktionary' | 'roa_rupwiki' | 'roa_rupwiktionary' | 'roa_tarawiki' | 'romdwikimedia' | 'rowiki' | 'rowikibooks' | 'rowikinews' | 'rowikiquote' | 'rowikisource' | 'rowikivoyage' | 'rowiktionary' | 'rswikimedia' | 'ruewiki' | 'ruwiki' | 'ruwikibooks' | 'ruwikimedia' | 'ruwikinews' | 'ruwikiquote' | 'ruwikisource' | 'ruwikiversity' | 'ruwikivoyage' | 'ruwiktionary' | 'rwwiki' | 'rwwiktionary' | 'sahwiki' | 'sahwikiquote' | 'sahwikisource' | 'satwiki' | 'sawiki' | 'sawikibooks' | 'sawikiquote' | 'sawikisource' | 'sawiktionary' | 'scnwiki' | 'scnwiktionary' | 'scowiki' | 'scwiki' | 'scwiktionary' | 'sdwiki' | 'sdwikinews' | 'sdwiktionary' | 'searchcomwiki' | 'sewiki' | 'sewikibooks' | 'sewikimedia' | 'sgwiki' | 'sgwiktionary' | 'shnwiki' | 'shnwiktionary' | 'shwiki' | 'shwiktionary' | 'shywiktionary' | 'simplewiki' | 'simplewikibooks' | 'simplewikiquote' | 'simplewiktionary' | 'siwiki' | 'siwikibooks' | 'siwiktionary' | 'skrwiki' | 'skrwiktionary' | 'skwiki' | 'skwikibooks' | 'skwikiquote' | 'skwikisource' | 'skwiktionary' | 'slwiki' | 'slwikibooks' | 'slwikiquote' | 'slwikisource' | 'slwikiversity' | 'slwiktionary' | 'smnwiki' | 'smwiki' | 'smwiktionary' | 'snwiki' | 'snwiktionary' | 'sourceswiki' | 'sowiki' | 'sowiktionary' | 'spcomwiki' | 'specieswiki' | 'sqwiki' | 'sqwikibooks' | 'sqwikinews' | 'sqwikiquote' | 'sqwiktionary' | 'srnwiki' | 'srwiki' | 'srwikibooks' | 'srwikinews' | 'srwikiquote' | 'srwikisource' | 'srwiktionary' | 'sswiki' | 'sswiktionary' | 'stewardwiki' | 'stqwiki' | 'strategywiki' | 'stwiki' | 'stwiktionary' | 'suwiki' | 'suwikibooks' | 'suwikiquote' | 'suwiktionary' | 'svwiki' | 'svwikibooks' | 'svwikinews' | 'svwikiquote' | 'svwikisource' | 'svwikiversity' | 'svwikivoyage' | 'svwiktionary' | 'swwiki' | 'swwikibooks' | 'swwiktionary' | 'sysop_itwiki' | 'szlwiki' | 'szywiki' | 'tawiki' | 'tawikibooks' | 'tawikinews' | 'tawikiquote' | 'tawikisource' | 'tawiktionary' | 'tcywiki' | 'techconductwiki' | 'tenwiki' | 'test2wiki' | 'testcommonswiki' | 'testwiki' | 'testwikidatawiki' | 'tetwiki' | 'tewiki' | 'tewikibooks' | 'tewikiquote' | 'tewikisource' | 'tewiktionary' | 'tgwiki' | 'tgwikibooks' | 'tgwiktionary' | 'thankyouwiki' | 'thwiki' | 'thwikibooks' | 'thwikinews' | 'thwikiquote' | 'thwikisource' | 'thwiktionary' | 'tiwiki' | 'tiwiktionary' | 'tkwiki' | 'tkwikibooks' | 'tkwikiquote' | 'tkwiktionary' | 'tlwiki' | 'tlwikibooks' | 'tlwiktionary' | 'tnwiki' | 'tnwiktionary' | 'towiki' | 'towiktionary' | 'tpiwiki' | 'tpiwiktionary' | 'transitionteamwiki' | 'trwiki' | 'trwikibooks' | 'trwikimedia' | 'trwikinews' | 'trwikiquote' | 'trwikisource' | 'trwiktionary' | 'tswiki' | 'tswiktionary' | 'ttwiki' | 'ttwikibooks' | 'ttwikiquote' | 'ttwiktionary' | 'tumwiki' | 'twwiki' | 'twwiktionary' | 'tyvwiki' | 'tywiki' | 'uawikimedia' | 'udmwiki' | 'ugwiki' | 'ugwikibooks' | 'ugwikiquote' | 'ugwiktionary' | 'ukwiki' | 'ukwikibooks' | 'ukwikimedia' | 'ukwikinews' | 'ukwikiquote' | 'ukwikisource' | 'ukwikivoyage' | 'ukwiktionary' | 'urwiki' | 'urwikibooks' | 'urwikiquote' | 'urwiktionary' | 'usabilitywiki' | 'uzwiki' | 'uzwikibooks' | 'uzwikiquote' | 'uzwiktionary' | 'vecwiki' | 'vecwikisource' | 'vecwiktionary' | 'vepwiki' | 'vewiki' | 'vewikimedia' | 'viwiki' | 'viwikibooks' | 'viwikiquote' | 'viwikisource' | 'viwikivoyage' | 'viwiktionary' | 'vlswiki' | 'votewiki' | 'vowiki' | 'vowikibooks' | 'vowikiquote' | 'vowiktionary' | 'warwiki' | 'wawiki' | 'wawikibooks' | 'wawikisource' | 'wawiktionary' | 'wbwikimedia' | 'wg_enwiki' | 'wikidatawiki' | 'wikimania2005wiki' | 'wikimania2006wiki' | 'wikimania2007wiki' | 'wikimania2008wiki' | 'wikimania2009wiki' | 'wikimania2010wiki' | 'wikimania2011wiki' | 'wikimania2012wiki' | 'wikimania2013wiki' | 'wikimania2014wiki' | 'wikimania2015wiki' | 'wikimania2016wiki' | 'wikimania2017wiki' | 'wikimania2018wiki' | 'wikimaniateamwiki' | 'wikimaniawiki' | 'wowiki' | 'wowikiquote' | 'wowiktionary' | 'wuuwiki' | 'xalwiki' | 'xhwiki' | 'xhwikibooks' | 'xhwiktionary' | 'xmfwiki' | 'yiwiki' | 'yiwikisource' | 'yiwiktionary' | 'yowiki' | 'yowikibooks' | 'yowiktionary' | 'yuewiktionary' | 'zawiki' | 'zawikibooks' | 'zawikiquote' | 'zawiktionary' | 'zeawiki' | 'zerowiki' | 'zh_classicalwiki' | 'zh_min_nanwiki' | 'zh_min_nanwikibooks' | 'zh_min_nanwikiquote' | 'zh_min_nanwikisource' | 'zh_min_nanwiktionary' | 'zh_yuewiki' | 'zhwiki' | 'zhwikibooks' | 'zhwikinews' | 'zhwikiquote' | 'zhwikisource' | 'zhwikiversity' | 'zhwikivoyage' | 'zhwiktionary' | 'zuwiki' | 'zuwikibooks' | 'zuwiktionary')[];
     gucontinue?: string;
     gufilterlocal?: boolean;
 }
@@ -1637,7 +1661,8 @@ export interface ApiQueryBacklinksParams extends ApiQueryParams {
     iuredirect?: boolean;
 }
 export interface ApiQueryInfoParams extends ApiQueryParams {
-    inprop?: ('displaytitle' | 'notificationtimestamp' | 'preload' | 'protection' | 'subjectid' | 'talkid' | 'url' | 'varianttitles' | 'visitingwatchers' | 'watched' | 'watchers' | 'readable')[];
+    inprop?: ('displaytitle' | 'linkclasses' | 'notificationtimestamp' | 'preload' | 'protection' | 'subjectid' | 'talkid' | 'url' | 'varianttitles' | 'visitingwatchers' | 'watched' | 'watchers' | 'readable')[];
+    inlinkcontext?: string;
     intestactions?: string | string[];
     intestactionsdetail?: 'boolean' | 'full' | 'quick';
     intoken?: ('block' | 'delete' | 'edit' | 'email' | 'import' | 'move' | 'protect' | 'unblock' | 'watch')[];
@@ -1712,7 +1737,7 @@ export interface MediaWikiLinterApiQueryLinterStatsParams extends ApiQueryParams
 export interface ApiQueryLogEventsParams extends ApiQueryParams {
     leprop?: ('comment' | 'details' | 'ids' | 'parsedcomment' | 'tags' | 'timestamp' | 'title' | 'type' | 'user' | 'userid')[];
     letype?: '' | 'abusefilter' | 'abusefilterprivatedetails' | 'block' | 'contentmodel' | 'create' | 'delete' | 'gblblock' | 'gblrename' | 'gblrights' | 'globalauth' | 'import' | 'managetags' | 'massmessage' | 'merge' | 'move' | 'newusers' | 'oath' | 'pagetriage-copyvio' | 'pagetriage-curation' | 'pagetriage-deletion' | 'patrol' | 'protect' | 'renameuser' | 'review' | 'rights' | 'spamblacklist' | 'stable' | 'suppress' | 'tag' | 'thanks' | 'timedmediahandler' | 'titleblacklist' | 'upload' | 'urlshortener' | 'usermerge';
-    leaction?: 'abusefilter/create' | 'abusefilter/hit' | 'abusefilter/modify' | 'abusefilterprivatedetails/access' | 'block/block' | 'block/reblock' | 'block/unblock' | 'contentmodel/change' | 'contentmodel/new' | 'create/create' | 'delete/delete' | 'delete/delete_redir' | 'delete/delete_redir2' | 'delete/event' | 'delete/restore' | 'delete/revision' | 'gblblock/dwhitelist' | 'gblblock/gblock' | 'gblblock/gblock2' | 'gblblock/gunblock' | 'gblblock/modify' | 'gblblock/whitelist' | 'gblrename/merge' | 'gblrename/promote' | 'gblrename/rename' | 'gblrights/deleteset' | 'gblrights/groupperms' | 'gblrights/groupprms2' | 'gblrights/groupprms3' | 'gblrights/grouprename' | 'gblrights/newset' | 'gblrights/setchange' | 'gblrights/setnewtype' | 'gblrights/setrename' | 'gblrights/usergroups' | 'globalauth/delete' | 'globalauth/hide' | 'globalauth/lock' | 'globalauth/lockandhid' | 'globalauth/setstatus' | 'globalauth/unhide' | 'globalauth/unlock' | 'import/interwiki' | 'import/upload' | 'interwiki/*' | 'managetags/activate' | 'managetags/create' | 'managetags/deactivate' | 'managetags/delete' | 'massmessage/*' | 'massmessage/failure' | 'massmessage/send' | 'massmessage/skipbadns' | 'massmessage/skipnouser' | 'massmessage/skipoptout' | 'merge/merge' | 'move/move' | 'move/move_redir' | 'newusers/autocreate' | 'newusers/byemail' | 'newusers/create' | 'newusers/create2' | 'newusers/newusers' | 'oath/*' | 'pagetriage-copyvio/insert' | 'pagetriage-curation/delete' | 'pagetriage-curation/enqueue' | 'pagetriage-curation/reviewed' | 'pagetriage-curation/tag' | 'pagetriage-curation/unreviewed' | 'pagetriage-deletion/delete' | 'patrol/autopatrol' | 'patrol/patrol' | 'protect/modify' | 'protect/move_prot' | 'protect/protect' | 'protect/unprotect' | 'renameuser/renameuser' | 'review/approve' | 'review/approve-a' | 'review/approve-i' | 'review/approve-ia' | 'review/approve2' | 'review/approve2-a' | 'review/approve2-i' | 'review/approve2-ia' | 'review/unapprove' | 'review/unapprove2' | 'rights/autopromote' | 'rights/blockautopromote' | 'rights/erevoke' | 'rights/restoreautopromote' | 'rights/rights' | 'spamblacklist/*' | 'stable/config' | 'stable/modify' | 'stable/move_stable' | 'stable/reset' | 'suppress/block' | 'suppress/cadelete' | 'suppress/delete' | 'suppress/event' | 'suppress/hide-afl' | 'suppress/reblock' | 'suppress/revision' | 'suppress/setstatus' | 'suppress/unhide-afl' | 'tag/update' | 'thanks/*' | 'timedmediahandler/resettranscode' | 'titleblacklist/*' | 'upload/overwrite' | 'upload/revert' | 'upload/upload' | 'urlshortener/*' | 'usermerge/*';
+    leaction?: 'abusefilter/create' | 'abusefilter/hit' | 'abusefilter/modify' | 'abusefilterprivatedetails/access' | 'block/block' | 'block/reblock' | 'block/unblock' | 'contentmodel/change' | 'contentmodel/new' | 'create/create' | 'delete/delete' | 'delete/delete_redir' | 'delete/delete_redir2' | 'delete/event' | 'delete/restore' | 'delete/revision' | 'gblblock/dwhitelist' | 'gblblock/gblock' | 'gblblock/gblock2' | 'gblblock/gunblock' | 'gblblock/modify' | 'gblblock/whitelist' | 'gblrename/merge' | 'gblrename/promote' | 'gblrename/rename' | 'gblrights/deleteset' | 'gblrights/groupperms' | 'gblrights/groupprms2' | 'gblrights/groupprms3' | 'gblrights/grouprename' | 'gblrights/newset' | 'gblrights/setchange' | 'gblrights/setnewtype' | 'gblrights/setrename' | 'gblrights/usergroups' | 'globalauth/delete' | 'globalauth/hide' | 'globalauth/lock' | 'globalauth/lockandhid' | 'globalauth/setstatus' | 'globalauth/unhide' | 'globalauth/unlock' | 'import/interwiki' | 'import/upload' | 'interwiki/*' | 'managetags/activate' | 'managetags/create' | 'managetags/deactivate' | 'managetags/delete' | 'massmessage/*' | 'massmessage/failure' | 'massmessage/send' | 'massmessage/skipbadns' | 'massmessage/skipnouser' | 'massmessage/skipoptout' | 'merge/merge' | 'move/move' | 'move/move_redir' | 'newusers/autocreate' | 'newusers/byemail' | 'newusers/create' | 'newusers/create2' | 'newusers/forcecreatelocal' | 'newusers/newusers' | 'oath/*' | 'pagetriage-copyvio/insert' | 'pagetriage-curation/delete' | 'pagetriage-curation/enqueue' | 'pagetriage-curation/reviewed' | 'pagetriage-curation/tag' | 'pagetriage-curation/unreviewed' | 'pagetriage-deletion/delete' | 'patrol/autopatrol' | 'patrol/patrol' | 'protect/modify' | 'protect/move_prot' | 'protect/protect' | 'protect/unprotect' | 'renameuser/renameuser' | 'review/approve' | 'review/approve-a' | 'review/approve-i' | 'review/approve-ia' | 'review/approve2' | 'review/approve2-a' | 'review/approve2-i' | 'review/approve2-ia' | 'review/unapprove' | 'review/unapprove2' | 'rights/autopromote' | 'rights/blockautopromote' | 'rights/erevoke' | 'rights/restoreautopromote' | 'rights/rights' | 'spamblacklist/*' | 'stable/config' | 'stable/modify' | 'stable/move_stable' | 'stable/reset' | 'suppress/block' | 'suppress/cadelete' | 'suppress/delete' | 'suppress/event' | 'suppress/hide-afl' | 'suppress/reblock' | 'suppress/revision' | 'suppress/setstatus' | 'suppress/unhide-afl' | 'tag/update' | 'thanks/*' | 'timedmediahandler/resettranscode' | 'titleblacklist/*' | 'upload/overwrite' | 'upload/revert' | 'upload/upload' | 'urlshortener/*' | 'usermerge/*';
     lestart?: timestamp;
     leend?: timestamp;
     ledir?: 'newer' | 'older';
@@ -1729,10 +1754,10 @@ export interface KartographerApiQueryMapDataParams extends ApiQueryParams {
     mpdlimit?: limit;
     mpdcontinue?: number;
 }
-export interface MediaWikiMassMessageApiApiQueryMMSitesParams extends ApiQueryParams {
+export interface MediaWikiMassMessageApiQueryMMSitesParams extends ApiQueryParams {
     term?: string;
 }
-export interface MediaWikiExtensionsPageViewInfoApiQueryMostViewedParams extends ApiQueryParams {
+export interface sPageViewInfoApiQueryMostViewedParams extends ApiQueryParams {
     pvimmetric?: 'pageviews';
     pvimlimit?: limit;
     pvimoffset?: number;
@@ -1760,7 +1785,7 @@ export interface ApiEchoNotificationsParams extends ApiQueryParams {
     notmessageunreadfirst?: boolean;
     notcrosswikisummary?: boolean;
 }
-export interface MediaWikiExtensionOATHAuthApiModuleApiQueryOATHParams extends ApiQueryParams {
+export interface OATHAuthApiModuleApiQueryOATHParams extends ApiQueryParams {
     oathuser?: string;
     oathreason?: string;
 }
@@ -1775,9 +1800,9 @@ export interface ApiQueryOldreviewedpagesParams extends ApiQueryParams {
     orfilterredir?: 'all' | 'nonredirects' | 'redirects';
     orlimit?: limit;
 }
-export interface ORESHooksApiApiQueryORESParams extends ApiQueryParams {
+export interface ORESHooksApiQueryORESParams extends ApiQueryParams {
 }
-export interface MediaWikiExtensionPageAssessmentsApiApiQueryPageAssessmentsParams extends ApiQueryParams {
+export interface PageAssessmentsApiQueryPageAssessmentsParams extends ApiQueryParams {
     pacontinue?: string;
     palimit?: limit;
     pasubprojects?: boolean;
@@ -1809,7 +1834,7 @@ export interface WikibaseClientApiPageTermsParams extends ApiQueryParams {
     wbptcontinue?: number;
     wbptterms?: ('alias' | 'description' | 'label')[];
 }
-export interface MediaWikiExtensionsPageViewInfoApiQueryPageViewsParams extends ApiQueryParams {
+export interface sPageViewInfoApiQueryPageViewsParams extends ApiQueryParams {
     pvipmetric?: 'pageviews';
     pvipdays?: number;
     pvipcontinue?: string;
@@ -1821,13 +1846,13 @@ export interface ApiQueryPrefixSearchParams extends ApiQueryParams {
     psoffset?: number;
     psprofile?: 'classic' | 'engine_autoselect' | 'fast-fuzzy' | 'fuzzy' | 'normal' | 'strict';
 }
-export interface MediaWikiExtensionPageAssessmentsApiApiQueryProjectPagesParams extends ApiQueryParams {
+export interface PageAssessmentsApiQueryProjectPagesParams extends ApiQueryParams {
     wppassessments?: boolean;
     wppprojects?: string | string[];
     wpplimit?: limit;
     wppcontinue?: string;
 }
-export interface MediaWikiExtensionPageAssessmentsApiApiQueryProjectsParams extends ApiQueryParams {
+export interface PageAssessmentsApiQueryProjectsParams extends ApiQueryParams {
     pjsubprojects?: boolean;
 }
 export interface ApiQueryProtectedTitlesParams extends ApiQueryParams {
@@ -1852,7 +1877,7 @@ export interface ApiQueryRandomParams extends ApiQueryParams {
     rnlimit?: limit;
     rncontinue?: string;
 }
-export interface MediaWikiExtensionsReadingListsApiApiQueryReadingListEntriesParams extends ApiQueryParams {
+export interface sReadingListsApiQueryReadingListEntriesParams extends ApiQueryParams {
     rlelists?: number | number[];
     rlechangedsince?: timestamp;
     rlesort?: 'name' | 'updated';
@@ -1860,7 +1885,7 @@ export interface MediaWikiExtensionsReadingListsApiApiQueryReadingListEntriesPar
     rlelimit?: limit;
     rlecontinue?: string;
 }
-export interface MediaWikiExtensionsReadingListsApiApiQueryReadingListsParams extends ApiQueryParams {
+export interface sReadingListsApiQueryReadingListsParams extends ApiQueryParams {
     rllist?: number;
     rlproject?: string;
     rltitle?: string;
@@ -1939,7 +1964,7 @@ export interface ApiQuerySiteinfoParams extends ApiQueryParams {
     sinumberingroup?: boolean;
     siinlanguagecode?: string;
 }
-export interface MediaWikiExtensionsPageViewInfoApiQuerySiteViewsParams extends ApiQueryParams {
+export interface sPageViewInfoApiQuerySiteViewsParams extends ApiQueryParams {
     pvismetric?: 'pageviews' | 'uniques';
     pvisdays?: number;
 }
@@ -2031,7 +2056,7 @@ export interface ApiQueryWatchlistParams extends ApiQueryParams {
     wlexcludeuser?: string;
     wldir?: 'newer' | 'older';
     wllimit?: limit;
-    wlprop?: ('comment' | 'flags' | 'ids' | 'loginfo' | 'notificationtimestamp' | 'oresscores' | 'parsedcomment' | 'patrol' | 'sizes' | 'tags' | 'timestamp' | 'title' | 'user' | 'userid')[];
+    wlprop?: ('comment' | 'expiry' | 'flags' | 'ids' | 'loginfo' | 'notificationtimestamp' | 'oresscores' | 'parsedcomment' | 'patrol' | 'sizes' | 'tags' | 'timestamp' | 'title' | 'user' | 'userid')[];
     wlshow?: ('!anon' | '!autopatrolled' | '!bot' | '!minor' | '!oresreview' | '!patrolled' | '!unread' | 'anon' | 'autopatrolled' | 'bot' | 'minor' | 'oresreview' | 'patrolled' | 'unread')[];
     wltype?: ('categorize' | 'edit' | 'external' | 'log' | 'new')[];
     wlowner?: string;
@@ -2050,21 +2075,21 @@ export interface ApiQueryWatchlistRawParams extends ApiQueryParams {
     wrfromtitle?: string;
     wrtotitle?: string;
 }
-export interface WikibaseClientApiApiPropsEntityUsageParams extends ApiQueryParams {
+export interface WikibaseClientApiPropsEntityUsageParams extends ApiQueryParams {
     wbeuprop?: ('url')[];
     wbeuaspect?: ('C' | 'D' | 'L' | 'O' | 'S' | 'T' | 'X')[];
     wbeuentities?: string | string[];
     wbeulimit?: limit;
     wbeucontinue?: string;
 }
-export interface WikibaseClientApiApiListEntityUsageParams extends ApiQueryParams {
+export interface WikibaseClientApiListEntityUsageParams extends ApiQueryParams {
     wbeuprop?: ('url')[];
     wbeuaspect?: ('C' | 'D' | 'L' | 'O' | 'S' | 'T' | 'X')[];
     wbeuentities?: string | string[];
     wbeulimit?: limit;
     wbeucontinue?: string;
 }
-export interface WikibaseClientApiApiClientInfoParams extends ApiQueryParams {
+export interface WikibaseClientApiClientInfoParams extends ApiQueryParams {
     wbprop?: ('siteid' | 'url')[];
 }
 export interface ApiQueryWikiSetsParams extends ApiQueryParams {
