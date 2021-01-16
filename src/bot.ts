@@ -72,7 +72,8 @@ import type {
 	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
 	ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams,
 	ApiEmailUserParams, ApiQueryRevisionsParams, ApiQueryLogEventsParams,
-	ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams, ApiUnblockParams
+	ApiQueryBacklinkspropParams, ApiQueryUserContribsParams, ApiBlockParams,
+	ApiUnblockParams
 } from "./api_params";
 
 export interface RawRequestParams extends AxiosRequestConfig {
@@ -114,8 +115,6 @@ export interface MwnPage extends MwnTitle {
 	images(): Promise<string[]>
 	externallinks(): Promise<string[]>
 	subpages(options?: ApiQueryAllPagesParams): Promise<string[]>
-	isRedirect(): Promise<boolean>
-	getRedirectTarget(): Promise<string>
 	isRedirect(): Promise<boolean>
 	getRedirectTarget(): Promise<string>
 	getCreator(): Promise<string>
@@ -238,7 +237,7 @@ export type ApiParams = {
 	}
 }
 
-export type ApiResponse = any
+export type ApiResponse = Record<string, any>
 
 export interface ApiPage {
 	title: string
@@ -251,10 +250,10 @@ export interface ApiRevision {
    content: string
    timestamp: string
    slots?: {
-	   main: {
-		   content: string
-		   timestamp: string
-	   }
+		main: {
+			content: string
+			timestamp: string
+		}
    }
 }
 
@@ -277,27 +276,100 @@ export class mwn {
 	 * Bot instance Login State
 	 * Is received from the MW Login API and contains token, userid, etc.
 	 */
-	state: any
+	state: any = {};
 
 	/**
 	 * Bot instance is logged in or not
 	 */
-	loggedIn: boolean
+	loggedIn = false;
 
 	/**
-	 * Bot instance's edit token.
+	 * Bot instance's edit token. Initially set as an invalid token string
+	 * so that the badtoken handling logic is invoked if the token is
+	 * not set before a query is sent.
+	 * @type {string}
 	 */
-	csrfToken: string
+	csrfToken = '%notoken%';
 
 	/**
 	 * Default options.
 	 * Should be immutable
 	 */
-	readonly defaultOptions: MwnOptions
+	readonly defaultOptions: MwnOptions = {
+		// suppress messages, except for error messages and warnings
+		silent: false,
 
+		// site API url, example "https://en.wikipedia.org/w/api.php"
+		apiUrl: null,
+
+		// User agent string
+		userAgent: 'mwn',
+
+		// bot login username and password, setup using Special:BotPasswords
+		username: null,
+		password: null,
+
+		// OAuth credentials
+		OAuthCredentials: {
+			consumerToken: null,
+			consumerSecret: null,
+			accessToken: null,
+			accessSecret: null
+		},
+
+		// max number of times to retry the same request on errors due to
+		// maxlag, wiki being in readonly mode, and other transient errors
+		maxRetries: 3,
+
+		// milliseconds to pause before retrying after a transient error
+		retryPause: 5000,
+
+		// Bot emergency shutoff options
+		shutoff: {
+			intervalDuration: 10000,
+			page: null,
+			condition: /^\s*$/,
+			onShutoff: function () {}
+		},
+
+		// default parameters included in every API request
+		defaultParams: {
+			format: 'json',
+			formatversion: '2',
+			maxlag: 5
+		},
+
+		// suppress logging of warnings received from the API
+		suppressAPIWarnings: false,
+
+		// options for the edit() function
+		editConfig: {
+			// max number of retries on edit conflicts
+			conflictRetries: 2,
+			// suppress warning on an edit resulting in no change to the page
+			suppressNochangeWarning: false,
+			// abort edit if exclusionRegex matches on the page content
+			exclusionRegex: null
+		},
+
+		// options for logging, see semlog documentation
+		semlog: {
+			printDateTime: true
+		}
+	};
+
+	/**
+	 * Actual, current options of the bot instance
+	 * Mix of the default options, the custom options and later changes
+	 * @type {Object}
+	 */
 	options: MwnOptions
 
-	cookieJar: tough.CookieJar
+	/**
+	 * Cookie jar for the bot instance - holds session and login cookies
+	 * @type {tough.CookieJar}
+	 */
+	cookieJar = new tough.CookieJar();
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
@@ -311,14 +383,25 @@ export class mwn {
 		timeout: 60000, // 60 seconds
 	}
 
-	requestOptions: RawRequestParams
+	/**
+	 * Request options for the axios library.
+	 * Change the defaults using setRequestOptions()
+	 * @type {Object}
+	 */
+	requestOptions: RawRequestParams = mergeDeep1({
+		responseType: 'json'
+	}, mwn.requestDefaults);
 
-	shutoff: {
-		state: boolean
-		hook: ReturnType<typeof setInterval>
-	}
+	/**
+	 * Emergency shutoff config
+	 * @type {{hook: NodeJS.Timeout, state: boolean}}
+	 */
+	shutoff: {state: boolean, hook: NodeJS.Timeout} = {
+		state: false,
+		hook: null
+	};
 
-	hasApiHighLimit: boolean
+	hasApiHighLimit = false;
 
 	oauth: OAuth
 
@@ -407,89 +490,6 @@ export class mwn {
 	 */
 	constructor(customOptions?: MwnOptions) {
 
-		this.state = {};
-		this.loggedIn = false;
-
-		/**
-		 * Bot instance's edit token. Initially set as an invalid token string
-		 * so that the badtoken handling logic is invoked if the token is
-		 * not set before a query is sent.
-		 * @type {string}
-		 */
-		this.csrfToken = '%notoken%';
-
-		/**
-		 * Default options.
-		 * Should be immutable
-		 */
-		this.defaultOptions = {
-			// suppress messages, except for error messages and warnings
-			silent: false,
-
-			// site API url, example "https://en.wikipedia.org/w/api.php"
-			apiUrl: null,
-
-			// User agent string
-			userAgent: 'mwn',
-
-			// bot login username and password, setup using Special:BotPasswords
-			username: null,
-			password: null,
-
-			// OAuth credentials
-			OAuthCredentials: {
-				consumerToken: null,
-				consumerSecret: null,
-				accessToken: null,
-				accessSecret: null
-			},
-
-			// max number of times to retry the same request on errors due to
-			// maxlag, wiki being in readonly mode, and other transient errors
-			maxRetries: 3,
-
-			// milliseconds to pause before retrying after a transient error
-			retryPause: 5000,
-
-			// Bot emergency shutoff options
-			shutoff: {
-				intervalDuration: 10000,
-				page: null,
-				condition: /^\s*$/,
-				onShutoff: function () {}
-			},
-
-			// default parameters included in every API request
-			defaultParams: {
-				format: 'json',
-				formatversion: '2',
-				maxlag: 5
-			},
-
-			// suppress logging of warnings received from the API
-			suppressAPIWarnings: false,
-
-			// options for the edit() function
-			editConfig: {
-				// max number of retries on edit conflicts
-				conflictRetries: 2,
-				// suppress warning on an edit resulting in no change to the page
-				suppressNochangeWarning: false,
-				// abort edit if exclusionRegex matches on the page content
-				exclusionRegex: null
-			},
-
-			// options for logging, see semlog documentation
-			semlog: {
-				printDateTime: true
-			}
-		};
-
-		/**
-		 * Actual, current options of the bot instance
-		 * Mix of the default options, the custom options and later changes
-		 * @type {Object}
-		 */
 		if (typeof customOptions === 'string') {
 			// Read options from file (JSON):
 			try {
@@ -499,30 +499,6 @@ export class mwn {
 			}
 		}
 		this.options = mergeDeep1(this.defaultOptions, customOptions);
-
-		/**
-		 * Cookie jar for the bot instance - holds session and login cookies
-		 * @type {tough.CookieJar}
-		 */
-		this.cookieJar = new tough.CookieJar();
-
-		/**
-		 * Request options for the axios library.
-		 * Change the defaults using setRequestOptions()
-		 * @type {Object}
-		 */
-		this.requestOptions = mergeDeep1({
-			responseType: 'json'
-		}, mwn.requestDefaults);
-
-		/**
-		 * Emergency shutoff config
-		 * @type {{hook: ReturnType<typeof setTimeout>, state: boolean}}
-		 */
-		this.shutoff = {
-			state: false,
-			hook: null
-		};
 
 		// set up any semlog options
 		semlog.updateConfig(this.options.semlog || {});
@@ -606,7 +582,7 @@ export class mwn {
 	 * @private
 	 * Determine if we're going to use OAuth for authentication
 	 */
-	_usingOAuth(): boolean {
+	private _usingOAuth(): boolean {
 		const creds = this.options.OAuthCredentials;
 		if (typeof creds !== 'object') {
 			return false;
@@ -652,7 +628,7 @@ export class mwn {
 	 * @private
 	 * Get OAuth Authorization header
 	 */
-	makeOAuthHeader(params: OAuth.RequestOptions): OAuth.Header {
+	private makeOAuthHeader(params: OAuth.RequestOptions): OAuth.Header {
 		return this.oauth.toHeader(this.oauth.authorize(params, {
 			key: this.options.OAuthCredentials.accessToken,
 			secret: this.options.OAuthCredentials.accessSecret
@@ -696,7 +672,7 @@ export class mwn {
 	 * @param {Object} [customRequestOptions={}]
 	 * @returns {Promise}
 	 */
-	async request(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<any> {
+	async request(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<ApiResponse> {
 
 		if (this.shutoff.state) {
 			return this.rejectWithError({
@@ -888,7 +864,7 @@ export class mwn {
 							// Per https://phabricator.wikimedia.org/T106066, "Nonce already used" indicates
 							// an upstream memcached/redis failure which is transient
 							// Also handled in mwclient (https://github.com/mwclient/mwclient/pull/165/commits/d447c333e)
-							// and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py) 
+							// and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py)
 							// Some discussion in https://github.com/mwclient/mwclient/issues/164
 							if (response.error.info.includes('Nonce already used')) {
 								log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause/1000} seconds`);
@@ -1739,8 +1715,8 @@ export class mwn {
 	 * @param {number} [limit=10] - limit on the maximum number of API calls to go through
 	 * @returns {Promise<Object[]>} - resolved with an array of responses of individual calls.
 	 */
-	continuedQuery(query?: ApiParams, limit: number = 10): Promise<ApiResponse[]> {
-		let responses = [];
+	continuedQuery(query?: ApiParams, limit = 10): Promise<ApiResponse[]> {
+		let responses: ApiResponse[] = [];
 		let callApi = (query, count) => {
 			return this.request(query).then(response => {
 				if (!this.options.silent) {

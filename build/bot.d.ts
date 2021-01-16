@@ -18,6 +18,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+/// <reference types="node" />
 /**
  * Attributions:
  * Parts of the code are adapted from MWBot <https://github.com/Fannon/mwbot/src/index.js>
@@ -85,8 +86,6 @@ export interface MwnPage extends MwnTitle {
     images(): Promise<string[]>;
     externallinks(): Promise<string[]>;
     subpages(options?: ApiQueryAllPagesParams): Promise<string[]>;
-    isRedirect(): Promise<boolean>;
-    getRedirectTarget(): Promise<string>;
     isRedirect(): Promise<boolean>;
     getRedirectTarget(): Promise<string>;
     getCreator(): Promise<string>;
@@ -225,7 +224,7 @@ export declare type ApiParams = {
         name: string;
     };
 };
-export declare type ApiResponse = any;
+export declare type ApiResponse = Record<string, any>;
 export interface ApiPage {
     title: string;
     missing?: boolean;
@@ -263,7 +262,10 @@ export declare class mwn {
      */
     loggedIn: boolean;
     /**
-     * Bot instance's edit token.
+     * Bot instance's edit token. Initially set as an invalid token string
+     * so that the badtoken handling logic is invoked if the token is
+     * not set before a query is sent.
+     * @type {string}
      */
     csrfToken: string;
     /**
@@ -271,13 +273,31 @@ export declare class mwn {
      * Should be immutable
      */
     readonly defaultOptions: MwnOptions;
+    /**
+     * Actual, current options of the bot instance
+     * Mix of the default options, the custom options and later changes
+     * @type {Object}
+     */
     options: MwnOptions;
+    /**
+     * Cookie jar for the bot instance - holds session and login cookies
+     * @type {tough.CookieJar}
+     */
     cookieJar: tough.CookieJar;
     static requestDefaults: RawRequestParams;
+    /**
+     * Request options for the axios library.
+     * Change the defaults using setRequestOptions()
+     * @type {Object}
+     */
     requestOptions: RawRequestParams;
+    /**
+     * Emergency shutoff config
+     * @type {{hook: NodeJS.Timeout, state: boolean}}
+     */
     shutoff: {
         state: boolean;
-        hook: ReturnType<typeof setInterval>;
+        hook: NodeJS.Timeout;
     };
     hasApiHighLimit: boolean;
     oauth: OAuth;
@@ -435,7 +455,7 @@ export declare class mwn {
      * @private
      * Determine if we're going to use OAuth for authentication
      */
-    _usingOAuth(): boolean;
+    private _usingOAuth;
     /**
      * Initialize OAuth instance
      */
@@ -444,7 +464,7 @@ export declare class mwn {
      * @private
      * Get OAuth Authorization header
      */
-    makeOAuthHeader(params: OAuth.RequestOptions): OAuth.Header;
+    private makeOAuthHeader;
     /************ CORE REQUESTS ***************/
     /**
      * Executes a raw request
@@ -460,7 +480,7 @@ export declare class mwn {
      * @param {Object} [customRequestOptions={}]
      * @returns {Promise}
      */
-    request(params: ApiParams, customRequestOptions?: RawRequestParams): Promise<any>;
+    request(params: ApiParams, customRequestOptions?: RawRequestParams): Promise<ApiResponse>;
     private dieWithError;
     /************** CORE FUNCTIONS *******************/
     /**

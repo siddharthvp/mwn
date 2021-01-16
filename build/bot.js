@@ -66,7 +66,14 @@ class mwn {
      * @param {Object} [customOptions] - Custom options
      */
     constructor(customOptions) {
+        /**
+         * Bot instance Login State
+         * Is received from the MW Login API and contains token, userid, etc.
+         */
         this.state = {};
+        /**
+         * Bot instance is logged in or not
+         */
         this.loggedIn = false;
         /**
          * Bot instance's edit token. Initially set as an invalid token string
@@ -131,21 +138,6 @@ class mwn {
             }
         };
         /**
-         * Actual, current options of the bot instance
-         * Mix of the default options, the custom options and later changes
-         * @type {Object}
-         */
-        if (typeof customOptions === 'string') {
-            // Read options from file (JSON):
-            try {
-                customOptions = JSON.parse(fs.readFileSync(customOptions).toString());
-            }
-            catch (err) {
-                throw new Error(`Failed to read or parse JSON config file: ` + err);
-            }
-        }
-        this.options = mergeDeep1(this.defaultOptions, customOptions);
-        /**
          * Cookie jar for the bot instance - holds session and login cookies
          * @type {tough.CookieJar}
          */
@@ -160,12 +152,23 @@ class mwn {
         }, mwn.requestDefaults);
         /**
          * Emergency shutoff config
-         * @type {{hook: ReturnType<typeof setTimeout>, state: boolean}}
+         * @type {{hook: NodeJS.Timeout, state: boolean}}
          */
         this.shutoff = {
             state: false,
             hook: null
         };
+        this.hasApiHighLimit = false;
+        if (typeof customOptions === 'string') {
+            // Read options from file (JSON):
+            try {
+                customOptions = JSON.parse(fs.readFileSync(customOptions).toString());
+            }
+            catch (err) {
+                throw new Error(`Failed to read or parse JSON config file: ` + err);
+            }
+        }
+        this.options = mergeDeep1(this.defaultOptions, customOptions);
         // set up any semlog options
         semlog.updateConfig(this.options.semlog || {});
         /**
@@ -499,7 +502,7 @@ class mwn {
                             // Per https://phabricator.wikimedia.org/T106066, "Nonce already used" indicates
                             // an upstream memcached/redis failure which is transient
                             // Also handled in mwclient (https://github.com/mwclient/mwclient/pull/165/commits/d447c333e)
-                            // and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py) 
+                            // and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py)
                             // Some discussion in https://github.com/mwclient/mwclient/issues/164
                             if (response.error.info.includes('Nonce already used')) {
                                 log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause / 1000} seconds`);
