@@ -27,7 +27,7 @@ jobs:
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
           rmRemote: true
-      - name: unzip
+      - name: unzip and copy
         uses: garygrossgarten/github-action-ssh@release
         with:
           command: cd /data/project/mwn && rm -rf docs && unzip docs.zip && rm -rf public_html/docs && rm -rf www/static/docs && cp -r docs public_html && cp -r docs www/static
