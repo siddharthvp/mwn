@@ -29,6 +29,12 @@ describe('Category', async function() {
 		});
 	});
 
+	it('category members gen', async function() {
+		for await (let member of category.membersGen()) {
+			expect(member).to.have.keys(['pageid', 'title', 'ns']);
+		}
+	});
+
 	it('category pages', function () {
 		return category.pages().then(pgs => {
 			expect(pgs).to.be.instanceOf(Array);

@@ -138,6 +138,7 @@ export interface MwnFile extends MwnPage {
 }
 export interface MwnCategory extends MwnPage {
 	members(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
+	membersGen(options?: ApiQueryCategoryMembersParams): AsyncGenerator<{pageid: number, ns: number, title: string}>
 	pages(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
 	subcats(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>
 	files(options?: ApiQueryCategoryMembersParams): Promise<{pageid: number, ns: number, title: string}[]>

@@ -28,6 +28,20 @@ module.exports = function (bot) {
                 ...options
             }).then(data => data.query.categorymembers);
         }
+        async *membersGen(options) {
+            let continuedQuery = bot.continuedQueryGen({
+                "action": "query",
+                "list": "categorymembers",
+                "cmtitle": "Category:" + this.title,
+                "cmlimit": "max",
+                ...options
+            });
+            for await (let json of continuedQuery) {
+                for (let result of json.query.categorymembers) {
+                    yield result;
+                }
+            }
+        }
         /**
          * Get all pages in the category - does not include subcategories or files
          * @param {Object} options - additional API parameters
