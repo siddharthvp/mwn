@@ -1,6 +1,6 @@
 import {MwnError} from "./error";
 
-import type {mwn, MwnTitle, MwnPage} from './bot'
+import type {mwn, MwnTitle, MwnPage} from './bot';
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -111,8 +111,8 @@ module.exports = function (bot: mwn) {
 				"lhprop": "title",
 				"lhlimit": "max"
 			}).then(jsons => {
-				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
-				var page = pages[0];
+				let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
+				let page = pages[0];
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
@@ -132,8 +132,8 @@ module.exports = function (bot: mwn) {
 				"tiprop": "title",
 				"tilimit": "max"
 			}).then(jsons => {
-				var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
-				var page = pages[0];
+				let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
+				let page = pages[0];
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
@@ -200,7 +200,7 @@ module.exports = function (bot: mwn) {
 		 */
 		getRedirectTarget(): Promise<string> {
 			if (this.data.text) {
-				var target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
+				let target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
 				if (!target) {
 					return Promise.resolve(this.toText());
 				}
@@ -211,7 +211,7 @@ module.exports = function (bot: mwn) {
 				titles: this.toString(),
 				redirects: '1',
 			}).then(data => {
-				var page = data.query.pages[0];
+				let page = data.query.pages[0];
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
@@ -233,7 +233,7 @@ module.exports = function (bot: mwn) {
 				rvlimit: 1,
 				rvdir: 'newer'
 			}).then(data => {
-				var page = data.query.pages[0];
+				let page = data.query.pages[0];
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
@@ -253,7 +253,7 @@ module.exports = function (bot: mwn) {
 				letitle: this.toString(),
 				lelimit: 1
 			}).then(data => {
-				var logs = data.query.logevents;
+				let logs = data.query.logevents;
 				if (logs.length === 0) {
 					return null;
 				}
@@ -274,7 +274,7 @@ module.exports = function (bot: mwn) {
 				titles: this.toString(),
 				...customOptions
 			}).then(data => {
-				var page = data.query.pages[0];
+				let page = data.query.pages[0];
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
@@ -292,7 +292,7 @@ module.exports = function (bot: mwn) {
 		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
 		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
 		 */
-		history(props: revisionprop[] | revisionprop, limit: number = 50, customOptions?: ApiQueryRevisionsParams): Promise<object[]> {
+		history(props: revisionprop[] | revisionprop, limit = 50, customOptions?: ApiQueryRevisionsParams): Promise<object[]> {
 			return bot.request({
 				"action": "query",
 				"prop": "revisions",
@@ -301,7 +301,7 @@ module.exports = function (bot: mwn) {
 				"rvlimit": limit || 50,
 				...customOptions
 			}).then(data => {
-				var page = data.query.pages[0];
+				let page = data.query.pages[0];
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
@@ -337,7 +337,7 @@ module.exports = function (bot: mwn) {
 		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
 		 */
 		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams) {
-			var logtypeObj: any = {};
+			let logtypeObj: any = {};
 			if (type) {
 				if (type.includes('/')) {
 					logtypeObj.leaction = type;

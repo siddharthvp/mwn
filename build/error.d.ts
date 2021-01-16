@@ -1,9 +1,10 @@
 /// <reference types="node" />
+import type { RawRequestParams } from "./bot";
 export declare type MwnErrorConfig = {
     code: string;
     info?: string;
     response?: Record<string, unknown>;
-    request?: Record<string, unknown>;
+    request?: RawRequestParams;
     disableRetry?: boolean;
 };
 export declare class MwnError extends Error {

@@ -1,8 +1,10 @@
+import type {RawRequestParams} from "./bot";
+
 export type MwnErrorConfig = {
 	code: string,
 	info?: string,
 	response?: Record<string, unknown>,
-	request?: Record<string, unknown>,
+	request?: RawRequestParams,
 	disableRetry?: boolean
 }
 

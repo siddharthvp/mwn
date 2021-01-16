@@ -87,8 +87,8 @@ module.exports = function (bot) {
                 "lhprop": "title",
                 "lhlimit": "max"
             }).then(jsons => {
-                var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
-                var page = pages[0];
+                let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
+                let page = pages[0];
                 if (page.missing) {
                     return Promise.reject(new error_1.MwnError.MissingPage());
                 }
@@ -107,8 +107,8 @@ module.exports = function (bot) {
                 "tiprop": "title",
                 "tilimit": "max"
             }).then(jsons => {
-                var pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
-                var page = pages[0];
+                let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
+                let page = pages[0];
                 if (page.missing) {
                     return Promise.reject(new error_1.MwnError.MissingPage());
                 }
@@ -169,7 +169,7 @@ module.exports = function (bot) {
          */
         getRedirectTarget() {
             if (this.data.text) {
-                var target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
+                let target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
                 if (!target) {
                     return Promise.resolve(this.toText());
                 }
@@ -180,7 +180,7 @@ module.exports = function (bot) {
                 titles: this.toString(),
                 redirects: '1',
             }).then(data => {
-                var page = data.query.pages[0];
+                let page = data.query.pages[0];
                 if (page.missing) {
                     return Promise.reject(new error_1.MwnError.MissingPage());
                 }
@@ -200,7 +200,7 @@ module.exports = function (bot) {
                 rvlimit: 1,
                 rvdir: 'newer'
             }).then(data => {
-                var page = data.query.pages[0];
+                let page = data.query.pages[0];
                 if (page.missing) {
                     return Promise.reject(new error_1.MwnError.MissingPage());
                 }
@@ -219,7 +219,7 @@ module.exports = function (bot) {
                 letitle: this.toString(),
                 lelimit: 1
             }).then(data => {
-                var logs = data.query.logevents;
+                let logs = data.query.logevents;
                 if (logs.length === 0) {
                     return null;
                 }
@@ -239,7 +239,7 @@ module.exports = function (bot) {
                 titles: this.toString(),
                 ...customOptions
             }).then(data => {
-                var page = data.query.pages[0];
+                let page = data.query.pages[0];
                 if (page.missing) {
                     return Promise.reject(new error_1.MwnError.MissingPage());
                 }
@@ -265,7 +265,7 @@ module.exports = function (bot) {
                 "rvlimit": limit || 50,
                 ...customOptions
             }).then(data => {
-                var page = data.query.pages[0];
+                let page = data.query.pages[0];
                 if (page.missing) {
                     return Promise.reject(new error_1.MwnError.MissingPage());
                 }
@@ -299,7 +299,7 @@ module.exports = function (bot) {
          * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
          */
         logs(props, limit, type, customOptions) {
-            var logtypeObj = {};
+            let logtypeObj = {};
             if (type) {
                 if (type.includes('/')) {
                     logtypeObj.leaction = type;
