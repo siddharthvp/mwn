@@ -1675,12 +1675,15 @@ export class mwn {
 	 */
 	getPagesInCategory(category: string, otherParams?: ApiQueryCategoryMembersParams): Promise<string[]> {
 		const title = this.title.newFromText(category, 14);
-		return this.request(merge({
+		return this.request({
 			"action": "query",
 			"list": "categorymembers",
 			"cmtitle": title.toText(),
-			"cmlimit": "max"
-		}, otherParams));
+			"cmlimit": "max",
+			...otherParams
+		}).then(data => {
+			return data.query.categorymembers.map(pg => pg.title);
+		});
 	}
 
 	/**

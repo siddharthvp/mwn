@@ -164,6 +164,12 @@ describe('mwn', async function() {
 		});
 	});
 
+	it('getPagesInCategory', async function() {
+		let pages = await bot.getPagesInCategory('Category:User_en-2');
+		expect(pages).to.be.instanceOf(Array);
+		expect(pages[0]).to.be.a('string');
+	});
+
 	let fileTitle = 'File:Example demo image.png';
 
 	it('downloads an image from title without local name specified', function(done) {
