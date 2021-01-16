@@ -1,0 +1,38 @@
+name: Docs deploy
+
+on:
+  push:
+    branches: ['master']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: npm install
+        run: npm ci
+      - name: build docs
+        run: npm run docs
+      - name: Copy docs to Toolforge (mwn.toolforge.org)
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: /home/runner/work/mwn/mwn/docs
+          remote: /data/project/mwn/public_html/docs
+          host: login.toolforge.org
+          username: ${{ secrets.TOOLFORGE_USERNAME }}
+          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          rmRemote: true
+          dotfiles: true
+      - name: Copy docs to Toolforge (tools-static.wmflabs.org/mwn)
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: /home/runner/work/mwn/mwn/docs
+          remote: /data/project/mwn/www/static/docs
+          host: login.toolforge.org
+          username: ${{ secrets.TOOLFORGE_USERNAME }}
+          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          rmRemote: true
+          dotfiles: true

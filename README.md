@@ -6,7 +6,9 @@
 
 Development status: Unstable. Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
-Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. You can learn about these by looking through the source code. 
+Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. You can learn about these by looking through the source code.
+
+API documentation available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html)**
 
 Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions can be automatically retried. 
 
