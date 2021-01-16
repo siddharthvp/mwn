@@ -16,23 +16,21 @@ jobs:
         run: npm ci
       - name: build docs
         run: npm run docs
-      - name: Copy docs to Toolforge (mwn.toolforge.org)
+      - name: zipping docs
+        run: zip -r docs.zip docs
+      - name: Copy docs to Toolforge
         uses: garygrossgarten/github-action-scp@release
         with:
-          local: /home/runner/work/mwn/mwn/docs
-          remote: /data/project/mwn/public_html/docs
+          local: /home/runner/work/mwn/mwn/docs.zip
+          remote: /data/project/mwn/docs.zip
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
           rmRemote: true
-          dotfiles: true
-      - name: Copy docs to Toolforge (tools-static.wmflabs.org/mwn)
-        uses: garygrossgarten/github-action-scp@release
+      - name: unzip
+        uses: garygrossgarten/github-action-ssh@release
         with:
-          local: /home/runner/work/mwn/mwn/docs
-          remote: /data/project/mwn/www/static/docs
+          command: cd /data/project/mwn && rm -rf docs && unzip docs.zip && rm -rf public_html/docs && rm -rf www/static/docs && cp -r docs public_html && cp -r docs www/static
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
-          rmRemote: true
-          dotfiles: true
