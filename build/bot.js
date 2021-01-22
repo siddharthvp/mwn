@@ -44,7 +44,9 @@ const axiosCookieJarSupport = require("axios-cookiejar-support");
 axiosCookieJarSupport.default(axios_1.default);
 const semlog = require('semlog');
 const log = semlog.log;
-// Nested classes of mwn
+const error_1 = require("./error");
+const static_utils_1 = require("./static_utils");
+// Nested classes of mwn: import the definitions
 // Typescript-style imports won't work for these
 const XDate = require('./date');
 const Title = require('./title');
@@ -54,8 +56,7 @@ const User = require('./user');
 const Category = require('./category');
 const File = require('./file');
 const Stream = require('./eventstream');
-const error_1 = require("./error");
-const static_utils_1 = require("./static_utils");
+const utils_1 = require("./utils");
 class mwn {
     /***************** CONSTRUCTOR ********************/
     /**
@@ -147,7 +148,7 @@ class mwn {
          * Change the defaults using setRequestOptions()
          * @type {Object}
          */
-        this.requestOptions = mergeDeep1({
+        this.requestOptions = utils_1.mergeDeep1({
             responseType: 'json'
         }, mwn.requestDefaults);
         /**
@@ -168,7 +169,7 @@ class mwn {
                 throw new Error(`Failed to read or parse JSON config file: ` + err);
             }
         }
-        this.options = mergeDeep1(this.defaultOptions, customOptions);
+        this.options = utils_1.mergeDeep1(this.defaultOptions, customOptions);
         // set up any semlog options
         semlog.updateConfig(this.options.semlog || {});
         /**
@@ -206,7 +207,7 @@ class mwn {
      * @param {Object} customOptions
      */
     setOptions(customOptions) {
-        this.options = mergeDeep1(this.options, customOptions);
+        this.options = utils_1.mergeDeep1(this.options, customOptions);
     }
     /**
      * Sets the API URL for MediaWiki requests
@@ -221,14 +222,14 @@ class mwn {
      * See https://www.npmjs.com/package/axios
      */
     setRequestOptions(customRequestOptions) {
-        return mergeDeep1(this.requestOptions, customRequestOptions);
+        return utils_1.mergeDeep1(this.requestOptions, customRequestOptions);
     }
     /**
      * Set the default parameters to be sent in API calls.
      * @param {Object} params - default parameters
      */
     setDefaultParams(params) {
-        this.options.defaultParams = merge(this.options.defaultParams, params);
+        this.options.defaultParams = utils_1.merge(this.options.defaultParams, params);
     }
     /**
      * Set your API user agent. See https://meta.wikimedia.org/wiki/User-Agent_policy
@@ -309,7 +310,7 @@ class mwn {
                 request: requestOptions
             });
         }
-        return axios_1.default(mergeDeep1({}, mwn.requestDefaults, {
+        return axios_1.default(utils_1.mergeDeep1({}, mwn.requestDefaults, {
             method: 'get',
             headers: {
                 'User-Agent': this.options.userAgent
@@ -332,7 +333,7 @@ class mwn {
                 info: `Bot was shut off (check ${this.options.shutoff.page})`
             });
         }
-        params = merge(this.options.defaultParams, params);
+        params = utils_1.merge(this.options.defaultParams, params);
         const getOrPost = function (data) {
             if (data.action === 'query') {
                 return 'get';
@@ -342,7 +343,7 @@ class mwn {
             }
             return 'post';
         };
-        let requestOptions = mergeDeep1({
+        let requestOptions = utils_1.mergeDeep1({
             url: this.options.apiUrl,
             method: getOrPost(params),
             // retryNumber isn't actually used by the API, but this is
@@ -557,7 +558,7 @@ class mwn {
      * @returns {Promise}
      */
     login(loginOptions) {
-        this.options = merge(this.options, loginOptions);
+        this.options = utils_1.merge(this.options, loginOptions);
         if (!this.options.username || !this.options.password || !this.options.apiUrl) {
             return Promise.reject(new Error('Incomplete login credentials!'));
         }
@@ -581,7 +582,7 @@ class mwn {
                 log('[E] [mwn] Login failed with invalid response: ' + loginString);
                 return Promise.reject(err);
             }
-            this.state = merge(this.state, response.query.tokens);
+            this.state = utils_1.merge(this.state, response.query.tokens);
             this.title.processNamespaceData(response);
             return this.request({
                 action: 'login',
@@ -592,7 +593,7 @@ class mwn {
             });
         }).then((response) => {
             if (response.login && response.login.result === 'Success') {
-                this.state = merge(this.state, response.login);
+                this.state = utils_1.merge(this.state, response.login);
                 this.loggedIn = true;
                 if (!this.options.silent) {
                     log('[S] [mwn] Login successful: ' + loginString);
@@ -656,7 +657,7 @@ class mwn {
             // console.log('getTokens response:', response);
             if (response.query && response.query.tokens) {
                 this.csrfToken = response.query.tokens.csrftoken;
-                this.state = merge(this.state, response.query.tokens);
+                this.state = utils_1.merge(this.state, response.query.tokens);
             }
             else {
                 let err = new mwn.Error({
@@ -698,7 +699,7 @@ class mwn {
             }
             if (response.query && response.query.tokens) {
                 this.csrfToken = response.query.tokens.csrftoken;
-                this.state = merge(this.state, response.query.tokens);
+                this.state = utils_1.merge(this.state, response.query.tokens);
             }
             else {
                 let err = new mwn.Error({
@@ -790,7 +791,7 @@ class mwn {
         let batchFieldName = typeof pages[0] === 'number' ? 'pageids' : 'titles';
         return this.massQuery({
             action: 'query',
-            ...makeTitles(titles),
+            ...utils_1.makeTitles(titles),
             prop: 'revisions',
             rvprop: 'content|timestamp',
             rvslots: 'main',
@@ -813,7 +814,7 @@ class mwn {
     async *readGen(titles, options) {
         let massQueryResponses = this.massQueryGen({
             action: 'query',
-            ...makeTitles(titles),
+            ...utils_1.makeTitles(titles),
             prop: 'revisions',
             rvprop: 'content|timestamp',
             rvslots: 'main',
@@ -856,7 +857,7 @@ class mwn {
         let basetimestamp, curtimestamp;
         return this.request({
             action: 'query',
-            ...makeTitles(title),
+            ...utils_1.makeTitles(title),
             prop: 'revisions',
             rvprop: ['content', 'timestamp'],
             rvslots: 'main',
@@ -899,7 +900,7 @@ class mwn {
             };
             return this.request({
                 action: 'edit',
-                ...makeTitle(title),
+                ...utils_1.makeTitle(title),
                 formatversion: '2',
                 basetimestamp: basetimestamp,
                 starttimestamp: curtimestamp,
@@ -934,13 +935,13 @@ class mwn {
      * @returns {Promise}
      */
     save(title, content, summary, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'edit',
             text: content,
             summary: summary,
             bot: true,
             token: this.csrfToken
-        }, makeTitle(title), options)).then(data => data.edit);
+        }, utils_1.makeTitle(title), options)).then(data => data.edit);
     }
     /**
      * Creates a new pages. Does not edit existing ones
@@ -953,7 +954,7 @@ class mwn {
      * @returns {Promise}
      */
     create(title, content, summary, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'edit',
             title: String(title),
             text: content,
@@ -972,14 +973,14 @@ class mwn {
      * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
      */
     newSection(title, header, message, additionalParams) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'edit',
             section: 'new',
             summary: header,
             text: message,
             bot: true,
             token: this.csrfToken
-        }, makeTitle(title), additionalParams)).then(data => data.edit);
+        }, utils_1.makeTitle(title), additionalParams)).then(data => data.edit);
     }
     /**
      * Deletes a page
@@ -990,11 +991,11 @@ class mwn {
      * @returns {Promise}
      */
     delete(title, summary, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'delete',
             reason: summary,
             token: this.csrfToken
-        }, makeTitle(title), options)).then(data => data.delete);
+        }, utils_1.makeTitle(title), options)).then(data => data.delete);
     }
     /**
      * Undeletes a page.
@@ -1006,7 +1007,7 @@ class mwn {
      * @returns {Promise}
      */
     undelete(title, summary, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'undelete',
             title: String(title),
             reason: summary,
@@ -1022,7 +1023,7 @@ class mwn {
      * @param {object}  [options]
      */
     move(fromtitle, totitle, summary, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'move',
             from: fromtitle,
             to: totitle,
@@ -1040,7 +1041,7 @@ class mwn {
      * @return {Promise<string>}
      */
     parseWikitext(content, additionalParams) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             text: String(content),
             formatversion: 2,
             action: 'parse',
@@ -1058,7 +1059,7 @@ class mwn {
      * @return {Promise<string>}
      */
     parseTitle(title, additionalParams) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             page: String(title),
             formatversion: 2,
             action: 'parse',
@@ -1111,7 +1112,7 @@ class mwn {
      * @returns {Promise<Object>}
      */
     uploadFromUrl(url, title, text, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'upload',
             url: url,
             filename: title || path.basename(url),
@@ -1137,11 +1138,11 @@ class mwn {
      * @returns {Promise<void>}
      */
     download(file, localname) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'query',
             prop: 'imageinfo',
             iiprop: 'url'
-        }, makeTitles(file))).then(data => {
+        }, utils_1.makeTitles(file))).then(data => {
             const url = data.query.pages[0].imageinfo[0].url;
             const name = new this.title(data.query.pages[0].title).getMainText();
             return this.downloadFromUrl(url, localname || name);
@@ -1172,11 +1173,11 @@ class mwn {
      * @return {Promise}
      */
     rollback(page, user, params) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'rollback',
             user: user,
             token: this.state.rollbacktoken
-        }, makeTitle(page), params)).then(data => {
+        }, utils_1.makeTitle(page), params)).then(data => {
             return data.rollback;
         });
     }
@@ -1188,9 +1189,9 @@ class mwn {
      * @returns {Promise}
      */
     purge(titles, options) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'purge',
-        }, makeTitles(titles), options)).then(data => data.purge);
+        }, utils_1.makeTitles(titles), options)).then(data => data.purge);
     }
     /**
      * Get pages with names beginning with a given prefix
@@ -1204,7 +1205,7 @@ class mwn {
         if (!title) {
             throw new Error('invalid prefix for getPagesByPrefix');
         }
-        return this.request(merge({
+        return this.request(utils_1.merge({
             "action": "query",
             "list": "allpages",
             "apprefix": title.title,
@@ -1242,7 +1243,7 @@ class mwn {
      * @returns {Promise<Object>}
      */
     search(searchTerm, limit, props, otherParams) {
-        return this.request(merge({
+        return this.request(utils_1.merge({
             action: 'query',
             list: 'search',
             srsearch: searchTerm,
@@ -1269,7 +1270,7 @@ class mwn {
                 }
                 responses.push(response);
                 if (response.continue && count < limit) {
-                    return callApi(merge(query, response.continue), count + 1);
+                    return callApi(utils_1.merge(query, response.continue), count + 1);
                 }
                 else {
                     return responses;
@@ -1289,7 +1290,7 @@ class mwn {
         let response = { continue: {} };
         for (let i = 0; i < limit; i++) {
             if (response.continue) {
-                response = await this.request(merge(query, response.continue));
+                response = await this.request(utils_1.merge(query, response.continue));
                 yield response;
             }
             else {
@@ -1368,7 +1369,7 @@ class mwn {
             throw new Error(`massQuery: batch field in query must be an array`);
         }
         const limit = batchSize || this.hasApiHighLimit ? 500 : 50;
-        const batches = arrayChunk(batchValues, limit);
+        const batches = utils_1.arrayChunk(batchValues, limit);
         const numBatches = batches.length;
         for (let i = 0; i < numBatches; i++) {
             query[batchFieldName] = batches[i];
@@ -1426,7 +1427,7 @@ class mwn {
                     for (let i = 0; i < numItemsInLastBatch; i++) {
                         let idx = batchIdx * concurrency + i;
                         finalBatchPromises[i] = worker(list[idx], idx);
-                        if (!ispromise(finalBatchPromises[i])) {
+                        if (!utils_1.ispromise(finalBatchPromises[i])) {
                             throw new Error('batchOperation worker function must return a promise');
                         }
                         finalBatchSettledPromises[i] = new Promise((resolve) => {
@@ -1456,7 +1457,7 @@ class mwn {
                 for (let i = 0; i < concurrency; i++) {
                     let idx = batchIdx * concurrency + i;
                     const promise = worker(list[idx], idx);
-                    if (!ispromise(promise)) {
+                    if (!utils_1.ispromise(promise)) {
                         throw new Error('batchOperation worker function must return a promise');
                     }
                     promise.then(incrementSuccesses, (err) => {
@@ -1548,7 +1549,7 @@ class mwn {
      */
     askQuery(query, apiUrl, customRequestOptions) {
         apiUrl = apiUrl || this.options.apiUrl;
-        let requestOptions = merge({
+        let requestOptions = utils_1.merge({
             method: 'get',
             url: apiUrl,
             responseType: 'json',
@@ -1572,7 +1573,7 @@ class mwn {
      */
     sparqlQuery(query, endpointUrl, customRequestOptions) {
         endpointUrl = endpointUrl || this.options.apiUrl;
-        let requestOptions = merge({
+        let requestOptions = utils_1.merge({
             method: 'get',
             url: endpointUrl,
             responseType: 'json',
@@ -1591,7 +1592,7 @@ class mwn {
      */
     oresQueryRevisions(endpointUrl, models, revisions) {
         let response = {};
-        const chunks = arrayChunk((revisions instanceof Array) ? revisions : [revisions], 50);
+        const chunks = utils_1.arrayChunk((revisions instanceof Array) ? revisions : [revisions], 50);
         return this.seriesBatchOperation(chunks, (chunk) => {
             return this.rawRequest({
                 method: 'get',
@@ -1714,83 +1715,3 @@ mwn.link = static_utils_1.default.link;
 mwn.template = static_utils_1.default.template;
 mwn.table = static_utils_1.default.table;
 mwn.util = static_utils_1.default.util;
-/**** Private utilities ****/
-/** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
-function ispromise(obj) {
-    return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
-        typeof obj.then === 'function';
-}
-/** Check whether an object is plain object, from https://github.com/sindresorhus/is-plain-obj/blob/master/index.js */
-function isplainobject(value) {
-    if (Object.prototype.toString.call(value) !== '[object Object]') {
-        return false;
-    }
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === null || prototype === Object.prototype;
-}
-/**
- * Simple wrapper around Object.assign to merge objects. null and undefined
- * arguments in argument list will be ignored.
- *
- * @param {...Object} objects - if the same property exists on multiple
- * objects, the value on the rightmost one will be kept in the output.
- * @returns {Object} - Merged object
- */
-function merge(...objects) {
-    // {} used as first parameter as this object is mutated by default
-    return Object.assign({}, ...objects);
-}
-/**
- * Merge objects deeply to 1 level. Object properties like params, data,
- * headers get merged. But not any object properties within them.
- * Arrays are not merged, but over-written (as if it were a primitive)
- * The first object is mutated and returned.
- * @param {...Object} objects - any number of objects
- * @returns {Object}
- */
-function mergeDeep1(...objects) {
-    let args = [...objects].filter(e => e); // skip null/undefined values
-    for (let options of args.slice(1)) {
-        for (let [key, val] of Object.entries(options)) {
-            if (isplainobject(val)) {
-                args[0][key] = merge(args[0][key], val);
-                // this can't be written as Object.assign(args[0][key], val)
-                // as args[0][key] could be undefined
-            }
-            else {
-                args[0][key] = val;
-            }
-        }
-    }
-    return args[0];
-}
-/**
- * @param {Array} arr
- * @param {number} size
- */
-function arrayChunk(arr, size) {
-    const numChunks = Math.ceil(arr.length / size);
-    let result = new Array(numChunks);
-    for (let i = 0; i < numChunks; i++) {
-        result[i] = arr.slice(i * size, (i + 1) * size);
-    }
-    return result;
-}
-function makeTitles(pages) {
-    let pagesArray = Array.isArray(pages) ? pages : [pages];
-    if (typeof pagesArray[0] === 'number') {
-        return { pageids: pagesArray };
-    }
-    else {
-        // .join casts array elements to strings and then joins
-        return { titles: pagesArray };
-    }
-}
-function makeTitle(page) {
-    if (typeof page === 'number') {
-        return { pageid: page };
-    }
-    else {
-        return { title: String(page) };
-    }
-}

@@ -79,7 +79,7 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 		 * @param {Function} action
 		 */
 		static recentchange(filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
-							action: ((data: recentchangeProps) => void)): EventStream {
+			action: ((data: recentchangeProps) => void)): EventStream {
 			let stream = new EventStream('recentchange');
 			stream.addListener(filter, action);
 			return stream;
