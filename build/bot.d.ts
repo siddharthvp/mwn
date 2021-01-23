@@ -32,6 +32,7 @@
 import { AxiosRequestConfig } from 'axios';
 import tough = require('tough-cookie');
 import OAuth = require('oauth-1.0a');
+import { log, updateLoggingConfig } from './log';
 import { MwnError, MwnErrorConfig } from "./error";
 import { MwnDate } from './date';
 import { MwnTitle } from './title';
@@ -70,7 +71,6 @@ export interface MwnOptions {
     suppressAPIWarnings?: boolean;
     editConfig?: editConfigType;
     suppressInvalidDateWarning?: boolean;
-    semlog?: object;
 }
 declare type editConfigType = {
     conflictRetries?: number;
@@ -162,7 +162,8 @@ export declare class mwn {
     oauth: OAuth;
     usingOAuth: boolean;
     static Error: typeof MwnError;
-    static log: (data: any) => void;
+    static log: typeof log;
+    static setLoggingConfig: typeof updateLoggingConfig;
     static link: (target: string | MwnTitle, displaytext?: string) => string;
     static template: (title: string | MwnTitle, parameters?: {
         [parameter: string]: string;

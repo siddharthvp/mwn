@@ -42,8 +42,7 @@ const http = require("http");
 const https = require("https");
 const axiosCookieJarSupport = require("axios-cookiejar-support");
 axiosCookieJarSupport.default(axios_1.default);
-const semlog = require('semlog');
-const log = semlog.log;
+const log_1 = require("./log");
 const error_1 = require("./error");
 const static_utils_1 = require("./static_utils");
 // Nested classes of mwn
@@ -130,10 +129,6 @@ class mwn {
                 suppressNochangeWarning: false,
                 // abort edit if exclusionRegex matches on the page content
                 exclusionRegex: null
-            },
-            // options for logging, see semlog documentation
-            semlog: {
-                printDateTime: true
             }
         };
         /**
@@ -200,8 +195,6 @@ class mwn {
             }
         }
         this.options = utils_1.mergeDeep1(this.defaultOptions, customOptions);
-        // set up any semlog options
-        semlog.updateConfig(this.options.semlog || {});
     }
     /**
      * Initialize a bot object. Login to the wiki and fetch editing tokens.
@@ -493,12 +486,12 @@ class mwn {
                         // This will not work if the token type to be used is defined by an
                         // extension, and not a part of mediawiki core
                         case 'badtoken':
-                            log(`[W] Encountered badtoken error, fetching new token and retrying`);
+                            log_1.log(`[W] Encountered badtoken error, fetching new token and retrying`);
                             return refreshTokenAndRetry();
                         case 'readonly':
                         case 'maxlag':
                             // Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-                            log(`[W] Encountered ${response.error.code} error, waiting for ${this.options.retryPause / 1000} seconds before retrying`);
+                            log_1.log(`[W] Encountered ${response.error.code} error, waiting for ${this.options.retryPause / 1000} seconds before retrying`);
                             return this.sleep(this.options.retryPause).then(() => {
                                 return this.request(params, customRequestOptions);
                             });
@@ -509,7 +502,7 @@ class mwn {
                                 return this.dieWithError(response, requestOptions);
                             }
                             // Possibly due to session loss: retry after logging in again
-                            log(`[W] Received ${response.error.code}, attempting to log in and retry`);
+                            log_1.log(`[W] Received ${response.error.code}, attempting to log in and retry`);
                             return this.login().then(() => {
                                 if (params.token) {
                                     return refreshTokenAndRetry();
@@ -525,7 +518,7 @@ class mwn {
                             // and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py)
                             // Some discussion in https://github.com/mwclient/mwclient/issues/164
                             if (response.error.info.includes('Nonce already used')) {
-                                log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause / 1000} seconds`);
+                                log_1.log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause / 1000} seconds`);
                                 return this.sleep(this.options.retryPause).then(() => {
                                     return this.request(params, customRequestOptions);
                                 });
@@ -543,14 +536,14 @@ class mwn {
             }
             if (response.warnings && !this.options.suppressAPIWarnings) {
                 for (let [key, info] of Object.entries(response.warnings)) {
-                    log(`[W] Warning received from API: ${key}: ${info.warnings}`);
+                    log_1.log(`[W] Warning received from API: ${key}: ${info.warnings}`);
                 }
             }
             return response;
         }, error => {
             if (!error.disableRetry && requestOptions.retryNumber < this.options.maxRetries) {
                 // error might be transient, give it another go!
-                log(`[W] Encountered ${error}, retrying in ${this.options.retryPause / 1000} seconds`);
+                log_1.log(`[W] Encountered ${error}, retrying in ${this.options.retryPause / 1000} seconds`);
                 customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
                 return this.sleep(this.options.retryPause).then(() => {
                     return this.request(params, customRequestOptions);
@@ -598,7 +591,7 @@ class mwn {
                     info: 'Failed to get login token',
                     response,
                 });
-                log('[E] [mwn] Login failed with invalid response: ' + loginString);
+                log_1.log('[E] [mwn] Login failed with invalid response: ' + loginString);
                 return Promise.reject(err);
             }
             this.state = utils_1.merge(this.state, response.query.tokens);
@@ -615,7 +608,7 @@ class mwn {
                 this.state = utils_1.merge(this.state, response.login);
                 this.loggedIn = true;
                 if (!this.options.silent) {
-                    log('[S] [mwn] Login successful: ' + loginString);
+                    log_1.log('[S] [mwn] Login successful: ' + loginString);
                 }
                 return this.state;
             }
@@ -628,7 +621,7 @@ class mwn {
                 info: 'Could not log in: ' + reason,
                 response
             });
-            log('[E] [mwn] Login failed: ' + loginString);
+            log_1.log('[E] [mwn] Login failed: ' + loginString);
             return Promise.reject(err);
         });
     }
@@ -930,7 +923,7 @@ class mwn {
             });
         }).then(data => {
             if (data.edit && data.edit.nochange && !editConfig.suppressNochangeWarning) {
-                log(`[W] No change from edit to ${data.edit.title}`);
+                log_1.log(`[W] No change from edit to ${data.edit.title}`);
             }
             return data.edit;
         }, err => {
@@ -1114,8 +1107,8 @@ class mwn {
             }
         }).then(data => {
             if (data.upload.warnings) {
-                log(`[W] The API returned warnings while uploading to ${title}:`);
-                log(data.upload.warnings);
+                log_1.log(`[W] The API returned warnings while uploading to ${title}:`);
+                log_1.log(data.upload.warnings);
             }
             return data.upload;
         });
@@ -1140,8 +1133,8 @@ class mwn {
             token: this.csrfToken
         }, options)).then(data => {
             if (data.upload.warnings) {
-                log('[W] The API returned warnings while uploading to ' + title + ':');
-                log(data.upload.warnings);
+                log_1.log('[W] The API returned warnings while uploading to ' + title + ':');
+                log_1.log(data.upload.warnings);
             }
             return data.upload;
         });
@@ -1285,7 +1278,7 @@ class mwn {
         let callApi = (query, count) => {
             return this.request(query).then(response => {
                 if (!this.options.silent) {
-                    log(`[+] Got part ${count} of continuous API query`);
+                    log_1.log(`[+] Got part ${count} of continuous API query`);
                 }
                 responses.push(response);
                 if (response.continue && count < limit) {
@@ -1428,7 +1421,7 @@ class mwn {
             const percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
             const statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
             if (!this.options.silent) {
-                log(statusText);
+                log_1.log(statusText);
             }
         };
         const numBatches = Math.ceil(list.length / concurrency);
@@ -1526,7 +1519,7 @@ class mwn {
             const percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
             const statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
             if (!this.options.silent) {
-                log(statusText);
+                log_1.log(statusText);
             }
         };
         let worklist = list;
@@ -1728,8 +1721,9 @@ mwn.requestDefaults = {
     timeout: 60000,
 };
 mwn.Error = error_1.MwnError;
-// Expose semlog
-mwn.log = log;
+// Expose logger
+mwn.log = log_1.log;
+mwn.setLoggingConfig = log_1.updateLoggingConfig;
 mwn.link = static_utils_1.default.link;
 mwn.template = static_utils_1.default.template;
 mwn.table = static_utils_1.default.table;

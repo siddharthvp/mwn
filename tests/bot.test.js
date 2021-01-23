@@ -74,6 +74,14 @@ describe('mwn', async function() {
 		});
 	});
 
+	it('correctly sets logging config', function () {
+		const {logConfig} = require('../build/log');
+		mwn.setLoggingConfig({
+			printYaml: true
+		});
+		expect(logConfig.printYaml).to.equal(true);
+	});
+
 
 
 

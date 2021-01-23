@@ -1,7 +1,7 @@
 /** Base file used in tests */
 
 const {mwn} = require('../build/bot');
-const log = require('semlog').log;
+const log = mwn.log;
 const crypto = require('crypto');
 
 const chai = require('chai');

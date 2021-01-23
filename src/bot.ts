@@ -44,8 +44,7 @@ import https = require('https');
 import axiosCookieJarSupport = require('axios-cookiejar-support');
 axiosCookieJarSupport.default(axios);
 
-const semlog = require('semlog');
-const log: ((data: any) => void) = semlog.log;
+import {log, updateLoggingConfig} from './log';
 
 import {MwnError, MwnErrorConfig} from "./error";
 import static_utils from './static_utils';
@@ -99,7 +98,6 @@ export interface MwnOptions {
 	suppressAPIWarnings?: boolean
 	editConfig?: editConfigType
 	suppressInvalidDateWarning?: boolean;
-	semlog?: object
 }
 
 type editConfigType = {
@@ -228,11 +226,6 @@ export class mwn {
 			suppressNochangeWarning: false,
 			// abort edit if exclusionRegex matches on the page content
 			exclusionRegex: null
-		},
-
-		// options for logging, see semlog documentation
-		semlog: {
-			printDateTime: true
 		}
 	};
 
@@ -287,8 +280,10 @@ export class mwn {
 
 	static Error = MwnError;
 
-	// Expose semlog
+	// Expose logger
 	static log = log;
+
+	static setLoggingConfig = updateLoggingConfig;
 
 	static link = static_utils.link;
 	static template = static_utils.template;
@@ -356,9 +351,6 @@ export class mwn {
 			}
 		}
 		this.options = mergeDeep1(this.defaultOptions, customOptions);
-
-		// set up any semlog options
-		semlog.updateConfig(this.options.semlog || {});
 	}
 
 
