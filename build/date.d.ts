@@ -1,7 +1,11 @@
 import type { mwn } from "./bot";
+/**
+ * Wrapper around the native JS Date() for ease of
+ * handling dates, as well as a constructor that
+ * can parse MediaWiki dating formats.
+ */
 export interface MwnDateStatic {
     new (...args: any[]): MwnDate;
-    loadLocaleData(data: any): void;
     getMonthName(monthNum: number): string;
     getMonthNameAbbrev(monthNum: number): string;
     getDayName(dayNum: number): string;
