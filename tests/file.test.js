@@ -19,7 +19,7 @@ describe('File', async function() {
 		expect(fileWithoutNs.namespace).to.equal(6);
 	});
 
-	it('getName', function() {
+	it('getName and getNameText', function() {
 		var file = new bot.file( 'File:Foo_bar.JPG' );
 		assert.strictEqual( file.getName(), 'Foo_bar' );
 		assert.strictEqual( file.getNameText(), 'Foo bar' );
@@ -34,5 +34,7 @@ describe('File', async function() {
 		file = new bot.file( 'File:Glarg_foo_glang.jpg' );
 		assert.strictEqual( file.getNameText(), 'Glarg foo glang', 'Underscores' );
 	});
+
+	// TODO: usages
 
 });
