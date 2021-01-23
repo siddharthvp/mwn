@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-module.exports = function (bot) {
+function default_1(bot) {
     class User {
         /**
          * @constructor
@@ -150,4 +150,5 @@ module.exports = function (bot) {
         }
     }
     return User;
-};
+}
+exports.default = default_1;

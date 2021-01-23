@@ -50,23 +50,15 @@ const log: ((data: any) => void) = semlog.log;
 import {MwnError, MwnErrorConfig} from "./error";
 import static_utils from './static_utils';
 
-// Nested classes of mwn: import the definitions
-// Typescript-style imports won't work for these
-const XDate = require('./date');
-const Title = require('./title');
-const Page = require('./page');
-const Wikitext = require('./wikitext');
-const User = require('./user');
-const Category = require('./category');
-const File = require('./file');
-const Stream = require('./eventstream');
-
-// Import the declarations
-import {
-	MwnTitle, MwnTitleStatic, MwnPage, MwnPageStatic, MwnFile, MwnFileStatic,
-	MwnCategory, MwnCategoryStatic, MwnDateStatic, MwnDate, MwnWikitext,
-	MwnWikitextStatic, MwnUser, MwnUserStatic, MwnStreamStatic, MwnStream
-} from './nested_classes';
+// Nested classes of mwn
+import MwnDateFactory, {MwnDate} from './date';
+import MwnTitleFactory, {MwnTitle} from './title';
+import MwnPageFactory, {MwnPage} from './page';
+import MwnWikitextFactory, {MwnWikitext} from './wikitext';
+import MwnUserFactory, {MwnUser} from './user';
+import MwnCategoryFactory, {MwnCategory} from './category';
+import MwnFileFactory, {MwnFile} from './file';
+import MwnStreamFactory, {MwnStream} from './eventstream';
 
 // Export them too
 export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream};
@@ -293,27 +285,58 @@ export class mwn {
 
 	usingOAuth: boolean
 
-	title: MwnTitleStatic
-	page: MwnPageStatic
-	file: MwnFileStatic
-	category: MwnCategoryStatic
-	stream: MwnStreamStatic
-	date: MwnDateStatic
-	wikitext: MwnWikitextStatic
-	user: MwnUserStatic
-
-	static Error = MwnError
+	static Error = MwnError;
 
 	// Expose semlog
-	static log = log
+	static log = log;
 
-	static link = static_utils.link
-	static template = static_utils.template
-	static table = static_utils.table
+	static link = static_utils.link;
+	static template = static_utils.template;
+	static table = static_utils.table;
 
-	static util = static_utils.util
+	static util = static_utils.util;
 
-	/***************** CONSTRUCTOR ********************/
+
+	/**
+	 * Title class associated with the bot instance
+	 */
+	title = MwnTitleFactory(this);
+
+	/**
+	 * Page class associated with the bot instance
+	 */
+	page = MwnPageFactory(this);
+
+	/**
+	 * Category class associated with the bot instance
+	 */
+	category = MwnCategoryFactory(this);
+
+	/**
+	 * File class associated with the bot instance
+	 */
+	file = MwnFileFactory(this);
+
+	/**
+	 * User class associated with the bot instance
+	 */
+	user = MwnUserFactory(this);
+
+	/**
+	 * Wikitext class associated with the bot instance
+	 */
+	wikitext = MwnWikitextFactory(this);
+
+	/**
+	 * Stream class associated with the bot instance
+	 */
+	stream = MwnStreamFactory(this, mwn);
+
+	/**
+	 * Date class associated with the bot instance
+	 */
+	date = MwnDateFactory(this);
+
 
 	/**
 	 * Constructs a new bot instance
@@ -336,18 +359,6 @@ export class mwn {
 
 		// set up any semlog options
 		semlog.updateConfig(this.options.semlog || {});
-
-		/**
-		 * Classes associated with the bot instance
-		 */
-		this.title = Title(this);
-		this.page = Page(this);
-		this.category = Category(this);
-		this.file = File(this);
-		this.user = User(this);
-		this.wikitext = Wikitext(this);
-		this.stream = Stream(this, mwn);
-		this.date = XDate(this);
 	}
 
 

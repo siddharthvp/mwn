@@ -9,7 +9,7 @@
  *
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-module.exports = function (bot) {
+function default_1(bot) {
     var NS_MAIN = 0;
     var NS_TALK = 1;
     var NS_SPECIAL = -1;
@@ -1171,4 +1171,5 @@ module.exports = function (bot) {
         "𞥃": ""
     };
     return Title;
-};
+}
+exports.default = default_1;

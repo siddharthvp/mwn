@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * handling dates, as well as a constructor that
  * can parse MediaWiki dating formats.
  */
-module.exports = function (bot) {
+function default_1(bot) {
     class MwnDate extends Date {
         /**
          * Create a date object. MediaWiki timestamp format is also acceptable,
@@ -230,7 +230,8 @@ module.exports = function (bot) {
         };
     });
     return MwnDate;
-};
+}
+exports.default = default_1;
 // mapping time units with getter/setter function names for add and subtract
 const unitMap = {
     seconds: 'Seconds',

@@ -13,8 +13,33 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type {mwn, MwnTitle, MwnWikitext} from "./bot";
+import type {mwn, MwnTitle} from "./bot";
 import type {ApiParseParams} from "./api_params";
+
+export interface MwnWikitextStatic {
+	new (text: string): MwnWikitext;
+	parseTemplates(wikitext: string, config: TemplateConfig): Template[];
+	parseTable(text: string): {
+		[column: string]: string;
+	}[];
+	parseSections(text: string): Section[];
+}
+export interface MwnWikitext {
+	text: string;
+	links: Array<PageLink>;
+	templates: Array<Template>;
+	files: Array<FileLink>;
+	categories: Array<CategoryLink>;
+	sections: Array<Section>;
+	parseLinks(): void;
+	parseTemplates(config: TemplateConfig): Template[];
+	removeEntity(entity: Link | Template): void;
+	parseSections(): Section[];
+	unbind(prefix: string, postfix: string): void;
+	rebind(): string;
+	getText(): string;
+	apiParse(options: ApiParseParams): Promise<string>;
+}
 
 export interface Link {
 	wikitext: string
@@ -106,7 +131,7 @@ export class Parameter {
 	}
 }
 
-module.exports = function (bot: mwn) {
+export default function (bot: mwn) {
 
 	class Wikitext implements MwnWikitext {
 		text: string
@@ -612,6 +637,6 @@ module.exports = function (bot: mwn) {
 		return string.slice(0, index) + char + string.slice(index + 1);
 	}
 
-	return Wikitext;
+	return Wikitext as MwnWikitextStatic;
 
-};
+}

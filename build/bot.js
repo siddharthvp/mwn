@@ -46,19 +46,17 @@ const semlog = require('semlog');
 const log = semlog.log;
 const error_1 = require("./error");
 const static_utils_1 = require("./static_utils");
-// Nested classes of mwn: import the definitions
-// Typescript-style imports won't work for these
-const XDate = require('./date');
-const Title = require('./title');
-const Page = require('./page');
-const Wikitext = require('./wikitext');
-const User = require('./user');
-const Category = require('./category');
-const File = require('./file');
-const Stream = require('./eventstream');
+// Nested classes of mwn
+const date_1 = require("./date");
+const title_1 = require("./title");
+const page_1 = require("./page");
+const wikitext_1 = require("./wikitext");
+const user_1 = require("./user");
+const category_1 = require("./category");
+const file_1 = require("./file");
+const eventstream_1 = require("./eventstream");
 const utils_1 = require("./utils");
 class mwn {
-    /***************** CONSTRUCTOR ********************/
     /**
      * Constructs a new bot instance
      * It is advised to create one bot instance for every API to use
@@ -160,6 +158,38 @@ class mwn {
             hook: null
         };
         this.hasApiHighLimit = false;
+        /**
+         * Title class associated with the bot instance
+         */
+        this.title = title_1.default(this);
+        /**
+         * Page class associated with the bot instance
+         */
+        this.page = page_1.default(this);
+        /**
+         * Category class associated with the bot instance
+         */
+        this.category = category_1.default(this);
+        /**
+         * File class associated with the bot instance
+         */
+        this.file = file_1.default(this);
+        /**
+         * User class associated with the bot instance
+         */
+        this.user = user_1.default(this);
+        /**
+         * Wikitext class associated with the bot instance
+         */
+        this.wikitext = wikitext_1.default(this);
+        /**
+         * Stream class associated with the bot instance
+         */
+        this.stream = eventstream_1.default(this, mwn);
+        /**
+         * Date class associated with the bot instance
+         */
+        this.date = date_1.default(this);
         if (typeof customOptions === 'string') {
             // Read options from file (JSON):
             try {
@@ -172,17 +202,6 @@ class mwn {
         this.options = utils_1.mergeDeep1(this.defaultOptions, customOptions);
         // set up any semlog options
         semlog.updateConfig(this.options.semlog || {});
-        /**
-         * Classes associated with the bot instance
-         */
-        this.title = Title(this);
-        this.page = Page(this);
-        this.category = Category(this);
-        this.file = File(this);
-        this.user = User(this);
-        this.wikitext = Wikitext(this);
-        this.stream = Stream(this, mwn);
-        this.date = XDate(this);
     }
     /**
      * Initialize a bot object. Login to the wiki and fetch editing tokens.

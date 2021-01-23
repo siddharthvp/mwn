@@ -1,7 +1,21 @@
-import type {mwn, MwnFile, MwnTitle} from './bot';
+import type {mwn, MwnPage, MwnTitle} from './bot';
 import {ApiQueryBacklinkspropParams} from "./api_params";
 
-module.exports = function (bot: mwn) {
+export interface MwnFileStatic {
+	new (title: MwnTitle | string): MwnFile;
+}
+export interface MwnFile extends MwnPage {
+	getName(): string;
+	getNameText(): string;
+	usages(options?: ApiQueryBacklinkspropParams): Promise<{
+		pageid: number;
+		title: string;
+		redirect: boolean;
+	}[]>;
+	download(localname: string): void;
+}
+
+export default function (bot: mwn) {
 
 	class File extends bot.page implements MwnFile {
 
@@ -69,6 +83,6 @@ module.exports = function (bot: mwn) {
 
 	}
 
-	return File;
+	return File as MwnFileStatic;
 
-};
+}

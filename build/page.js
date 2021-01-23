@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const error_1 = require("./error");
-module.exports = function (bot) {
+function default_1(bot) {
     class Page extends bot.title {
         constructor(title, namespace) {
             // bot property is set by mwn#page() method
@@ -345,4 +345,5 @@ module.exports = function (bot) {
         }
     }
     return Page;
-};
+}
+exports.default = default_1;

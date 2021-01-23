@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-module.exports = function (bot) {
+function default_1(bot) {
     class Category extends bot.page {
         /**
          * @constructor
@@ -71,4 +71,5 @@ module.exports = function (bot) {
         }
     }
     return Category;
-};
+}
+exports.default = default_1;

@@ -1,4 +1,4 @@
-import type {mwn, MwnPage, MwnUser} from "./bot";
+import type {mwn, MwnPage} from "./bot";
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
@@ -6,6 +6,27 @@ import type {
 	ApiQueryUserContribsParams,
 	ApiUnblockParams
 } from "./api_params";
+
+
+export interface MwnUserStatic {
+	new (username: string): MwnUser;
+}
+
+export interface MwnUser {
+	username: string;
+	userpage: MwnPage;
+	talkpage: MwnPage;
+	contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]>;
+	contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution>;
+	logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
+	logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>;
+	info(props?: string | string[]): Promise<any>;
+	globalinfo(props?: ("groups" | "rights" | "merged" | "unattached" | "editcount")[]): Promise<any>;
+	sendMessage(header: string, message: string): Promise<any>;
+	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any>;
+	block(options: ApiBlockParams): Promise<any>;
+	unblock(options: ApiUnblockParams): Promise<any>;
+}
 
 export type UserContribution = {
 	userid: number
@@ -37,7 +58,7 @@ export type LogEvent = {
 	comment: string
 }
 
-module.exports = function(bot: mwn) {
+export default function(bot: mwn) {
 
 	class User implements MwnUser {
 		username: string
@@ -205,6 +226,6 @@ module.exports = function(bot: mwn) {
 
 	}
 
-	return User;
+	return User as MwnUserStatic;
 
-};
+}

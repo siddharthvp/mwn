@@ -1,6 +1,17 @@
-
 import EventSource = require('eventsource');
-import type {mwn as Mwn, MwnDate, MwnStream} from './bot';
+import type {mwn as Mwn, MwnDate} from './bot';
+
+export interface MwnStreamStatic {
+	new (streams: string | string[], config: {
+		since?: Date | MwnDate | string;
+		onopen?: (() => void);
+		onerror?: ((evt: MessageEvent) => void);
+	}): MwnStream;
+	recentchange(filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean), action: ((data: recentchangeProps) => void)): MwnStream;
+}
+export interface MwnStream {
+	addListener(filter: ((data: any) => boolean) | any, action: (data: any) => void): void;
+}
 
 export type recentchangeProps = {
 	wiki: string,
@@ -12,7 +23,7 @@ export type recentchangeProps = {
 	minor: boolean
 }
 
-module.exports = function (bot: Mwn, mwn: typeof Mwn) {
+export default function (bot: Mwn, mwn: typeof Mwn) {
 
 	class EventStream extends EventSource implements MwnStream {
 
@@ -87,5 +98,5 @@ module.exports = function (bot: Mwn, mwn: typeof Mwn) {
 
 	}
 
-	return EventStream;
-};
+	return EventStream as MwnStreamStatic;
+}

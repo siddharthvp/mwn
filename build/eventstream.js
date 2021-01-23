@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventSource = require("eventsource");
-module.exports = function (bot, mwn) {
+function default_1(bot, mwn) {
     class EventStream extends EventSource {
         /**
          * Access the Wikimedia EventStreams API
@@ -63,4 +63,5 @@ module.exports = function (bot, mwn) {
         }
     }
     return EventStream;
-};
+}
+exports.default = default_1;

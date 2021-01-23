@@ -8,9 +8,62 @@
  *
  */
 
-import type {mwn, MwnTitle} from "./bot";
+import type {mwn} from "./bot";
 
-module.exports = function (bot: mwn) {
+export interface MwnTitleStatic {
+	new (title: string, namespace?: number): MwnTitle;
+	idNameMap: {
+		[namespaceId: number]: string;
+	};
+	nameIdMap: {
+		[namespaceName: string]: number;
+	};
+	legaltitlechars: string;
+	caseSensitiveNamespaces: Array<number>;
+	processNamespaceData(json: {
+		query: {
+			general: {
+				legaltitlechars: string;
+			};
+			namespaces: {
+				name: string;
+				id: number;
+				canonical: boolean;
+				case: string;
+			}[];
+			namespacealiases: {
+				alias: string;
+				id: number;
+			}[];
+		};
+	}): void;
+	checkData(): void;
+	newFromText(title: string, namespace?: number): MwnTitle | null;
+	makeTitle(namespace: number, title: string): MwnTitle | null;
+	isTalkNamespace(namespaceId: number): boolean;
+	phpCharToUpper(chr: string): string;
+}
+export interface MwnTitle {
+	title: string;
+	namespace: number;
+	fragment: string;
+	getNamespaceId(): number;
+	getMain(): string;
+	getMainText(): string;
+	getPrefixedDb(): string;
+	getPrefixedText(): string;
+	getFragment(): string | null;
+	isTalkPage(): boolean;
+	getTalkPage(): MwnTitle | null;
+	getSubjectPage(): MwnTitle | null;
+	canHaveTalkPage(): boolean;
+	getExtension(): string | null;
+	getDotExtension(): string;
+	toString(): string;
+	toText(): string;
+}
+
+export default function (bot: mwn) {
 
 	var NS_MAIN = 0;
 	var NS_TALK = 1;
@@ -1257,6 +1310,6 @@ module.exports = function (bot: mwn) {
 		"𞥃": ""
 	};
 
-	return Title;
+	return Title as MwnTitleStatic;
 
-};
+}

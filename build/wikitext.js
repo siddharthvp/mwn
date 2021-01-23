@@ -65,7 +65,7 @@ class Parameter {
     }
 }
 exports.Parameter = Parameter;
-module.exports = function (bot) {
+function default_1(bot) {
     class Wikitext {
         constructor(wikitext) {
             if (typeof wikitext !== 'string') {
@@ -505,4 +505,5 @@ module.exports = function (bot) {
         return string.slice(0, index) + char + string.slice(index + 1);
     }
     return Wikitext;
-};
+}
+exports.default = default_1;

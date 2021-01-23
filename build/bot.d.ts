@@ -33,7 +33,14 @@ import { AxiosRequestConfig } from 'axios';
 import tough = require('tough-cookie');
 import OAuth = require('oauth-1.0a');
 import { MwnError, MwnErrorConfig } from "./error";
-import { MwnTitle, MwnTitleStatic, MwnPage, MwnPageStatic, MwnFile, MwnFileStatic, MwnCategory, MwnCategoryStatic, MwnDateStatic, MwnDate, MwnWikitext, MwnWikitextStatic, MwnUser, MwnUserStatic, MwnStreamStatic, MwnStream } from './nested_classes';
+import { MwnDate } from './date';
+import { MwnTitle } from './title';
+import { MwnPage } from './page';
+import { MwnWikitext } from './wikitext';
+import { MwnUser } from './user';
+import { MwnCategory } from './category';
+import { MwnFile } from './file';
+import { MwnStream } from './eventstream';
 export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream };
 import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams } from "./api_params";
 export interface RawRequestParams extends AxiosRequestConfig {
@@ -154,14 +161,6 @@ export declare class mwn {
     hasApiHighLimit: boolean;
     oauth: OAuth;
     usingOAuth: boolean;
-    title: MwnTitleStatic;
-    page: MwnPageStatic;
-    file: MwnFileStatic;
-    category: MwnCategoryStatic;
-    stream: MwnStreamStatic;
-    date: MwnDateStatic;
-    wikitext: MwnWikitextStatic;
-    user: MwnUserStatic;
     static Error: typeof MwnError;
     static log: (data: any) => void;
     static link: (target: string | MwnTitle, displaytext?: string) => string;
@@ -198,7 +197,38 @@ export declare class mwn {
         isIPv6Address: (address: string, allowBlock?: boolean) => boolean;
         isIPAddress: (address: string, allowBlock?: boolean) => boolean;
     };
-    /***************** CONSTRUCTOR ********************/
+    /**
+     * Title class associated with the bot instance
+     */
+    title: import("./title").MwnTitleStatic;
+    /**
+     * Page class associated with the bot instance
+     */
+    page: import("./page").MwnPageStatic;
+    /**
+     * Category class associated with the bot instance
+     */
+    category: import("./category").MwnCategoryStatic;
+    /**
+     * File class associated with the bot instance
+     */
+    file: import("./file").MwnFileStatic;
+    /**
+     * User class associated with the bot instance
+     */
+    user: import("./user").MwnUserStatic;
+    /**
+     * Wikitext class associated with the bot instance
+     */
+    wikitext: import("./wikitext").MwnWikitextStatic;
+    /**
+     * Stream class associated with the bot instance
+     */
+    stream: import("./eventstream").MwnStreamStatic;
+    /**
+     * Date class associated with the bot instance
+     */
+    date: import("./date").MwnDateStatic;
     /**
      * Constructs a new bot instance
      * It is advised to create one bot instance for every API to use
