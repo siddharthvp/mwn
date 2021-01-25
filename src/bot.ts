@@ -671,10 +671,22 @@ export class mwn {
 							return refreshTokenAndRetry();
 
 						case 'readonly':
+							log(`[W] Encountered readonly error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
+							return this.sleep(this.options.retryPause).then(() => {
+								return this.request(params, customRequestOptions);
+							});
+
 						case 'maxlag':
 							// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-							log(`[W] Encountered ${response.error.code} error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
-							return this.sleep(this.options.retryPause).then(() => {
+							// eslint-disable-next-line no-case-declarations
+							let pause = parseInt(fullResponse.headers['retry-after']); // axios uses lowercase headers
+							// retry-after appears to be usually 5 for WMF wikis
+							if (isNaN(pause)) {
+								pause = this.options.retryPause / 1000;
+							}
+
+							log(`[W] Encountered maxlag: ${response.error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`);
+							return this.sleep(pause * 1000).then(() => {
 								return this.request(params, customRequestOptions);
 							});
 
