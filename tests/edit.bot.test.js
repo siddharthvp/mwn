@@ -4,7 +4,7 @@ const { bot, log, crypto, expect, loginBefore, logoutAfter} = require('./test_ba
 
 
 describe('methods which modify the wiki', function() {
-	this.timeout(7000);
+	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', loginBefore);
 

@@ -3,6 +3,7 @@
 const { bot, expect, logoutAfter} = require('./test_base');
 
 describe('Page', async function() {
+	this.timeout(10000);
 
 	var page;
 
