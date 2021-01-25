@@ -29,6 +29,7 @@ export declare function mergeDeep1(...objects: any[]): any;
  * @param {number} size
  */
 export declare function arrayChunk<T>(arr: T[], size: number): T[][];
+export declare function sleep(duration: number): Promise<void>;
 export declare function makeTitles(pages: string | string[] | number | number[] | MwnTitle | MwnTitle[]): {
     titles: string[];
 } | {

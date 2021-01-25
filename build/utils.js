@@ -3,7 +3,7 @@
  * Private utilities
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeTitle = exports.makeTitles = exports.arrayChunk = exports.mergeDeep1 = exports.merge = exports.isplainobject = exports.ispromise = void 0;
+exports.makeTitle = exports.makeTitles = exports.sleep = exports.arrayChunk = exports.mergeDeep1 = exports.merge = exports.isplainobject = exports.ispromise = void 0;
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
 function ispromise(obj) {
     return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
@@ -70,6 +70,12 @@ function arrayChunk(arr, size) {
     return result;
 }
 exports.arrayChunk = arrayChunk;
+function sleep(duration) {
+    return new Promise(resolve => {
+        setTimeout(resolve, duration);
+    });
+}
+exports.sleep = sleep;
 function makeTitles(pages) {
     let pagesArray = Array.isArray(pages) ? pages : [pages];
     if (typeof pagesArray[0] === 'number') {

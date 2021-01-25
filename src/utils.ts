@@ -69,6 +69,12 @@ export function arrayChunk<T>(arr: T[], size: number): T[][] {
 	return result;
 }
 
+export function sleep(duration: number): Promise<void> {
+	return new Promise(resolve => {
+		setTimeout(resolve, duration);
+	});
+}
+
 export function makeTitles(pages: string | string[] | number | number[] | MwnTitle | MwnTitle[]): {titles: string[]} | {pageids: number[]} {
 	let pagesArray = Array.isArray(pages) ? pages : [pages];
 	if (typeof pagesArray[0] === 'number') {

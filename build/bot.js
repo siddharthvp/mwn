@@ -185,6 +185,11 @@ class mwn {
          * Date class associated with the bot instance
          */
         this.date = date_1.default(this);
+        /**
+        * Promisified version of setTimeout
+        * @param {number} duration - of sleep in milliseconds
+        */
+        this.sleep = utils_1.sleep;
         if (typeof customOptions === 'string') {
             // Read options from file (JSON):
             try {
@@ -489,7 +494,7 @@ class mwn {
                             return refreshTokenAndRetry();
                         case 'readonly':
                             log_1.log(`[W] Encountered readonly error, waiting for ${this.options.retryPause / 1000} seconds before retrying`);
-                            return this.sleep(this.options.retryPause).then(() => {
+                            return utils_1.sleep(this.options.retryPause).then(() => {
                                 return this.request(params, customRequestOptions);
                             });
                         case 'maxlag':
@@ -501,7 +506,7 @@ class mwn {
                                 pause = this.options.retryPause / 1000;
                             }
                             log_1.log(`[W] Encountered maxlag: ${response.error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`);
-                            return this.sleep(pause * 1000).then(() => {
+                            return utils_1.sleep(pause * 1000).then(() => {
                                 return this.request(params, customRequestOptions);
                             });
                         case 'assertbotfailed':
@@ -528,7 +533,7 @@ class mwn {
                             // Some discussion in https://github.com/mwclient/mwclient/issues/164
                             if (response.error.info.includes('Nonce already used')) {
                                 log_1.log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause / 1000} seconds`);
-                                return this.sleep(this.options.retryPause).then(() => {
+                                return utils_1.sleep(this.options.retryPause).then(() => {
                                     return this.request(params, customRequestOptions);
                                 });
                             }
@@ -554,7 +559,7 @@ class mwn {
                 // error might be transient, give it another go!
                 log_1.log(`[W] Encountered ${error}, retrying in ${this.options.retryPause / 1000} seconds`);
                 customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
-                return this.sleep(this.options.retryPause).then(() => {
+                return utils_1.sleep(this.options.retryPause).then(() => {
                     return this.request(params, customRequestOptions);
                 });
             }
@@ -1553,7 +1558,7 @@ class mwn {
                 });
                 updateStatusText();
                 if (delay !== 0) {
-                    await this.sleep(delay);
+                    await utils_1.sleep(delay);
                 }
             }
         }
@@ -1700,15 +1705,6 @@ class mwn {
             return a.bytes < b.bytes ? 1 : -1;
         });
         return data;
-    }
-    /**
-    * Promisified version of setTimeout
-    * @param {number} duration - of sleep in milliseconds
-    */
-    sleep(duration) {
-        return new Promise(resolve => {
-            setTimeout(resolve, duration);
-        });
     }
     /**
      * Returns a promise rejected with an error object

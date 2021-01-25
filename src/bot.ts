@@ -68,7 +68,7 @@ import type {
 	ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
 
-import {ispromise, merge, mergeDeep1, arrayChunk, makeTitle, makeTitles} from './utils';
+import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} from './utils';
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number
@@ -672,7 +672,7 @@ export class mwn {
 
 						case 'readonly':
 							log(`[W] Encountered readonly error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
-							return this.sleep(this.options.retryPause).then(() => {
+							return sleep(this.options.retryPause).then(() => {
 								return this.request(params, customRequestOptions);
 							});
 
@@ -686,7 +686,7 @@ export class mwn {
 							}
 
 							log(`[W] Encountered maxlag: ${response.error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`);
-							return this.sleep(pause * 1000).then(() => {
+							return sleep(pause * 1000).then(() => {
 								return this.request(params, customRequestOptions);
 							});
 
@@ -715,7 +715,7 @@ export class mwn {
 							// Some discussion in https://github.com/mwclient/mwclient/issues/164
 							if (response.error.info.includes('Nonce already used')) {
 								log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause/1000} seconds`);
-								return this.sleep(this.options.retryPause).then(() => {
+								return sleep(this.options.retryPause).then(() => {
 									return this.request(params, customRequestOptions);
 								});
 							} else {
@@ -746,7 +746,7 @@ export class mwn {
 				// error might be transient, give it another go!
 				log(`[W] Encountered ${error}, retrying in ${this.options.retryPause/1000} seconds`);
 				customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
-				return this.sleep(this.options.retryPause).then(() => {
+				return sleep(this.options.retryPause).then(() => {
 					return this.request(params, customRequestOptions);
 				});
 			}
@@ -1860,7 +1860,7 @@ export class mwn {
 				});
 				updateStatusText();
 				if (delay !== 0) {
-					await this.sleep(delay);
+					await sleep(delay);
 				}
 			}
 		}
@@ -2044,11 +2044,7 @@ export class mwn {
 	* Promisified version of setTimeout
 	* @param {number} duration - of sleep in milliseconds
 	*/
-	sleep(duration: number): Promise<void> {
-		return new Promise(resolve => {
-			setTimeout(resolve, duration);
-		});
-	}
+	sleep = sleep;
 
 	/**
 	 * Returns a promise rejected with an error object

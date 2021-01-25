@@ -45,6 +45,7 @@ import { MwnFile } from './file';
 import { MwnStream } from './eventstream';
 export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream };
 import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams } from "./api_params";
+import { sleep } from './utils';
 export interface RawRequestParams extends AxiosRequestConfig {
     retryNumber?: number;
 }
@@ -694,7 +695,7 @@ export declare class mwn {
     * Promisified version of setTimeout
     * @param {number} duration - of sleep in milliseconds
     */
-    sleep(duration: number): Promise<void>;
+    sleep: typeof sleep;
     /**
      * Returns a promise rejected with an error object
      * @private
