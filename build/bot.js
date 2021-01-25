@@ -564,7 +564,7 @@ class mwn {
                 });
             }
             error.request = requestOptions;
-            return Promise.reject(error);
+            return Promise.reject(new mwn.Error(error));
         });
     }
     dieWithError(response, requestOptions) {
@@ -1380,7 +1380,7 @@ class mwn {
                 query[batchFieldName] = batches[idx];
                 this.request(query, { method: 'post' }).then(response => {
                     responses[idx] = response;
-                }, err => {
+                }, (err) => {
                     responses[idx] = err;
                 }).finally(() => {
                     sendQuery(idx + 1);
@@ -1710,7 +1710,7 @@ class mwn {
      * Returns a promise rejected with an error object
      * @private
      * @param {string} errorCode
-     * @returns {Promise<mwn.Error>}
+     * @returns {Promise}
      */
     rejectWithErrorCode(errorCode) {
         return Promise.reject(new mwn.Error({

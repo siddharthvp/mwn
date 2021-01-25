@@ -480,7 +480,7 @@ export class mwn {
 	 * @param {Object} requestOptions
 	 * @returns {Promise}
 	 */
-	rawRequest(requestOptions: RawRequestParams): Promise<any> {
+	rawRequest(requestOptions: RawRequestParams): Promise<AxiosResponse> {
 
 		if (!requestOptions.url) {
 			return this.rejectWithError({
@@ -752,7 +752,7 @@ export class mwn {
 			}
 
 			error.request = requestOptions;
-			return Promise.reject(error);
+			return Promise.reject(new mwn.Error(error));
 		});
 
 	}
@@ -1658,7 +1658,7 @@ export class mwn {
 				query[batchFieldName] = batches[idx];
 				this.request(query, { method: 'post' }).then(response => {
 					responses[idx] = response;
-				}, err => {
+				}, (err: MwnError) => {
 					responses[idx] = err;
 				}).finally(() => {
 					sendQuery(idx + 1);
@@ -2050,15 +2050,15 @@ export class mwn {
 	 * Returns a promise rejected with an error object
 	 * @private
 	 * @param {string} errorCode
-	 * @returns {Promise<mwn.Error>}
+	 * @returns {Promise}
 	 */
-	rejectWithErrorCode(errorCode: string): Promise<MwnError> {
+	rejectWithErrorCode(errorCode: string): Promise<never> {
 		return Promise.reject(new mwn.Error({
 			code: errorCode
 		}));
 	}
 
-	rejectWithError(errorConfig: MwnErrorConfig): Promise<MwnError> {
+	rejectWithError(errorConfig: MwnErrorConfig): Promise<never> {
 		return Promise.reject(new mwn.Error(errorConfig));
 	}
 

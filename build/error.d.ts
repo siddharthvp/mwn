@@ -11,7 +11,7 @@ export declare class MwnError extends Error {
     /**
      * @param {Object} config
      */
-    constructor(config: MwnErrorConfig);
+    constructor(config: Error | MwnErrorConfig);
     static MissingPage: {
         new (config?: Partial<MwnErrorConfig>): {
             name: string;

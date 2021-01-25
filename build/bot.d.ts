@@ -29,7 +29,7 @@
  * released under GNU GPL v2.
  *
  */
-import { AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import tough = require('tough-cookie');
 import OAuth = require('oauth-1.0a');
 import { log, updateLoggingConfig } from './log';
@@ -274,7 +274,7 @@ export declare class mwn {
      * @param {Object} requestOptions
      * @returns {Promise}
      */
-    rawRequest(requestOptions: RawRequestParams): Promise<any>;
+    rawRequest(requestOptions: RawRequestParams): Promise<AxiosResponse>;
     /**
      * Executes a request with the ability to use custom parameters and custom
      * request options
@@ -700,8 +700,8 @@ export declare class mwn {
      * Returns a promise rejected with an error object
      * @private
      * @param {string} errorCode
-     * @returns {Promise<mwn.Error>}
+     * @returns {Promise}
      */
-    rejectWithErrorCode(errorCode: string): Promise<MwnError>;
-    rejectWithError(errorConfig: MwnErrorConfig): Promise<MwnError>;
+    rejectWithErrorCode(errorCode: string): Promise<never>;
+    rejectWithError(errorConfig: MwnErrorConfig): Promise<never>;
 }
