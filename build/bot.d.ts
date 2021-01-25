@@ -44,7 +44,7 @@ import { MwnCategory } from './category';
 import { MwnFile } from './file';
 import { MwnStream } from './eventstream';
 export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream };
-import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams } from "./api_params";
+import type { ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams, ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams, ApiQuerySearchParams, ApiQueryUserInfoParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams } from "./api_params";
 import { sleep } from './utils';
 export interface RawRequestParams extends AxiosRequestConfig {
     retryNumber?: number;
@@ -300,6 +300,12 @@ export declare class mwn {
      * @returns {Promise<void>}
      */
     logout(): Promise<void>;
+    /**
+     * Get basic info about the logged-in user
+     * @param [options]
+     * @returns {Promise}
+     */
+    userinfo(options?: ApiQueryUserInfoParams): Promise<any>;
     /**
      * Gets namespace-related information for use in title nested class.
      * This need not be used if login() is being used. This is for cases

@@ -65,7 +65,7 @@ export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, 
 import type {
 	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
 	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
-	ApiQuerySearchParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
+	ApiQuerySearchParams, ApiQueryUserInfoParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
 
 import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} from './utils';
@@ -797,7 +797,7 @@ export class mwn {
 
 		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
 
-		// Fetch login token, also at the same time, fetch info about namespaces for MwnTitle
+		// Fetch login token, also in the same API call fetch info about namespaces for MwnTitle
 		return this.request({
 			action: 'query',
 			meta: 'tokens|siteinfo',
@@ -819,7 +819,7 @@ export class mwn {
 				log('[E] [mwn] Login failed with invalid response: ' + loginString);
 				return Promise.reject(err);
 			}
-			this.state = merge(this.state, response.query.tokens);
+			Object.assign(this.state, response.query.tokens);
 
 			this.title.processNamespaceData(response);
 
@@ -832,25 +832,35 @@ export class mwn {
 			});
 
 		}).then((response) => {
-			if (response.login && response.login.result === 'Success') {
-				this.state = merge(this.state, response.login);
-				this.loggedIn = true;
-				if (!this.options.silent) {
-					log('[S] [mwn] Login successful: ' + loginString);
+			let reason;
+			let data = response.login;
+			if (data) {
+				if (data.result === 'Success') {
+					Object.assign(this.state, data);
+					this.loggedIn = true;
+					if (!this.options.silent) {
+						log('[S] [mwn] Login successful: ' + loginString);
+					}
+					return data;
+
+				} else if (data.result === 'Aborted') {
+					if (data.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.') {
+						reason = `Already logged in as ${this.options.username}, logout first to re-login`;
+					} else if (data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.') {
+						reason = `Cannot use login/logout while using OAuth`;
+					} else if (data.reason) {
+						reason = data.result + ': ' + data.reason;
+					}
+				} else if (data.result && data.reason) {
+					reason = data.result + ': ' + data.reason;
 				}
-				return this.state;
 			}
 
-			let reason = 'Unknown reason';
-			if (response.login && response.login.result) {
-				reason = response.login.result;
-			}
 			let err = new mwn.Error({
 				code: 'mwn_failedlogin',
-				info: 'Could not log in: ' + reason,
+				info: reason || 'Login failed',
 				response
 			});
-			log('[E] [mwn] Login failed: ' + loginString);
 			return Promise.reject(err);
 
 		});
@@ -871,6 +881,19 @@ export class mwn {
 			this.state = {};
 			this.csrfToken = '%notoken%';
 		});
+	}
+
+	/**
+	 * Get basic info about the logged-in user
+	 * @param [options]
+	 * @returns {Promise}
+	 */
+	userinfo(options: ApiQueryUserInfoParams = {}): Promise<any> {
+		return this.request({
+			action: 'query',
+			meta: 'userinfo',
+			...options
+		}).then(response => response.query.userinfo);
 	}
 
 	/**

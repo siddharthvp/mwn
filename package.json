@@ -7,7 +7,7 @@
 	"scripts": {
 		"bump": "node bump-version.js",
 		"build": "npx tsc",
-		"test-readonly": "cd tests && npx mocha bot.test.js batchOperations.bot.test.js category.test.js date.test.js file.test.js page.test.js title.test.js wikitext.test.js",
+		"test-readonly": "cd tests && npx mocha bot.test.js batchOperations.bot.test.js category.test.js date.test.js file.test.js log.test.js login.bot.test.js oauth.test.js page.test.js static_utils.test.js suppl.bot.test.js title.test.js user.test.js wikitext.test.js",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coverage": "nyc report --reporter=text-lcov | coveralls",
 		"test-ts": "ts-mocha -p tsconfig.json tests/ts/*",
@@ -53,7 +53,7 @@
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-promise": "^4.2.1",
 		"eslint-plugin-standard": "^4.0.1",
-		"mocha": "^7.1.1",
+		"mocha": "^8.2.1",
 		"nyc": "^15.1.0",
 		"ts-mocha": "^8.0.0",
 		"ts-node": "^9.0.0",

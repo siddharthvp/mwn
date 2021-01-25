@@ -595,7 +595,7 @@ class mwn {
             return Promise.reject(new Error('Incomplete login credentials!'));
         }
         let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
-        // Fetch login token, also at the same time, fetch info about namespaces for MwnTitle
+        // Fetch login token, also in the same API call fetch info about namespaces for MwnTitle
         return this.request({
             action: 'query',
             meta: 'tokens|siteinfo',
@@ -614,7 +614,7 @@ class mwn {
                 log_1.log('[E] [mwn] Login failed with invalid response: ' + loginString);
                 return Promise.reject(err);
             }
-            this.state = utils_1.merge(this.state, response.query.tokens);
+            Object.assign(this.state, response.query.tokens);
             this.title.processNamespaceData(response);
             return this.request({
                 action: 'login',
@@ -624,24 +624,37 @@ class mwn {
                 assert: undefined // as above, assert won't work till the user is logged in
             });
         }).then((response) => {
-            if (response.login && response.login.result === 'Success') {
-                this.state = utils_1.merge(this.state, response.login);
-                this.loggedIn = true;
-                if (!this.options.silent) {
-                    log_1.log('[S] [mwn] Login successful: ' + loginString);
+            let reason;
+            let data = response.login;
+            if (data) {
+                if (data.result === 'Success') {
+                    Object.assign(this.state, data);
+                    this.loggedIn = true;
+                    if (!this.options.silent) {
+                        log_1.log('[S] [mwn] Login successful: ' + loginString);
+                    }
+                    return data;
                 }
-                return this.state;
-            }
-            let reason = 'Unknown reason';
-            if (response.login && response.login.result) {
-                reason = response.login.result;
+                else if (data.result === 'Aborted') {
+                    if (data.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.') {
+                        reason = `Already logged in as ${this.options.username}, logout first to re-login`;
+                    }
+                    else if (data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.') {
+                        reason = `Cannot use login/logout while using OAuth`;
+                    }
+                    else if (data.reason) {
+                        reason = data.result + ': ' + data.reason;
+                    }
+                }
+                else if (data.result && data.reason) {
+                    reason = data.result + ': ' + data.reason;
+                }
             }
             let err = new mwn.Error({
                 code: 'mwn_failedlogin',
-                info: 'Could not log in: ' + reason,
+                info: reason || 'Login failed',
                 response
             });
-            log_1.log('[E] [mwn] Login failed: ' + loginString);
             return Promise.reject(err);
         });
     }
@@ -659,6 +672,18 @@ class mwn {
             this.state = {};
             this.csrfToken = '%notoken%';
         });
+    }
+    /**
+     * Get basic info about the logged-in user
+     * @param [options]
+     * @returns {Promise}
+     */
+    userinfo(options = {}) {
+        return this.request({
+            action: 'query',
+            meta: 'userinfo',
+            ...options
+        }).then(response => response.query.userinfo);
     }
     /**
      * Gets namespace-related information for use in title nested class.
