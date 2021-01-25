@@ -34,6 +34,7 @@ import tough = require('tough-cookie');
 import OAuth = require('oauth-1.0a');
 import { log, updateLoggingConfig } from './log';
 import { MwnError, MwnErrorConfig } from "./error";
+import { link, template, table } from './static_utils';
 import { MwnDate } from './date';
 import { MwnTitle } from './title';
 import { MwnPage } from './page';
@@ -164,31 +165,9 @@ export declare class mwn {
     static Error: typeof MwnError;
     static log: typeof log;
     static setLoggingConfig: typeof updateLoggingConfig;
-    static link: (target: string | MwnTitle, displaytext?: string) => string;
-    static template: (title: string | MwnTitle, parameters?: {
-        [parameter: string]: string;
-    }) => string;
-    static table: {
-        new (config?: {
-            plain?: boolean;
-            sortable?: boolean;
-            style?: string;
-            multiline?: boolean;
-        }): {
-            text: string;
-            multiline: boolean;
-            _makecell(cell: string | {
-                [attribute: string]: string;
-            }, isHeader?: boolean): string;
-            addHeaders(headers: (string | {
-                [attribute: string]: string;
-            })[]): void;
-            addRow(fields: string[], attributes?: {
-                [attribute: string]: string;
-            }): void;
-            getText(): string;
-        };
-    };
+    static link: typeof link;
+    static template: typeof template;
+    static table: typeof table;
     static util: {
         escapeRegExp: (str: string) => string;
         escapeHtml: (s: string) => string;

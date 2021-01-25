@@ -1724,7 +1724,7 @@ mwn.Error = error_1.MwnError;
 // Expose logger
 mwn.log = log_1.log;
 mwn.setLoggingConfig = log_1.updateLoggingConfig;
-mwn.link = static_utils_1.default.link;
-mwn.template = static_utils_1.default.template;
-mwn.table = static_utils_1.default.table;
-mwn.util = static_utils_1.default.util;
+mwn.link = static_utils_1.link;
+mwn.template = static_utils_1.template;
+mwn.table = static_utils_1.table;
+mwn.util = static_utils_1.util;

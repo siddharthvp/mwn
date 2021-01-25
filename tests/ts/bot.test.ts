@@ -1,8 +1,13 @@
-import {mwn} from '../../src/bot';
-import loginCredentials = require('../mocking/loginCredentials');
-
+import {mwn} from '../..';
 import {expect} from 'chai';
 import 'mocha';
+
+/**
+ * Basic tests to check that the library works with TypeScript
+ * mocha --require ts-node/register tests/ts/bot.test.ts
+ */
+
+const loginCredentials = require('../mocking/loginCredentials');
 
 describe('typescript', async function () {
 	this.timeout(5000);

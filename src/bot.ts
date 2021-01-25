@@ -47,7 +47,7 @@ axiosCookieJarSupport.default(axios);
 import {log, updateLoggingConfig} from './log';
 
 import {MwnError, MwnErrorConfig} from "./error";
-import static_utils from './static_utils';
+import {link, template, table, util} from './static_utils';
 
 // Nested classes of mwn
 import MwnDateFactory, {MwnDate} from './date';
@@ -282,14 +282,13 @@ export class mwn {
 
 	// Expose logger
 	static log = log;
-
 	static setLoggingConfig = updateLoggingConfig;
 
-	static link = static_utils.link;
-	static template = static_utils.template;
-	static table = static_utils.table;
+	static link = link;
+	static template = template;
+	static table = table;
 
-	static util = static_utils.util;
+	static util = util;
 
 
 	/**
