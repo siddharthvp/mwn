@@ -25,6 +25,7 @@ describe('mwn', async function() {
 				postId: 1
 			}
 		}).then((response) => {
+			response = response.data;
 			expect(response).to.be.instanceof(Array);
 			expect(response[0]).to.be.instanceof(Object);
 			expect(response[0].postId).to.equal(1);

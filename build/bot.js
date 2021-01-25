@@ -327,9 +327,7 @@ class mwn {
             headers: {
                 'User-Agent': this.options.userAgent
             },
-        }, requestOptions)).then(response => {
-            return response.data;
-        });
+        }, requestOptions));
     }
     /**
      * Executes a request with the ability to use custom parameters and custom
@@ -458,7 +456,8 @@ class mwn {
             requestOptions.jar = this.cookieJar;
             requestOptions.withCredentials = true;
         }
-        return this.rawRequest(requestOptions).then((response) => {
+        return this.rawRequest(requestOptions).then((fullResponse) => {
+            let response = fullResponse.data;
             if (typeof response !== 'object') {
                 if (params.format !== 'json') {
                     throw new Error('must use format=json');
@@ -472,7 +471,7 @@ class mwn {
             const refreshTokenAndRetry = () => {
                 return Promise.all([this.getTokenType(params.action), this.getTokens()]).then(([tokentype]) => {
                     if (!tokentype || !this.state[tokentype + 'token']) {
-                        return this.dieWithError(response, requestOptions);
+                        return this.dieWithError(fullResponse, requestOptions);
                     }
                     params.token = this.state[tokentype + 'token'];
                     return this.request(params, customRequestOptions);
@@ -499,7 +498,7 @@ class mwn {
                         case 'assertuserfailed':
                             // this shouldn't have happened if we're using OAuth
                             if (this.usingOAuth) {
-                                return this.dieWithError(response, requestOptions);
+                                return this.dieWithError(fullResponse, requestOptions);
                             }
                             // Possibly due to session loss: retry after logging in again
                             log_1.log(`[W] Received ${response.error.code}, attempting to log in and retry`);
@@ -524,14 +523,14 @@ class mwn {
                                 });
                             }
                             else {
-                                return this.dieWithError(response, requestOptions);
+                                return this.dieWithError(fullResponse, requestOptions);
                             }
                         default:
-                            return this.dieWithError(response, requestOptions);
+                            return this.dieWithError(fullResponse, requestOptions);
                     }
                 }
                 else {
-                    return this.dieWithError(response, requestOptions);
+                    return this.dieWithError(fullResponse, requestOptions);
                 }
             }
             if (response.warnings && !this.options.suppressAPIWarnings) {
@@ -554,10 +553,16 @@ class mwn {
         });
     }
     dieWithError(response, requestOptions) {
-        let errorData = Object.assign(response.error, {
+        let errorData = Object.assign({}, response.data.error, {
             // Enhance error object with additional information:
-            // the full response
-            response: response,
+            // the full API response: everything in AxiosResponse object except
+            // config (not needed) and request (included as errorData.request instead)
+            response: {
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+            },
             // the original request, should the client want to retry the request
             request: requestOptions
         });
@@ -1173,7 +1178,7 @@ class mwn {
             url: url,
             responseType: 'stream'
         }).then(response => {
-            response.pipe(fs.createWriteStream(localname || path.basename(url)));
+            response.data.pipe(fs.createWriteStream(localname || path.basename(url)));
         });
     }
     /**
@@ -1571,7 +1576,7 @@ class mwn {
                 query: query
             }
         }, customRequestOptions);
-        return this.rawRequest(requestOptions);
+        return this.rawRequest(requestOptions).then(response => response.data);
     }
     /**
      * Executes a SPARQL Query
@@ -1594,7 +1599,7 @@ class mwn {
                 query: query
             }
         }, customRequestOptions);
-        return this.rawRequest(requestOptions);
+        return this.rawRequest(requestOptions).then(response => response.data);
     }
     /**
      * Gets ORES predictions from revision IDs
@@ -1614,8 +1619,8 @@ class mwn {
                     revids: chunk.join('|')
                 },
                 responseType: 'json'
-            }).then(data => {
-                Object.assign(response, Object.values(data)[0].scores);
+            }).then(oresResponse => {
+                Object.assign(response, Object.values(oresResponse.data)[0].scores);
             });
         }, 0, 2).then(() => {
             return response;
@@ -1636,7 +1641,7 @@ class mwn {
         try {
             json = await this.rawRequest({
                 url: `https://api.wikiwho.net/${langcodematch[1]}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(title)}/?editor=true`
-            });
+            }).then(response => response.data);
         }
         catch (err) {
             throw new Error(err && err.response && err.response.data

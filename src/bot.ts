@@ -30,7 +30,7 @@
  *
  */
 
-import axios, {AxiosRequestConfig} from 'axios';
+import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
 
 import fs = require('fs');
 import path = require('path');
@@ -495,9 +495,7 @@ export class mwn {
 			headers: {
 				'User-Agent': this.options.userAgent
 			},
-		}, requestOptions)).then(response => {
-			return response.data;
-		});
+		}, requestOptions));
 
 	}
 
@@ -633,7 +631,8 @@ export class mwn {
 			requestOptions.withCredentials = true;
 		}
 
-		return this.rawRequest(requestOptions).then((response) => {
+		return this.rawRequest(requestOptions).then((fullResponse: AxiosResponse<ApiResponse>) => {
+			let response = fullResponse.data;
 			if (typeof response !== 'object') {
 				if (params.format !== 'json') {
 					throw new Error('must use format=json');
@@ -650,7 +649,7 @@ export class mwn {
 					[this.getTokenType(params.action as string), this.getTokens()]
 				).then(([tokentype]) => {
 					if (!tokentype || !this.state[tokentype + 'token']) {
-						return this.dieWithError(response, requestOptions);
+						return this.dieWithError(fullResponse, requestOptions);
 					}
 					params.token = this.state[ tokentype + 'token' ];
 					return this.request(params, customRequestOptions);
@@ -683,7 +682,7 @@ export class mwn {
 						case 'assertuserfailed':
 							// this shouldn't have happened if we're using OAuth
 							if (this.usingOAuth) {
-								return this.dieWithError(response, requestOptions);
+								return this.dieWithError(fullResponse, requestOptions);
 							}
 
 							// Possibly due to session loss: retry after logging in again
@@ -708,15 +707,15 @@ export class mwn {
 									return this.request(params, customRequestOptions);
 								});
 							} else {
-								return this.dieWithError(response, requestOptions);
+								return this.dieWithError(fullResponse, requestOptions);
 							}
 
 						default:
-							return this.dieWithError(response, requestOptions);
+							return this.dieWithError(fullResponse, requestOptions);
 					}
 
 				} else {
-					return this.dieWithError(response, requestOptions);
+					return this.dieWithError(fullResponse, requestOptions);
 				}
 
 			}
@@ -746,11 +745,17 @@ export class mwn {
 
 	}
 
-	private dieWithError(response: ApiResponse, requestOptions: RawRequestParams): Promise<never> {
-		let errorData = Object.assign(response.error, {
+	private dieWithError(response: AxiosResponse, requestOptions: RawRequestParams): Promise<never> {
+		let errorData = Object.assign({}, response.data.error, {
 			// Enhance error object with additional information:
-			// the full response
-			response: response,
+			// the full API response: everything in AxiosResponse object except
+			// config (not needed) and request (included as errorData.request instead)
+			response: {
+				data: response.data,
+				status: response.status,
+				statusText: response.statusText,
+				headers: response.headers
+			},
 			// the original request, should the client want to retry the request
 			request: requestOptions
 		});
@@ -1444,7 +1449,7 @@ export class mwn {
 			url: url,
 			responseType: 'stream'
 		}).then(response => {
-			response.pipe(fs.createWriteStream(localname || path.basename(url)));
+			response.data.pipe(fs.createWriteStream(localname || path.basename(url)));
 		});
 	}
 
@@ -1884,7 +1889,7 @@ export class mwn {
 			}
 		}, customRequestOptions);
 
-		return this.rawRequest(requestOptions);
+		return this.rawRequest(requestOptions).then(response => response.data);
 	}
 
 
@@ -1912,7 +1917,7 @@ export class mwn {
 			}
 		}, customRequestOptions);
 
-		return this.rawRequest(requestOptions);
+		return this.rawRequest(requestOptions).then(response => response.data);
 	}
 
 	/**
@@ -1936,8 +1941,8 @@ export class mwn {
 					revids: chunk.join('|')
 				},
 				responseType: 'json'
-			}).then(data => {
-				Object.assign(response, Object.values(data)[0].scores);
+			}).then(oresResponse => {
+				Object.assign(response, Object.values(oresResponse.data)[0].scores);
 			});
 		}, 0, 2).then(() => {
 			return response;
@@ -1960,7 +1965,7 @@ export class mwn {
 		try {
 			json = await this.rawRequest({
 				url: `https://api.wikiwho.net/${langcodematch[1]}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(title)}/?editor=true`
-			});
+			}).then(response => response.data);
 		} catch(err) {
 			throw new Error(err && err.response && err.response.data
 				&& err.response.data.Error);
