@@ -3,6 +3,7 @@ npm-debug.log
 local.js
 tests/mocking/.auth.json
 /coveralls.yml
-/.nyc_output/
+.nyc_output/*
+coverage/*
 .idea/*
 docs/*
