@@ -2,7 +2,9 @@ name: Docs deploy
 
 on:
   push:
-    branches: ['master']
+    branches: [ master ]
+    paths:
+      - 'src/**'
   workflow_dispatch:
 
 jobs:
@@ -30,7 +32,14 @@ jobs:
       - name: unzip and copy
         uses: garygrossgarten/github-action-ssh@release
         with:
-          command: cd /data/project/mwn && rm -rf docs && unzip docs.zip && rm -rf public_html/docs && rm -rf www/static/docs && cp -r docs public_html && cp -r docs www/static
+          command: >-
+            cd /data/project/mwn &&
+            rm -rf docs &&
+            unzip docs.zip &&
+            rm -rf public_html/docs &&
+            rm -rf www/static/docs &&
+            cp -r docs public_html &&
+            cp -r docs www/static
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}

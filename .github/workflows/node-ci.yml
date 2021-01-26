@@ -4,28 +4,36 @@
 name: Node.js CI
 
 on:
-    push:
-        branches: [ master ]
-    pull_request:
-        branches: [ master ]
-    workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - 'build/**'
+      - 'tests/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - 'build/**'
+      - 'tests/**'
+  workflow_dispatch:
 
 jobs:
-    build:
+  build:
 
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-        strategy:
-            matrix:
-                node-version: [10.x, 12.x, 14.x]
+    strategy:
+      matrix:
+        node-version: [ 10.x, 12.x, 14.x ]
 
-        steps:
-            - uses: actions/checkout@v2
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
-              with:
-                  node-version: ${{ matrix.node-version }}
-            - run: npm ci
-            - run: npm run test-readonly
-              env:
-                AUTH_JSON: ${{secrets.AUTH_JSON}}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run test-readonly && npm run test-ts
+        env:
+          AUTH_JSON: ${{secrets.AUTH_JSON}}
