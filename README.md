@@ -1,16 +1,25 @@
 # mwn
+![Node.js CI](https://github.com/siddharthvp/mwn/workflows/Node.js%20CI/badge.svg)
+![CodeQL](https://github.com/siddharthvp/mwn/workflows/CodeQL/badge.svg)
 [![NPM version](https://img.shields.io/npm/v/mwn.svg)](https://www.npmjs.com/package/mwn)
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**mwn** is a modern MediaWiki bot framework in NodeJS, orginally adapted from [mwbot](https://github.com/Fannon/mwbot).
+**Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
-Development status: Unstable. Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
+Mwn works with both JavaScript and TypeScript. It is created with a design philosophy of allowing bot developers to easily and quickly write bot code, without having to deal with the MediaWiki API complications and idiosyncrasies such as logins, tokens, maxlag, query continuations and error handling. Making raw API calls is also supported for complete flexibility where needed. The [axios](https://www.npmjs.com/package/axios) library is used for HTTP requests.
 
-Documentation given below is incomplete. There are a number of additional classes such as `bot.title`, `bot.wikitext`, `bot.page`, etc that provide useful functionality but aren't documented. You can learn about these by looking through the source code.
+Mwn uses promises, which you can use with async-await. To handle query continuations, mwn uses asynchronous generators. All methods with names ending in `Gen` are generators.
 
-API documentation available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html)**
+Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) by default. Use of the legacy formatversion is not recommended. Note that [Special:ApiSandbox](https://en.wikipedia.org/wiki/Special:ApiSandbox) uses formatversion=1 by default, so if you're testing API calls using ApiSandbox be sure to set the correct formatversion there, otherwise the output will be formatted differently.
 
-Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions can be automatically retried. 
+Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
+
+Complete API documentation is available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html)** ([alternative link](https://mwn.toolforge.org/docs/classes/_bot_.mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API and WikiWho API.  
+
+Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions are automatically retried. 
+
+This library uses mocha for tests and has extensive test coverage covering all commonly used code paths. Testing is automated using a CI workflow on Github Actions.
 
 ### Setup
 
@@ -25,34 +34,43 @@ cd mwn
 npm install		# install dependencies
 ```
 
-#### mwn uses JSON with formatversion 2 by default; formatversion 2 is an [improved JSON output format](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) introduced in MediaWiki in 2015.
+#### Node.js compatibility
+Mwn is written in TypeScript v4. The repository contains JavaScript files compiled to CommonJS module system for ES2018 target, which corresponds to Node 10.x. 
 
-
-#### Node version
-mwn is written in TypeScript v4. The repository contains JavaScript files compiled for ES2018 target, which corresponds to Node 10.x. If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. But you can install the latest version node to your home directory, using:
+If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. You can install a more recent version of node to your home directory, using:
 ```sh
-npm install npm@latest     # update npm first to the latest version
-npm install n
+npm install npm@latest		# update npm first to the latest version
+npm install n				# install a node package manager
 export N_PREFIX=~
-./node_modules/n/bin/n latest
+./node_modules/n/bin/n lts	# get the latest LTS version of node
 export PATH=~/bin:$PATH
 ```
+
 Check that your `.profile` or `.bashrc` file includes the line `PATH="$HOME/bin:$PATH"`, so that the path includes your home directory every time you open the shell.
 
-#### MediaWiki version
-mwn is written for and tested on the latest version of MediaWiki used on WMF wikis.
+If you're using mwn for a Toolforge webservice, use the Kubernetes backend which provides node v10. Mwn is not supported for the legacy Grid Engine backend since it uses node v8.11.1. The [toolforge-node-app-base](https://github.com/siddharthvp/toolforge-node-app-base) template repository can quickly get you started with a basic web tool boilerplate. 
+
+
+#### MediaWiki compatibility
+Mwn is written for and tested on the latest version of MediaWiki used on WMF wikis.
 
 #### Set up a bot password or OAuth credentials
 
-mwn supports authentication via both BotPasswords and via OAuth. Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also a bit more secure. 
+Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wiki/Manual:Bot_passwords) and [OAuth](https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers). Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also more secure. 
 
-Bot passwords may be a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page. 
+Bot passwords, however, are a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page. 
+
+**Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxRetries` will take place (default 3).
+
+**Token handling**: `bot.getCsrfToken()` fetches a CSRF token required for most write operations. The token, once retrieved, is stored in the bot state so that it can be reused any number of times. If an API request fails due to an expired or missing token, the request is automatically retried after fetching a new token.
+
+**Retries**: Mwn automatically retries failing requests `bot.options.maxRetries` times (default: 3). This is useful in case of connectivity resets and the like. As for errors raised by the API itself, note that MediaWiki generally handles these at the response level rather than the protocol level (they still emit a 200 OK response). Mwn will attempt retries for these errors based on the error code. For instance, if the error is `readonly` or `maxlag` , retry is done after a delay. If it's `assertuserfailed` or `assertbotfailed` (indicates a session loss), mwn will try to log in again and then retry. If it's `badtoken`, retry is done after fetching a fresh edit token.
 
 If you're migrating from mwbot, note that:
 - `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
 - If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
 
-### Documentation
+### Getting started
 
 Importing mwn:
 
@@ -69,83 +87,66 @@ import {mwn} from 'mwn';
 
 Create a new bot instance:
 ```js
-const bot = new mwn({
-    apiUrl: 'https://en.wikipedia.org/w/api.php',
-    username: 'YourBotUsername',
-    password: 'YourBotPassword'
-});
-await bot.login();
-```
-Or to use OAuth:
-```js
-const bot = new mwn({
-    apiUrl: 'https://en.wikipedia.org/w/api.php',
+const bot = await mwn.init({
+	apiUrl: 'https://en.wikipedia.org/w/api.php',
+
+	// Can be skipped if the bot doesn't need to sign in
+	username: 'YourBotUsername',
+	password: 'YourBotPassword',
+
+	// Instead of username and password, you can use OAuth to authenticate:
 	oauth_consumer_token: "16_DIGIT_ALPHANUMERIC_KEY",
 	oauth_consumer_secret: "20_DIGIT_ALPHANUMERIC_KEY",
 	oauth_access_token: "16_DIGIT_ALPHANUMERIC_KEY",
-	oauth_access_secret: "20_DIGIT_ALPHANUMERIC_KEY"
-});
-bot.initOAuth(); // does not involve an API call
-// Any errors in authentication will surface when the first actual API call is made
-```
+	oauth_access_secret: "20_DIGIT_ALPHANUMERIC_KEY",
 
-A more complete constructor syntax:
+	// Set your user agent (required for WMF wikis, see https://meta.wikimedia.org/wiki/User-Agent_policy):
+	userAgent: 'myCoolToolName 1.0 ([[link to bot user page or tool documentation]])',
+
+	// Set default parameters to be sent to be included in every API request
+	defaultParams: {
+		assert: 'user' // ensure we're logged in
+	}
+});
+```
+This creates a bot instance, signs in and fetches tokens needed for editing.
+
+You can also create a bot instance synchronously (without using await):
 ```js
 const bot = new mwn({
-    apiUrl: 'https://en.wikipedia.org/w/api.php',
-    username: 'YourBotUsername',
-    password: 'YourBotPassword',
-
-    userAgent: 'myCoolToolName 1.0 ([[link to bot user page or tool documentation]])',
-    defaultParams: {
-        assert: 'user' // API parameter to ensure we're logged in 
-    }
+	...options
 });
 ```
 
-Set default parameters to be sent to be included in every API request:
-```js
-bot.setDefaultParams({
-	assert: 'bot',
-	maxlag: 4 // mwn default is 5
-});
-```
+This creates a bot instance which is not signed in. Then use `bot.login()`, `bot.loginGetToken()`, `bot.initOAuth()` or `bot.getTokensAndSiteInfo()`. Note that `bot.initOAuth()` does not involve an API call. Any error in authentication will surface when the first API call is made.
 
-Set bot options. The default values for each is specified below:
+The bot options can also be set using `setOptions` rather than through the constructor:
 ```js
 bot.setOptions({
 	silent: false, // suppress messages (except error messages)
-	maxlagPause: 5000, // pause for 5000 milliseconds (5 seconds) on maxlag error.
-	maxlagMaxRetries: 3, // attempt to retry a request failing due to maxlag upto 3 times
-	apiUrl: null // set the API URL, can also be set by a bot.setApiUrl
+	retryPause: 5000, // pause for 5000 milliseconds (5 seconds) on maxlag error.
+	maxRetries: 3, // attempt to retry a failing requests upto 3 times
 });
 ```
 
-**Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxlagMaxRetries` will take place (default 3).
+### Direct API calls
+The `request` method is for directly querying the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options. You can create and test your queries in [Special:ApiSandbox](https://www.mediawiki.org/wiki/Special:ApiSandbox). Be sure to set formatversion: 2 in the options for format=json!
 
-Fetch an CSRF token required for most write operations.
+Example: get all images used on the article Foo
 ```js
-bot.getCsrfToken();
-```
-The token, once obtained is stored in the bot state so that it can be reused any number of times.
-
-If an action fails due to an expired or missing token, the action will be automatically retried after fetching a new token.
-
-For convenience, you can log in and get the edit token together as:
-```js
-bot.loginGetToken();
-```
-If your bot doesn't need to log in, you can simply set the API url using:
-```js
-bot.setApiUrl('https://en.wikipedia.org/w/api.php');
+bot.request({
+	"action": "query",
+	"prop": "images",
+	"titles": "Foo"
+}).then(data => {
+	return data.query.pages[0].images.map(im => im.title);
+});
 ```
 
-Set your user agent (required for [WMF wikis](https://meta.wikimedia.org/wiki/User-Agent_policy)):
-```js
-bot.setUserAgent('myCoolToolName v1.0 ([[w:en:User:Example]])/mwn');
-```
+Mwn provides a great number of convenience methods so that you can avoid writing raw API calls, see the sections below. 
 
-Edit a page. Edit conflicts are raised as errors.
+### Editing pages
+Edit a page. On edit conflicts, a retry is automatically attempted once.
 ```js
 bot.edit('Page title', rev => {
 	// rev.content gives the revision text
@@ -162,20 +163,19 @@ bot.edit('Page title', rev => {
 });
 ```
 
-Save a page with the given content without loading it first. Simpler verion of `edit`. Does not offer any edit conflict detection.
+Some more functions associated with editing pages:
 ```js
+// Save a page with the given content without loading it first. Simpler verion of `edit`. Does not offer any edit conflict detection.
 bot.save('Page title', 'Page content', 'Edit summary');
-```
-Create a new page.
-```js
-bot.create('Page title', 'Page content', 'Edit summary');
-```
 
-Post a new section to a talk page:
-```js
+// Create a new page.
+bot.create('Page title', 'Page content', 'Edit summary');
+
+// Post a new section to a talk page:
 bot.newSection('Page title', 'New section header', 'Section content', additionalOptions);
 ```
 
+### Other basic operations
 Read the contents of a page:
 ```js
 bot.read('Page title');
@@ -198,11 +198,6 @@ bot.read(['Page 1', 'Page 2', 'Page 3']).then(pages => {
 Delete a page:
 ```js
 bot.delete('Page title', 'deletion log summary', additionalOptions);
-```
-
-Restore all deleted versions:
-```js
-bot.undelete('Page title', 'log summary', additionalOptions);
 ```
 
 Move a page along with its subpages:
@@ -228,29 +223,10 @@ Upload a file from your system to the wiki:
 bot.upload('File title', '/path/to/file', 'comment', customParams);
 ```
 
-#### Direct calls
-
-#### request(query)
-Directly query the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options. You can create and test your queries in the [`API sandbox`](https://www.mediawiki.org/wiki/Special:ApiSandbox). Be sure to set formatversion: 2 in the options for format=json!
-
-Example: get all images used on the article Foo
-```js
-bot.request({
-	"action": "query",
-	"prop": "images",
-	"titles": "Foo"
-}).then(data => {
-	return data.query.pages[0].images.map(im => im.title);
-});
-```
-
 #### Bulk processing methods
 
 ##### continuedQuery(query, maxCallsLimit)
 Send an API query, and continue re-sending it with the continue parameters received in the response, until there are no more results (or till `maxCalls` limit is reached). The return value is a promise resolved with the array of responses to individual API calls.
-```js
-bot.continousQuery(apiQueryObject, maxCalls=10)
-```
 
 Example: get a list of all active users on the wiki using `continuedQuery` (using [API:Allusers](https://www.mediawiki.org/wiki/API:Allusers)):
 ```js
@@ -259,7 +235,7 @@ bot.continuedQuery({
 	"list": "allusers",
 	"auactiveusers": 1,
 	"aulimit": "max"
-}, 40).then(jsons => {
+}, /* max number of calls */ 40).then(jsons => {
 	return jsons.reduce((activeusers, json) => {
 		return activeusers.concat(json.query.allusers.map(user => user.name));
 	}, []);
@@ -304,17 +280,18 @@ The 3rd parameter `hasApiHighLimit` is set `true` by default. If you get the API
 
 Any errors in the individual API calls will not cause the entire massQuery to fail, but the data at the array index corresponding to that API call will be error object.
 
-##### batchOperation(pageList, workerFunction, concurrency)
+#### Batch operations
 Perform asynchronous tasks (involving API usage) over a number of pages (or other arbitrary items). `batchOperation` uses a default concurrency of 5. Customise this according to how expensive the API operation is. Higher concurrency limits could lead to more frequent API errors.
 
-The `workerFunction` must return a promise.
+Usage: `batchOperation(pageList, workerFunction, concurrency)` The `workerFunction` must return a promise.
+
 ```js
 bot.batchOperation(pageList, (page, idx) => {
 	// do something with each page
 	// the index of the page in pageList is available as the 2nd argument
 
 	// return a promise in the end
-}, 5, 2); // set the concurrency as the third parameter, number of retries as 4th parameter
+}, /* concurrency */ 5, /* retries */ 2);
 ```
 
 ##### seriesBatchOperation(pageList, workerFunction, sleepDuration)
@@ -334,4 +311,4 @@ Note that `seriesBatchOperation` with delay=0 is same as `batchOperation` with c
 
 ## Licensing
 
-**mwn** is released under GNU Lesser General Public License (LGPL) v3.0, since it borrows quite a bit of code from MediaWiki core (GPL v2). LGPL is a more permissive variant of the more popular GNU GPL. Unlike GPL, LPGL _allows_ the work to be used as a library in software not released under GPL-compatible licenses, and even in proprietary software. However, any derivatives of this library should also be released under LGPL or another GPL-compatible license. 
+Mwn is released under [GNU Lesser General Public License](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License) (LGPL) v3.0, since it borrows quite a bit of code from MediaWiki core (GPL v2). LGPL is a more permissive variant of the more popular GNU GPL. Unlike GPL, LPGL _allows_ the work to be used as a library in software not released under GPL-compatible licenses, and even in proprietary software. However, any derivatives of this library should also be released under LGPL or another GPL-compatible license. 
