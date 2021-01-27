@@ -1,0 +1,13 @@
+Only breaking changes are documented in this change log.
+
+### Breaking changes
+
+#### 0.9.0
+* [mwn#rawRequest](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html#rawrequest) now returns the `AxiosResponse` object directly, rather than the `data` part of `AxiosResponse`.
+* In cases of error, the shape of the error thrown by [mwn#request](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html#request) is different. 
+  * Earlier: `error.response` was the API response data along with response and request objects, the former making it a cyclic object. 
+  * Now: `error.response` is an object with fields {data, headers, status, statusText}
+	
+
+#### 0.8.0
+* For imports in JavaScript, use `const {mwn} = require('mwn');` instead of `const mwn = require('mwn');`
