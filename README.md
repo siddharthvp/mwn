@@ -9,7 +9,7 @@
 
 Mwn works with both JavaScript and TypeScript. It is created with a design philosophy of allowing bot developers to easily and quickly write bot code, without having to deal with the MediaWiki API complications and idiosyncrasies such as logins, tokens, maxlag, query continuations and error handling. Making raw API calls is also supported for complete flexibility where needed. The [axios](https://www.npmjs.com/package/axios) library is used for HTTP requests.
 
-Mwn uses promises, which you can use with async-await. To handle query continuations, mwn uses asynchronous generators. All methods with names ending in `Gen` are generators.
+Mwn uses promises, which you can use with async–await. To handle query continuations, mwn uses asynchronous generators. All methods with names ending in `Gen` are generators.
 
 Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) by default. Use of the legacy formatversion is not recommended. Note that [Special:ApiSandbox](https://en.wikipedia.org/wiki/Special:ApiSandbox) uses formatversion=1 by default, so if you're testing API calls using ApiSandbox be sure to set the correct formatversion there, otherwise the output will be formatted differently.
 
@@ -52,11 +52,11 @@ If you're using mwn for a Toolforge webservice, use the Kubernetes backend which
 
 
 #### MediaWiki compatibility
-Mwn is written for and tested on the latest version of MediaWiki used on WMF wikis.
+Mwn is written for and tested on the latest version of MediaWiki used on WMF wikis. Support for MW versions going back to 1.34 is planned.
 
 #### Set up a bot password or OAuth credentials
 
-Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wiki/Manual:Bot_passwords) and [OAuth](https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers). Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also more secure. 
+Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wiki/Manual:Bot_passwords) and [OAuth 1.0a](https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers). Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also more secure. 
 
 Bot passwords, however, are a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page. 
 
@@ -94,7 +94,7 @@ const bot = await mwn.init({
 	username: 'YourBotUsername',
 	password: 'YourBotPassword',
 
-	// Instead of username and password, you can use OAuth to authenticate:
+	// Instead of username and password, you can use OAuth 1.0a to authenticate:
 	oauth_consumer_token: "16_DIGIT_ALPHANUMERIC_KEY",
 	oauth_consumer_secret: "20_DIGIT_ALPHANUMERIC_KEY",
 	oauth_access_token: "16_DIGIT_ALPHANUMERIC_KEY",
@@ -221,6 +221,11 @@ bot.parseTitle('Page name', additionalOptions);
 Upload a file from your system to the wiki:
 ```js
 bot.upload('File title', '/path/to/file', 'comment', customParams);
+```
+
+Download a file from the wiki:
+```js
+bot.download('File:File name.jpg', 'Downloaded file name.jpg'); // 2nd param defaults to the on-wiki name if unspecified
 ```
 
 #### Bulk processing methods
