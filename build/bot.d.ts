@@ -301,6 +301,13 @@ export declare class mwn {
      */
     logout(): Promise<void>;
     /**
+     * Create an account. Only works on wikis without extensions like
+     * ConfirmEdit enabled (hence doesn't work on WMF wikis).
+     * @param username
+     * @param password
+     */
+    createAccount(username: string, password: string): Promise<any>;
+    /**
      * Get basic info about the logged-in user
      * @param [options]
      * @returns {Promise}

@@ -884,6 +884,33 @@ export class mwn {
 	}
 
 	/**
+	 * Create an account. Only works on wikis without extensions like
+	 * ConfirmEdit enabled (hence doesn't work on WMF wikis).
+	 * @param username
+	 * @param password
+	 */
+	async createAccount(username: string, password: string): Promise<any> {
+		if (!this.state.createaccounttoken) { // not logged in
+			await this.getTokens();
+		}
+		return this.request({
+			action: 'createaccount',
+			createreturnurl: 'https://example.com',
+			createtoken: this.state.createaccounttoken,
+			username: username,
+			password: password,
+			retype: password
+		}).then(json => {
+			let data = json.createaccount;
+			if (data.status === 'FAIL') {
+				return Promise.reject(data);
+			} else { // status === 'PASS' or other value
+				return data;
+			}
+		});
+	}
+
+	/**
 	 * Get basic info about the logged-in user
 	 * @param [options]
 	 * @returns {Promise}
