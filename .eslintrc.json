@@ -1,24 +1,25 @@
 {
     "env": {
-        "commonjs": true,
-        "es6": true,
+        "es2017": true,
         "node": true
     },
-	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-    "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
-    },
-    "parserOptions": {
-        "ecmaVersion": 2018
-    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
 	"ignorePatterns": ["build/*"],
 	"parser": "@typescript-eslint/parser",
-	"plugins": ["@typescript-eslint"],
-	"rules": {
+    "parserOptions": {
+        "ecmaVersion": 8,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
 		"indent": ["error", "tab", { "SwitchCase": 1 }],
-        "linebreak-style": ["error", "unix"],
-        "semi": ["error", "always"],
+		"linebreak-style": ["error", "unix"],
+		"semi": ["error", "always"],
 		"prefer-const": "off"
 	}
 }
