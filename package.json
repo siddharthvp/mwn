@@ -30,7 +30,6 @@
 	},
 	"homepage": "https://github.com/siddharthvp/mwn#readme",
 	"files": [
-		"src/",
 		"build/"
 	],
 	"dependencies": {

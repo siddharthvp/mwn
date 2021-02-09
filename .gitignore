@@ -1,9 +1,17 @@
+# node
 /node_modules/
 npm-debug.log
+
+# testing/secrets
 local.js
 tests/mocking/.auth.json
 /coveralls.yml
+
+# OS/IDEs
+.idea/*
+
+# generated files
+build/*
+docs/*
 .nyc_output/*
 coverage/*
-.idea/*
-docs/*
