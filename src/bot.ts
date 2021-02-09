@@ -868,18 +868,22 @@ export class mwn {
 	}
 
 	/**
-	 * Log out of the account
+	 * Log out of the account. Flushes the cookie jar and clears the saved tokens.
+	 * Should not be used if authenticating via OAuth.
 	 * @returns {Promise<void>}
 	 */
 	logout(): Promise<void> {
+		if (this.usingOAuth) {
+			throw new Error("Can't use logout() while using OAuth");
+		}
 		return this.request({
 			action: 'logout',
 			token: this.csrfToken
-		}).then(() => { // returns an empty response if successful
+		}).then(() => { // returns an empty response ({}) if successful
 			this.loggedIn = false;
-			this.cookieJar.removeAllCookiesSync();
 			this.state = {};
 			this.csrfToken = '%notoken%';
+			return this.cookieJar.removeAllCookies();
 		});
 	}
 
