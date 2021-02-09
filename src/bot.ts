@@ -362,7 +362,8 @@ export class mwn {
 
 
 	/**
-	 * Initialize a bot object. Login to the wiki and fetch editing tokens.
+	 * Initialize a bot object. Login to the wiki and fetch editing tokens. If OAuth
+	 * credentials are provided, they will be used over BotPassword credentials.
 	 * Also fetches the site data needed for parsing and constructing title objects.
 	 * @param {Object} config - Bot configurations, including apiUrl, and either the
 	 * username and password or the OAuth credentials
@@ -374,7 +375,7 @@ export class mwn {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
 		} else {
-			await bot.loginGetToken();
+			await bot.login();
 		}
 		return bot;
 	}
@@ -649,18 +650,6 @@ export class mwn {
 				});
 			}
 
-			const refreshTokenAndRetry = () => {
-				return Promise.all(
-					[this.getTokenType(params.action as string), this.getTokens()]
-				).then(([tokentype]) => {
-					if (!tokentype || !this.state[tokentype + 'token']) {
-						return this.dieWithError(fullResponse, requestOptions);
-					}
-					params.token = this.state[ tokentype + 'token' ];
-					return this.request(params, customRequestOptions);
-				});
-			};
-
 			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
 			if (response.error) {
 
@@ -673,7 +662,15 @@ export class mwn {
 						// extension, and not a part of mediawiki core
 						case 'badtoken':
 							log(`[W] Encountered badtoken error, fetching new token and retrying`);
-							return refreshTokenAndRetry();
+							return Promise.all(
+								[this.getTokenType(params.action as string), this.getTokens()]
+							).then(([tokentype]) => {
+								if (!tokentype || !this.state[tokentype + 'token']) {
+									return this.dieWithError(fullResponse, requestOptions);
+								}
+								params.token = this.state[ tokentype + 'token' ];
+								return this.request(params, customRequestOptions);
+							});
 
 						case 'readonly':
 							log(`[W] Encountered readonly error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
@@ -705,11 +702,7 @@ export class mwn {
 							// Possibly due to session loss: retry after logging in again
 							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
 							return this.login().then(() => {
-								if (params.token) {
-									return refreshTokenAndRetry();
-								} else {
-									return this.request(params, customRequestOptions);
-								}
+								return this.request(params, customRequestOptions);
 							});
 
 						case 'mwoauth-invalid-authorization':
@@ -788,88 +781,85 @@ export class mwn {
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 * @returns {Promise}
 	 */
-	login(loginOptions?: {
+	async login(loginOptions?: {
 		username?: string
 		password?: string
 		apiUrl?: string
 	}): Promise<ApiResponse> {
 
 		this.options = merge(this.options, loginOptions);
-
 		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
 			return Promise.reject(new Error('Incomplete login credentials!'));
 		}
 
 		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
 
-		// Fetch login token, also in the same API call fetch info about namespaces for MwnTitle
-		return this.request({
+		// Step 1: Fetch login token
+		const loginTokenResponse = await this.request({
 			action: 'query',
-			meta: 'tokens|siteinfo',
+			meta: 'tokens',
 			type: 'login',
-			siprop: 'general|namespaces|namespacealiases',
-
 			// unset the assert parameter (in case it's given by the user as a default
 			// option), as it will invariably fail until login is performed.
 			assert: undefined
-
-		}).then((response) => {
-
-			if (!response.query || !response.query.tokens || !response.query.tokens.logintoken) {
-				let err = new mwn.Error({
-					code: 'mwn_notoken',
-					info: 'Failed to get login token',
-					response,
-				});
-				log('[E] [mwn] Login failed with invalid response: ' + loginString);
-				return Promise.reject(err);
-			}
-			Object.assign(this.state, response.query.tokens);
-
-			this.title.processNamespaceData(response);
-
-			return this.request({
-				action: 'login',
-				lgname: this.options.username,
-				lgpassword: this.options.password,
-				lgtoken: response.query.tokens.logintoken,
-				assert: undefined // as above, assert won't work till the user is logged in
-			});
-
-		}).then((response) => {
-			let reason;
-			let data = response.login;
-			if (data) {
-				if (data.result === 'Success') {
-					Object.assign(this.state, data);
-					this.loggedIn = true;
-					if (!this.options.silent) {
-						log('[S] [mwn] Login successful: ' + loginString);
-					}
-					return data;
-
-				} else if (data.result === 'Aborted') {
-					if (data.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.') {
-						reason = `Already logged in as ${this.options.username}, logout first to re-login`;
-					} else if (data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.') {
-						reason = `Cannot use login/logout while using OAuth`;
-					} else if (data.reason) {
-						reason = data.result + ': ' + data.reason;
-					}
-				} else if (data.result && data.reason) {
-					reason = data.result + ': ' + data.reason;
-				}
-			}
-
+		});
+		if (!loginTokenResponse?.query?.tokens?.logintoken) {
 			let err = new mwn.Error({
-				code: 'mwn_failedlogin',
-				info: reason || 'Login failed',
-				response
+				code: 'mwn_notoken',
+				info: 'Failed to get login token',
+				response: loginTokenResponse,
 			});
+			log('[E] [mwn] Login failed with invalid response: ' + loginString);
 			return Promise.reject(err);
+		}
+		Object.assign(this.state, loginTokenResponse.query.tokens);
 
+
+		// Step 2: Post login request
+		const loginResponse = await this.request({
+			action: 'login',
+			lgname: this.options.username,
+			lgpassword: this.options.password,
+			lgtoken: loginTokenResponse.query.tokens.logintoken,
+			assert: undefined // as above, assert won't work till the user is logged in
 		});
 
+		let reason;
+		let data = loginResponse.login;
+		if (data) {
+			if (data.result === 'Success') {
+				Object.assign(this.state, data);
+				this.loggedIn = true;
+				if (!this.options.silent) {
+					log('[S] [mwn] Login successful: ' + loginString);
+				}
+
+				// Step 3: fetch tokens for editing, and info about namespaces for MwnTitle
+				await this.getTokensAndSiteInfo().catch(err => {
+					log(`[W] ${err}`);
+				});
+
+				return data;
+
+			} else if (data.result === 'Aborted') {
+				if (data.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.') {
+					reason = `Already logged in as ${this.options.username}, logout first to re-login`;
+				} else if (data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.') {
+					reason = `Cannot use login/logout while using OAuth`;
+				} else if (data.reason) {
+					reason = data.result + ': ' + data.reason;
+				}
+			} else if (data.result && data.reason) {
+				reason = data.result + ': ' + data.reason;
+			}
+		}
+
+		let err = new mwn.Error({
+			code: 'mwn_failedlogin',
+			info: reason || 'Login failed',
+			response: loginResponse
+		});
+		return Promise.reject(err);
 	}
 
 	/**
@@ -953,28 +943,7 @@ export class mwn {
 	 * @returns {Promise<void>}
 	 */
 	getTokens(): Promise<void> {
-		return this.request({
-			action: 'query',
-			meta: 'tokens|userinfo',
-			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
-			uiprop: 'rights'
-		}).then((response: ApiResponse) => {
-			// console.log('getTokens response:', response);
-			if (response.query && response.query.tokens) {
-				this.csrfToken = response.query.tokens.csrftoken;
-				this.state = merge(this.state, response.query.tokens);
-			} else {
-				let err = new mwn.Error({
-					code: 'mwn_notoken',
-					info: 'Could not get token',
-					response
-				});
-				return Promise.reject(err);
-			}
-			if (response.query.userinfo.rights.includes('apihighlimit')) {
-				this.hasApiHighLimit = true;
-			}
-		});
+		return this.getTokensAndSiteInfo();
 	}
 
 	/**
@@ -994,10 +963,10 @@ export class mwn {
 	getTokensAndSiteInfo(): Promise<void> {
 		return this.request({
 			action: 'query',
-			meta: 'siteinfo|tokens|userinfo',
+			meta: 'tokens|siteinfo|userinfo',
+			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
 			siprop: 'general|namespaces|namespacealiases',
-			uiprop: 'rights',
-			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch'
+			uiprop: 'rights'
 		}).then((response: ApiResponse) => {
 			this.title.processNamespaceData(response);
 			if (response.query.userinfo.rights.includes('apihighlimit')) {
@@ -1032,14 +1001,14 @@ export class mwn {
 	}
 
 	/**
-	 * Combines Login  with getCsrfToken
+	 * Login and fetch edit tokens. Deprecated in favour of login(), which
+	 * also fetches tokens from mwn v0.10
+	 * @deprecated
 	 * @param [loginOptions]
 	 * @returns {Promise<void>}
 	 */
 	loginGetToken(loginOptions?: MwnOptions): Promise<void> {
-		return this.login(loginOptions).then(() => {
-			return this.getTokens();
-		});
+		return this.login(loginOptions).then();
 	}
 
 	/**

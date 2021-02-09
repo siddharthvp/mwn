@@ -8,7 +8,7 @@ describe('testing for error recoveries', function() {
 
 	before('initializes', function () {
 		loginBefore(); // initialize `bot` OAuth
-		return bot2.loginGetToken();
+		return bot2.login();
 	});
 
 	after('logs out', logoutAfter);

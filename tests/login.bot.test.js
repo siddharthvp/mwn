@@ -7,12 +7,13 @@ const {account1, account2, account1_oauth} = require('./mocking/loginCredentials
 describe('login', async function() {
 	this.timeout(10000);
 
-	it('successfully logs in and gets token', async function() {
+	it('successfully logs in and gets token & siteinfo', async function() {
 		let client = new mwn();
-		return client.loginGetToken(account1).then(async () => {
+		return client.login(account1).then(async () => {
 			expect(client.loggedIn).to.be.true;
 			expect(client.csrfToken).to.be.a('string');
-			assert(client.csrfToken.endsWith('+\\'));
+			expect(client.csrfToken).to.be.of.length.greaterThan(5);
+			expect(client.title.nameIdMap).to.include.all.keys('project', 'user');
 			let userinfo = await client.userinfo();
 			expect(userinfo.anon).to.be.undefined;
 		});
@@ -23,7 +24,7 @@ describe('login', async function() {
 		bot = await mwn.init(account1);
 		expect(bot.loggedIn).to.be.true;
 		expect(bot.csrfToken).to.be.a('string');
-		expect(bot.csrfToken.length).to.be.gte(5); // csrftoken longer than `+\` for non-anons
+		expect(bot.csrfToken).to.be.of.length.greaterThan(5); // csrftoken longer than `+\` for non-anons
 	});
 
 	it('raises correct error on trying to login without logout', async function() {
@@ -51,7 +52,7 @@ describe('login', async function() {
 		bot.setDefaultParams({
 			assert: 'user'
 		});
-		await bot.loginGetToken(); // need a token to be able to log out
+		await bot.login(); // need a token to be able to log out
 		expect(bot.loggedIn).to.be.true;
 		expect(bot.csrfToken).to.be.a('string');
 		assert(bot.csrfToken.endsWith('+\\'));
