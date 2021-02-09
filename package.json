@@ -6,7 +6,7 @@
 	"types": "./build/bot.d.ts",
 	"scripts": {
 		"bump": "node bump-version.js",
-		"build": "npx tsc",
+		"build": "npx tsc || echo",
 		"test-readonly": "cd tests && npx mocha bot.test.js batchOperations.bot.test.js category.test.js date.test.js file.test.js log.test.js login.bot.test.js oauth.test.js page.test.js static_utils.test.js suppl.bot.test.js title.test.js user.test.js wikitext.test.js",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coverage": "nyc report --reporter=text-lcov | coveralls",
@@ -43,9 +43,7 @@
 		"form-data": "^3.0.0",
 		"oauth-1.0a": "^2.2.6",
 		"prettyjson": "^1.1.3",
-		"tough-cookie": "^4.0.0",
-		"typedoc-neo-theme": "^1.1.0",
-		"typedoc-plugin-markdown": "^3.4.5"
+		"tough-cookie": "^4.0.0"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.14",

@@ -8,13 +8,11 @@ on:
     branches: [ master ]
     paths:
       - 'src/**'
-      - 'build/**'
       - 'tests/**'
   pull_request:
     branches: [ master ]
     paths:
       - 'src/**'
-      - 'build/**'
       - 'tests/**'
   workflow_dispatch:
 
@@ -34,6 +32,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
+      - run: npm run build
       - run: npm run test-readonly && npm run test-ts
         env:
           AUTH_JSON: ${{secrets.AUTH_JSON}}
