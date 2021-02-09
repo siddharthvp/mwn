@@ -32,6 +32,7 @@ Or obtain the latest development copy:
 git clone https://github.com/siddharthvp/mwn.git
 cd mwn
 npm install		# install dependencies
+npm run build   # generate JS files from TS
 ```
 
 #### Node.js compatibility

@@ -341,6 +341,14 @@ export class mwn {
 	 */
 	constructor(customOptions?: MwnOptions) {
 
+		if (process.version) {
+			let majorVersionMatch = process.version.match(/v(\d+)/);
+			let majorVersion = majorVersionMatch && majorVersionMatch[1] && parseInt(majorVersionMatch[1]);
+			if (majorVersion < 10) {
+				log(`[W] Detected node version ${process.version}, but mwn is only supported on node v10.x`);
+			}
+		}
+
 		if (typeof customOptions === 'string') {
 			// Read options from file (JSON):
 			try {
