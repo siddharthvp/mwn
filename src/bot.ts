@@ -32,17 +32,17 @@
 
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
 
-import fs = require('fs');
-import path = require('path');
-import crypto = require('crypto');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
 
-import tough = require('tough-cookie');
-import formData = require('form-data');
-import OAuth = require('oauth-1.0a');
-import http = require('http');
-import https = require('https');
-import axiosCookieJarSupport = require('axios-cookiejar-support');
-axiosCookieJarSupport.default(axios);
+import * as tough from 'tough-cookie';
+import * as formData from 'form-data';
+import * as OAuth from 'oauth-1.0a';
+import * as http from 'http';
+import * as https from 'https';
+import axiosCookieJarSupport from 'axios-cookiejar-support';
+axiosCookieJarSupport(axios);
 
 import {log, updateLoggingConfig} from './log';
 
@@ -578,7 +578,6 @@ export class mwn {
 				customRequestOptions.headers['Content-Type'];
 
 			if ((hasLongFields && (!contentTypeGiven || contentTypeGiven === 'mulipart/form-data')) || contentTypeGiven === 'multipart/form-data') {
-				// console.log('sending multipart POST request for action=' + params.action);
 				// use multipart/form-data
 				let form = new formData();
 				for (let [key, val] of Object.entries(params)) {
@@ -602,7 +601,6 @@ export class mwn {
 					});
 				});
 			} else {
-				// console.log('sending POST request for action=' + params.action);
 				// use application/x-www-form-urlencoded (default)
 				// requestOptions.data = params;
 				requestOptions.data = Object.entries(params).map(([key, val]) => {
@@ -610,7 +608,6 @@ export class mwn {
 				}).join('&');
 			}
 		} else {
-			// console.log('sending GET request for action=' + params.action);
 			// axios takes care of stringifying to URL query string
 			requestOptions.params = params;
 		}
