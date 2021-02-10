@@ -35,6 +35,7 @@ import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import * as stream from 'stream';
 
 import * as tough from 'tough-cookie';
 import * as formData from 'form-data';
@@ -1489,7 +1490,15 @@ export class mwn {
 			url: url,
 			responseType: 'stream'
 		}).then(response => {
-			response.data.pipe(fs.createWriteStream(localname || path.basename(url)));
+			const writeStream = (response.data as stream).pipe(fs.createWriteStream(localname || path.basename(url)));
+			return new Promise((resolve, reject) => {
+				writeStream.on('finish', () => {
+					resolve();
+				});
+				writeStream.on('error', (err) => {
+					reject(err);
+				});
+			});
 		});
 	}
 
