@@ -14,8 +14,8 @@ describe('batch operations', function() {
 		silent: true
 	});
 
-	it('batch operation', function(done) {
-		bot.batchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
+	it('batch operation', function() {
+		return bot.batchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
 			return new Promise((resolve, reject) => {
 				setTimeout(function() {
 					if (idx % 4 === 0) {
@@ -29,12 +29,11 @@ describe('batch operations', function() {
 			});
 		}, 7).then((res) => {
 			expect(Object.keys(res.failures)).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
-			done();
 		});
 	});
 
-	it('batch operation with 1 retry', function(done) {
-		bot.batchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
+	it('batch operation with 1 retry', function() {
+		return bot.batchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
 			return new Promise((resolve, reject) => {
 				setTimeout(function() {
 					if (idx % 4 === 0) {
@@ -48,12 +47,11 @@ describe('batch operations', function() {
 			});
 		}, 7, 1).then((res) => {
 			expect(Object.keys(res.failures)).to.deep.equal(['a', 'q']);
-			done();
 		});
 	});
 
-	it('batch operation with 2 retries', function(done) {
-		bot.batchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
+	it('batch operation with 2 retries', function() {
+		return bot.batchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
 			return new Promise((resolve, reject) => {
 				setTimeout(function() {
 					if (idx % 4 === 0) {
@@ -67,13 +65,12 @@ describe('batch operations', function() {
 			});
 		}, 7, 2).then((res) => {
 			expect(Object.keys(res.failures)).to.deep.equal(['a']);
-			done();
 		});
 	});
 
 
-	it('series batch operation', function(done) {
-		bot.seriesBatchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
+	it('series batch operation', function() {
+		return bot.seriesBatchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
 			return new Promise((resolve, reject) => {
 				setTimeout(function() {
 					if (idx % 4 === 0) {
@@ -87,12 +84,11 @@ describe('batch operations', function() {
 			});
 		}, 4).then((res) => {
 			expect(Object.keys(res.failures)).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
-			done();
 		});
 	});
 
-	it('series batch operation with 1 retry', function(done) {
-		bot.seriesBatchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
+	it('series batch operation with 1 retry', function() {
+		return bot.seriesBatchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
 			return new Promise((resolve, reject) => {
 				setTimeout(function() {
 					if (idx % 4 === 0) {
@@ -108,12 +104,11 @@ describe('batch operations', function() {
 			// first round failures: a, e, i, m, q
 			// second round failures: a, q
 			expect(Object.keys(res.failures)).to.deep.equal(['a', 'q']);
-			done();
 		});
 	});
 
-	it('series batch operation with 2 retries', function(done) {
-		bot.seriesBatchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
+	it('series batch operation with 2 retries', function() {
+		return bot.seriesBatchOperation('abcdefghijklmnopqrst'.split(''), (item, idx) => {
 			return new Promise((resolve, reject) => {
 				setTimeout(function() {
 					if (idx % 4 === 0) {
@@ -127,7 +122,6 @@ describe('batch operations', function() {
 			});
 		}, 3, 2).then((res) => {
 			expect(Object.keys(res.failures)).to.deep.equal(['a']);
-			done();
 		});
 	});
 

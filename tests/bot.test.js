@@ -15,9 +15,9 @@ describe('mwn', async function() {
 	// SUCCESSFUL                           //
 	//////////////////////////////////////////
 
-	it('successfully executes a raw HTTP request', function(done) {
+	it('successfully executes a raw HTTP request', function() {
 
-		bot.rawRequest({
+		return bot.rawRequest({
 			method: 'get',
 			url: 'https://jsonplaceholder.typicode.com/comments',
 			responseType: 'json',
@@ -29,12 +29,11 @@ describe('mwn', async function() {
 			expect(response).to.be.instanceof(Array);
 			expect(response[0]).to.be.instanceof(Object);
 			expect(response[0].postId).to.equal(1);
-			done();
-		}).catch(log);
+		});
 	});
 
 
-	it('correctly gets site info', function(done) {
+	it('correctly gets site info', function() {
 
 		// unset them to check if they'll correctly reset
 		bot.title.nameIdMap = null;
@@ -45,20 +44,18 @@ describe('mwn', async function() {
 			new bot.title('werwerw');
 		}).to.throw('namespace data unavailable: run getSiteInfo() or login() first on the mwn object');
 
-		bot.getSiteInfo().then(function() {
+		return bot.getSiteInfo().then(function() {
 			expect(bot.title.nameIdMap).to.be.a('object');
 			expect(bot.title.legaltitlechars).to.be.a('string');
 			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-			done();
 		});
 	});
 
-	it('gets the server time', function(done) {
-		bot.getServerTime().then(time => {
+	it('gets the server time', function() {
+		return bot.getServerTime().then(time => {
 			expect(time).to.be.a('string');
 			let dateobj = new Date(time);
 			expect(dateobj.getTime()).to.not.be.NaN;
-			done();
 		});
 	});
 
@@ -86,17 +83,27 @@ describe('mwn', async function() {
 
 
 
-	it('successfully reads a page with read()', function(done) {
-		bot.read('Main Page').then((response) => {
+	it('successfully reads a page with read()', function() {
+		return bot.read('Main Page').then((response) => {
 			expect(response).to.be.instanceOf(Object);
 			expect(response).to.include.all.keys('revisions', 'pageid', 'title');
 			expect(response.revisions[0].content).to.be.a('string');
-			done();
 		});
 	});
 
-	it('successfully reads multiple pages with read()', function(done) {
-		bot.read(['Main Page', 'MediaWiki:Sidebar'], {
+	it('successfully reads multiple pages with read()', function() {
+		return bot.read(['Main Page', 'MediaWiki:Sidebar'], {
+			rvprop: 'content|timestamp|user'
+		}).then((response) => {
+			expect(response).to.be.instanceOf(Array).of.length(2);
+			expect(response[1]).to.include.all.keys('pageid', 'ns', 'revisions');
+			expect(response[0].revisions).to.be.instanceOf(Array);
+			expect(response[0].revisions[0]).to.include.all.keys('content');
+		});
+	});
+
+	it('successfully reads multiple pages using pageid with read()', function() {
+		return bot.read([11791 /* Main Page */, 25 /* MediaWiki:Sidebar */], {
 			rvprop: 'content|timestamp|user'
 		}).then((response) => {
 			expect(response).to.be.instanceOf(Array);
@@ -104,59 +111,41 @@ describe('mwn', async function() {
 			expect(response[1]).to.include.all.keys('pageid', 'ns', 'revisions');
 			expect(response[0].revisions).to.be.instanceOf(Array);
 			expect(response[0].revisions[0]).to.include.all.keys('content');
-			done();
 		});
 	});
 
-	it('successfully reads multiple pages using pageid with read()', function(done) {
-		bot.read([11791 /* Main Page */, 25 /* MediaWiki:Sidebar */], {
-			rvprop: 'content|timestamp|user'
-		}).then((response) => {
-			expect(response).to.be.instanceOf(Array);
-			expect(response.length).to.equal(2);
-			expect(response[1]).to.include.all.keys('pageid', 'ns', 'revisions');
-			expect(response[0].revisions).to.be.instanceOf(Array);
-			expect(response[0].revisions[0]).to.include.all.keys('content');
-			done();
-		});
-	});
-
-	it('successfully reads apilimit+ pages with read', function(done) {
+	it('successfully reads apilimit+ pages with read', function() {
 		this.timeout(10000);
 		let arr = [];
 		for (let i=1; i<=60; i++) {
 			arr.push(`page${i}`);
 		}
-		bot.read(arr).then((response) => {
+		return bot.read(arr).then((response) => {
 			expect(response).to.be.instanceOf(Array);
 			expect(response.length).to.equal(60);
 			assert(response[45].missing === true ||
 				typeof response[45].revisions[0].content === 'string');
-			done();
 		});
 	});
 
-	it('successfully purges pages from page id', function(done) {
-		bot.purge([11791]).then(function(response) {
+	it('successfully purges pages from page id', function() {
+		return bot.purge([11791]).then(function(response) {
 			expect(response).to.be.instanceOf(Array);
 			expect(response[0].purged).to.equal(true);
-			done();
 		});
 	});
 
-	it('successfully parses wikitext', function(done) {
-		bot.parseWikitext('[[link]]s.')
+	it('successfully parses wikitext', function() {
+		return bot.parseWikitext('[[link]]s.')
 			.then(parsedtext => {
 				expect(parsedtext).to.be.a('string');
 				assert(parsedtext.startsWith(`<div class="mw-parser-output"><p><a href="/wiki/Link" title="Link">links</a>.`));
-				done();
 			});
 	});
 
-	it('successfully parses a page', function(done) {
-		bot.parseTitle('MediaWiki:Sidebar').then(parsed => {
+	it('successfully parses a page', function() {
+		return bot.parseTitle('MediaWiki:Sidebar').then(parsed => {
 			expect(parsed).to.be.a('string');
-			done();
 		});
 	});
 
@@ -165,11 +154,10 @@ describe('mwn', async function() {
 		expect(title.toText()).to.equal('Wikipedia:Xyz');
 	});
 
-	it('getPagesByPrefix', function(done) {
-		bot.getPagesByPrefix('SD0001test').then(pages => {
+	it('getPagesByPrefix', function() {
+		return bot.getPagesByPrefix('SD0001test').then(pages => {
 			expect(pages).to.be.instanceOf(Array);
 			expect(pages[0]).to.be.a('string');
-			done();
 		});
 	});
 
@@ -181,29 +169,26 @@ describe('mwn', async function() {
 
 	let fileTitle = 'File:Example demo image.png';
 
-	it('downloads an image from title without local name specified', function(done) {
-		bot.download(fileTitle).then(async () => {
+	it('downloads an image from title without local name specified', function() {
+		return bot.download(fileTitle).then(async () => {
 			let expectedTitle = 'Example demo image.png';
 			await bot.sleep(2000); // wait for download to complete
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
 			fs.unlinkSync(expectedTitle); // delete the file
-			done();
 		});
 	});
 
-	it('downloads an image from title with local name specified', function(done) {
-		bot.download(fileTitle, 'download-test.png').then(async () => {
+	it('downloads an image from title with local name specified', function() {
+		return bot.download(fileTitle, 'download-test.png').then(async () => {
 			let expectedTitle = 'download-test.png';
-			await bot.sleep(2000);
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
 			fs.unlinkSync(expectedTitle);
-			done();
 		});
 	});
 
-	it('downloads an image from URL', function(done) {
+	it('downloads an image from URL', function() {
 		// get url:
-		bot.request({
+		return bot.request({
 			action: 'query',
 			titles: fileTitle,
 			prop: 'imageinfo',
@@ -213,10 +198,8 @@ describe('mwn', async function() {
 			return bot.downloadFromUrl(url);
 		}).then(async () => {
 			let expectedTitle = 'Example_demo_image.png';
-			await bot.sleep(2000);
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
 			fs.unlinkSync(expectedTitle);
-			done();
 		});
 	});
 
@@ -225,35 +208,31 @@ describe('mwn', async function() {
 	// UNSUCCESSFUL                         //
 	//////////////////////////////////////////
 
-	it('rejects deleting a non-existing page with delete()', function(done) {
-		bot.delete('Non-Existing Page8s56df3f2sd624', 'Test Reasons')
+	it('rejects deleting a non-existing page with delete()', function() {
+		return bot.delete('Non-Existing Page8s56df3f2sd624', 'Test Reasons')
 			.catch((e) => {
 				expect(e).to.be.an.instanceof(Error);
 				expect(e.message).to.include('missingtitle');
-				done();
 			});
 	});
 
-	it('cannot edit a page without providing API URL / Login', function(done) {
-		new mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
+	it('cannot edit a page without providing API URL / Login', function() {
+		return new mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('No URL');
-			done();
 		});
 	});
 
-	it('fails to parse a non-existing page', function(done) {
-		bot.parseTitle('fswer4536tgrr').catch(err => {
-			assert(err.code === 'missingtitle');
-			done();
+	it('fails to parse a non-existing page', function() {
+		return bot.parseTitle('fswer4536tgrr').catch(err => {
+			expect(err.code).to.equal('missingtitle');
 		});
 	});
 
-	it('rejects to upload a non-existing file with upload()', function(done) {
-		bot.upload(__dirname + '/mocking/NonExistingImage.png', 'Title', 'Some text').catch((e) => {
+	it('rejects to upload a non-existing file with upload()', function() {
+		return bot.upload(__dirname + '/mocking/NonExistingImage.png', 'Title', 'Some text').catch((e) => {
 			expect(e).to.be.an.instanceof(Error);
 			expect(e.message).to.include('ENOENT');
-			done();
 		});
 	});
 
