@@ -8,8 +8,6 @@
  *
  */
 
-import type {mwn} from "./bot";
-
 export interface MwnTitleStatic {
 	new (title: string, namespace?: number): MwnTitle;
 	idNameMap: {
@@ -63,11 +61,11 @@ export interface MwnTitle {
 	toText(): string;
 }
 
-export default function (bot: mwn) {
+export default function () {
 
-	var NS_MAIN = 0;
-	var NS_TALK = 1;
-	var NS_SPECIAL = -1;
+	let NS_MAIN = 0;
+	let NS_TALK = 1;
+	let NS_SPECIAL = -1;
 
 	class Title implements MwnTitle {
 
@@ -88,7 +86,7 @@ export default function (bot: mwn) {
 			}
 		}) {
 
-			var namespaceNorm = ns => (ns || '').toLowerCase().replace(/ /g, '_');
+			let namespaceNorm = ns => (ns || '').toLowerCase().replace(/ /g, '_');
 
 			// Analog of mw.config.get('wgFormattedNamespaces')
 			Title.idNameMap = {};
@@ -125,7 +123,7 @@ export default function (bot: mwn) {
 		fragment: string
 
 		constructor( title: string, namespace?: number ) {
-			var parsed = parse( title, namespace );
+			let parsed = parse( title, namespace );
 			if ( !parsed ) {
 				throw new Error( 'Unable to parse title' );
 			}
@@ -246,7 +244,7 @@ export default function (bot: mwn) {
 		 * Get the extension of the page name (if any)
 		 */
 		getExtension(): string | null {
-			var lastDot = this.title.lastIndexOf( '.' );
+			let lastDot = this.title.lastIndexOf( '.' );
 			if ( lastDot === -1 ) {
 				return null;
 			}
@@ -259,7 +257,7 @@ export default function (bot: mwn) {
 		 * Returns a string like ".json", or "" if no extension.
 		 */
 		getDotExtension(): string {
-			var ext = this.getExtension();
+			let ext = this.getExtension();
 			return ext === null ? '' : '.' + ext;
 		}
 
@@ -271,8 +269,8 @@ export default function (bot: mwn) {
 		 * details.
 		 * @return {Title|null} A valid Title object or null if the title is invalid
 		 */
-		static newFromText(title: string, namespace: number = 0): Title | null {
-			var t, parsed = parse( title, namespace );
+		static newFromText(title: string, namespace = 0): Title | null {
+			let t, parsed = parse( title, namespace );
 			if ( !parsed ) {
 				return null;
 			}
@@ -343,12 +341,12 @@ export default function (bot: mwn) {
 	 * Private members
 	 */
 
-	var parse = function(title: string, defaultNamespace?: number) {
+	let parse = function(title: string, defaultNamespace?: number) {
 		Title.checkData();
 
-		var namespace, m, id, i, fragment;
+		let namespace, m, id, i, fragment;
 
-		var rUnicodeBidi = /[\u200E\u200F\u202A-\u202E]+/g,
+		let rUnicodeBidi = /[\u200E\u200F\u202A-\u202E]+/g,
 			rWhitespace = /[ _\u00A0\u1680\u180E\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+/g,
 			rUnderscoreTrim = /^_+|_+$/g,
 			rSplit = /^(.+?)_*:_*(.*)$/,
@@ -473,14 +471,14 @@ export default function (bot: mwn) {
 
 	};
 
-	var getNamespacePrefix = function ( namespace: number ) {
+	let getNamespacePrefix = function ( namespace: number ) {
 		return namespace === NS_MAIN ?
 			'' :
 			( Title.idNameMap[ namespace ].replace( / /g, '_' ) + ':' );
 	};
 
-	var getNsIdByName = function ( ns: string ) {
-		var id;
+	let getNsIdByName = function ( ns: string ) {
+		let id;
 		// Don't cast non-strings to strings, because null or undefined should not result in
 		// returning the id of a potential namespace called "Null:" (e.g. on null.example.org/wiki)
 		// Also, toLowerCase throws exception on null/undefined, because it is a String method.
@@ -496,7 +494,7 @@ export default function (bot: mwn) {
 	};
 
 	// From https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/resources/src/mediawiki.String.js
-	var byteLength = function( str: string ) {
+	let byteLength = function( str: string ) {
 		return str
 			.replace( /[\u0080-\u07FF\uD800-\uDFFF]/g, '**' )
 			.replace( /[\u0800-\uD7FF\uE000-\uFFFF]/g, '***' )
@@ -505,7 +503,7 @@ export default function (bot: mwn) {
 
 
 	// XXX: put this in a separate file, like in mw.Title source code?
-	var toUpperMap = {
+	let toUpperMap = {
 		"ß": "",
 		"ŉ": "",
 		"ƀ": "",

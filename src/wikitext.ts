@@ -306,7 +306,7 @@ export default function (bot: mwn) {
 				}).map(templateWikitext => {
 					return Wikitext.parseTemplates(templateWikitext, config);
 				});
-				return result.concat.apply(result, subtemplates);
+				return result.concat(...subtemplates);
 			}
 
 			return result;

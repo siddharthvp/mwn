@@ -92,9 +92,7 @@ export interface ApiCategoryTreeParams extends ApiParams {
 	options?: string
 }
 
-export interface ApiCentralAuthTokenParams extends ApiParams {
-
-}
+export type ApiCentralAuthTokenParams = ApiParams
 
 export interface ApiCentralNoticeCdnCacheUpdateBannerParams extends ApiParams {
 	banner?: string
@@ -132,25 +130,17 @@ export interface ApiCheckTokenParams extends ApiParams {
 	maxtokenage?: number
 }
 
-export interface CirrusSearchApiConfigDumpParams extends ApiParams {
+export type CirrusSearchApiConfigDumpParams = ApiParams
 
-}
-
-export interface CirrusSearchApiMappingDumpParams extends ApiParams {
-
-}
+export type CirrusSearchApiMappingDumpParams = ApiParams
 
 export interface CirrusSearchApiProfilesDumpParams extends ApiParams {
 	verbose?: boolean
 }
 
-export interface CirrusSearchApiSettingsDumpParams extends ApiParams {
+export type CirrusSearchApiSettingsDumpParams = ApiParams
 
-}
-
-export interface ApiClearHasMsgParams extends ApiParams {
-
-}
+export type ApiClearHasMsgParams = ApiParams
 
 export interface ApiClientLoginParams extends ApiParams {
 	requests?: string | string[]
@@ -398,9 +388,7 @@ export interface ApiExpandTemplatesParams extends ApiParams {
 	templatesandboxcontentformat?: 'application/json' | 'application/octet-stream' | 'application/unknown' | 'application/x-binary' | 'text/css' | 'text/javascript' | 'text/plain' | 'text/unknown' | 'text/x-wiki' | 'unknown/unknown'
 }
 
-export interface ApiFancyCaptchaReloadParams extends ApiParams {
-
-}
+export type ApiFancyCaptchaReloadParams = ApiParams
 
 export interface ApiFeaturedFeedsParams extends ApiParams {
 	feedformat?: 'atom' | 'rss'
@@ -461,9 +449,7 @@ export interface ApiFileRevertParams extends ApiParams {
 	token?: string
 }
 
-export interface ApiFlagConfigParams extends ApiParams {
-
-}
+export type ApiFlagConfigParams = ApiParams
 
 export interface ApiGlobalBlockParams extends ApiParams {
 	target?: string
@@ -520,9 +506,7 @@ export interface ApiHelpParams extends ApiParams {
 	toc?: boolean
 }
 
-export interface ApiDisabledParams extends ApiParams {
-
-}
+export type ApiDisabledParams = ApiParams
 
 export interface ApiImportParams extends ApiParams {
 	summary?: string
@@ -651,9 +635,7 @@ export interface ApiMoveParams extends ApiParams {
 	token?: string
 }
 
-export interface ApiFormatNoneParams extends ApiParams {
-
-}
+export type ApiFormatNoneParams = ApiParams
 
 export interface OATHAuthApiModuleApiOATHValidateParams extends ApiParams {
 	user?: string
@@ -946,9 +928,7 @@ export interface ApiRollbackParams extends ApiParams {
 	token?: string
 }
 
-export interface ApiRsdParams extends ApiParams {
-
-}
+export type ApiRsdParams = ApiParams
 
 export interface KartographerApiSanitizeMapDataParams extends ApiParams {
 	title?: string
@@ -1226,9 +1206,7 @@ export interface ApiWatchParams extends ApiParams {
 	token?: string
 }
 
-export interface MobileFrontendApiWebappManifestParams extends ApiParams {
-
-}
+export type MobileFrontendApiWebappManifestParams = ApiParams
 
 export interface WebAuthnApiWebAuthnParams extends ApiParams {
 	func?: string
@@ -1559,17 +1537,13 @@ export interface ApiQueryCheckUserLogParams extends ApiQueryParams {
 	culcontinue?: string
 }
 
-export interface CirrusSearchApiQueryBuildDocumentParams extends ApiQueryParams {
-
-}
+export type CirrusSearchApiQueryBuildDocumentParams = ApiQueryParams
 
 export interface CirrusSearchApiQueryCompSuggestBuildDocParams extends ApiQueryParams {
 	csbmethod?: string
 }
 
-export interface CirrusSearchApiQueryCirrusDocParams extends ApiQueryParams {
-
-}
+export type CirrusSearchApiQueryCirrusDocParams = ApiQueryParams
 
 export interface ApiQueryContentTranslationParams extends ApiQueryParams {
 	translationid?: string
@@ -1593,9 +1567,7 @@ export interface ApiQueryContentTranslationLanguageTrendParams extends ApiQueryP
 	interval?: 'month' | 'week'
 }
 
-export interface ApiQueryContentTranslationStatsParams extends ApiQueryParams {
-
-}
+export type ApiQueryContentTranslationStatsParams = ApiQueryParams
 
 export interface ApiQueryContentTranslationSuggestionsParams extends ApiQueryParams {
 	from?: string
@@ -1759,9 +1731,7 @@ export interface ApiQueryBacklinkspropParams extends ApiQueryParams {
 	fucontinue?: string
 }
 
-export interface ApiQueryFlaggedParams extends ApiQueryParams {
-
-}
+export type ApiQueryFlaggedParams = ApiQueryParams
 
 export interface ApiQueryGadgetCategoriesParams extends ApiQueryParams {
 	gcprop?: ('members' | 'name' | 'title')[]
@@ -1928,9 +1898,7 @@ export interface ApiQueryLangLinksParams extends ApiQueryParams {
 	llurl?: boolean
 }
 
-export interface ApiQueryLangLinksCountParams extends ApiQueryParams {
-
-}
+export type ApiQueryLangLinksCountParams = ApiQueryParams
 
 export interface ApiQueryLanguageinfoParams extends ApiQueryParams {
 	liprop?: ('autonym' | 'bcp47' | 'code' | 'dir' | 'fallbacks' | 'name' | 'variants')[]
@@ -1963,9 +1931,7 @@ export interface MediaWikiLinterApiQueryLintErrorsParams extends ApiQueryParams 
 	lntfrom?: number
 }
 
-export interface MediaWikiLinterApiQueryLinterStatsParams extends ApiQueryParams {
-
-}
+export type MediaWikiLinterApiQueryLinterStatsParams = ApiQueryParams
 
 export interface ApiQueryLogEventsParams extends ApiQueryParams {
 	leprop?: ('comment' | 'details' | 'ids' | 'parsedcomment' | 'tags' | 'timestamp' | 'title' | 'type' | 'user' | 'userid')[]
@@ -2041,9 +2007,7 @@ export interface ApiQueryOldreviewedpagesParams extends ApiQueryParams {
 	orlimit?: limit
 }
 
-export interface ORESHooksApiQueryORESParams extends ApiQueryParams {
-
-}
+export type ORESHooksApiQueryORESParams = ApiQueryParams
 
 export interface PageAssessmentsApiQueryPageAssessmentsParams extends ApiQueryParams {
 	pacontinue?: string
@@ -2267,9 +2231,7 @@ export interface ApiQueryBacklinkspropParams extends ApiQueryParams {
 	ticontinue?: string
 }
 
-export interface ApiTranscodeStatusParams extends ApiQueryParams {
-
-}
+export type ApiTranscodeStatusParams = ApiQueryParams
 
 export interface ApiEchoUnreadNotificationPagesParams extends ApiQueryParams {
 	unpwikis?: string | string[]

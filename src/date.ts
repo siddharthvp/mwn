@@ -161,6 +161,7 @@ export default function (bot: mwn) {
 			if (!this.isValid()) {
 				return ''; // avoid bogus NaNs in output
 			}
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			let udate: XDate = this;
 			// create a new date object that will contain the date to display as system time
 			if (!zone || zone === 'utc') {

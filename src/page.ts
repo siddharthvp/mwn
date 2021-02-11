@@ -8,6 +8,7 @@ import type {
 	ApiQueryLogEventsParams, ApiQueryRevisionsParams, ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams
 } from "./api_params";
+import type {LogEvent} from "./user";
 
 export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parsedcomment" |
 	"ids" | "flags" | "size"  | "tags" | "userid" | "contentmodel";
@@ -48,12 +49,12 @@ export interface MwnPage extends MwnTitle {
 	getCreator(): Promise<string>;
 	getDeletingAdmin(): Promise<string>;
 	getDescription(customOptions?: any): Promise<string>;
-	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: ApiQueryRevisionsParams): Promise<object[]>;
-	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams): Promise<object[]>;
+	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: ApiQueryRevisionsParams): Promise<any[]>;
+	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
 	edit(transform: ((rev: {
 		content: string;
 		timestamp: string;
-	}) => string | object)): Promise<any>;
+	}) => string | ApiEditPageParams)): Promise<any>;
 	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>;
 	newSection(header: string, message: string, additionalParams?: ApiEditPageParams): Promise<any>;
 	move(target: string, summary: string, options?: ApiMoveParams): Promise<any>;
@@ -340,7 +341,7 @@ export default function(bot: mwn): MwnPageStatic {
 		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
 		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
 		 */
-		history(props: revisionprop[] | revisionprop, limit = 50, customOptions?: ApiQueryRevisionsParams): Promise<object[]> {
+		history(props: revisionprop[] | revisionprop, limit = 50, customOptions?: ApiQueryRevisionsParams): Promise<any[]> {
 			return bot.request({
 				"action": "query",
 				"prop": "revisions",
@@ -357,7 +358,7 @@ export default function(bot: mwn): MwnPageStatic {
 			});
 		}
 
-		async *historyGen(props: revisionprop[] | revisionprop, customOptions?: ApiQueryRevisionsParams): AsyncGenerator<object> {
+		async *historyGen(props: revisionprop[] | revisionprop, customOptions?: ApiQueryRevisionsParams): AsyncGenerator<any> {
 			let continuedQuery = bot.continuedQueryGen({
 				"action": "query",
 				"prop": "revisions",
@@ -384,7 +385,7 @@ export default function(bot: mwn): MwnPageStatic {
 		 * log entries, eg. { ns: '0', title: 'Main Page', type: 'delete', user: 'Example',
 		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
 		 */
-		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams) {
+		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams): Promise<LogEvent[]> {
 			let logtypeObj: any = {};
 			if (type) {
 				if (type.includes('/')) {

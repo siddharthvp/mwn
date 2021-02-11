@@ -206,7 +206,7 @@ export class mwn {
 			intervalDuration: 10000,
 			page: null,
 			condition: /^\s*$/,
-			onShutoff: function () {}
+			onShutoff() {}
 		},
 
 		// default parameters included in every API request
@@ -1711,7 +1711,7 @@ export class mwn {
 	 * @param {string} [batchFieldName=titles]
 	 * @param {number} [batchSize]
 	 */
-	async *massQueryGen(query: ApiParams, batchFieldName: string = 'titles', batchSize?: number): AsyncGenerator<ApiResponse> {
+	async *massQueryGen(query: ApiParams, batchFieldName = 'titles', batchSize?: number): AsyncGenerator<ApiResponse> {
 		let batchValues = query[batchFieldName];
 		if (!Array.isArray(batchValues)) {
 			throw new Error(`massQuery: batch field in query must be an array`);
