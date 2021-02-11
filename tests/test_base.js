@@ -5,8 +5,11 @@ const log = mwn.log;
 const crypto = require('crypto');
 
 const chai = require('chai');
+const chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
 const expect = chai.expect;
 const assert = require('assert');
+const sinon = require('sinon');
 
 const loginCredentials = require('./mocking/loginCredentials.js');
 
@@ -40,4 +43,4 @@ let logoutAfter = function() {
 };
 
 // Export everything
-module.exports = { mwn, bot, bot2, log, crypto, expect, assert, loginBefore, logoutAfter };
+module.exports = { mwn, bot, bot2, log, crypto, expect, assert, sinon, loginBefore, logoutAfter };

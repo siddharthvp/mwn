@@ -1,7 +1,6 @@
 'use strict';
 
-const {log, colorize, debug, error, getDateArray, humanDate,
-	message, pad, updateLoggingConfig} = require('../build/log');
+const {log, error, getDateArray, humanDate, pad, updateLoggingConfig} = require('../build/log');
 const expect = require('chai').expect;
 
 describe('logger', function() {

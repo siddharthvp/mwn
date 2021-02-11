@@ -4,7 +4,6 @@
 		"target": "es2018",
 		"module": "CommonJS",
 		"declaration": true,
-		"types": ["node"],
 		"noImplicitAny": true,
 		"newLine": "lf"
 	},

@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, expect, loginBefore, logoutAfter} = require('./test_base');
+const {mwn, bot, expect, loginBefore, logoutAfter} = require('./test_base');
 
 
 describe('bot emergency shutoff', async function() {
@@ -52,14 +52,12 @@ describe('bot emergency shutoff', async function() {
 		bot.disableEmergencyShutoff();
 	});
 
-	it('refuses to do API requests when shut off', function () {
+	it('refuses to do API requests when shut off', async function () {
 		bot.shutoff.state = true;
-		return bot.request({action: 'query', titles: 'testtitle'})
-			.then(() => {
-				expect(true).to.equal(false); // should never execute
-			}, (err) => {
-				expect(err.code).to.equal('bot-shutoff');
-			});
+
+		// Fuck, this works!
+		await expect(bot.request({action: 'query', titles: 'testtitle'})).to.be.eventually.rejectedWith(mwn.Error)
+			.that.has.property('code').which.equals('bot-shutoff');
 	});
 
 });

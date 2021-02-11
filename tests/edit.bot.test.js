@@ -1,7 +1,7 @@
 'use strict';
 
-const { bot, log, crypto, expect, loginBefore, logoutAfter} = require('./test_base');
-
+const { bot, sinon, crypto, expect, loginBefore, logoutAfter} = require('./test_base');
+const logger = require('../build/log');
 
 describe('methods which modify the wiki', function() {
 	this.timeout(10000);
@@ -9,7 +9,6 @@ describe('methods which modify the wiki', function() {
 	before('logs in and gets token & namespaceInfo', loginBefore);
 
 	after('logs out', logoutAfter);
-
 
 	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
 
@@ -34,8 +33,11 @@ describe('methods which modify the wiki', function() {
 
 	// will have to observe the warning, can't test it by code :(   XXX: use mocks!
 	it('shows warning (see above) on a no-op edit', function() {
+		sinon.spy(logger, 'log');
 		return bot.edit('SD0001test', rev => {
 			return rev.content;
+		}).then(() => {
+			expect(logger.log.calledOnce).to.be.true;
 		});
 	});
 
