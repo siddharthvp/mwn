@@ -1,6 +1,6 @@
 import {MwnError} from "./error";
 
-import type {mwn, MwnTitle} from './bot';
+import type {mwn, MwnTitle, ApiPage} from './bot';
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -165,7 +165,7 @@ export default function(bot: mwn): MwnPageStatic {
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
-				return page.linkshere.map(pg => pg.title);
+				return page.linkshere.map((pg: ApiPage) => pg.title);
 			});
 		}
 
@@ -186,7 +186,7 @@ export default function(bot: mwn): MwnPageStatic {
 				if (page.missing) {
 					return Promise.reject(new MwnError.MissingPage());
 				}
-				return page.transcludedin.map(pg => pg.title);
+				return page.transcludedin.map((pg: ApiPage) => pg.title);
 			});
 		}
 
@@ -228,7 +228,7 @@ export default function(bot: mwn): MwnPageStatic {
 				"aplimit": "max",
 				...options
 			}).then((data) => {
-				return data.query.allpages.map(pg => pg.title);
+				return data.query.allpages.map((pg: ApiPage) => pg.title);
 			});
 		}
 

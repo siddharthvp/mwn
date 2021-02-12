@@ -108,13 +108,16 @@ type editConfigType = {
 }
 
 export type ApiParams = {
-	[param: string]: string | string[] | boolean | number | number[] | MwnDate | {
+	[param: string]: string | string[] | boolean | number | number[] | Date | {
 		stream: ReadableStream
 		name: string
 	}
 }
 
-export type ApiResponse = Record<string, any>
+export interface ApiResponse {
+	query?: Record<string, any>
+	[prop: string]: any
+}
 
 export interface ApiPage {
 	title: string
@@ -295,7 +298,7 @@ export class mwn {
 	/**
 	 * Title class associated with the bot instance
 	 */
-	title = MwnTitleFactory(this);
+	title = MwnTitleFactory();
 
 	/**
 	 * Page class associated with the bot instance
@@ -1552,7 +1555,7 @@ export class mwn {
 			"apnamespace": title.namespace,
 			"aplimit": "max"
 		}, otherParams)).then((data) => {
-			return data.query.allpages.map(pg => pg.title);
+			return data.query.allpages.map((pg: ApiPage) => pg.title);
 		});
 	}
 
@@ -1571,7 +1574,7 @@ export class mwn {
 			"cmlimit": "max",
 			...otherParams
 		}).then(data => {
-			return data.query.categorymembers.map(pg => pg.title);
+			return data.query.categorymembers.map((pg: ApiPage) => pg.title);
 		});
 	}
 
@@ -1610,7 +1613,7 @@ export class mwn {
 	 */
 	continuedQuery(query?: ApiParams, limit = 10): Promise<ApiResponse[]> {
 		let responses: ApiResponse[] = [];
-		let callApi = (query, count) => {
+		let callApi = (query: ApiParams, count: number): Promise<ApiResponse[]> => {
 			return this.request(query).then(response => {
 				if (!this.options.silent) {
 					log(`[+] Got part ${count} of continuous API query`);
@@ -1634,7 +1637,7 @@ export class mwn {
 	 * @yields {Object} a single page of the response
 	 */
 	async *continuedQueryGen(query?: ApiParams, limit = Infinity): AsyncGenerator<ApiResponse>  {
-		let response = { continue: {} };
+		let response: ApiResponse = { continue: {} };
 		for (let i = 0; i < limit; i++) {
 			if (response.continue) {
 				response = await this.request(merge(query, response.continue));

@@ -1,6 +1,4 @@
-import type {MwnDate} from "./bot";
-
-type timestamp = MwnDate | string
+type timestamp = Date | string
 type expiry = string
 type namespace = number
 type limit = number | 'max'

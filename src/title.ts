@@ -310,11 +310,13 @@ export default function () {
 		 * @return {string} Unicode character, in upper case, according to the same rules as in PHP
 		 */
 		static phpCharToUpper(chr: string): string {
+			// @ts-ignore
 			if ( toUpperMap[ chr ] === '' ) {
 				// Optimisation: When the override is to keep the character unchanged,
 				// we use an empty string in JSON. This reduces the data by 50%.
 				return chr;
 			}
+			// @ts-ignore
 			return toUpperMap[ chr ] || chr.toUpperCase();
 		}
 
@@ -477,7 +479,7 @@ export default function () {
 			( Title.idNameMap[ namespace ].replace( / /g, '_' ) + ':' );
 	};
 
-	let getNsIdByName = function ( ns: string ) {
+	let getNsIdByName = function ( ns: string ): false | number {
 		let id;
 		// Don't cast non-strings to strings, because null or undefined should not result in
 		// returning the id of a potential namespace called "Null:" (e.g. on null.example.org/wiki)

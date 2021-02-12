@@ -94,7 +94,7 @@ export function debug(obj: item) {
 
 	} else {
 		// Print indented JSON
-		let msg = JSON.stringify(obj, false, 4);
+		let msg = JSON.stringify(obj, null, 4);
 		console.log(chalk.gray(msg));
 	}
 }
@@ -137,9 +137,8 @@ export function colorize(msg: item) {
 		'[TODO]': 'magenta'   // TO-DO
 	};
 
-	for (let searchString in colorMap) {
-		let color = colorMap[searchString];
-		if (msg && msg.indexOf && msg.startsWith(searchString)) {
+	for (let [code, color] of Object.entries(colorMap)) {
+		if (msg && msg.indexOf && msg.startsWith(code)) {
 			return chalk[color](msg);
 		}
 	}

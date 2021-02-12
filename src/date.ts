@@ -198,6 +198,7 @@ export default function (bot: mwn) {
 				 */
 				/H{1,2}|h{1,2}|m{1,2}|s{1,2}|d(d{2,3})?|D{1,2}|M{1,4}|Y{1,2}(Y{2})?|A/g,
 				function(match) {
+					// @ts-ignore
 					return replacementMap[match];
 				}
 			);
