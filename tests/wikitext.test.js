@@ -6,13 +6,13 @@
 
 'use strict';
 
-const { bot, assert, expect, loginBefore, logoutAfter} = require('./test_wiki');
+const { bot, assert, expect, setup, teardown} = require('./test_wiki');
 
 
 describe('wikitext', async function() {
 
-	before('logs in and gets token & namespaceInfo', loginBefore);
-	after('logs out', logoutAfter);
+	before('logs in and gets token & namespaceInfo', setup);
+	after('logs out', teardown);
 
 	it('wikitext parse links', function() {
 		var wkt = new bot.wikitext(`

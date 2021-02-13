@@ -1,11 +1,11 @@
 'use strict';
 
-const { mwn, bot, expect, assert, loginBefore, logoutAfter } = require('./test_wiki');
+const { mwn, bot, expect, assert, setup, teardown } = require('./test_wiki');
 
 describe('static utils', function() {
 
-	before('logs in and gets token & namespaceInfo', loginBefore);
-	after('logs out', logoutAfter);
+	before('logs in and gets token & namespaceInfo', setup);
+	after('logs out', teardown);
 
 	it('link', function() {
 		expect(mwn.link('Main Page')).to.equal('[[Main Page]]');

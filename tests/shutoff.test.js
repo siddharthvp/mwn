@@ -1,14 +1,14 @@
 'use strict';
 
-const {mwn, bot, expect, loginBefore, logoutAfter} = require('./local_wiki');
+const {mwn, bot, expect, setup, teardown} = require('./local_wiki');
 
 
 describe('bot emergency shutoff', async function() {
 	this.timeout(10000);
 
-	before('logs in and gets token & namespaceInfo', loginBefore);
+	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', function () {
-		logoutAfter();
+		teardown();
 		bot.shutoff.state = false;
 	});
 

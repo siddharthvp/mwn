@@ -1,11 +1,11 @@
 'use strict';
 
-const { bot, expect, logoutAfter} = require('./test_wiki');
+const { bot, expect, teardown} = require('./test_wiki');
 
 describe('Page', async function() {
 	this.timeout(10000);
 
-	var page;
+	let page;
 
 	before('gets site info', function() {
 		return bot.getSiteInfo().then(() => {
@@ -14,7 +14,7 @@ describe('Page', async function() {
 		});
 	});
 
-	after('logs out', logoutAfter);
+	after('logs out', teardown);
 
 	it('page inherits title', function() {
 		expect(page.toText()).to.equal('Wikipedia:Requests/Permissions');

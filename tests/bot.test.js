@@ -1,14 +1,14 @@
 'use strict';
 
-const { mwn, bot, expect, assert, loginBefore, logoutAfter} = require('./test_wiki');
+const { mwn, bot, expect, assert, setup, teardown} = require('./test_wiki');
 const fs = require('fs');
 
 describe('mwn', async function() {
 	this.timeout(5000);
 
-	before('logs in and gets token & namespaceInfo', loginBefore);
+	before('logs in and gets token & namespaceInfo', setup);
 
-	after('logs out', logoutAfter);
+	after('logs out', teardown);
 
 
 	//////////////////////////////////////////

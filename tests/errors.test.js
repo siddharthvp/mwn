@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, bot2, expect, loginBefore, logoutAfter} = require('./local_wiki');
+const { bot, bot2, expect, setup, teardown} = require('./local_wiki');
 
 describe('testing for error recoveries', function() {
 	this.timeout(10000);
@@ -9,14 +9,14 @@ describe('testing for error recoveries', function() {
 
 	before('initializes', function () {
 		return Promise.all([
-			loginBefore().then(() => {
+			setup().then(() => {
 				return bot.save(testPage, 'lorem ipsum', 'Init test page for testing error recoveries');
 			}),
 			bot2.login()
 		]);
 	});
 
-	after('logs out', logoutAfter);
+	after('logs out', teardown);
 
 	it('recovers from badtoken errors', function() {
 		bot.csrfToken = 'invalid-value';

@@ -1,4 +1,4 @@
-const {mwn, log, crypto, expect, assert, sinon} = require('./test_base');
+const {mwn, log, crypto, expect, assert, sinon, verifyTokenAndSiteInfo} = require('./test_base');
 
 const baseConfig = {
 	silent: true,
@@ -19,19 +19,15 @@ let bot2 = new mwn({
 	username: 'Wikiuser2@bp'
 });
 
-let loginBefore = function() {
-	return bot.login().then(() => {
-		expect(bot.csrfToken).to.be.a('string').of.length.greaterThan(5);
-		expect(bot.csrfToken.endsWith('+\\')).to.be.true;
-		expect(bot.title.nameIdMap).to.be.a('object');
-		expect(bot.title.legaltitlechars).to.be.a('string');
-		expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
-	});
-};
+async function setup() {
+	if (!bot.loggedIn) {
+		return bot.login().then(() => verifyTokenAndSiteInfo(bot));
+	}
+}
 
-let logoutAfter = function() {
-	return bot.logout();
-};
+async function teardown() {
+
+}
 
 // Export everything
-module.exports = { mwn, bot, bot2, log, crypto, expect, assert, sinon, loginBefore, logoutAfter };
+module.exports = { mwn, bot, bot2, log, crypto, expect, assert, sinon, setup, teardown };

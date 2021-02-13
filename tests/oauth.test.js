@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect, assert } = require('./test_wiki');
+const { mwn, expect, verifyTokenAndSiteInfo } = require('./test_base');
 
 const oauthCredentials = require('./mocking/loginCredentials.js').account1_oauth;
 
@@ -12,11 +12,9 @@ bot.initOAuth();
 
 describe('OAuth', async function() {
 
-	it('gets a token (GET request)', function() {
-		return bot.getTokens().then(() => {
-			expect(bot.csrfToken).to.be.a('string');
-			expect(bot.csrfToken.length).to.be.gt(5);
-			assert(bot.csrfToken.endsWith('+\\'));
+	it('gets tokens (GET request)', function() {
+		return bot.getTokensAndSiteInfo().then(() => {
+			verifyTokenAndSiteInfo(bot);
 		});
 	});
 
@@ -28,7 +26,7 @@ describe('OAuth', async function() {
 		}, {
 			method: 'post'
 		}).then(data => {
-			expect(data.query.tokens.csrftoken.length).to.be.gt(5);
+			expect(data.query.tokens.csrftoken.length).to.be.gt(10);
 		});
 	});
 
@@ -43,7 +41,7 @@ describe('OAuth', async function() {
 				'Content-Type': 'multipart/form-data'
 			}
 		}).then(data => {
-			expect(data.query.tokens.csrftoken.length).to.be.gt(5);
+			expect(data.query.tokens.csrftoken.length).to.be.gt(10);
 		});
 	});
 

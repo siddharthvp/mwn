@@ -11,4 +11,12 @@ const expect = chai.expect;
 const assert = require('assert');
 const sinon = require('sinon');
 
-module.exports = {mwn, log, crypto, expect, assert, sinon};
+function verifyTokenAndSiteInfo(bot) {
+	expect(bot.csrfToken).to.be.a('string').of.length.greaterThan(5);
+	expect(bot.csrfToken.endsWith('+\\')).to.be.true;
+	expect(bot.title.nameIdMap).to.be.a('object');
+	expect(bot.title.legaltitlechars).to.be.a('string');
+	expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
+}
+
+module.exports = {mwn, log, crypto, expect, assert, sinon, verifyTokenAndSiteInfo};

@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect } = require('./test_base');
+const { mwn, expect, verifyTokenAndSiteInfo } = require('./test_base');
 
 const testwiki = require('./mocking/loginCredentials.js');
 
@@ -11,9 +11,7 @@ describe('login', async function() {
 		let client = new mwn();
 		return client.login(testwiki.account1).then(async () => {
 			expect(client.loggedIn).to.be.true;
-			expect(client.csrfToken).to.be.a('string');
-			expect(client.csrfToken).to.be.of.length.greaterThan(5);
-			expect(client.title.nameIdMap).to.include.all.keys('project', 'user');
+			verifyTokenAndSiteInfo(client);
 			let userinfo = await client.userinfo();
 			expect(userinfo).to.not.have.property('anon');
 		});
@@ -23,8 +21,7 @@ describe('login', async function() {
 	it('successfully logs in through init', async function() {
 		bot = await mwn.init(testwiki.account1);
 		expect(bot.loggedIn).to.be.true;
-		expect(bot.csrfToken).to.be.a('string');
-		expect(bot.csrfToken).to.be.of.length.greaterThan(5); // csrftoken longer than `+\` for non-anons
+		verifyTokenAndSiteInfo(bot);
 	});
 
 	it('raises correct error on trying to login without logout', async function() {
@@ -54,8 +51,7 @@ describe('login', async function() {
 		});
 		await bot.login(); // need a token to be able to log out
 		expect(bot.loggedIn).to.be.true;
-		expect(bot.csrfToken).to.be.a('string');
-		expect(bot.csrfToken.endsWith('+\\')).to.be.true;
+		verifyTokenAndSiteInfo(bot);
 		let userinfo = await bot.userinfo();
 		expect(userinfo).to.not.have.property('anon');
 		expect(userinfo.name).to.eq(testwiki.account1.username.slice(0, testwiki.account1.username.indexOf('@')));
@@ -71,5 +67,7 @@ describe('login', async function() {
 		expect(userinfo).to.not.have.property('anon');
 		expect(userinfo.name).to.eq(testwiki.account2.username.slice(0, testwiki.account2.username.indexOf('@')));
 	});
+
+	// TODO: add test for two bot instances signed into different wikis
 
 });

@@ -1,14 +1,14 @@
 'use strict';
 
-const { bot, sinon, crypto, expect, loginBefore, logoutAfter} = require('./local_wiki');
+const { bot, sinon, crypto, expect, setup, teardown} = require('./local_wiki');
 const logger = require('../build/log');
 
 describe('methods which modify the wiki', function() {
 	this.timeout(10000);
 
-	before('logs in and gets token & namespaceInfo', loginBefore);
+	before('logs in and gets token & namespaceInfo', setup);
 
-	after('logs out', logoutAfter);
+	after('logs out', teardown);
 
 	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
 

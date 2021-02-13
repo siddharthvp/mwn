@@ -1,11 +1,11 @@
 'use strict';
 
-const { bot, expect, loginBefore, logoutAfter} = require('./test_wiki');
+const { bot, expect, setup, teardown} = require('./test_wiki');
 
 describe('Category', async function() {
 
-	before('logs in and gets token & namespaceInfo', loginBefore);
-	after('logs out', logoutAfter);
+	before('logs in and gets token & namespaceInfo', setup);
+	after('logs out', teardown);
 
 	let category;
 
