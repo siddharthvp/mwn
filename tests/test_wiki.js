@@ -4,7 +4,7 @@ const loginCredentials = require('./mocking/loginCredentials.js');
 
 let bot = new mwn({
 	silent: true,
-	...loginCredentials.account1_oauth,
+	...loginCredentials.account1,
 	userAgent: 'mwn (https://github.com/siddharthvp/mwn)'
 });
 let bot2 = new mwn({
@@ -14,8 +14,9 @@ let bot2 = new mwn({
 });
 
 let loginBefore = function() {
-	bot.initOAuth();
-	return bot.getTokensAndSiteInfo().then(() => {
+	// Switching to BotPassword authentication due to OAuth being unreliable in CI due to
+	// https://phabricator.wikimedia.org/T272319. Revert when that is resolved.
+	return bot.login().then(() => {
 		expect(bot.csrfToken).to.be.a('string').of.length.greaterThan(5);
 		expect(bot.csrfToken.endsWith('+\\')).to.be.true;
 		expect(bot.title.nameIdMap).to.be.a('object');
@@ -26,7 +27,7 @@ let loginBefore = function() {
 };
 
 let logoutAfter = function() {
-
+	return bot.logout();
 };
 
 // Export everything
