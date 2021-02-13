@@ -9,31 +9,95 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/node-ci.yml'
   pull_request:
     branches: [ master ]
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/node-ci.yml'
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: npm ci
+      - uses: actions/upload-artifact@v2
+        with:
+          name: node_modules
+          path: node_modules
+      - run: npm run lint
+      - run: npm run build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: Test usage with TypeScript
+        run: npm run test:ts
+
+  setup_mediawiki:
+    runs-on: ubuntu-latest
+    name: Setup MediaWiki instance using Docker for integration tests
+    steps:
+      - run: npm run setuplocalwiki
+
+  test:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ 10.x, 12.x, 14.x ]
-
+    env:
+      AUTH_JSON: ${{secrets.AUTH_JSON}}
+    needs:
+      - build
+      - setup_mediawiki
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npm run test:testwiki && npm run test:nowiki && npm run test:ts
-        env:
-          AUTH_JSON: ${{secrets.AUTH_JSON}}
+      - uses: actions/download-artifact@v2
+      - run: npm run test
+      - uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coverage
+
+  upload_coverage:
+    runs-on: ubuntu-latest
+    env:
+      COVERALLS_TOKEN: ${{secrets.COVERALLS_TOKEN}}
+    needs: test
+    steps:
+      - uses: actions/download-artifact@v2
+      - name: Upload coverage reports to Toolforge
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: /home/runner/work/mwn/mwn/coverage.zip
+          remote: /data/project/mwn/coverage.zip
+          host: login.toolforge.org
+          username: ${{ secrets.TOOLFORGE_USERNAME }}
+          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          rmRemote: true
+      - name: Coverage
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: >-
+            cd /data/project/mwn &&
+            rm -rf coverage &&
+            unzip coverage.zip &&
+            rm -rf public_html/coverage &&
+            rm -rf www/static/coverage &&
+            cp -r docs public_html &&
+            cp -r docs www/static
+          host: login.toolforge.org
+          username: ${{ secrets.TOOLFORGE_USERNAME }}
+          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
