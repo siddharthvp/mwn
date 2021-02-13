@@ -1,5 +1,4 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+# Workflow for linting, building, testing, CodeQL analysis, and reporting of code coverage
 
 name: Node.js CI
 
@@ -39,6 +38,20 @@ jobs:
         run: npm run test:ts
         env:
           AUTH_JSON: ${{secrets.AUTH_JSON}}
+
+  code_ql:
+    runs-on: ubuntu-latest
+    name: CodeQL
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: javascript
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
 
   test:
     runs-on: ubuntu-latest
