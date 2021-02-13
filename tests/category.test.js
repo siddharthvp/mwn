@@ -3,6 +3,7 @@
 const { bot, expect, setup, teardown} = require('./test_wiki');
 
 describe('Category', async function() {
+	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);

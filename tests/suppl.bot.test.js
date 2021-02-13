@@ -1,4 +1,4 @@
-const { mwn, expect } = require('./test_wiki');
+const { mwn, expect, sinon } = require('./test_base');
 
 describe('supplementary functions', function() {
 	this.timeout(5000);
@@ -33,5 +33,43 @@ describe('supplementary functions', function() {
 		});
 
 	});
+
+	it('eventstream', function (done) {
+		let stream = new bot.stream('recentchange');
+		function messageHandler(data) {
+			expect(data).to.be.an('object');
+			expect(data).to.have.property('wiki').that.is.a('string');
+		}
+		let spy = sinon.spy(messageHandler);
+		stream.addListener({}, spy);
+		setTimeout(function () {
+			stream.close();
+			expect(spy.callCount).to.be.greaterThan(2);
+			done();
+		}, 2000);
+	});
+
+	it('eventstream with since param', function (done) {
+		let sinceTime = new bot.date().subtract(5, 'hours');
+		let stream = new bot.stream('recentchange', {
+			since: sinceTime
+		});
+		function messageHandler(data) {
+			expect(data).to.be.an('object');
+			expect(new bot.date(data.timestamp * 1000)).to.be.within(
+				new bot.date(sinceTime).subtract(5, 'minutes'),
+				new bot.date(sinceTime).add(10, 'minutes')
+			);
+			expect(data).to.have.property('wiki').that.is.a('string');
+		}
+		let spy = sinon.spy(messageHandler);
+		stream.addListener({}, spy);
+		setTimeout(function () {
+			stream.close();
+			expect(spy.callCount).to.be.greaterThan(2);
+			done();
+		}, 2000);
+	});
+
 
 });

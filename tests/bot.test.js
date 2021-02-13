@@ -4,7 +4,7 @@ const { mwn, bot, expect, assert, setup, teardown} = require('./test_wiki');
 const fs = require('fs');
 
 describe('mwn', async function() {
-	this.timeout(5000);
+	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', setup);
 
@@ -115,7 +115,6 @@ describe('mwn', async function() {
 	});
 
 	it('successfully reads apilimit+ pages with read', function() {
-		this.timeout(10000);
 		let arr = [];
 		for (let i=1; i<=60; i++) {
 			arr.push(`page${i}`);
