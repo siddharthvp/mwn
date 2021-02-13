@@ -5,7 +5,8 @@
 		"module": "CommonJS",
 		"declaration": true,
 		"noImplicitAny": true,
-		"newLine": "lf"
+		"newLine": "lf",
+		"sourceMap": true
 	},
 	"include": ["./src/**/*"],
 	"ts-node": {

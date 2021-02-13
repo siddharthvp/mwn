@@ -1,0 +1,8 @@
+# Ignore everything except for the build directory.
+# Within build directory, exclude source maps (*.js.map files)
+# Certain files like package.json, README.md and CHANGELOG.md
+# are not affected by the rules here and always included by npm
+
+*
+!build/*
+*.js.map
