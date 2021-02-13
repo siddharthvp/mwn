@@ -10,6 +10,7 @@ const { bot, assert, expect, setup, teardown} = require('./test_wiki');
 
 
 describe('wikitext', async function() {
+	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);

@@ -8,33 +8,53 @@ describe('User', async function() {
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
 
-	it('gets user contribs', function(done) {
-		var u = new bot.user('SD0001');
-		u.contribs().then(response => {
-			expect(response).to.be.instanceOf(Array);
-			expect(response.length).to.be.gt(500);
+	it('gets user contribs', function() {
+		let u = new bot.user('SD0001');
+		return u.contribs().then(response => {
+			expect(response).to.be.instanceOf(Array).of.length.greaterThan(500);
 			expect(response[0].user).to.equal('SD0001');
 			expect(response[0].title).to.be.a('string');
-			done();
 		});
 	});
 
-	it('gets user logs', function(done) {
-		var u = new bot.user('SD0001');
-		u.logs().then(response => {
-			expect(response).to.be.instanceOf(Array);
-			expect(response.length).to.be.gt(10);
+	it('gets user logs', async function() {
+		let u = new bot.user('SD0001');
+		return u.logs().then(response => {
+			expect(response).to.be.instanceOf(Array).of.length.greaterThan(10);
 			expect(response[0].logid).to.be.a('number');
 			expect(response[0].user).to.equal('SD0001');
 			expect(response[0].title).to.be.a('string');
-			done();
 		});
 	});
 
-	it('userpage', function() {
-		var u = new bot.user('SD0001');
-		expect(u.userpage).to.be.instanceOf(bot.page);
-		expect(u.userpage.namespace).to.equal(2);
+	it('contribsGen and logsGen', async function () {
+		let u = new bot.user('SD0001');
+		let count = 0;
+		for await (let item of u.contribsGen()) {
+			expect(item).to.have.property('user').that.equals('SD0001');
+			if (++count > 10) break;
+		}
+
+		count = 0;
+		for await (let item of u.logsGen()) {
+			expect(item).to.have.property('user').that.equals('SD0001');
+			if (++count > 10) break;
+		}
 	});
 
+	it('userpage and talkpage', function() {
+		let u = new bot.user('SD0001');
+		expect(u.userpage).to.be.instanceOf(bot.page).that.has.property('title').which.equals('SD0001');
+		expect(u.userpage.namespace).to.equal(2);
+		expect(u.talkpage).to.be.instanceOf(bot.page).that.has.property('title').which.equals('SD0001');
+		expect(u.talkpage.namespace).to.equal(3);
+	});
+	
+	it('info', async function () {
+		let u = new bot.user('SD0001');
+		let info = await u.info();
+		expect(info).to.include.keys('userid', 'editcount', 'groups', 'rights');
+		let globalinfo = await u.globalinfo();
+		expect(globalinfo).to.include.keys('home', 'id', 'name');
+	});
 });

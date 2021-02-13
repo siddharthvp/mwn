@@ -3,6 +3,7 @@
 const { mwn, bot, expect, assert, setup, teardown } = require('./test_wiki');
 
 describe('static utils', function() {
+	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
@@ -46,7 +47,7 @@ describe('static utils', function() {
 	});
 
 
-	it('table', function() {
+	it('table & wikitext.parseTable', function() {
 		var expected1 = `{| class="wikitable sortable"
 |-
 ! Header text !! Header text !! Header text
@@ -62,6 +63,12 @@ describe('static utils', function() {
 		table.addRow(['Example', 'Example', 'Example']);
 		expect(table.getText()).to.equal(expected1);
 
+		expect(bot.wikitext.parseTable(expected1)).to.deep.equal([
+			// Same header name, so object will have only one key
+			{ 'Header text': 'Example' },
+			{ 'Header text': 'Example'}
+		]);
+
 		var expected2 = `{| class="wikitable"
 |-
 ! Header1 text !! Header2 text !! Header3 text
@@ -70,6 +77,19 @@ describe('static utils', function() {
 |-
 | Example21 || Example22 || Example23
 |}`;
+
+		expect(bot.wikitext.parseTable(expected2)).to.deep.equal([
+			{
+				'Header1 text': 'Example11',
+				'Header2 text': 'Example12',
+				'Header3 text': 'Example13'
+			},
+			{
+				'Header1 text': 'Example21',
+				'Header2 text': 'Example22',
+				'Header3 text': 'Example23'
+			}
+		]);
 
 		table = new mwn.table({ sortable: false, multiline: false });
 		table.addHeaders(['Header1 text', 'Header2 text', 'Header3 text']);
