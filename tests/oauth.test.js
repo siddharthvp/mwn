@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect, assert } = require('./test_base');
+const { mwn, expect, assert } = require('./test_wiki');
 
 const oauthCredentials = require('./mocking/loginCredentials.js').account1_oauth;
 
@@ -10,7 +10,7 @@ let bot = new mwn({
 
 bot.initOAuth();
 
-describe('get token', async function() {
+describe('OAuth', async function() {
 
 	it('gets a token (GET request)', function() {
 		return bot.getTokens().then(() => {

@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, expect, loginBefore, logoutAfter} = require('./test_base');
+const { bot, expect, loginBefore, logoutAfter} = require('./test_wiki');
 
 describe('Category', async function() {
 

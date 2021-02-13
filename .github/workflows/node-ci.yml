@@ -34,6 +34,6 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - run: npm run test-readonly && npm run test-ts
+      - run: npm run test:testwiki && npm run test:nowiki && npm run test:ts
         env:
           AUTH_JSON: ${{secrets.AUTH_JSON}}

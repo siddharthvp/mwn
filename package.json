@@ -1,17 +1,20 @@
 {
 	"name": "mwn",
-	"version": "0.9.1",
-	"description": "MediaWiki bot framework for Node.js",
+	"version": "0.10.0",
+	"description": "JavaScript & TypeScript MediaWiki bot framework for Node.js",
 	"main": "./build/bot.js",
 	"types": "./build/bot.d.ts",
 	"scripts": {
 		"bump": "node bump-version.js",
 		"build": "npx tsc || echo",
-		"lint": "eslint src && eslint tests",
-		"test-readonly": "cd tests && npx mocha bot.test.js batchOperations.bot.test.js category.test.js date.test.js file.test.js log.test.js login.bot.test.js oauth.test.js page.test.js static_utils.test.js suppl.bot.test.js title.test.js user.test.js wikitext.test.js",
+		"lint": "eslint src tests",
+		"test:testwiki": "cd tests && npx mocha bot.test.js category.test.js file.test.js login.bot.test.js oauth.test.js page.test.js suppl.bot.test.js user.test.js wikitext.test.js",
+		"setuplocalwiki": "cd tests/docker && bash main.sh",
+		"test:localwiki": "cd tests && npx mocha edit.bot.test.js errors.test.js shutoff.test.js",
+		"test:nowiki": "cd tests && npx mocha batchOperations.bot.test.js date.test.js log.test.js static_utils.test.js title.test.js",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
-		"coverage": "nyc report --reporter=text-lcov | coveralls",
-		"test-ts": "npx ts-mocha -p tsconfig.json tests/ts/*",
+		"coveralls": "nyc report --reporter=text-lcov | coveralls",
+		"test:ts": "npx ts-mocha -p tsconfig.json tests/ts/*",
 		"docs": "npx typedoc src/bot.ts --out docs --ignoreCompilerErrors"
 	},
 	"engines": {

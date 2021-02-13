@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, bot, expect, assert, loginBefore, logoutAfter } = require('./test_base');
+const { mwn, bot, expect, assert, loginBefore, logoutAfter } = require('./test_wiki');
 
 describe('static utils', function() {
 

@@ -6,7 +6,7 @@
 
 'use strict';
 
-const { bot, assert, expect, loginBefore, logoutAfter} = require('./test_base');
+const { bot, assert, expect, loginBefore, logoutAfter} = require('./test_wiki');
 
 
 describe('wikitext', async function() {

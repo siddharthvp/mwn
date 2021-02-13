@@ -1,4 +1,4 @@
-const { mwn, expect } = require('./test_base');
+const { mwn, expect } = require('./test_wiki');
 
 describe('supplementary functions', function() {
 	this.timeout(5000);

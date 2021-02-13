@@ -1,4 +1,4 @@
-const { bot, expect} = require('./test_base');
+const { bot, expect } = require('./local_wiki');
 
 // Includes some tests copied from https://github.com/wikimedia-gadgets/twinkle/blob/master/tests/morebits.date.js
 

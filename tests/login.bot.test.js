@@ -1,27 +1,27 @@
 'use strict';
 
-const { mwn, expect, assert } = require('./test_base');
+const { mwn, expect } = require('./test_base');
 
-const {account1, account2, account1_oauth} = require('./mocking/loginCredentials.js');
+const testwiki = require('./mocking/loginCredentials.js');
 
 describe('login', async function() {
 	this.timeout(10000);
 
 	it('successfully logs in and gets token & siteinfo', async function() {
 		let client = new mwn();
-		return client.login(account1).then(async () => {
+		return client.login(testwiki.account1).then(async () => {
 			expect(client.loggedIn).to.be.true;
 			expect(client.csrfToken).to.be.a('string');
 			expect(client.csrfToken).to.be.of.length.greaterThan(5);
 			expect(client.title.nameIdMap).to.include.all.keys('project', 'user');
 			let userinfo = await client.userinfo();
-			expect(userinfo.anon).to.be.undefined;
+			expect(userinfo).to.not.have.property('anon');
 		});
 	});
 
 	let bot = new mwn();
 	it('successfully logs in through init', async function() {
-		bot = await mwn.init(account1);
+		bot = await mwn.init(testwiki.account1);
 		expect(bot.loggedIn).to.be.true;
 		expect(bot.csrfToken).to.be.a('string');
 		expect(bot.csrfToken).to.be.of.length.greaterThan(5); // csrftoken longer than `+\` for non-anons
@@ -34,7 +34,7 @@ describe('login', async function() {
 	});
 
 	it('raises correct error on trying to login while using OAuth', async function() {
-		let client = new mwn({...account1, ...account1_oauth});
+		let client = new mwn({...testwiki.account1, ...testwiki.account1_oauth});
 		client.initOAuth();
 		return client.login().catch(err => {
 			expect(err.info).to.eq(`Cannot use login/logout while using OAuth`);
@@ -55,21 +55,21 @@ describe('login', async function() {
 		await bot.login(); // need a token to be able to log out
 		expect(bot.loggedIn).to.be.true;
 		expect(bot.csrfToken).to.be.a('string');
-		assert(bot.csrfToken.endsWith('+\\'));
+		expect(bot.csrfToken.endsWith('+\\')).to.be.true;
 		let userinfo = await bot.userinfo();
-		expect(userinfo.anon).to.be.undefined;
-		expect(userinfo.name).to.eq(account1.username.slice(0, account1.username.indexOf('@')));
+		expect(userinfo).to.not.have.property('anon');
+		expect(userinfo.name).to.eq(testwiki.account1.username.slice(0, testwiki.account1.username.indexOf('@')));
 	});
 
 	it('logs out and logs in to another account (same bot instance)', async function() {
 		await bot.logout();
 
 		// Now trying logging in to another account
-		await bot.login(account2);
+		await bot.login(testwiki.account2);
 		expect(bot.loggedIn).to.be.true;
 		let userinfo = await bot.userinfo();
-		expect(userinfo.anon).to.be.undefined;
-		expect(userinfo.name).to.eq(account2.username.slice(0, account2.username.indexOf('@')));
+		expect(userinfo).to.not.have.property('anon');
+		expect(userinfo.name).to.eq(testwiki.account2.username.slice(0, testwiki.account2.username.indexOf('@')));
 	});
 
 });

@@ -282,7 +282,6 @@ bot.massQuery({
 	// jsons is the array of individual JSON responses.
 });
 ```
-The 3rd parameter `hasApiHighLimit` is set `true` by default. If you get the API error 'toomanyvalues' (or similar), your account doesn't have the required user right, so set the parameter as `false`.
 
 Any errors in the individual API calls will not cause the entire massQuery to fail, but the data at the array index corresponding to that API call will be error object.
 

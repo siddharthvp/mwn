@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, sinon, crypto, expect, loginBefore, logoutAfter} = require('./test_base');
+const { bot, sinon, crypto, expect, loginBefore, logoutAfter} = require('./local_wiki');
 const logger = require('../build/log');
 
 describe('methods which modify the wiki', function() {
@@ -34,7 +34,7 @@ describe('methods which modify the wiki', function() {
 	// will have to observe the warning, can't test it by code :(   XXX: use mocks!
 	it('shows warning (see above) on a no-op edit', function() {
 		sinon.spy(logger, 'log');
-		return bot.edit('SD0001test', rev => {
+		return bot.edit(randPage, rev => {
 			return rev.content;
 		}).then(() => {
 			expect(logger.log.calledOnce).to.be.true;
@@ -71,6 +71,7 @@ describe('methods which modify the wiki', function() {
 		return bot.edit(randPage, function(rev) {
 			expect(rev.content).to.be.a('string');
 			expect(rev.timestamp).to.be.a('string');
+			expect(new Date(rev.timestamp).getTime()).to.not.be.NaN;
 			return {
 				text: rev.content + '\n\n\n' + rev.content,
 				summary: 'test edit with mwn edit()',
@@ -86,8 +87,9 @@ describe('methods which modify the wiki', function() {
 	it('successfully moves a page without leaving redirect', function() {
 		return bot.move(randPage, randPageMoved, 'Test move using mwn', {noredirect: 1}).then((response) => {
 			expect(response).to.be.an('object');
-			expect(response).to.include.all.keys('from', 'to', 'redirectcreated');
-			expect(response.redirectcreated).to.equal(false);
+			expect(response).to.have.property('from').which.equals(randPage);
+			expect(response).to.have.property('to').which.equals(randPageMoved);
+			expect(response).to.have.property('redirectcreated').which.equals(false);
 		});
 	});
 
@@ -99,18 +101,21 @@ describe('methods which modify the wiki', function() {
 
 	describe('image uploads', function() {
 
-		var randFileName = 'mwn-' + Math.random() + '.png';
-
 		it('successfully upload image from URL', function() {
-			var url = 'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png';
-			return bot.uploadFromUrl(url, randFileName, 'Test upload using mwn').then(data => {
+			return bot.uploadFromUrl(
+				'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png',
+				'Random-' + Math.random() + '.png',
+				'Test upload using mwn'
+			).then(data => {
 				expect(data.result).to.equal('Success');
-				bot.delete('File:' + randFileName, 'Delete after testing (mwn)');
 			});
 		});
 
 		it('successfully uploads files with upload()', function() {
-			return bot.upload(__dirname + '/mocking/example1.png', randFileName).then(response => {
+			return bot.upload(
+				__dirname + '/mocking/example1.png',
+				'Random-' + Math.random() + '.png'
+			).then(response => {
 				expect(response.result).to.equal('Success');
 			});
 		});

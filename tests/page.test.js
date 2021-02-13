@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, expect, logoutAfter} = require('./test_base');
+const { bot, expect, logoutAfter} = require('./test_wiki');
 
 describe('Page', async function() {
 	this.timeout(10000);

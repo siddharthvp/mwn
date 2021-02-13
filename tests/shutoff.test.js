@@ -1,6 +1,6 @@
 'use strict';
 
-const {mwn, bot, expect, loginBefore, logoutAfter} = require('./test_base');
+const {mwn, bot, expect, loginBefore, logoutAfter} = require('./local_wiki');
 
 
 describe('bot emergency shutoff', async function() {
@@ -12,13 +12,15 @@ describe('bot emergency shutoff', async function() {
 		bot.shutoff.state = false;
 	});
 
+	const testPage = 'SD0001test';
+
 	it('set shutoff=true on non-matching regex', async function () {
 		bot.enableEmergencyShutoff({
-			page: 'SD0001test',
+			page: testPage,
 			intervalDuration: 1000,
 			condition: /^\s*$/
 		});
-		await bot.save('SD0001test', 'shutoff', 'Testing bot shutoff (mwn)');
+		await bot.save(testPage, 'shutoff', 'Testing bot shutoff');
 		await bot.sleep(1500); // wait till we can be sure that shutoff check is queried
 		expect(bot.shutoff.state).to.equal(true);
 		bot.disableEmergencyShutoff();
@@ -28,7 +30,7 @@ describe('bot emergency shutoff', async function() {
 		bot.shutoff.state = false; // restore to default state
 
 		bot.enableEmergencyShutoff({
-			page: 'SD0001test',
+			page: testPage,
 			intervalDuration: 1000,
 			condition: function () {
 				return false; // function returns false means bot would shut down
@@ -42,11 +44,11 @@ describe('bot emergency shutoff', async function() {
 	it ('sets shutoff=true even if shutoff options are not configured in function', async function () {
 		bot.shutoff.state = false; // restore to default state
 
-		bot.options.shutoff.page = 'SD0001test';
+		bot.options.shutoff.page = testPage;
 		bot.options.shutoff.intervalDuration = 1000;
 		bot.options.shutoff.condition = /^\s*$/;
 		bot.enableEmergencyShutoff();
-		await bot.save('SD0001test', 'shutoff', 'Testing bot shutoff (mwn)');
+		await bot.save(testPage, 'shutoff', 'Testing bot shutoff (mwn)');
 		await bot.sleep(1500); // wait till we can be sure that shutoff check is queried
 		expect(bot.shutoff.state).to.equal(true);
 		bot.disableEmergencyShutoff();
