@@ -113,12 +113,27 @@ describe('Page', async function() {
 		});
 	});
 
+	it('historyGen', async function () {
+		let count = 0;
+		for await (let edit of page.historyGen()) {
+			expect(edit).to.include.keys(['revid', 'parentid']);
+			if (++count > 10) break;
+		}
+	});
+
 	it('logs', function() {
 		return page.logs().then(logs => {
 			expect(logs).to.be.instanceOf(Array);
 			expect(logs[0]).to.include.all.keys('title', 'type', 'action',
 				'timestamp','comment');
 		});
+	});
+
+	it('logsGen', async function () {
+		for await (let event of page.logsGen()) {
+			expect(event).to.include.keys(['title', 'type', 'action',
+				'timestamp']);
+		}
 	});
 
 	it('logs with type=delete', function() {

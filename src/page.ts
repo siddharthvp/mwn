@@ -1,12 +1,10 @@
 import {MwnError} from "./error";
 
-import type {mwn, MwnTitle, ApiPage} from './bot';
+import type {mwn, MwnTitle} from './bot';
 import type {
-	ApiDeleteParams,
-	ApiEditPageParams,
-	ApiMoveParams, ApiPurgeParams, ApiQueryAllPagesParams,
-	ApiQueryLogEventsParams, ApiQueryRevisionsParams, ApiUndeleteParams,
-	WikibaseClientApiDescriptionParams
+	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiPurgeParams,
+	ApiQueryAllPagesParams, ApiQueryLogEventsParams, ApiQueryRevisionsParams,
+	ApiUndeleteParams, WikibaseClientApiDescriptionParams
 } from "./api_params";
 import type {LogEvent} from "./user";
 
@@ -14,6 +12,43 @@ export type revisionprop = "content" | "timestamp" | "user" | "comment" | "parse
 	"ids" | "flags" | "size"  | "tags" | "userid" | "contentmodel";
 export type logprop =  "type" | "user" | "comment" | "details" | "timestamp" | "title" |
 	"parsedcomment" | "ids" | "tags" | "userid";
+
+export interface ApiPage {
+	pageid: number
+	ns: number
+	title: string
+	missing?: true
+	invalid?: true
+	revisions?: ApiRevision[]
+}
+
+// If rvslots is not used revisions slot info is part of revision object
+export interface ApiRevision extends ApiRevisionSlot {
+	revid?: number
+	parentid?: number
+	minor?: boolean
+	userhidden?: true
+	anon?: true
+	user?: string
+	userid?: number
+	timestamp?: string
+	roles?: string[]
+	commenthidden?: true
+	comment?: string
+	parsedcomment?: string
+	slots?: {
+		main: ApiRevisionSlot
+		[slotname: string]: ApiRevisionSlot
+	}
+}
+
+export interface ApiRevisionSlot {
+	size?: number
+	sha1?: string
+	contentmodel?: string
+	contentformat?: string
+	content?: string
+}
 
 export interface MwnPageStatic {
 	new (title: MwnTitle | string, namespace?: number): MwnPage;
@@ -49,8 +84,10 @@ export interface MwnPage extends MwnTitle {
 	getCreator(): Promise<string>;
 	getDeletingAdmin(): Promise<string>;
 	getDescription(customOptions?: any): Promise<string>;
-	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: ApiQueryRevisionsParams): Promise<any[]>;
+	history(props: revisionprop[] | revisionprop, limit: number, customOptions?: ApiQueryRevisionsParams): Promise<ApiRevision[]>;
+	historyGen(props: revisionprop[] | revisionprop, customOptions?: ApiQueryRevisionsParams): AsyncGenerator<ApiRevision>;
 	logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
+	logsGen(props: logprop | logprop[], type?: string, customOptions?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>
 	edit(transform: ((rev: {
 		content: string;
 		timestamp: string;
@@ -341,7 +378,7 @@ export default function(bot: mwn): MwnPageStatic {
 		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
 		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
 		 */
-		history(props: revisionprop[] | revisionprop, limit = 50, customOptions?: ApiQueryRevisionsParams): Promise<any[]> {
+		history(props: revisionprop[] | revisionprop, limit = 50, customOptions?: ApiQueryRevisionsParams): Promise<ApiRevision[]> {
 			return bot.request({
 				"action": "query",
 				"prop": "revisions",
@@ -358,7 +395,7 @@ export default function(bot: mwn): MwnPageStatic {
 			});
 		}
 
-		async *historyGen(props: revisionprop[] | revisionprop, customOptions?: ApiQueryRevisionsParams): AsyncGenerator<any> {
+		async *historyGen(props: revisionprop[] | revisionprop, customOptions?: ApiQueryRevisionsParams): AsyncGenerator<ApiRevision> {
 			let continuedQuery = bot.continuedQueryGen({
 				"action": "query",
 				"prop": "revisions",
@@ -386,13 +423,9 @@ export default function(bot: mwn): MwnPageStatic {
 		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
 		 */
 		logs(props: logprop | logprop[], limit?: number, type?: string, customOptions?: ApiQueryLogEventsParams): Promise<LogEvent[]> {
-			let logtypeObj: any = {};
+			let logtypeObj: ApiQueryLogEventsParams = {};
 			if (type) {
-				if (type.includes('/')) {
-					logtypeObj.leaction = type;
-				} else {
-					logtypeObj.letype = type;
-				}
+				logtypeObj = { [type.includes('/') ? "leaction" : "letype"]: type };
 			}
 			return bot.request({
 				"action": "query",
@@ -407,6 +440,26 @@ export default function(bot: mwn): MwnPageStatic {
 			});
 		}
 
+		async *logsGen(props: logprop | logprop[], type?: string, customOptions?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent> {
+			let logtypeObj: ApiQueryLogEventsParams = {};
+			if (type) {
+				logtypeObj = { [type.includes('/') ? "leaction" : "letype"]: type };
+			}
+			let continuedQuery = bot.continuedQueryGen({
+				"action": "query",
+				"list": "logevents",
+				...logtypeObj,
+				"leprop": props || "title|type|user|timestamp|comment",
+				"letitle": this.toString(),
+				"lelimit": 50,
+				...customOptions
+			});
+			for await (let json of continuedQuery) {
+				for (let event of json.query.logevents) {
+					yield event;
+				}
+			}
+		}
 
 
 		/**** Post operations *****/

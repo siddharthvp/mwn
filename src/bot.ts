@@ -53,7 +53,7 @@ import {link, template, table, util} from './static_utils';
 // Nested classes of mwn
 import MwnDateFactory, {MwnDate} from './date';
 import MwnTitleFactory, {MwnTitle} from './title';
-import MwnPageFactory, {MwnPage} from './page';
+import MwnPageFactory, {MwnPage, ApiPage, ApiRevision} from './page';
 import MwnWikitextFactory, {MwnWikitext} from './wikitext';
 import MwnUserFactory, {MwnUser} from './user';
 import MwnCategoryFactory, {MwnCategory} from './category';
@@ -61,7 +61,8 @@ import MwnFileFactory, {MwnFile} from './file';
 import MwnStreamFactory, {MwnStream} from './eventstream';
 
 // Export them too
-export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream};
+export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream,
+	ApiPage, ApiRevision};
 
 import type {
 	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
@@ -119,24 +120,6 @@ export interface ApiResponse {
 	[prop: string]: any
 }
 
-export interface ApiPage {
-	title: string
-	missing?: boolean
-	invalid?: boolean
-	revisions: ApiRevision[]
-}
-
-export interface ApiRevision {
-   content: string
-   timestamp: string
-   slots?: {
-		main: {
-			content: string
-			timestamp: string
-		}
-   }
-}
-
 type ApiEditResponse = { // fix
 	result: string
 	pageid: number
@@ -147,7 +130,6 @@ type ApiEditResponse = { // fix
 	newrevid: number
 	newtimestamp: string
 }
-
 
 
 export class mwn {
