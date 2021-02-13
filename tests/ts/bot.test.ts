@@ -1,6 +1,5 @@
 import {mwn} from '../..';
 import {expect} from 'chai';
-import 'mocha';
 
 /**
  * Basic tests to check that the library works with TypeScript

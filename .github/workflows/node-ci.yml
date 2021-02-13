@@ -19,9 +19,9 @@ on:
   workflow_dispatch:
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
@@ -29,10 +29,6 @@ jobs:
         with:
           node-version: 14.x
       - run: npm ci
-      - uses: actions/upload-artifact@v2
-        with:
-          name: node_modules
-          path: node_modules
       - run: npm run lint
       - run: npm run build
       - uses: actions/upload-artifact@v2
@@ -41,31 +37,28 @@ jobs:
           path: build
       - name: Test usage with TypeScript
         run: npm run test:ts
-
-  setup_mediawiki:
-    runs-on: ubuntu-latest
-    name: Setup MediaWiki instance using Docker for integration tests
-    steps:
-      - run: npm run setuplocalwiki
+        env:
+          AUTH_JSON: ${{secrets.AUTH_JSON}}
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ 10.x, 12.x, 14.x ]
-    env:
-      AUTH_JSON: ${{secrets.AUTH_JSON}}
-    needs:
-      - build
-      - setup_mediawiki
+    needs: build
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Setup MediaWiki instance using Docker for integration tests
+        run: npm run setuplocalwiki
+      - run: npm ci
       - uses: actions/download-artifact@v2
       - run: npm run test
+        env:
+          AUTH_JSON: ${{secrets.AUTH_JSON}}
       - uses: actions/upload-artifact@v2
         with:
           name: coverage
@@ -73,11 +66,13 @@ jobs:
 
   upload_coverage:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     env:
       COVERALLS_TOKEN: ${{secrets.COVERALLS_TOKEN}}
     needs: test
     steps:
       - uses: actions/download-artifact@v2
+      - run: zip -r coverage.zip coverage
       - name: Upload coverage reports to Toolforge
         uses: garygrossgarten/github-action-scp@release
         with:
