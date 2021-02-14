@@ -35,6 +35,7 @@ describe('supplementary functions', function() {
 	});
 
 	it('eventstream', function (done) {
+		this.timeout(8000);
 		let stream = new bot.stream('recentchange');
 		function messageHandler(data) {
 			expect(data).to.be.an('object');
@@ -42,14 +43,17 @@ describe('supplementary functions', function() {
 		}
 		let spy = sinon.spy(messageHandler);
 		stream.addListener({}, spy);
-		setTimeout(function () {
-			stream.close();
-			expect(spy.callCount).to.be.greaterThan(2);
-			done();
-		}, 2000);
+		let interval = setInterval(function () {
+			if (spy.callCount > 2) {
+				stream.close();
+				clearInterval(interval);
+				done();
+			}
+		}, 500);
 	});
 
 	it('eventstream with since param', function (done) {
+		this.timeout(8000);
 		let sinceTime = new bot.date().subtract(5, 'hours');
 		let stream = new bot.stream('recentchange', {
 			since: sinceTime
@@ -64,11 +68,13 @@ describe('supplementary functions', function() {
 		}
 		let spy = sinon.spy(messageHandler);
 		stream.addListener({}, spy);
-		setTimeout(function () {
-			stream.close();
-			expect(spy.callCount).to.be.greaterThan(2);
-			done();
-		}, 2000);
+		let interval = setInterval(function () {
+			if (spy.callCount > 10) {
+				stream.close();
+				clearInterval(interval);
+				done();
+			}
+		}, 500);
 	});
 
 
