@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, sinon, crypto, expect, setup, teardown} = require('./local_wiki');
+const {bot, sinon, crypto, expect, setup, teardown} = require('./local_wiki');
 const logger = require('../build/log');
 
 describe('methods which modify the wiki', function() {
@@ -96,6 +96,12 @@ describe('methods which modify the wiki', function() {
 	it('successfully deletes a page with delete()', function() {
 		return bot.delete(randPageMoved, 'Test mwn').then((response) => {
 			expect(response.logid).to.be.a('number');
+		});
+	});
+
+	it('successfully creates an account', function () {
+		return bot.createAccount('testAcct', 'testPassword').then(data => {
+			expect(data.status).to.equal('PASS');
 		});
 	});
 

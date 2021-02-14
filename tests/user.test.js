@@ -50,11 +50,12 @@ describe('User', async function() {
 		expect(u.talkpage.namespace).to.equal(3);
 	});
 	
-	it('info', async function () {
+	it('info and globalinfo', async function () {
 		let u = new bot.user('SD0001');
 		let info = await u.info();
 		expect(info).to.include.keys('userid', 'editcount', 'groups', 'rights');
 		let globalinfo = await u.globalinfo();
 		expect(globalinfo).to.include.keys('home', 'id', 'name');
 	});
+
 });

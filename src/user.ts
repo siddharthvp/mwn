@@ -195,7 +195,14 @@ export default function(bot: mwn) {
 				text: message,
 				token: bot.csrfToken,
 				...options
-			}).then(data => data.emailuser);
+			}).then(response => {
+				let data = response.emailuser;
+				if (data.result === 'Success') {
+					return data;
+				} else {
+					return Promise.reject(data);
+				}
+			});
 		}
 
 		/**
