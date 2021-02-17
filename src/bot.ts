@@ -1564,12 +1564,12 @@ export class mwn {
 	 * Search the wiki.
 	 * @param {string} searchTerm
 	 * @param {number} limit
-	 * @param {("size"|"timestamp"|"worcount"|"snippet"|"redirectitle"|"sectiontitle"|
+	 * @param {("size"|"timestamp"|"wordcount"|"snippet"|"redirectitle"|"sectiontitle"|
 	 * "redirectsnippet"|"titlesnippet"|"sectionsnippet"|"categorysnippet")[]} props
 	 * @param {Object} otherParams
 	 * @returns {Promise<Object>}
 	 */
-	search(searchTerm: string, limit: number, props: ("size" | "timestamp" | "worcount" |
+	search(searchTerm: string, limit: number, props: ("size" | "timestamp" | "wordcount" |
 		"snippet" | "redirectitle" | "sectiontitle" | "redirectsnippet" | "titlesnippet" |
 		"sectionsnippet" | "categorysnippet")[], otherParams?: ApiQuerySearchParams): Promise<ApiResponse> {
 		return this.request(merge({
