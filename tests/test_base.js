@@ -1,6 +1,6 @@
 /** Base libraries used in tests */
 
-const {mwn} = require('../build/bot');
+const {mwn} = require('..');
 const log = mwn.log;
 const crypto = require('crypto');
 

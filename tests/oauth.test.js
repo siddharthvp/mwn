@@ -30,6 +30,13 @@ describe('OAuth', async function() {
 		});
 	});
 
+	it('purges a page (has to be POST request)', function() {
+		return bot.purge([11791]).then(function(response) {
+			expect(response).to.be.instanceOf(Array);
+			expect(response[0].purged).to.equal(true);
+		});
+	});
+
 	it('gets a token (multipart/form-data POST request)', function() {
 		return bot.request({
 			action: 'query',

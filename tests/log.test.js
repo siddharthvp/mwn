@@ -1,5 +1,7 @@
 'use strict';
 
+// TODO: use sinon to disable visible logging and check chalk function calls
+
 const {log, error, getDateArray, humanDate, pad, updateLoggingConfig} = require('../build/log');
 const expect = require('chai').expect;
 
