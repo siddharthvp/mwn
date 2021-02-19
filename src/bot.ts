@@ -30,13 +30,14 @@
  *
  */
 
-import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
-
+// Node internal module
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as stream from 'stream';
 
+// NPM modules
+import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
 import * as tough from 'tough-cookie';
 import * as formData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
@@ -45,14 +46,9 @@ import * as https from 'https';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
 axiosCookieJarSupport(axios);
 
-import {log, updateLoggingConfig} from './log';
-
-import {MwnError, MwnErrorConfig} from "./error";
-import {link, template, table, util} from './static_utils';
-
 // Nested classes of mwn
 import MwnDateFactory, {MwnDate} from './date';
-import MwnTitleFactory, {MwnTitle} from './title';
+import MwnTitleFactory, {MwnTitle, siteinfoqueryResponse} from './title';
 import MwnPageFactory, {MwnPage, ApiPage, ApiRevision} from './page';
 import MwnWikitextFactory, {MwnWikitext} from './wikitext';
 import MwnUserFactory, {MwnUser} from './user';
@@ -64,13 +60,16 @@ import MwnStreamFactory, {MwnStream} from './eventstream';
 export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream,
 	ApiPage, ApiRevision};
 
+import {log, updateLoggingConfig} from './log';
+import {MwnError, MwnErrorConfig} from "./error";
+import {link, template, table, util} from './static_utils';
+import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} from './utils';
+
 import type {
 	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
 	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
 	ApiQuerySearchParams, ApiQueryUserInfoParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
-
-import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} from './utils';
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number
