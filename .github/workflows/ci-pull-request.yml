@@ -1,0 +1,59 @@
+name: Node.js CI
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/ci-pull-request.yml'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
+
+  code_ql:
+    runs-on: ubuntu-latest
+    name: CodeQL
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: javascript
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 10.x, 12.x, 14.x ]
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Setup MediaWiki instance using Docker for integration tests
+        run: npm run setuplocalwiki
+      - run: npm ci
+      - uses: actions/download-artifact@v2
+      - run: npm run test:localwiki && npm run test:nowiki

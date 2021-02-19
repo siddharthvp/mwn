@@ -8,13 +8,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-      - '.github/workflows/node-ci.yml'
-  pull_request:
-    branches: [ master ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - '.github/workflows/node-ci.yml'
+      - '.github/workflows/ci-push.yml'
   workflow_dispatch:
 
 jobs:
@@ -91,7 +85,6 @@ jobs:
   # Upload coverage report to toolforge as well
   upload_coverage:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
     needs: test
     steps:
       - uses: actions/download-artifact@v2
