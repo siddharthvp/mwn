@@ -919,7 +919,7 @@ export class mwn {
 			action: 'query',
 			meta: 'siteinfo',
 			siprop: 'general|namespaces|namespacealiases'
-		}).then(result => {
+		}).then((result: siteinfoqueryResponse) => {
 			this.title.processNamespaceData(result);
 		});
 	}
@@ -953,7 +953,7 @@ export class mwn {
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
 			siprop: 'general|namespaces|namespacealiases',
 			uiprop: 'rights'
-		}).then((response: ApiResponse) => {
+		}).then((response: ApiResponse & siteinfoqueryResponse) => {
 			this.title.processNamespaceData(response);
 			if (response.query.userinfo.rights.includes('apihighlimit')) {
 				this.hasApiHighLimit = true;
@@ -2043,7 +2043,7 @@ export class mwn {
 			"list": "users",
 			"ususerids": Object.keys(userdata).filter(us => !us.startsWith('0|')) // don't lookup IPs
 		}).then(json => {
-			json.query.users.forEach(us => {
+			json.query.users.forEach((us: any) => {
 				userdata[String(us.userid)].name = us.name;
 			});
 		});

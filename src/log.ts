@@ -155,7 +155,7 @@ export function colorize(msg: item) {
  * @returns {string}
  */
 export function pad(number: number, digits: number): string {
-	return new Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
+	return new Array(Math.max(digits - String(number).length + 1, 0)).join('0') + number;
 }
 
 /**

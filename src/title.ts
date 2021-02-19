@@ -18,23 +18,7 @@ export interface MwnTitleStatic {
 	};
 	legaltitlechars: string;
 	caseSensitiveNamespaces: Array<number>;
-	processNamespaceData(json: {
-		query: {
-			general: {
-				legaltitlechars: string;
-			};
-			namespaces: {
-				name: string;
-				id: number;
-				canonical: boolean;
-				case: string;
-			}[];
-			namespacealiases: {
-				alias: string;
-				id: number;
-			}[];
-		};
-	}): void;
+	processNamespaceData(json: siteinfoqueryResponse): void;
 	checkData(): void;
 	newFromText(title: string, namespace?: number): MwnTitle | null;
 	makeTitle(namespace: number, title: string): MwnTitle | null;
@@ -61,6 +45,24 @@ export interface MwnTitle {
 	toText(): string;
 }
 
+export type siteinfoqueryResponse = {
+	query: {
+		general: {
+			legaltitlechars: string;
+		};
+		namespaces: Record<string, {
+			name: string;
+			id: number;
+			canonical: string;
+			case: string;
+		}>;
+		namespacealiases: {
+			alias: string;
+			id: number;
+		}[];
+	};
+};
+
 export default function () {
 
 	let NS_MAIN = 0;
@@ -78,15 +80,9 @@ export default function () {
 		static legaltitlechars: string
 		static caseSensitiveNamespaces: Array<number>
 
-		static processNamespaceData(json: {
-			query: {
-				general: { legaltitlechars: string }
-				namespaces: { name: string, id: number, canonical: boolean, case: string }[]
-				namespacealiases: { alias: string, id: number }[]
-			}
-		}) {
+		static processNamespaceData(json: siteinfoqueryResponse) {
 
-			let namespaceNorm = ns => (ns || '').toLowerCase().replace(/ /g, '_');
+			let namespaceNorm = (ns: string) => (ns || '').toLowerCase().replace(/ /g, '_');
 
 			// Analog of mw.config.get('wgFormattedNamespaces')
 			Title.idNameMap = {};
