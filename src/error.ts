@@ -1,4 +1,4 @@
-import type {RawRequestParams} from "./bot";
+import type {RawRequestParams} from "./core";
 
 export type MwnErrorConfig = {
 	code: string,

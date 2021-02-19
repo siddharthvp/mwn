@@ -35,14 +35,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as stream from 'stream';
-
-// NPM modules
-import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
-import * as tough from 'tough-cookie';
-import * as formData from 'form-data';
-import * as OAuth from 'oauth-1.0a';
 import * as http from 'http';
 import * as https from 'https';
+
+// NPM modules
+import axios, {AxiosResponse} from 'axios';
+import * as tough from 'tough-cookie';
+import * as OAuth from 'oauth-1.0a';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
 axiosCookieJarSupport(axios);
 
@@ -60,6 +59,7 @@ import MwnStreamFactory, {MwnStream} from './eventstream';
 export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream,
 	ApiPage, ApiRevision};
 
+import {Request, Response, RawRequestParams} from "./core";
 import {log, updateLoggingConfig} from './log';
 import {MwnError, MwnErrorConfig} from "./error";
 import {link, template, table, util} from './static_utils';
@@ -70,10 +70,6 @@ import type {
 	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
 	ApiQuerySearchParams, ApiQueryUserInfoParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
-
-export interface RawRequestParams extends AxiosRequestConfig {
-	retryNumber?: number
-}
 
 export interface MwnOptions {
 	silent?: boolean
@@ -454,16 +450,6 @@ export class mwn {
 		}
 	}
 
-	/**
-	 * @private
-	 * Get OAuth Authorization header
-	 */
-	private makeOAuthHeader(params: OAuth.RequestOptions): OAuth.Header {
-		return this.oauth.toHeader(this.oauth.authorize(params, {
-			key: this.options.OAuthCredentials.accessToken,
-			secret: this.options.OAuthCredentials.accessSecret
-		}));
-	}
 
 
 	/************ CORE REQUESTS ***************/
@@ -509,252 +495,14 @@ export class mwn {
 			});
 		}
 
-		params = merge(this.options.defaultParams, params);
+		const req = new Request(this, params, customRequestOptions);
+		await req.process();
 
-		const getOrPost = function (data: ApiParams) {
-			if (data.action === 'query') {
-				return 'get';
-			}
-			if (data.action === 'parse' && !data.text) {
-				return 'get';
-			}
-			return 'post';
-		};
+		return this.rawRequest(req.requestParams).then(
+			(fullResponse: AxiosResponse<ApiResponse>) => new Response(this, req.apiParams, req.requestParams).process(fullResponse),
+			error => new Response(this, req.apiParams, req.requestParams).handleRequestFailure(error)
+		);
 
-		let requestOptions: RawRequestParams = mergeDeep1({
-			url: this.options.apiUrl,
-			method: getOrPost(params),
-
-			// retryNumber isn't actually used by the API, but this is
-			// included here for tracking our maxlag retry count.
-			retryNumber: 0
-
-		}, this.requestOptions, customRequestOptions);
-
-		const MULTIPART_THRESHOLD = 8000;
-		let hasLongFields = false;
-
-		// pre-process params:
-		// Convert arrays to |-delimited strings. If one of the array items
-		// itself contains a |, then use \x1f as delimiter and begin the string
-		// with \x1f.
-		// Adapted from mw.Api().preprocessParameters
-		Object.entries(params).forEach(([key, val]) => {
-			if (Array.isArray(val)) {
-				if (!val.join('').includes('|')) {
-					params[key] = val.join('|');
-				} else {
-					params[key] = '\x1f' + val.join('\x1f');
-				}
-			}
-			if (val === false || val === undefined) {
-				delete params[key];
-			} else if (val === true) {
-				params[key] = '1'; // booleans cause error with multipart/form-data requests
-			} else if (val instanceof Date) {
-				params[key] = val.toISOString();
-			} else if (String(params[key]).length > MULTIPART_THRESHOLD) {
-				// use multipart/form-data if there are large fields, for better performance
-				hasLongFields = true;
-			}
-		});
-
-		if (requestOptions.method === 'post') {
-			// Shift the token to the end of the query string, to prevent
-			// incomplete data sent from being accepted meaningfully by the server
-			if (params.token) {
-				let token = params.token;
-				delete params.token;
-				params.token = token;
-			}
-
-			const contentTypeGiven = customRequestOptions.headers &&
-				customRequestOptions.headers['Content-Type'];
-
-			if ((hasLongFields && (!contentTypeGiven || contentTypeGiven === 'mulipart/form-data')) || contentTypeGiven === 'multipart/form-data') {
-				// use multipart/form-data
-				let form = new formData();
-				for (let [key, val] of Object.entries(params)) {
-					if (val instanceof Object && 'stream' in val) { // TypeScript facepalm
-						form.append(key, val.stream, val.name);
-					} else {
-						form.append(key, val);
-					}
-				}
-				requestOptions.data = form;
-				requestOptions.headers = await new Promise((resolve, reject) => {
-					form.getLength((err, length) => {
-						if (err) {
-							reject(err);
-						}
-						resolve({
-							...requestOptions.headers,
-							...form.getHeaders(),
-							'Content-Length': length
-						});
-					});
-				});
-			} else {
-				// use application/x-www-form-urlencoded (default)
-				// requestOptions.data = params;
-				requestOptions.data = Object.entries(params).map(([key, val]) => {
-					return encodeURIComponent(key) + '=' + encodeURIComponent(val as string);
-				}).join('&');
-			}
-		} else {
-			// axios takes care of stringifying to URL query string
-			requestOptions.params = params;
-		}
-
-		if (this.usingOAuth) {
-			// OAuth authentication
-			requestOptions.headers = {
-				...requestOptions.headers,
-				...this.makeOAuthHeader({
-					url: requestOptions.url,
-					method: requestOptions.method,
-					data: requestOptions.data instanceof formData ? {} : params
-				})
-			};
-		} else {
-			// BotPassword authentication
-			requestOptions.jar = this.cookieJar;
-			requestOptions.withCredentials = true;
-		}
-
-		return this.rawRequest(requestOptions).then((fullResponse: AxiosResponse<ApiResponse>) => {
-			let response = fullResponse.data;
-			if (typeof response !== 'object') {
-				if (params.format !== 'json') {
-					throw new Error('must use format=json');
-				}
-				return this.rejectWithError({
-					code: 'invalidjson',
-					info: 'No valid JSON response',
-					response: response
-				});
-			}
-
-			// See https://www.mediawiki.org/wiki/API:Errors_and_warnings#Errors
-			if (response.error) {
-
-				if (requestOptions.retryNumber < this.options.maxRetries) {
-					customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
-
-					switch (response.error.code) {
-
-						// This will not work if the token type to be used is defined by an
-						// extension, and not a part of mediawiki core
-						case 'badtoken':
-							log(`[W] Encountered badtoken error, fetching new token and retrying`);
-							return Promise.all(
-								[this.getTokenType(params.action as string), this.getTokens()]
-							).then(([tokentype]) => {
-								if (!tokentype || !this.state[tokentype + 'token']) {
-									return this.dieWithError(fullResponse, requestOptions);
-								}
-								params.token = this.state[ tokentype + 'token' ];
-								return this.request(params, customRequestOptions);
-							});
-
-						case 'readonly':
-							log(`[W] Encountered readonly error, waiting for ${this.options.retryPause/1000} seconds before retrying`);
-							return sleep(this.options.retryPause).then(() => {
-								return this.request(params, customRequestOptions);
-							});
-
-						case 'maxlag':
-							// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-							// eslint-disable-next-line no-case-declarations
-							let pause = parseInt(fullResponse.headers['retry-after']); // axios uses lowercase headers
-							// retry-after appears to be usually 5 for WMF wikis
-							if (isNaN(pause)) {
-								pause = this.options.retryPause / 1000;
-							}
-
-							log(`[W] Encountered maxlag: ${response.error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`);
-							return sleep(pause * 1000).then(() => {
-								return this.request(params, customRequestOptions);
-							});
-
-						case 'assertbotfailed':
-						case 'assertuserfailed':
-							// this shouldn't have happened if we're using OAuth
-							if (this.usingOAuth) {
-								return this.dieWithError(fullResponse, requestOptions);
-							}
-
-							// Possibly due to session loss: retry after logging in again
-							log(`[W] Received ${response.error.code}, attempting to log in and retry`);
-							return this.login().then(() => {
-								return this.request(params, customRequestOptions);
-							});
-
-						case 'mwoauth-invalid-authorization':
-							// Per https://phabricator.wikimedia.org/T106066, "Nonce already used" indicates
-							// an upstream memcached/redis failure which is transient
-							// Also handled in mwclient (https://github.com/mwclient/mwclient/pull/165/commits/d447c333e)
-							// and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py)
-							// Some discussion in https://github.com/mwclient/mwclient/issues/164
-							if (response.error.info.includes('Nonce already used')) {
-								log(`[W] Retrying failed OAuth authentication in ${this.options.retryPause/1000} seconds`);
-								return sleep(this.options.retryPause).then(() => {
-									return this.request(params, customRequestOptions);
-								});
-							} else {
-								return this.dieWithError(fullResponse, requestOptions);
-							}
-
-						default:
-							return this.dieWithError(fullResponse, requestOptions);
-					}
-
-				} else {
-					return this.dieWithError(fullResponse, requestOptions);
-				}
-
-			}
-
-			if (response.warnings && !this.options.suppressAPIWarnings) {
-				for (let [key, info] of Object.entries(response.warnings)) {
-					log(`[W] Warning received from API: ${key}: ${info.warnings}`);
-				}
-			}
-
-			return response;
-
-		}, error => {
-
-			if (!error.disableRetry && requestOptions.retryNumber < this.options.maxRetries) {
-				// error might be transient, give it another go!
-				log(`[W] Encountered ${error}, retrying in ${this.options.retryPause/1000} seconds`);
-				customRequestOptions.retryNumber = requestOptions.retryNumber + 1;
-				return sleep(this.options.retryPause).then(() => {
-					return this.request(params, customRequestOptions);
-				});
-			}
-
-			error.request = requestOptions;
-			return Promise.reject(new mwn.Error(error));
-		});
-
-	}
-
-	private dieWithError(response: AxiosResponse, requestOptions: RawRequestParams): Promise<never> {
-		let errorData = Object.assign({}, response.data.error, {
-			// Enhance error object with additional information:
-			// the full API response: everything in AxiosResponse object except
-			// config (not needed) and request (included as errorData.request instead)
-			response: {
-				data: response.data,
-				status: response.status,
-				statusText: response.statusText,
-				headers: response.headers
-			},
-			// the original request, should the client want to retry the request
-			request: requestOptions
-		});
-		return Promise.reject(new mwn.Error(errorData));
 	}
 
 
