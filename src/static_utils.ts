@@ -232,16 +232,16 @@ function escapeRegExp( str: string ): string {
 function escapeHtml( s: string ): string {
 	return s.replace( /['"<>&]/g, function escapeCallback( s ) {
 		switch ( s ) {
-			case '\'':
-				return '&#039;';
-			case '"':
-				return '&quot;';
-			case '<':
-				return '&lt;';
-			case '>':
-				return '&gt;';
-			case '&':
-				return '&amp;';
+		case '\'':
+			return '&#039;';
+		case '"':
+			return '&quot;';
+		case '<':
+			return '&lt;';
+		case '>':
+			return '&gt;';
+		case '&':
+			return '&amp;';
 		}
 	});
 }

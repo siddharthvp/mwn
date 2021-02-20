@@ -218,18 +218,18 @@ export default function (bot: mwn) {
 			const dateDiff = (new Date().setHours(0, 0, 0, 0) -
 				new Date(this).setHours(0, 0, 0, 0)) / 8.64e7;
 			switch (true) {
-				case dateDiff === 0:
-					return this.format(XDate.localeData.relativeTimes.thisDay, zone);
-				case dateDiff === 1:
-					return this.format(XDate.localeData.relativeTimes.prevDay, zone);
-				case dateDiff > 0 && dateDiff < 7:
-					return this.format(XDate.localeData.relativeTimes.pastWeek, zone);
-				case dateDiff === -1:
-					return this.format(XDate.localeData.relativeTimes.nextDay, zone);
-				case dateDiff < 0 && dateDiff > -7:
-					return this.format(XDate.localeData.relativeTimes.thisWeek, zone);
-				default:
-					return this.format(XDate.localeData.relativeTimes.other, zone);
+			case dateDiff === 0:
+				return this.format(XDate.localeData.relativeTimes.thisDay, zone);
+			case dateDiff === 1:
+				return this.format(XDate.localeData.relativeTimes.prevDay, zone);
+			case dateDiff > 0 && dateDiff < 7:
+				return this.format(XDate.localeData.relativeTimes.pastWeek, zone);
+			case dateDiff === -1:
+				return this.format(XDate.localeData.relativeTimes.nextDay, zone);
+			case dateDiff < 0 && dateDiff > -7:
+				return this.format(XDate.localeData.relativeTimes.thisWeek, zone);
+			default:
+				return this.format(XDate.localeData.relativeTimes.other, zone);
 			}
 		}
 
