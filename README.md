@@ -63,7 +63,7 @@ Bot passwords, however, are a bit easier to set up. To generate one, go to the w
 
 **Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxRetries` will take place (default 3).
 
-**Token handling**: `bot.getCsrfToken()` fetches a CSRF token required for most write operations. The token, once retrieved, is stored in the bot state so that it can be reused any number of times. If an API request fails due to an expired or missing token, the request is automatically retried after fetching a new token.
+**Token handling**: [Tokens](https://www.mediawiki.org/wiki/API:Tokens) are automatically fetched as part of `mwn.init()` or `bot.login()` or `bot.getTokensAndSiteInfo()`. Once retrieved, they are stored in the bot state and can be reused any number of times. If any API request fails due to an expired or missing token, the request is automatically retried after fetching a new token. `bot.getTokens()` can be used to refresh the token cache, though mwn manages this, so you'd never need to explicitly use that.
 
 **Retries**: Mwn automatically retries failing requests `bot.options.maxRetries` times (default: 3). This is useful in case of connectivity resets and the like. As for errors raised by the API itself, note that MediaWiki generally handles these at the response level rather than the protocol level (they still emit a 200 OK response). Mwn will attempt retries for these errors based on the error code. For instance, if the error is `readonly` or `maxlag` , retry is done after a delay. If it's `assertuserfailed` or `assertbotfailed` (indicates a session loss), mwn will try to log in again and then retry. If it's `badtoken`, retry is done after fetching a fresh edit token.
 
@@ -95,7 +95,8 @@ const bot = await mwn.init({
 	username: 'YourBotUsername',
 	password: 'YourBotPassword',
 
-	// Instead of username and password, you can use OAuth 1.0a to authenticate:
+	// Instead of username and password, you can use OAuth 1.0a to authenticate,
+	// if the wiki has Extension:OAuth enabled
 	oauth_consumer_token: "16_DIGIT_ALPHANUMERIC_KEY",
 	oauth_consumer_secret: "20_DIGIT_ALPHANUMERIC_KEY",
 	oauth_access_token: "16_DIGIT_ALPHANUMERIC_KEY",
@@ -119,7 +120,8 @@ const bot = new mwn({
 });
 ```
 
-This creates a bot instance which is not signed in. Then use `bot.login()`, `bot.loginGetToken()`, `bot.initOAuth()` or `bot.getTokensAndSiteInfo()`. Note that `bot.initOAuth()` does not involve an API call. Any error in authentication will surface when the first API call is made.
+This creates a bot instance which is not signed in. Then to authenticate, use `bot.login()` which returns a promise. If using OAuth, use `bot.initOAuth()` followed by `bot.getTokensAndSiteInfo()`. Note that `bot.initOAuth()` does not involve an API call. Any error in authentication will surface on running bot.getTokensAndSiteInfo().
+
 
 The bot options can also be set using `setOptions` rather than through the constructor:
 ```js
@@ -167,24 +169,24 @@ bot.edit('Page title', rev => {
 Some more functions associated with editing pages:
 ```js
 // Save a page with the given content without loading it first. Simpler verion of `edit`. Does not offer any edit conflict detection.
-bot.save('Page title', 'Page content', 'Edit summary');
+await bot.save('Page title', 'Page content', 'Edit summary');
 
 // Create a new page.
-bot.create('Page title', 'Page content', 'Edit summary');
+await bot.create('Page title', 'Page content', 'Edit summary');
 
 // Post a new section to a talk page:
-bot.newSection('Page title', 'New section header', 'Section content', additionalOptions);
+await bot.newSection('Page title', 'New section header', 'Section content', additionalOptions);
 ```
 
 ### Other basic operations
 Read the contents of a page:
 ```js
-bot.read('Page title');
+await bot.read('Page title');
 ```
 
 Read a page along with metadata:
 ```js
-bot.read('Page title', {
+await bot.read('Page title', {
 	rvprop: ['content', 'timestamp', 'user', 'comment']
 });
 ```
@@ -198,12 +200,12 @@ bot.read(['Page 1', 'Page 2', 'Page 3']).then(pages => {
 
 Delete a page:
 ```js
-bot.delete('Page title', 'deletion log summary', additionalOptions);
+await bot.delete('Page title', 'deletion log summary', additionalOptions);
 ```
 
 Move a page along with its subpages:
 ```js
-bot.move('Old page title', 'New page title', 'move summary', {
+await bot.move('Old page title', 'New page title', 'move summary', {
 	movesubpages: true,
 	movetalk: true
 });
@@ -211,22 +213,22 @@ bot.move('Old page title', 'New page title', 'move summary', {
 
 Parse wikitext (see [API:Parse](https://www.mediawiki.org/wiki/API:Parsing_wikitext) for additionalOptions)
 ```js
-bot.parseWikitext('Input wikitext', additonalOptions);
+await bot.parseWikitext('Input wikitext', additonalOptions);
 ```
 
 Parse the contents of a given page
 ```js
-bot.parseTitle('Page name', additionalOptions);
+await bot.parseTitle('Page name', additionalOptions);
 ```
 
 Upload a file from your system to the wiki:
 ```js
-bot.upload('File title', '/path/to/file', 'comment', customParams);
+await bot.upload('File title', '/path/to/file', 'comment', customParams);
 ```
 
 Download a file from the wiki:
 ```js
-bot.download('File:File name.jpg', 'Downloaded file name.jpg'); // 2nd param defaults to the on-wiki name if unspecified
+await bot.download('File:File name.jpg', 'Downloaded file name.jpg'); // 2nd param defaults to the on-wiki name if unspecified
 ```
 
 #### Bulk processing methods

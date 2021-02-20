@@ -1,12 +1,13 @@
 {
 	"name": "mwn",
-	"version": "0.10.0",
+	"version": "0.10.1",
 	"description": "JavaScript & TypeScript MediaWiki bot framework for Node.js",
 	"main": "./build/bot.js",
 	"types": "./build/bot.d.ts",
 	"scripts": {
 		"bump": "node bump-version.js",
 		"build": "npx tsc || echo",
+		"quickbuild": "babel src --extensions \".ts\" --out-dir build",
 		"lint": "eslint src tests",
 		"test:testwiki": "cd tests && npx mocha bot.test.js category.test.js file.test.js login.bot.test.js oauth.test.js page.test.js suppl.bot.test.js user.test.js wikitext.test.js",
 		"setuplocalwiki": "cd tests/docker && bash main.sh",
