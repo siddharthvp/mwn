@@ -231,7 +231,58 @@ Download a file from the wiki:
 await bot.download('File:File name.jpg', 'Downloaded file name.jpg'); // 2nd param defaults to the on-wiki name if unspecified
 ```
 
-#### Bulk processing methods
+Creating a page object opens up further possibilities:
+```js
+let page = new bot.page('Main Page');
+```
+
+See [list of methods available on page object](https://mwn.toolforge.org/docs/interfaces/_page_.mwnpage.html).
+
+[Files](https://mwn.toolforge.org/docs/interfaces/_file_.mwnfile.html#text) and [categories](https://mwn.toolforge.org/docs/interfaces/_category_.mwncategory.html) have their own subclasses that add a few additional methods.
+
+### Working with titles
+
+Titles can be represented as objects created using the class constructor on `mwn`, as: (`bot` is the mwn object)
+
+```js
+let title = new bot.title('Wikipedia:Articles for deletion');
+
+// The constructor throws if given an illegal page name. To avoid this the static method can be used instead
+title = bot.title.newFromText('Wikipedia:Articles for deletion'); // same effect
+
+// Can also construct titles from namespace number and the page name
+title = new bot.title('Aritcles for deletion', 4);
+
+title.getMainText(); // 'Articles for deletion'
+title.getNamespaceId(); // 4
+
+title = bot.title.newFromText('cateEogrY:living people'); // titles will be normalised!
+title.toText(); // 'Category:Living people'
+```
+
+The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://mwn.toolforge.org/docs/interfaces/_title_.mwntitle.html).
+
+
+### Working with wikitext
+
+Mwn can be used for parsing wikitext: 
+
+```js
+let wkt = new bot.wikitext('This is some wikitext with [[links]] and {{templates|with=params}}.');
+
+wkt.parseTemplates(); // -> [Template {wikitext: '{{templates|with=params}}', parameters: [ Parameter {name: 'with', value: 'params', wikitext: '|with=params'}] ], name: 'Templates' }]
+
+// This requires the bot object to have the namespace data of the wiki available.
+// Either the bot should be logged in, or run bot.getSiteInfo()
+wkt.parseLinks(); // populates wkt.links, wkt.files, wkt.categories
+wkt.links; // -> [{ wikitext: '[[links]]', target: Title { namespace: 0, title: 'links', fragment: null }, displaytext: 'links'}]
+```
+
+In addition:
+- `bot.wikitext.parseTable(wikitext)` parses simple tables without fancy markup; will throw on unparsable input
+
+
+### Bulk processing methods
 
 ##### continuedQuery(query, maxCallsLimit)
 Send an API query, and continue re-sending it with the continue parameters received in the response, until there are no more results (or till `maxCalls` limit is reached). The return value is a promise resolved with the array of responses to individual API calls.
