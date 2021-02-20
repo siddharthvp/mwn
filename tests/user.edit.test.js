@@ -1,6 +1,6 @@
 const {mwn, bot, expect, setup, teardown} = require('./local_wiki');
 
-describe('write methods', async function () {
+describe('user class: write methods', async function () {
 
 	before('setup', setup);
 	after('teardown', teardown);

@@ -28,10 +28,25 @@ export class MwnError extends Error {
 		constructor(config: Partial<MwnErrorConfig> = {}) {
 			super({
 				code: 'missingtitle',
-				info: 'The page you specified doesn\'t exist.',
+				info: "The page you specified doesn't exist.",
 				...config
 			});
 		}
 	}
 }
 
+/**
+ * Returns a promise rejected with an error object
+ * @private
+ * @param {string} errorCode
+ * @returns {Promise}
+ */
+export function rejectWithErrorCode(errorCode: string): Promise<never> {
+	return rejectWithError({
+		code: errorCode
+	});
+}
+
+export function rejectWithError(errorConfig: MwnErrorConfig): Promise<never> {
+	return Promise.reject(new MwnError(errorConfig));
+}

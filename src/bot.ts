@@ -61,7 +61,7 @@ export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, 
 
 import {Request, Response, RawRequestParams} from "./core";
 import {log, updateLoggingConfig} from './log';
-import {MwnError, MwnErrorConfig} from "./error";
+import {MwnError, rejectWithError, rejectWithErrorCode} from "./error";
 import {link, template, table, util} from './static_utils';
 import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} from './utils';
 
@@ -463,7 +463,7 @@ export class mwn {
 	rawRequest(requestOptions: RawRequestParams): Promise<AxiosResponse> {
 
 		if (!requestOptions.url) {
-			return this.rejectWithError({
+			return rejectWithError({
 				code: 'mwn_nourl',
 				info: 'No URL provided for API request!',
 				disableRetry: true,
@@ -489,7 +489,7 @@ export class mwn {
 	async request(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<ApiResponse> {
 
 		if (this.shutoff.state) {
-			return this.rejectWithError({
+			return rejectWithError({
 				code: 'bot-shutoff',
 				info: `Bot was shut off (check ${this.options.shutoff.page})`
 			});
@@ -522,7 +522,10 @@ export class mwn {
 
 		this.options = merge(this.options, loginOptions);
 		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
-			return Promise.reject(new Error('Incomplete login credentials!'));
+			return rejectWithError({
+				code: 'mwn_nologincredentials',
+				info: 'Incomplete login credentials!'
+			});
 		}
 
 		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
@@ -537,13 +540,12 @@ export class mwn {
 			assert: undefined
 		});
 		if (!loginTokenResponse?.query?.tokens?.logintoken) {
-			let err = new mwn.Error({
+			log('[E] [mwn] Login failed with invalid response: ' + loginString);
+			return rejectWithError({
 				code: 'mwn_notoken',
 				info: 'Failed to get login token',
 				response: loginTokenResponse,
 			});
-			log('[E] [mwn] Login failed with invalid response: ' + loginString);
-			return Promise.reject(err);
 		}
 		Object.assign(this.state, loginTokenResponse.query.tokens);
 
@@ -587,12 +589,11 @@ export class mwn {
 			}
 		}
 
-		let err = new mwn.Error({
+		return rejectWithError({
 			code: 'mwn_failedlogin',
 			info: reason || 'Login failed',
 			response: loginResponse
 		});
-		return Promise.reject(err);
 	}
 
 	/**
@@ -635,7 +636,7 @@ export class mwn {
 		}).then(json => {
 			let data = json.createaccount;
 			if (data.status === 'FAIL') {
-				return this.rejectWithError({
+				return rejectWithError({
 					code: data.messagecode,
 					info: data.message,
 					...data
@@ -713,12 +714,11 @@ export class mwn {
 				this.csrfToken = response.query.tokens.csrftoken;
 				this.state = merge(this.state, response.query.tokens);
 			} else {
-				let err = new mwn.Error({
+				return rejectWithError({
 					code: 'mwn_notoken',
 					info: 'Could not get token',
 					response
 				});
-				return Promise.reject(err);
 			}
 		});
 	}
@@ -771,7 +771,7 @@ export class mwn {
 			try {
 				return JSON.parse(data.revisions[0].content);
 			} catch(e) {
-				return this.rejectWithErrorCode('invalidjson');
+				return rejectWithErrorCode('invalidjson');
 			}
 		});
 	}
@@ -914,11 +914,11 @@ export class mwn {
 		}).then((data: ApiResponse) => {
 			let page, revision, revisionContent;
 			if (!data.query || !data.query.pages) {
-				return this.rejectWithErrorCode('unknown');
+				return rejectWithErrorCode('unknown');
 			}
 			page = data.query.pages[0];
 			if (!page || page.invalid) {
-				return this.rejectWithErrorCode('invalidtitle');
+				return rejectWithErrorCode('invalidtitle');
 			}
 			if (page.missing) {
 				return Promise.reject(new mwn.Error.MissingPage());
@@ -927,13 +927,13 @@ export class mwn {
 			try {
 				revisionContent = revision.slots.main.content;
 			} catch(err) {
-				return this.rejectWithErrorCode('unknown');
+				return rejectWithErrorCode('unknown');
 			}
 			basetimestamp = revision.timestamp;
 			curtimestamp = data.curtimestamp;
 
 			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revisionContent)) {
-				return this.rejectWithErrorCode('bot-denied');
+				return rejectWithErrorCode('bot-denied');
 			}
 
 			return transform({
@@ -970,7 +970,7 @@ export class mwn {
 				editConfig.conflictRetries--;
 				return this.edit(title, transform, editConfig);
 			} else {
-				return Promise.reject(err);
+				return rejectWithError(err);
 			}
 		});
 	}
@@ -1818,21 +1818,5 @@ export class mwn {
 	* @param {number} duration - of sleep in milliseconds
 	*/
 	sleep = sleep;
-
-	/**
-	 * Returns a promise rejected with an error object
-	 * @private
-	 * @param {string} errorCode
-	 * @returns {Promise}
-	 */
-	rejectWithErrorCode(errorCode: string): Promise<never> {
-		return Promise.reject(new mwn.Error({
-			code: errorCode
-		}));
-	}
-
-	rejectWithError(errorConfig: MwnErrorConfig): Promise<never> {
-		return Promise.reject(new mwn.Error(errorConfig));
-	}
 
 }

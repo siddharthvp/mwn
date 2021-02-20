@@ -10,7 +10,7 @@ import * as OAuth from "oauth-1.0a";
 
 import type {mwn, ApiParams, ApiResponse} from "./bot";
 import {log} from "./log";
-import {MwnError} from "./error";
+import {rejectWithError} from "./error";
 import {merge, mergeDeep1, sleep} from "./utils";
 
 export interface RawRequestParams extends AxiosRequestConfig {
@@ -206,13 +206,13 @@ export class Response {
 	async initialCheck(): Promise<void> {
 		if (typeof this.response !== 'object') {
 			if (this.params.format !== 'json') {
-				return this.bot.rejectWithError({
-					code: 'invalidformat',
-					info: 'Must use format=json',
+				return rejectWithError({
+					code: 'mwn_invalidformat',
+					info: 'Must use format=json!',
 					response: this.response
 				});
 			}
-			return this.bot.rejectWithError({
+			return rejectWithError({
 				code: 'invalidjson',
 				info: 'No valid JSON response',
 				response: this.response
@@ -331,7 +331,7 @@ export class Response {
 			// the original request, should the client want to retry the request
 			request: requestOptions
 		});
-		return Promise.reject(new MwnError(errorData));
+		return rejectWithError(errorData);
 	}
 
 	handleRequestFailure(error: any) {
@@ -344,7 +344,7 @@ export class Response {
 		}
 
 		error.request = this.requestOptions;
-		return Promise.reject(new MwnError(error));
+		return rejectWithError(error);
 	}
 
 }

@@ -6,6 +6,7 @@ import type {
 	ApiQueryUserContribsParams,
 	ApiUnblockParams
 } from "./api_params";
+import {rejectWithError} from "./error";
 
 
 export interface MwnUserStatic {
@@ -200,7 +201,12 @@ export default function(bot: mwn) {
 				if (data.result === 'Success') {
 					return data;
 				} else {
-					return Promise.reject(data);
+					return rejectWithError({
+						// try to get an error code and info
+						code: data.errors?.[0]?.code,
+						info: data.errors?.[0]?.info,
+						...data
+					});
 				}
 			});
 		}
