@@ -305,7 +305,7 @@ export class mwn {
 	/**
 	 * Stream class associated with the bot instance
 	 */
-	stream = MwnStreamFactory(this, mwn);
+	stream = MwnStreamFactory(this);
 
 	/**
 	 * Date class associated with the bot instance

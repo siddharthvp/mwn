@@ -1,5 +1,7 @@
-import EventSource = require('eventsource');
-import type {mwn as Mwn, MwnDate} from './bot';
+import * as EventSource from 'eventsource';
+import type {mwn} from './bot';
+import type {MwnDate} from './date';
+import {log} from './log';
 
 export interface MwnStreamStatic {
 	new (streams: string | string[], config: {
@@ -69,7 +71,7 @@ export type recentchangeProps = {
 	log_action_comment: string
 }
 
-export default function (bot: Mwn, mwn: typeof Mwn) {
+export default function (bot: mwn) {
 
 	class EventStream extends EventSource implements MwnStream {
 
@@ -93,11 +95,11 @@ export default function (bot: Mwn, mwn: typeof Mwn) {
 				}
 			});
 			this.onopen = config.onopen || function () {
-				mwn.log(`[S] Opened eventsource connection for ${streams} stream(s)`);
+				log(`[S] Opened eventsource connection for ${streams} stream(s)`);
 			};
 			this.onerror = config.onerror || function (evt) {
-				mwn.log(`[W] event source encountered error:`);
-				mwn.log(evt);
+				log(`[W] event source encountered error:`);
+				log(evt);
 			};
 
 		}
