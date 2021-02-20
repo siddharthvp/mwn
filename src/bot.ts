@@ -635,7 +635,11 @@ export class mwn {
 		}).then(json => {
 			let data = json.createaccount;
 			if (data.status === 'FAIL') {
-				return Promise.reject(data);
+				return this.rejectWithError({
+					code: data.messagecode,
+					info: data.message,
+					...data
+				});
 			} else { // status === 'PASS' or other value
 				return data;
 			}

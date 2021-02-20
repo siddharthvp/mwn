@@ -99,10 +99,13 @@ describe('methods which modify the wiki', function() {
 		});
 	});
 
-	it('successfully creates an account', function () {
-		return bot.createAccount('testAcct', 'testPassword').then(data => {
+	it('successfully creates an account', async () => {
+		const randAccountName = 'testAcct' + String(Math.random()).slice(3, 8);
+		await bot.createAccount(randAccountName, 'testPassword').then(data => {
 			expect(data.status).to.equal('PASS');
 		});
+		await expect(bot.createAccount(randAccountName, 'testPassword')).to.be.eventually.rejectedWith(MwnError)
+			.that.has.property('code').which.equals('userexists');
 	});
 
 	describe('image uploads', function() {
