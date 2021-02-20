@@ -1,7 +1,8 @@
 'use strict';
 
-const { mwn, bot, expect, assert, setup, teardown} = require('./test_wiki');
+const { mwn, bot, expect, assert, setup, teardown } = require('./test_wiki');
 const fs = require('fs');
+const {MwnError} = require("../build/error");
 
 describe('mwn', async function() {
 	this.timeout(10000);
@@ -181,7 +182,7 @@ describe('mwn', async function() {
 		return bot.download(fileTitle, 'download-test.png').then(async () => {
 			let expectedTitle = 'download-test.png';
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
-			fs.unlinkSync(expectedTitle);
+			fs.unlink(expectedTitle, () => {});
 		});
 	});
 
@@ -198,7 +199,7 @@ describe('mwn', async function() {
 		}).then(async () => {
 			let expectedTitle = 'Example_demo_image.png';
 			expect(fs.readdirSync('.')).to.include(expectedTitle);
-			fs.unlinkSync(expectedTitle);
+			fs.unlink(expectedTitle, () => {});
 		});
 	});
 
@@ -210,14 +211,14 @@ describe('mwn', async function() {
 	it('rejects deleting a non-existing page with delete()', function() {
 		return bot.delete('Non-Existing Page8s56df3f2sd624', 'Test Reasons')
 			.catch((e) => {
-				expect(e).to.be.an.instanceof(Error);
+				expect(e).to.be.an.instanceof(MwnError);
 				expect(e.message).to.include('missingtitle');
 			});
 	});
 
 	it('cannot edit a page without providing API URL / Login', function() {
 		return new mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
-			expect(e).to.be.an.instanceof(Error);
+			expect(e).to.be.an.instanceof(MwnError);
 			expect(e.message).to.include('No URL');
 		});
 	});

@@ -2,6 +2,8 @@
 
 const {bot, sinon, crypto, expect, setup, teardown} = require('./local_wiki');
 const logger = require('../build/log');
+const {MwnError} = require("../build/error");
+const {Request} = require('../build/core');
 
 describe('methods which modify the wiki', function() {
 	this.timeout(10000);
@@ -13,13 +15,17 @@ describe('methods which modify the wiki', function() {
 	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
 
 	it('successfully creates a page with create()', function() {
+		const spy = sinon.spy(Request.prototype, 'useMultipartFormData');
 		return bot.create(randPage, '=Some more Wikitext= \n[[Category:Test Page]]', 'Test creation using mwn')
 			.then(response => {
 				expect(response.result).to.equal('Success');
+				expect(spy).to.have.always.returned(false);
+				sinon.restore();
 			});
 	});
 
 	it('successfully makes large edits (multipart/form-data)', function() {
+		const spy = sinon.spy(Request.prototype, 'useMultipartFormData');
 		var text = 'lorem ipsum '.repeat(1000);
 		return bot.edit(randPage, () => {
 			return {
@@ -28,6 +34,8 @@ describe('methods which modify the wiki', function() {
 			};
 		}).then(response => {
 			expect(response.result).to.equal('Success');
+			expect(spy).to.have.returned(true);
+			sinon.restore();
 		});
 	});
 
@@ -37,7 +45,7 @@ describe('methods which modify the wiki', function() {
 		return bot.edit(randPage, rev => {
 			return rev.content;
 		}).then(() => {
-			expect(logger.log.calledOnce).to.be.true;
+			expect(logger.log).to.have.been.calledOnce;
 		});
 	});
 

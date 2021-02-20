@@ -10,6 +10,8 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const assert = require('assert');
 const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
+chai.use(sinonChai);
 
 function verifyTokenAndSiteInfo(bot) {
 	expect(bot.csrfToken).to.be.a('string').of.length.greaterThan(5);

@@ -1,6 +1,7 @@
 'use strict';
 
-const { bot, bot2, expect, setup, teardown} = require('./local_wiki');
+const {sinon, bot, bot2, expect, setup, teardown} = require('./local_wiki');
+const {Request} = require('../build/core');
 
 describe('testing for error recoveries', function() {
 	this.timeout(10000);
@@ -45,6 +46,7 @@ describe('testing for error recoveries', function() {
 
 	it('makes large edits (multipart/form-data) after session loss', async function() {
 		await bot.logout();
+		const spy = sinon.spy(Request.prototype, 'useMultipartFormData');
 		let text = 'lorem ipsum '.repeat(1000);
 		return bot.edit(testPage, () => {
 			return {
@@ -53,6 +55,7 @@ describe('testing for error recoveries', function() {
 			};
 		}).then(response => {
 			expect(response.result).to.equal('Success');
+			expect(spy).to.have.returned(true);
 		});
 	});
 
