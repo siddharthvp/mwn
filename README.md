@@ -61,15 +61,54 @@ Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wi
 
 Bot passwords, however, are a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page. 
 
+### Features
+**Handling multiple users and wikis**: Mwn can seamlessly work with multiple bot users signed into the same wiki, and multiple wikis at the same time. You just have to create multiple bot instances – each one representing a wiki + user. Each bot instance uses an isolated cookie jar; all settings are also isolated. 
+
 **Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxRetries` will take place (default 3).
 
 **Token handling**: [Tokens](https://www.mediawiki.org/wiki/API:Tokens) are automatically fetched as part of `mwn.init()` or `bot.login()` or `bot.getTokensAndSiteInfo()`. Once retrieved, they are stored in the bot state and can be reused any number of times. If any API request fails due to an expired or missing token, the request is automatically retried after fetching a new token. `bot.getTokens()` can be used to refresh the token cache, though mwn manages this, so you'd never need to explicitly use that.
 
 **Retries**: Mwn automatically retries failing requests `bot.options.maxRetries` times (default: 3). This is useful in case of connectivity resets and the like. As for errors raised by the API itself, note that MediaWiki generally handles these at the response level rather than the protocol level (they still emit a 200 OK response). Mwn will attempt retries for these errors based on the error code. For instance, if the error is `readonly` or `maxlag` , retry is done after a delay. If it's `assertuserfailed` or `assertbotfailed` (indicates a session loss), mwn will try to log in again and then retry. If it's `badtoken`, retry is done after fetching a fresh edit token.
 
-If you're migrating from mwbot, note that:
-- `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
-- If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
+**Emergency shutoff**: Mwn exploits Node's asynchronous event loop to efficiently implement emergency shutoff. 
+```js
+bot.enableEmergencyShutoff({
+	page: 'User:ExampleBot/shutoff',  	// The name of the page to check 
+	intervalDuration: 5000, 			// check shutoff page every 5 seconds
+	condition: function(pagetext) {		// function to determine whether the bot should continue to run or not
+	    if (pagetext !== 'running') {	// Example implementation: if some one changes the text to something 
+	        return false;				// other than "running", let's decide to stop!
+		} else return true;
+	},
+	onShutoff: function (pagetext) { 	// function to trigger when shutoff is activated
+	    process.exit();					// let's just exit, though we could also terminate 
+	}									// any open connections, close files, etc.
+})
+```
+The rate of shutoff checks is not impacted by your actual editing rate, as it takes place separately in a setInterval() loop. Caution: this implementation has not been stress-tested. 
+
+Shutoff once enabled can be disabled anytime, such as when you stop performing write operations and you're now just doing read operations.
+```js
+bot.disableEmergencyShutoff();
+```
+
+**Bot exclusion compliance**: Mwn's edit() method can be configured to respect {{nobots}} or equivalent. If the text of the page tests positive for the exclusionRegex you set in the bot options, edit will be aborted.
+```js
+bot.setOptions({
+	exclusionRegex: /\{\{nobots\}\}/i
+})
+```
+It's also possible to do this on a per-edit basis:
+```js
+bot.edit('Page name', (rev) => {
+    // edit the page the way you want, in this lame example we're just appending lorem ipsum 
+ 	return rev.content + 'lorem ipsum';   
+}, /* editConfig */ {
+    exclusionRegex: /\{\{nobots\}\}/i
+})
+```
+
+Exclusion compliance is _not_ enabled by default.
 
 ### Getting started
 
@@ -85,6 +124,11 @@ In TypeScript:
 ```ts
 import {mwn} from 'mwn';
 ```
+
+If you're migrating from mwbot, note that:
+- `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
+- If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
+
 
 Create a new bot instance:
 ```js
