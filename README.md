@@ -9,8 +9,6 @@
 
 Mwn works with both JavaScript and TypeScript. It is created with a design philosophy of allowing bot developers to easily and quickly write bot code, without having to deal with the MediaWiki API complications and idiosyncrasies such as logins, tokens, maxlag, query continuations and error handling. Making raw API calls is also supported for complete flexibility where needed. The [axios](https://www.npmjs.com/package/axios) library is used for HTTP requests.
 
-Mwn uses promises, which you can use with async–await. To handle query continuations, mwn uses asynchronous generators. All methods with names ending in `Gen` are generators.
-
 Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) by default. Use of the legacy formatversion is not recommended. Note that [Special:ApiSandbox](https://en.wikipedia.org/wiki/Special:ApiSandbox) uses formatversion=1 by default, so if you're testing API calls using ApiSandbox be sure to set the correct formatversion there, otherwise the output will be formatted differently.
 
 Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
@@ -69,6 +67,33 @@ Bot passwords, however, are a bit easier to set up. To generate one, go to the w
 **Token handling**: [Tokens](https://www.mediawiki.org/wiki/API:Tokens) are automatically fetched as part of `mwn.init()` or `bot.login()` or `bot.getTokensAndSiteInfo()`. Once retrieved, they are stored in the bot state and can be reused any number of times. If any API request fails due to an expired or missing token, the request is automatically retried after fetching a new token. `bot.getTokens()` can be used to refresh the token cache, though mwn manages this, so you'd never need to explicitly use that.
 
 **Retries**: Mwn automatically retries failing requests `bot.options.maxRetries` times (default: 3). This is useful in case of connectivity resets and the like. As for errors raised by the API itself, note that MediaWiki generally handles these at the response level rather than the protocol level (they still emit a 200 OK response). Mwn will attempt retries for these errors based on the error code. For instance, if the error is `readonly` or `maxlag` , retry is done after a delay. If it's `assertuserfailed` or `assertbotfailed` (indicates a session loss), mwn will try to log in again and then retry. If it's `badtoken`, retry is done after fetching a fresh edit token.
+
+**Handling query continuation**: Mwn uses [asynchronous generators](https://javascript.info/async-iterators-generators), ([for await...of](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loops) to provide a very intuitive interface around MediaWiki API's [query continuation](https://www.mediawiki.org/wiki/API:Query#Example_4:_Continuing_queries).
+
+Use `bot.continuedQueryGen` everytime you want to fetch more results than what the API gives you in one go (usually 5000 results). `continuedQueryGen` automatically uses the continue parameters in the response to create and send new requests that retrieve data from where the previous response was cut off.
+
+The following example generates a list of all active users on the wiki (which may be more than 5000).
+```js
+var activeusers = [];
+for await (let json of bot.continuedQueryGen({
+    "action": "query",
+    "list": "allusers",
+    "auactiveusers": 1,
+    "aulimit": "max"
+})) {
+    let users = json.query.allusers.map(user => user.name);
+    activeusers = activeusers.concat(users);
+}
+``` 
+
+Specialised derivatives exist to fulfill common needs:
+- `new bot.page('Page name').historyGen()` - fetch page history
+- `new bot.page('Page name').logsGen()` - fetch page logs
+- `new bot.category('Page name').membersGen()` - fetch category members
+- `new bot.user('User name').contribsGen()` - fetch user contributions
+- `new bot.user('User name').logsGen()` - fetch user logs
+
+Every method names that end in `Gen` is an async generator.
 
 **Emergency shutoff**: Mwn exploits Node's asynchronous event loop to efficiently implement emergency shutoff. 
 ```js
@@ -328,43 +353,13 @@ In addition:
 
 ### Bulk processing methods
 
-##### continuedQuery(query, maxCallsLimit)
-Send an API query, and continue re-sending it with the continue parameters received in the response, until there are no more results (or till `maxCalls` limit is reached). The return value is a promise resolved with the array of responses to individual API calls.
+**continuedQuery / continuedQueryGen**: Handles query continuation. See "Handling query continuations" in [Features section above](#user-content-features).
 
-Example: get a list of all active users on the wiki using `continuedQuery` (using [API:Allusers](https://www.mediawiki.org/wiki/API:Allusers)):
-```js
-bot.continuedQuery({
-	"action": "query",
-	"list": "allusers",
-	"auactiveusers": 1,
-	"aulimit": "max"
-}, /* max number of calls */ 40).then(jsons => {
-	return jsons.reduce((activeusers, json) => {
-		return activeusers.concat(json.query.allusers.map(user => user.name));
-	}, []);
-});
-```
+continuedQuery returns a promised resolved with the array of all individual API response.
 
-A simpler way is to use `bot.continuedQueryGen` which is an [asynchronous generator](https://javascript.info/async-iterators-generators). 
-```js
-var activeusers = [];
-for await (let json of bot.continuedQueryGen({
-    "action": "query",
-    "list": "allusers",
-    "auactiveusers": 1,
-    "aulimit": "max"
-})) {
-    let users = json.query.allusers.map(user => user.name);
-    activeusers = activeusers.concat(users);
-}
-``` 
+Use of `continuedQueryGen` is recommended since continuedQuery will fetch the results of all the API calls before it begins to do anything with the results. `continuedQueryGen` gets the result of each API call and processes them one at a time.
 
-Use of `continuedQueryGen` is recommended for several reasons:
-- If there are a large number of calls involved, continuedQuery will fetch the results of all the API calls before it begins to do anything with the results. `continuedQueryGen` gets the result of each API call and processes them one at a time.
-- Since making multiple API calls can take some time. you can add logging statements to know the number of the API calls that have gone through.
-
-##### massQuery(query, nameOfBatchField, batchSize)
-MediaWiki sets a limit of 500 (50 for non-bots) on the number of pages that can be queried in a single API call. To query more than that, the `massQuery` function can be used, which splits the page list into batches of 500 and sends individual queries and returns a promise resolved with the array of all individual API call responses.
+**massQuery / massQueryGen**: MediaWiki sets a limit of 500 (50 for non-bots) on the number of pages that can be queried in a single API call. To query more than that, `massQuery` or `massQueryGen` can be used. This splits the page list into batches of 500 and sends individual queries and returns a promise resolved with the array of all individual API call responses.
 
 Example: get the protection status of a large number of pages:
 ```js
@@ -372,20 +367,22 @@ bot.massQuery({
 	"action": "query",
 	"format": "json",
 	"prop": "info",
-	"titles": ['Page1', 'Page2', ... , 'Page1300'],  // array of page names
+	"titles": ['Page1', 'Page2', 'Page1300'],  // array of page names
 	"inprop": "protection"
 }) // 2nd parameter is taken as 'titles' by default
-.then(jsons => {
+.then((jsons) => { 
 	// jsons is the array of individual JSON responses.
 });
 ```
 
 Any errors in the individual API calls will not cause the entire massQuery to fail, but the data at the array index corresponding to that API call will be error object.
 
+massQueryGen is the generator equivalent that yields each API response as when they're received.
+
 #### Batch operations
 Perform asynchronous tasks (involving API usage) over a number of pages (or other arbitrary items). `batchOperation` uses a default concurrency of 5. Customise this according to how expensive the API operation is. Higher concurrency limits could lead to more frequent API errors.
 
-Usage: `batchOperation(pageList, workerFunction, concurrency)` The `workerFunction` must return a promise.
+- `batchOperation(pageList, workerFunction, concurrency, maxRetries)`: The `workerFunction` must return a promise.
 
 ```js
 bot.batchOperation(pageList, (page, idx) => {
@@ -396,10 +393,8 @@ bot.batchOperation(pageList, (page, idx) => {
 }, /* concurrency */ 5, /* retries */ 2);
 ```
 
-##### seriesBatchOperation(pageList, workerFunction, sleepDuration)
-Perform asynchronous tasks (involving API usage) over a number of pages one after the other, with a sleep duration between each task (default 5 seconds)
+- `bot.seriesBatchOperation(pageList, workerFunction, sleepDuration, retries)` can be used for serial operations, with a sleep duration between each task (default 5 seconds).
 
-The `workerFunction` must return a promise.
 ```js
 bot.seriesBatchOperation(pageList, (page, idx) => {
 	// do something with each page
