@@ -5,6 +5,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
+**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/classes/_bot_.mwn.html)**
+
 **Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
 Mwn works with both JavaScript and TypeScript. It is created with a design philosophy of allowing bot developers to easily and quickly write bot code, without having to deal with the MediaWiki API complications and idiosyncrasies such as logins, tokens, maxlag, query continuations and error handling. Making raw API calls is also supported for complete flexibility where needed. The [axios](https://www.npmjs.com/package/axios) library is used for HTTP requests.
