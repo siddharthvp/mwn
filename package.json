@@ -6,17 +6,17 @@
 	"types": "./build/bot.d.ts",
 	"scripts": {
 		"bump": "node bump-version.js",
-		"build": "npx tsc || echo",
+		"build": "tsc || echo",
 		"quickbuild": "babel src --extensions \".ts\" --out-dir build",
 		"lint": "eslint src tests",
-		"test:testwiki": "cd tests && npx mocha bot.test.js category.test.js file.test.js login.bot.test.js oauth.test.js page.test.js suppl.bot.test.js user.test.js wikitext.test.js",
+		"test:testwiki": "cd tests && mocha bot.test.js category.test.js file.test.js login.bot.test.js oauth.test.js page.test.js suppl.bot.test.js user.test.js wikitext.test.js",
 		"setuplocalwiki": "cd tests/docker && bash main.sh",
-		"test:localwiki": "cd tests && npx mocha edit.bot.test.js user.edit.test.js errors.test.js shutoff.test.js core.test.js",
-		"test:nowiki": "cd tests && npx mocha batchOperations.bot.test.js date.test.js log.test.js static_utils.test.js title.test.js",
+		"test:localwiki": "cd tests && mocha edit.bot.test.js user.edit.test.js errors.test.js shutoff.test.js core.test.js",
+		"test:nowiki": "cd tests && mocha batchOperations.bot.test.js date.test.js log.test.js static_utils.test.js title.test.js",
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coveralls": "nyc report --reporter=text-lcov | coveralls",
-		"test:ts": "npx ts-mocha -p tsconfig.json tests/ts/*",
-		"docs": "npx typedoc src/bot.ts --out docs --ignoreCompilerErrors"
+		"test:ts": "ts-mocha -p tsconfig.json tests/ts/*",
+		"docs": "typedoc src/bot.ts --out docs --ignoreCompilerErrors"
 	},
 	"engines": {
 		"node": ">=10"
