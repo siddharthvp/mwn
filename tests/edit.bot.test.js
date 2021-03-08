@@ -116,6 +116,20 @@ describe('methods which modify the wiki', function() {
 			.that.has.property('code').which.equals('userexists');
 	});
 
+	it('changes user options', async () => {
+		await bot.saveOptions({
+			'userjs-mwntest': 'lorem ipsum',
+			'userjs-mwntestwithpipe': 'with|pipe'
+		});
+		await bot.saveOption('userjs-single', 'single');
+		const options = (await bot.userinfo({
+			uiprop: ["options"]
+		})).options;
+		expect(options).to.have.property('userjs-mwntest').that.equals('lorem ipsum');
+		expect(options).to.have.property('userjs-mwntestwithpipe').that.equals('with|pipe');
+		expect(options).to.have.property('userjs-single').that.equals('single');
+	});
+
 	describe('image uploads', function() {
 
 		it('successfully upload image from URL', function() {

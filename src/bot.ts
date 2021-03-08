@@ -1238,6 +1238,18 @@ export class mwn {
 		});
 	}
 
+	saveOption(option: string, value: string) {
+		return this.saveOptions({ [option]: value });
+	}
+
+	saveOptions(options: Record<string, string>) {
+		return this.request({
+			action: 'options',
+			change: Object.entries(options).map(([key, val]) => key + '=' + val),
+			token: this.csrfToken
+		});
+	}
+
 	/**
 	 * Convenience method for `action=rollback`.
 	 *
