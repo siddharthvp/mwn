@@ -318,15 +318,14 @@ export class mwn {
 	 * It is advised to create one bot instance for every API to use
 	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations
 	 *
-	 * @param {Object} [customOptions] - Custom options
+	 * @param [customOptions] - Custom options
 	 */
-	constructor(customOptions?: MwnOptions) {
+	constructor(customOptions?: MwnOptions | string) {
 
-		if (process.version) {
-			let majorVersionMatch = process.version.match(/v(\d+)/);
-			let majorVersion = majorVersionMatch && majorVersionMatch[1] && parseInt(majorVersionMatch[1]);
+		if (process.versions.node) {
+			let majorVersion = parseInt(process.versions.node);
 			if (majorVersion < 10) {
-				log(`[W] Detected node version ${process.version}, but mwn is only supported on node v10.x`);
+				log(`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v10.x and above`);
 			}
 		}
 
