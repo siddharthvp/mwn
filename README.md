@@ -168,10 +168,12 @@ const bot = await mwn.init({
 
 	// Instead of username and password, you can use OAuth 1.0a to authenticate,
 	// if the wiki has Extension:OAuth enabled
-	oauth_consumer_token: "16_DIGIT_ALPHANUMERIC_KEY",
-	oauth_consumer_secret: "20_DIGIT_ALPHANUMERIC_KEY",
-	oauth_access_token: "16_DIGIT_ALPHANUMERIC_KEY",
-	oauth_access_secret: "20_DIGIT_ALPHANUMERIC_KEY",
+	OAuthCredentials: {
+		consumerToken: "16_DIGIT_ALPHANUMERIC_KEY",
+		consumerSecret: "20_DIGIT_ALPHANUMERIC_KEY",
+		accessToken: "16_DIGIT_ALPHANUMERIC_KEY",
+		accessSecret: "20_DIGIT_ALPHANUMERIC_KEY"
+	},
 
 	// Set your user agent (required for WMF wikis, see https://meta.wikimedia.org/wiki/User-Agent_policy):
 	userAgent: 'myCoolToolName 1.0 ([[link to bot user page or tool documentation]])',
