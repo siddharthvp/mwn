@@ -167,6 +167,18 @@ describe('mwn', async function() {
 		expect(pages[0]).to.be.a('string');
 	});
 
+	it('getMessages', async function () {
+		let messages = await bot.getMessages(['and', 'word-separator']);
+		expect(messages).to.deep.equal({
+			'and': ' and',
+			'word-separator': ' '
+		});
+		let singleMessage = await bot.getMessages('colon-separator');
+		expect(singleMessage).to.deep.equal({
+			'colon-separator': ': '
+		});
+	});
+
 	let fileTitle = 'File:Example demo image.png';
 
 	it('downloads an image from title without local name specified', function() {

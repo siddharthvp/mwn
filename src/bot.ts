@@ -67,7 +67,7 @@ import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} 
 
 import type {
 	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
-	ApiPurgeParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
+	ApiPurgeParams, ApiQueryAllMessagesParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
 	ApiQuerySearchParams, ApiQueryUserInfoParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
 } from "./api_params";
 
@@ -772,6 +772,28 @@ export class mwn {
 			} catch(e) {
 				return rejectWithErrorCode('invalidjson');
 			}
+		});
+	}
+
+	/**
+	 * Fetch MediaWiki messages
+	 * @param messages
+	 * @param options
+	 */
+	getMessages(messages: string | string[], options: ApiQueryAllMessagesParams = {}) {
+		return this.request({
+			"action": "query",
+			"meta": "allmessages",
+			"ammessages": messages,
+			...options
+		}).then((data) => {
+			let result: Record<string, string> = {};
+			data.query.allmessages.forEach((obj) => {
+				if (!obj.missing) {
+					result[obj.name] = obj.content;
+				}
+			});
+			return result;
 		});
 	}
 
