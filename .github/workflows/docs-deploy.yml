@@ -21,7 +21,7 @@ jobs:
       - name: zipping docs
         run: zip -r docs.zip docs
       - name: Copy docs to Toolforge
-        uses: garygrossgarten/github-action-scp@release
+        uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
         with:
           local: /home/runner/work/mwn/mwn/docs.zip
           remote: /data/project/mwn/docs.zip
@@ -30,7 +30,7 @@ jobs:
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
           rmRemote: true
       - name: unzip and copy
-        uses: garygrossgarten/github-action-ssh@release
+        uses: garygrossgarten/github-action-ssh@2b10f41b5a33808f6d24eafd253296766308b7c4
         with:
           command: >-
             cd /data/project/mwn &&

@@ -90,7 +90,7 @@ jobs:
       - uses: actions/download-artifact@v2
       - run: zip -r coverage.zip coverage/lcov-report
       - name: Upload coverage reports to Toolforge
-        uses: garygrossgarten/github-action-scp@release
+        uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
         with:
           local: /home/runner/work/mwn/mwn/coverage.zip
           remote: /data/project/mwn/coverage.zip
@@ -99,7 +99,7 @@ jobs:
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
           rmRemote: true
       - name: Coverage
-        uses: garygrossgarten/github-action-ssh@release
+        uses: garygrossgarten/github-action-ssh@2b10f41b5a33808f6d24eafd253296766308b7c4
         with:
           command: >-
             cd /data/project/mwn &&
