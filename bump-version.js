@@ -1,4 +1,6 @@
 /**
+ * Note: Unused.
+ *
  * Script to bump the version before a release.
  * The last commit is amended to raise the version
  * number. The commit message of the last commit
