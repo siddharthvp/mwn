@@ -39,7 +39,6 @@ describe('methods which modify the wiki', function() {
 		});
 	});
 
-	// will have to observe the warning, can't test it by code :(   XXX: use mocks!
 	it('shows warning (see above) on a no-op edit', function() {
 		sinon.spy(logger, 'log');
 		return bot.edit(randPage, rev => {

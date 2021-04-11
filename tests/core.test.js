@@ -39,6 +39,13 @@ describe('core', function () {
 				.that.has.property('code').which.equals('badvalue');
 		});
 
+		it("doesn't retry on ENOTFOUND rejection", async function () {
+			const bot2 = new mwn({apiUrl: 'https://somewebsite2342978653424.org/w/api.php'});
+			// this test relies on no retry taking place since they won't take place within the 2 second timeout
+			await expect(bot2.getSiteInfo()).to.be.eventually.rejectedWith(Error)
+				.that.has.property('code').which.equals('ENOTFOUND');
+		});
+
 	});
 
 });

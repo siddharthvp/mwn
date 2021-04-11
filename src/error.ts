@@ -1,5 +1,6 @@
 import type {RawRequestParams} from "./core";
 
+// make this extend AxiosError?
 export type MwnErrorConfig = {
 	code: string,
 	info?: string,
@@ -47,6 +48,6 @@ export function rejectWithErrorCode(errorCode: string): Promise<never> {
 	});
 }
 
-export function rejectWithError(errorConfig: MwnErrorConfig): Promise<never> {
+export function rejectWithError(errorConfig: MwnErrorConfig | Error): Promise<never> {
 	return Promise.reject(new MwnError(errorConfig));
 }
