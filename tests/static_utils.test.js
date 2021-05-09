@@ -137,6 +137,21 @@ describe('static utils', function () {
 		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
 			`{| style="text-align: center"\n|}`,
 		);
+
+		var expected4 = `{| class="plainlinks wikitable sortable"
+|-
+! Header text !! Header text !! Header text
+|-
+| Example || Example || Example
+|-
+| Example || Example || Example
+|}`;
+
+		table = new mwn.table({ multiline: false, classes: ['plainlinks'] });
+		table.addHeaders(['Header text', 'Header text', 'Header text']);
+		table.addRow(['Example', 'Example', 'Example']);
+		table.addRow(['Example', 'Example', 'Example']);
+		expect(table.getText()).to.equal(expected4);
 	});
 
 	describe('mwn.util', function () {

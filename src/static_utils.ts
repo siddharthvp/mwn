@@ -72,21 +72,22 @@ export class table {
 			sortable?: boolean;
 			style?: string;
 			multiline?: boolean;
+			classes?: string[];
 		} = {},
 	) {
-		let classes = [];
+		let classes = new Set(config.classes);
 		if (!config.plain) {
-			classes.push('wikitable');
+			classes.add('wikitable');
 		}
 		if (config.sortable !== false) {
-			classes.push('sortable');
+			classes.add('sortable');
 		}
 		if (config.multiline !== false) {
 			this.multiline = true;
 		}
 		this.text = `{|`;
-		if (classes.length) {
-			this.text += ` class="${classes.join(' ')}"`;
+		if (classes.size) {
+			this.text += ` class="${[...classes].join(' ')}"`;
 		}
 		if (config.style) {
 			this.text += ` style="${config.style}"`;
