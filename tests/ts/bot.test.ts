@@ -1,5 +1,5 @@
-import {mwn} from '../..';
-import {expect} from 'chai';
+import { mwn } from '../..';
+import { expect } from 'chai';
 
 /**
  * Basic tests to check that the library works with TypeScript
@@ -16,14 +16,14 @@ describe('typescript', async function () {
 		bot = new mwn({
 			silent: true,
 			...loginCredentials.account1_oauth,
-			userAgent: 'mwn (https://github.com/siddharthvp/mwn)'
+			userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
 		});
 		return bot.getTokensAndSiteInfo();
 	});
 
 	it('works with typescript', function () {
-		expect(bot).to.be instanceof(mwn);
-		return bot.request({action: 'query'}).then(data => {
+		expect(bot).to.be.instanceOf(mwn);
+		return bot.request({ action: 'query' }).then((data) => {
 			expect(data).to.have.key('batchcomplete');
 			expect(data.batchcomplete).to.equal(true);
 		});
@@ -36,8 +36,5 @@ describe('typescript', async function () {
 		let date = new bot.date('20200101130042');
 		expect(date.format('YYYY-MM-DD')).to.equal('2020-01-01');
 		expect(date.getDate()).to.equal(1);
-
 	});
-
 });
-
