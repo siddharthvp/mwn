@@ -4,14 +4,14 @@
  * the Request and Response classes defined in this file.
  */
 
-import type {AxiosResponse, AxiosRequestConfig} from "axios";
-import * as formData from "form-data";
-import * as OAuth from "oauth-1.0a";
+import type { AxiosResponse, AxiosRequestConfig } from 'axios';
+import * as formData from 'form-data';
+import * as OAuth from 'oauth-1.0a';
 
-import type {mwn, ApiParams, ApiResponse} from "./bot";
-import {log} from "./log";
-import {rejectWithError} from "./error";
-import {merge, mergeDeep1, sleep} from "./utils";
+import type { mwn, ApiParams, ApiResponse } from './bot';
+import { log } from './log';
+import { rejectWithError } from './error';
+import { merge, mergeDeep1, sleep } from './utils';
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number;
@@ -72,15 +72,18 @@ export class Request {
 
 	async fillRequestOptions() {
 		let method = this.getMethod();
-		this.requestParams = mergeDeep1({
-			url: this.bot.options.apiUrl,
-			method,
+		this.requestParams = mergeDeep1(
+			{
+				url: this.bot.options.apiUrl,
+				method,
 
-			// retryNumber isn't actually used by the API, but this is
-			// included here for tracking our maxlag retry count.
-			retryNumber: 0
-
-		}, this.bot.requestOptions, this.requestParams);
+				// retryNumber isn't actually used by the API, but this is
+				// included here for tracking our maxlag retry count.
+				retryNumber: 0,
+			},
+			this.bot.requestOptions,
+			this.requestParams,
+		);
 
 		if (method === 'get') {
 			this.handleGet();
@@ -99,8 +102,8 @@ export class Request {
 				...this.makeOAuthHeader({
 					url: requestOptions.url,
 					method: requestOptions.method,
-					data: requestOptions.data instanceof formData ? {} : this.apiParams
-				})
+					data: requestOptions.data instanceof formData ? {} : this.apiParams,
+				}),
 			};
 		} else {
 			// BotPassword authentication
@@ -113,10 +116,12 @@ export class Request {
 	 * Get OAuth Authorization header
 	 */
 	makeOAuthHeader(params: OAuth.RequestOptions): OAuth.Header {
-		return this.bot.oauth.toHeader(this.bot.oauth.authorize(params, {
-			key: this.bot.options.OAuthCredentials.accessToken,
-			secret: this.bot.options.OAuthCredentials.accessSecret
-		}));
+		return this.bot.oauth.toHeader(
+			this.bot.oauth.authorize(params, {
+				key: this.bot.options.OAuthCredentials.accessToken,
+				secret: this.bot.options.OAuthCredentials.accessSecret,
+			}),
+		);
 	}
 
 	handleGet() {
@@ -139,9 +144,11 @@ export class Request {
 		} else {
 			// use application/x-www-form-urlencoded (default)
 			// requestOptions.data = params;
-			this.requestParams.data = Object.entries(params).map(([key, val]) => {
-				return encodeURIComponent(key) + '=' + encodeURIComponent(val as string);
-			}).join('&');
+			this.requestParams.data = Object.entries(params)
+				.map(([key, val]) => {
+					return encodeURIComponent(key) + '=' + encodeURIComponent(val as string);
+				})
+				.join('&');
 		}
 	}
 
@@ -156,10 +163,12 @@ export class Request {
 	}
 
 	async handlePostMultipartFormData() {
-		let params = this.apiParams, requestOptions = this.requestParams;
+		let params = this.apiParams,
+			requestOptions = this.requestParams;
 		let form = new formData();
 		for (let [key, val] of Object.entries(params)) {
-			if (val instanceof Object && 'stream' in val) { // TypeScript facepalm
+			if (val instanceof Object && 'stream' in val) {
+				// TypeScript facepalm
 				form.append(key, val.stream, val.name);
 			} else {
 				form.append(key, val);
@@ -174,13 +183,12 @@ export class Request {
 				resolve({
 					...requestOptions.headers,
 					...form.getHeaders(),
-					'Content-Length': length
+					'Content-Length': length,
 				});
 			});
 		});
 	}
 }
-
 
 export class Response {
 	bot: mwn;
@@ -200,7 +208,7 @@ export class Response {
 		this.response = rawResponse.data;
 		await this.initialCheck();
 		this.showWarnings();
-		return await this.handleErrors() || this.response;
+		return (await this.handleErrors()) || this.response;
 	}
 
 	async initialCheck(): Promise<void> {
@@ -209,13 +217,13 @@ export class Response {
 				return rejectWithError({
 					code: 'mwn_invalidformat',
 					info: 'Must use format=json!',
-					response: this.response
+					response: this.response,
 				});
 			}
 			return rejectWithError({
 				code: 'invalidjson',
 				info: 'No valid JSON response',
-				response: this.response
+				response: this.response,
 			});
 		}
 	}
@@ -233,81 +241,87 @@ export class Response {
 		// TODO: support non-legacy error formats
 		const error = this.response.error;
 		if (error) {
-
 			if (this.requestOptions.retryNumber < this.bot.options.maxRetries) {
-
 				switch (error.code) {
+					// This will not work if the token type to be used is defined by an
+					// extension, and not a part of mediawiki core
+					case 'badtoken':
+						log(`[W] Encountered badtoken error, fetching new token and retrying`);
+						return Promise.all([
+							this.bot.getTokenType(this.params.action as string),
+							this.bot.getTokens(),
+						]).then(([tokentype]) => {
+							if (!tokentype || !this.bot.state[tokentype + 'token']) {
+								return this.dieWithError();
+							}
+							this.params.token = this.bot.state[tokentype + 'token'];
+							return this.retry();
+						});
 
-				// This will not work if the token type to be used is defined by an
-				// extension, and not a part of mediawiki core
-				case 'badtoken':
-					log(`[W] Encountered badtoken error, fetching new token and retrying`);
-					return Promise.all(
-						[this.bot.getTokenType(this.params.action as string), this.bot.getTokens()]
-					).then(([tokentype]) => {
-						if (!tokentype || !this.bot.state[tokentype + 'token']) {
-							return this.dieWithError();
-						}
-						this.params.token = this.bot.state[ tokentype + 'token' ];
-						return this.retry();
-					});
-
-				case 'readonly':
-					log(`[W] Encountered readonly error, waiting for ${this.bot.options.retryPause/1000} seconds before retrying`);
-					return sleep(this.bot.options.retryPause).then(() => {
-						return this.retry();
-					});
-
-				case 'maxlag':
-					// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
-					// eslint-disable-next-line no-case-declarations
-					let pause = parseInt(this.rawResponse.headers['retry-after']); // axios uses lowercase headers
-					// retry-after appears to be usually 5 for WMF wikis
-					if (isNaN(pause)) {
-						pause = this.bot.options.retryPause / 1000;
-					}
-
-					log(`[W] Encountered maxlag: ${error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`);
-					return sleep(pause * 1000).then(() => {
-						return this.retry();
-					});
-
-				case 'assertbotfailed':
-				case 'assertuserfailed':
-					// this shouldn't have happened if we're using OAuth
-					if (this.bot.usingOAuth) {
-						return this.dieWithError();
-					}
-
-					// Possibly due to session loss: retry after logging in again
-					log(`[W] Received ${error.code}, attempting to log in and retry`);
-					return this.bot.login().then(() => {
-						return this.retry();
-					});
-
-				case 'mwoauth-invalid-authorization':
-					// Per https://phabricator.wikimedia.org/T106066, "Nonce already used" indicates
-					// an upstream memcached/redis failure which is transient
-					// Also handled in mwclient (https://github.com/mwclient/mwclient/pull/165/commits/d447c333e)
-					// and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py)
-					// Some discussion in https://github.com/mwclient/mwclient/issues/164
-					if (error.info.includes('Nonce already used')) {
-						log(`[W] Retrying failed OAuth authentication in ${this.bot.options.retryPause/1000} seconds`);
+					case 'readonly':
+						log(
+							`[W] Encountered readonly error, waiting for ${
+								this.bot.options.retryPause / 1000
+							} seconds before retrying`,
+						);
 						return sleep(this.bot.options.retryPause).then(() => {
 							return this.retry();
 						});
-					} else {
+
+					case 'maxlag':
+						// Handle maxlag, see https://www.mediawiki.org/wiki/Manual:Maxlag_parameter
+						// eslint-disable-next-line no-case-declarations
+						let pause = parseInt(this.rawResponse.headers['retry-after']); // axios uses lowercase headers
+						// retry-after appears to be usually 5 for WMF wikis
+						if (isNaN(pause)) {
+							pause = this.bot.options.retryPause / 1000;
+						}
+
+						log(
+							`[W] Encountered maxlag: ${error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`,
+						);
+						return sleep(pause * 1000).then(() => {
+							return this.retry();
+						});
+
+					case 'assertbotfailed':
+					case 'assertuserfailed':
+						// this shouldn't have happened if we're using OAuth
+						if (this.bot.usingOAuth) {
+							return this.dieWithError();
+						}
+
+						// Possibly due to session loss: retry after logging in again
+						log(`[W] Received ${error.code}, attempting to log in and retry`);
+						return this.bot.login().then(() => {
+							return this.retry();
+						});
+
+					case 'mwoauth-invalid-authorization':
+						// Per https://phabricator.wikimedia.org/T106066, "Nonce already used" indicates
+						// an upstream memcached/redis failure which is transient
+						// Also handled in mwclient (https://github.com/mwclient/mwclient/pull/165/commits/d447c333e)
+						// and pywikibot (https://gerrit.wikimedia.org/r/c/pywikibot/core/+/289582/1/pywikibot/data/api.py)
+						// Some discussion in https://github.com/mwclient/mwclient/issues/164
+						if (error.info.includes('Nonce already used')) {
+							log(
+								`[W] Retrying failed OAuth authentication in ${
+									this.bot.options.retryPause / 1000
+								} seconds`,
+							);
+							return sleep(this.bot.options.retryPause).then(() => {
+								return this.retry();
+							});
+						} else {
+							return this.dieWithError();
+						}
+
+					default:
 						return this.dieWithError();
-					}
-
-				default:
-					return this.dieWithError();
 				}
-
 			} else {
 				return this.dieWithError();
 			}
-
 		}
 	}
 
@@ -317,7 +331,8 @@ export class Response {
 	}
 
 	dieWithError(): Promise<never> {
-		let response = this.rawResponse, requestOptions = this.requestOptions;
+		let response = this.rawResponse,
+			requestOptions = this.requestOptions;
 		let errorData = Object.assign({}, response.data.error, {
 			// Enhance error object with additional information:
 			// the full API response: everything in AxiosResponse object except
@@ -326,10 +341,10 @@ export class Response {
 				data: response.data,
 				status: response.status,
 				statusText: response.statusText,
-				headers: response.headers
+				headers: response.headers,
 			},
 			// the original request, should the client want to retry the request
-			request: requestOptions
+			request: requestOptions,
 		});
 		return rejectWithError(errorData);
 	}
@@ -342,7 +357,7 @@ export class Response {
 			error.code !== 'ENOTFOUND'
 		) {
 			// error might be transient, give it another go!
-			log(`[W] Encountered ${error}, retrying in ${this.bot.options.retryPause/1000} seconds`);
+			log(`[W] Encountered ${error}, retrying in ${this.bot.options.retryPause / 1000} seconds`);
 			return sleep(this.bot.options.retryPause).then(() => {
 				return this.retry();
 			});
@@ -351,5 +366,4 @@ export class Response {
 		error.request = this.requestOptions;
 		return rejectWithError(error);
 	}
-
 }

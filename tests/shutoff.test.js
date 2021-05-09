@@ -1,9 +1,8 @@
 'use strict';
 
-const {mwn, bot, expect, setup, teardown} = require('./local_wiki');
+const { mwn, bot, expect, setup, teardown } = require('./local_wiki');
 
-
-describe('bot emergency shutoff', async function() {
+describe('bot emergency shutoff', async function () {
 	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', setup);
@@ -18,7 +17,7 @@ describe('bot emergency shutoff', async function() {
 		bot.enableEmergencyShutoff({
 			page: testPage,
 			intervalDuration: 1000,
-			condition: /^\s*$/
+			condition: /^\s*$/,
 		});
 		await bot.save(testPage, 'shutoff', 'Testing bot shutoff');
 		await bot.sleep(1500); // wait till we can be sure that shutoff check is queried
@@ -34,14 +33,14 @@ describe('bot emergency shutoff', async function() {
 			intervalDuration: 1000,
 			condition: function () {
 				return false; // function returns false means bot would shut down
-			}
+			},
 		});
 		await bot.sleep(1500); // wait till we can be sure that shutoff check is queried
 		expect(bot.shutoff.state).to.equal(true);
 		bot.disableEmergencyShutoff();
 	});
 
-	it ('sets shutoff=true even if shutoff options are not configured in function', async function () {
+	it('sets shutoff=true even if shutoff options are not configured in function', async function () {
 		bot.shutoff.state = false; // restore to default state
 
 		bot.options.shutoff.page = testPage;
@@ -58,8 +57,9 @@ describe('bot emergency shutoff', async function() {
 		bot.shutoff.state = true;
 
 		// Fuck, this works!
-		await expect(bot.request({action: 'query', titles: 'testtitle'})).to.be.eventually.rejectedWith(mwn.Error)
-			.that.has.property('code').which.equals('bot-shutoff');
+		await expect(bot.request({ action: 'query', titles: 'testtitle' }))
+			.to.be.eventually.rejectedWith(mwn.Error)
+			.that.has.property('code')
+			.which.equals('bot-shutoff');
 	});
-
 });

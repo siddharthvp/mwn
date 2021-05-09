@@ -4,10 +4,10 @@ const { mwn, expect, verifyTokenAndSiteInfo } = require('./test_base');
 
 const testwiki = require('./mocking/loginCredentials.js');
 
-describe('login', async function() {
+describe('login', async function () {
 	this.timeout(10000);
 
-	it('successfully logs in and gets token & siteinfo', async function() {
+	it('successfully logs in and gets token & siteinfo', async function () {
 		let client = new mwn();
 		return client.login(testwiki.account1).then(async () => {
 			expect(client.loggedIn).to.be.true;
@@ -18,36 +18,36 @@ describe('login', async function() {
 	});
 
 	let bot = new mwn();
-	it('successfully logs in through init', async function() {
+	it('successfully logs in through init', async function () {
 		bot = await mwn.init(testwiki.account1);
 		expect(bot.loggedIn).to.be.true;
 		verifyTokenAndSiteInfo(bot);
 	});
 
-	it('raises correct error on trying to login without logout', async function() {
-		return bot.login().catch(err => {
+	it('raises correct error on trying to login without logout', async function () {
+		return bot.login().catch((err) => {
 			expect(err.info).to.include('Already logged in as');
 		});
 	});
 
-	it('raises correct error on trying to login while using OAuth', async function() {
-		let client = new mwn({...testwiki.account1, ...testwiki.account1_oauth});
+	it('raises correct error on trying to login while using OAuth', async function () {
+		let client = new mwn({ ...testwiki.account1, ...testwiki.account1_oauth });
 		client.initOAuth();
-		return client.login().catch(err => {
+		return client.login().catch((err) => {
 			expect(err.info).to.eq(`Cannot use login/logout while using OAuth`);
 		});
 	});
 
-	it('successfully logs out', async function() {
+	it('successfully logs out', async function () {
 		await bot.logout();
 		expect(bot.loggedIn).to.be.false;
 		let userinfo = await bot.userinfo();
 		expect(userinfo.anon).to.be.true;
 	});
 
-	it('successfully logs in again (same bot instance) and even if assert: user is a default option', async function() {
+	it('successfully logs in again (same bot instance) and even if assert: user is a default option', async function () {
 		bot.setDefaultParams({
-			assert: 'user'
+			assert: 'user',
 		});
 		await bot.login(); // need a token to be able to log out
 		expect(bot.loggedIn).to.be.true;
@@ -57,7 +57,7 @@ describe('login', async function() {
 		expect(userinfo.name).to.eq(testwiki.account1.username.slice(0, testwiki.account1.username.indexOf('@')));
 	});
 
-	it('logs out and logs in to another account (same bot instance)', async function() {
+	it('logs out and logs in to another account (same bot instance)', async function () {
 		await bot.logout();
 
 		// Now trying logging in to another account
@@ -69,5 +69,4 @@ describe('login', async function() {
 	});
 
 	// TODO: add test for two bot instances signed into different wikis
-
 });

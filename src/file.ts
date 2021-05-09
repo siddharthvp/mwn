@@ -1,5 +1,5 @@
-import type {mwn, MwnPage, MwnTitle} from './bot';
-import {ApiQueryBacklinkspropParams} from "./api_params";
+import type { mwn, MwnPage, MwnTitle } from './bot';
+import { ApiQueryBacklinkspropParams } from './api_params';
 
 export interface MwnFileStatic {
 	new (title: MwnTitle | string): MwnFile;
@@ -7,18 +7,20 @@ export interface MwnFileStatic {
 export interface MwnFile extends MwnPage {
 	getName(): string;
 	getNameText(): string;
-	usages(options?: ApiQueryBacklinkspropParams): Promise<{
-		pageid: number;
-		title: string;
-		redirect: boolean;
-	}[]>;
+	usages(
+		options?: ApiQueryBacklinkspropParams,
+	): Promise<
+		{
+			pageid: number;
+			title: string;
+			redirect: boolean;
+		}[]
+	>;
 	download(localname: string): void;
 }
 
 export default function (bot: mwn) {
-
 	class File extends bot.page implements MwnFile {
-
 		/**
 		 * @constructor
 		 * @param {string} name - name of the file
@@ -39,10 +41,10 @@ export default function (bot: mwn) {
 		 */
 		getName(): string {
 			let ext = this.getExtension();
-			if ( ext === null ) {
+			if (ext === null) {
 				return this.getMain();
 			}
-			return this.getMain().slice( 0, -ext.length - 1 );
+			return this.getMain().slice(0, -ext.length - 1);
 		}
 
 		/**
@@ -53,9 +55,8 @@ export default function (bot: mwn) {
 		 * as "Example image".
 		 */
 		getNameText(): string {
-			return this.getName().replace( /_/g, ' ' );
+			return this.getName().replace(/_/g, ' ');
 		}
-
 
 		/**
 		 * Get file usages
@@ -63,16 +64,18 @@ export default function (bot: mwn) {
 		 * @returns {Promise<Object[]>} - resolved with array of { pageid: 32434,
 		 * ns: 0, title: 'Main Page', redirect: false } like objects.
 		 */
-		usages(options?: ApiQueryBacklinkspropParams): Promise<{ pageid: number, title: string, redirect: boolean }[]> {
-			return bot.request({
-				"action": "query",
-				"prop": "fileusage",
-				"titles": this.toString(),
-				"fuprop": "pageid|title|redirect",
-				...options
-			}).then(data => {
-				return data.query.pages[0].fileusage || [];
-			});
+		usages(options?: ApiQueryBacklinkspropParams): Promise<{ pageid: number; title: string; redirect: boolean }[]> {
+			return bot
+				.request({
+					action: 'query',
+					prop: 'fileusage',
+					titles: this.toString(),
+					fuprop: 'pageid|title|redirect',
+					...options,
+				})
+				.then((data) => {
+					return data.query.pages[0].fileusage || [];
+				});
 		}
 
 		// TODO: Add wrapper for prop=imageinfo
@@ -80,9 +83,7 @@ export default function (bot: mwn) {
 		download(localname: string) {
 			return bot.download(this.toString(), localname);
 		}
-
 	}
 
 	return File as MwnFileStatic;
-
 }

@@ -13,13 +13,15 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type {mwn, MwnTitle} from "./bot";
-import type {ApiParseParams} from "./api_params";
+import type { mwn, MwnTitle } from './bot';
+import type { ApiParseParams } from './api_params';
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;
 	parseTemplates(wikitext: string, config: TemplateConfig): Template[];
-	parseTable(text: string): {
+	parseTable(
+		text: string,
+	): {
 		[column: string]: string;
 	}[];
 	parseSections(text: string): Section[];
@@ -42,36 +44,35 @@ export interface MwnWikitext {
 }
 
 export interface Link {
-	wikitext: string
-	target: MwnTitle
+	wikitext: string;
+	target: MwnTitle;
 }
 
 export interface PageLink extends Link {
-	displaytext: string
+	displaytext: string;
 }
 
 export interface FileLink extends Link {
-	props: string
+	props: string;
 }
 
 export interface CategoryLink extends Link {
-	sortkey: string
+	sortkey: string;
 }
 
 export interface Section {
-	level: number
-	header: string
-	index: number
-	content?: string
+	level: number;
+	header: string;
+	index: number;
+	content?: string;
 }
 
 export interface TemplateConfig {
-	recursive?: boolean
-	namePredicate?: ((name: string) => boolean)
-	templatePredicate?: ((template: Template) => boolean)
-	count?: number
+	recursive?: boolean;
+	namePredicate?: (name: string) => boolean;
+	templatePredicate?: (template: Template) => boolean;
+	count?: number;
 }
-
 
 // Adapted from https://en.wikipedia.org/wiki/MediaWiki:Gadget-libExtraUtil.js
 // by Evad37 (cc-by-sa-3.0/GFDL)
@@ -89,9 +90,9 @@ export interface TemplateConfig {
 		}
  */
 export class Template {
-	wikitext: string
-	parameters: Array<Parameter>
-	name: string | number
+	wikitext: string;
+	parameters: Array<Parameter>;
+	name: string | number;
 
 	/**
 	 * @param {String} wikitext Wikitext of a template transclusion,
@@ -105,7 +106,7 @@ export class Template {
 		this.parameters.push(new Parameter(name, val, wikitext));
 	}
 	getParam(paramName: string | number): Parameter {
-		return this.parameters.find(p => {
+		return this.parameters.find((p) => {
 			return p.name == paramName; // == is intentional
 		});
 	}
@@ -115,14 +116,14 @@ export class Template {
 	}
 	setName(name: string) {
 		name = name.trim();
-		this.name = name[0] ? (name[0].toUpperCase() + name.slice(1)) : name;
+		this.name = name[0] ? name[0].toUpperCase() + name.slice(1) : name;
 	}
 }
 
 export class Parameter {
-	name: string | number
-	value: string
-	wikitext: string
+	name: string | number;
+	value: string;
+	wikitext: string;
 
 	constructor(name: string | number, val: string, wikitext: string) {
 		this.name = name;
@@ -132,22 +133,21 @@ export class Parameter {
 }
 
 export default function (bot: mwn) {
-
 	class Wikitext implements MwnWikitext {
-		text: string
-		links: Array<PageLink>
-		templates: Array<Template>
-		files: Array<FileLink>
-		categories: Array<CategoryLink>
-		sections: Section[]
+		text: string;
+		links: Array<PageLink>;
+		templates: Array<Template>;
+		files: Array<FileLink>;
+		categories: Array<CategoryLink>;
+		sections: Section[];
 
 		private unbinder: {
-			counter: number
+			counter: number;
 			history: {
-				[replaced: string]: string
-			}
-			prefix: string
-			postfix: string
+				[replaced: string]: string;
+			};
+			prefix: string;
+			postfix: string;
 		};
 
 		constructor(wikitext: string) {
@@ -169,7 +169,7 @@ export default function (bot: mwn) {
 			for (let i = 0; i < n; i++) {
 				if (this.text[i] === '[' && this.text[i + 1] === '[') {
 					stack.push({
-						startIdx: i
+						startIdx: i,
 					});
 					i++;
 				} else if (this.text[i] === ']' && this.text[i + 1] === ']' && stack.top()) {
@@ -209,7 +209,7 @@ export default function (bot: mwn) {
 		 * @returns {Template[]}
 		 */
 		parseTemplates(config: TemplateConfig): Template[] {
-			return this.templates = Wikitext.parseTemplates(this.text, config);
+			return (this.templates = Wikitext.parseTemplates(this.text, config));
 		}
 
 		// parseTemplates() and processTemplateText() are adapted from
@@ -225,7 +225,7 @@ export default function (bot: mwn) {
 				recursive: false,
 				namePredicate: null,
 				templatePredicate: null,
-				count: null
+				count: null,
 			};
 
 			const result = [];
@@ -243,10 +243,13 @@ export default function (bot: mwn) {
 			let startIdx, endIdx;
 
 			for (let i = 0; i < n; i++) {
-
 				if (!inComment && !inNowiki && !inParameter) {
-
-					if (wikitext[i] === '{' && wikitext[i + 1] === '{' && wikitext[i + 2] === '{' && wikitext[i + 3] !== '{') {
+					if (
+						wikitext[i] === '{' &&
+						wikitext[i + 1] === '{' &&
+						wikitext[i + 2] === '{' &&
+						wikitext[i + 3] !== '{'
+					) {
 						inParameter = true;
 						i += 2;
 					} else if (wikitext[i] === '{' && wikitext[i + 1] === '{') {
@@ -259,7 +262,11 @@ export default function (bot: mwn) {
 						if (numUnclosed === 2) {
 							endIdx = i;
 							let templateWikitext = wikitext.slice(startIdx, endIdx); // without braces
-							let processed = processTemplateText(templateWikitext, config.namePredicate, config.templatePredicate);
+							let processed = processTemplateText(
+								templateWikitext,
+								config.namePredicate,
+								config.templatePredicate,
+							);
 							if (processed) {
 								result.push(processed);
 							}
@@ -279,8 +286,8 @@ export default function (bot: mwn) {
 						inNowiki = true;
 						i += 7;
 					}
-
-				} else { // we are in a comment or nowiki or {{{parameter}}}
+				} else {
+					// we are in a comment or nowiki or {{{parameter}}}
 					if (wikitext[i] === '|') {
 						// swap out pipes with \x01 character
 						wikitext = strReplaceAt(wikitext, i, '\x01');
@@ -295,22 +302,23 @@ export default function (bot: mwn) {
 						i += 2;
 					}
 				}
-
 			}
 
 			if (config.recursive) {
-				let subtemplates = result.map(template => {
-					return template.wikitext.slice(2, -2);
-				}).filter(templateWikitext => {
-					return /\{\{.*\}\}/s.test(templateWikitext);
-				}).map(templateWikitext => {
-					return Wikitext.parseTemplates(templateWikitext, config);
-				});
+				let subtemplates = result
+					.map((template) => {
+						return template.wikitext.slice(2, -2);
+					})
+					.filter((templateWikitext) => {
+						return /\{\{.*\}\}/s.test(templateWikitext);
+					})
+					.map((templateWikitext) => {
+						return Wikitext.parseTemplates(templateWikitext, config);
+					});
 				return result.concat(...subtemplates);
 			}
 
 			return result;
-
 		}
 
 		/**
@@ -323,7 +331,6 @@ export default function (bot: mwn) {
 		removeEntity(entity: Link | Template) {
 			this.text = this.text.replace(entity.wikitext, '');
 		}
-
 
 		/**
 		 * Temporarily hide a part of the string while processing the rest of it.
@@ -346,11 +353,11 @@ export default function (bot: mwn) {
 					counter: 0,
 					history: {},
 					prefix: '%UNIQ::' + Math.random() + '::',
-					postfix: '::UNIQ%'
+					postfix: '::UNIQ%',
 				};
 			}
 			let re = new RegExp(prefix + '([\\s\\S]*?)' + postfix, 'g');
-			this.text = this.text.replace(re, match => {
+			this.text = this.text.replace(re, (match) => {
 				let current = this.unbinder.prefix + this.unbinder.counter + this.unbinder.postfix;
 				this.unbinder.history[current] = match;
 				++this.unbinder.counter;
@@ -385,7 +392,6 @@ export default function (bot: mwn) {
 			return bot.parseWikitext(this.text, options);
 		}
 
-
 		/**
 		 * Simple table parser.
 		 * Parses tables provided:
@@ -402,10 +408,9 @@ export default function (bot: mwn) {
 		 * @returns {Object[]} - each object in the returned array represents a row,
 		 * with its keys being column names, and values the cell content
 		 */
-		static parseTable(text: string): {[column: string]: string}[] {
+		static parseTable(text: string): { [column: string]: string }[] {
 			text = text.trim();
 			const indexOfRawPipe = function (text: string) {
-
 				// number of unclosed brackets
 				let tlevel = 0,
 					llevel = 0;
@@ -436,7 +441,7 @@ export default function (bot: mwn) {
 			// including table attributes and caption, and unnecessary |- at the top
 			text = text.replace(/^\{\|.*$((\n\|-)?\n\|\+.*$)?(\n\|-)?/m, '').replace(/^\|\}$/m, '');
 
-			let [header, ...rows] = text.split(/^\|-/m).map(r => r.trim());
+			let [header, ...rows] = text.split(/^\|-/m).map((r) => r.trim());
 
 			// remove cell attributes, extracts data
 			const extractData = (cell: string) => {
@@ -444,9 +449,10 @@ export default function (bot: mwn) {
 			};
 
 			// XXX: handle the case where there are is no header row
-			let cols = header.split('\n').map(e => e.replace(/^!/, ''));
+			let cols = header.split('\n').map((e) => e.replace(/^!/, ''));
 
-			if (cols.length === 1) { // non-multilined table?
+			if (cols.length === 1) {
+				// non-multilined table?
 				cols = cols[0].split('!!');
 			}
 			cols = cols.map(extractData);
@@ -458,7 +464,8 @@ export default function (bot: mwn) {
 			rows.forEach((row, idx) => {
 				let cells = row.split(/^\|/m).slice(1); // slice(1) removes the emptiness or the row styles if present
 
-				if (cells.length === 1) { // non-multilined
+				if (cells.length === 1) {
+					// non-multilined
 					// cells are separated by ||
 					cells = cells[0].replace(/^\|/, '').split('||');
 				}
@@ -466,7 +473,9 @@ export default function (bot: mwn) {
 				cells = cells.map(extractData);
 
 				if (cells.length !== numcols) {
-					throw new Error(`failed to parse table: found ${cells.length} cells on row ${idx}, expected ${numcols}`);
+					throw new Error(
+						`failed to parse table: found ${cells.length} cells on row ${idx}, expected ${numcols}`,
+					);
 				}
 
 				output[idx] = {}; // output[idx] represents a row
@@ -476,7 +485,6 @@ export default function (bot: mwn) {
 			});
 
 			return output;
-
 		}
 
 		/**
@@ -490,27 +498,29 @@ export default function (bot: mwn) {
 		 * The top is represented as level 1, with header `null`.
 		 */
 		parseSections(): Section[] {
-			return this.sections = Wikitext.parseSections(this.text);
+			return (this.sections = Wikitext.parseSections(this.text));
 		}
-
 
 		// XXX: fix jsdocs
 		/**
 		 * @inheritdoc
 		 */
 		static parseSections(text: string): Section[] {
-			const rgx = /^(=+)(.*?)\1/mg;
-			let sections: Section[] = [{
-				level: 1,
-				header: null,
-				index: 0
-			}];
+			const rgx = /^(=+)(.*?)\1/gm;
+			let sections: Section[] = [
+				{
+					level: 1,
+					header: null,
+					index: 0,
+				},
+			];
 			let match;
-			while (match = rgx.exec(text)) { // eslint-disable-line no-cond-assign
+			while ((match = rgx.exec(text))) {
+				// eslint-disable-line no-cond-assign
 				sections.push({
 					level: match[1].length,
 					header: match[2].trim(),
-					index: match.index
+					index: match.index,
 				});
 			}
 			let n = sections.length;
@@ -520,7 +530,6 @@ export default function (bot: mwn) {
 			sections[n - 1].content = text.slice(sections[n - 1].index);
 			return sections;
 		}
-
 	}
 
 	/**** Private members *****/
@@ -548,14 +557,14 @@ export default function (bot: mwn) {
 				self.files.push({
 					wikitext: linktext,
 					target: title,
-					props: linktext.slice(linktext.indexOf('|') + 1, -2)
+					props: linktext.slice(linktext.indexOf('|') + 1, -2),
 				});
 				return;
 			} else if (title.namespace === 14) {
 				self.categories.push({
 					wikitext: linktext,
 					target: title,
-					sortkey: noSortkey ? '' : displaytext
+					sortkey: noSortkey ? '' : displaytext,
 				});
 				return;
 			}
@@ -563,7 +572,7 @@ export default function (bot: mwn) {
 		self.links.push({
 			wikitext: linktext,
 			target: title,
-			displaytext: displaytext
+			displaytext: displaytext,
 		});
 	}
 
@@ -576,10 +585,9 @@ export default function (bot: mwn) {
 	 */
 	function processTemplateText(
 		text: string,
-		namePredicate: ((name: string | number) => boolean),
-		templatePredicate: ((template: Template) => boolean)
+		namePredicate: (name: string | number) => boolean,
+		templatePredicate: (template: Template) => boolean,
 	) {
-
 		// eslint-disable-next-line no-control-regex
 		const template = new Template('{{' + text.replace(/\x01/g, '|') + '}}');
 
@@ -589,7 +597,7 @@ export default function (bot: mwn) {
 			text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\x01$2');
 		}
 
-		const [name, ...parameterChunks] = text.split('|').map(chunk => {
+		const [name, ...parameterChunks] = text.split('|').map((chunk) => {
 			// change '\x01' control characters back to pipes
 			// eslint-disable-next-line no-control-regex
 			return chunk.replace(/\x01/g, '|');
@@ -608,7 +616,7 @@ export default function (bot: mwn) {
 
 			let isWithoutEquals = !chunk.includes('=');
 			let hasBracesBeforeEquals = chunk.includes('{{') && indexOfOpenBraces < indexOfEqualTo;
-			let isUnnamedParam = (isWithoutEquals || hasBracesBeforeEquals);
+			let isUnnamedParam = isWithoutEquals || hasBracesBeforeEquals;
 
 			let pName, pNum, pVal;
 			if (isUnnamedParam) {
@@ -638,5 +646,4 @@ export default function (bot: mwn) {
 	}
 
 	return Wikitext as MwnWikitextStatic;
-
 }

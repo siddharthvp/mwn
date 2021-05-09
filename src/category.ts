@@ -1,5 +1,5 @@
-import type {mwn, MwnPage, MwnTitle} from './bot';
-import {ApiQueryCategoryMembersParams} from "./api_params";
+import type { mwn, MwnPage, MwnTitle } from './bot';
+import { ApiQueryCategoryMembersParams } from './api_params';
 
 type ApiPageInfo = {
 	pageid: number;
@@ -20,9 +20,7 @@ export interface MwnCategory extends MwnPage {
 }
 
 export default function (bot: mwn) {
-
 	class Category extends bot.page implements MwnCategory {
-
 		/**
 		 * @constructor
 		 * @param {string} name - name of the category
@@ -43,22 +41,24 @@ export default function (bot: mwn) {
 		 * { pageid: 324234, ns: 0, title: 'Main Page' }
 		 */
 		members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
-			return bot.request({
-				"action": "query",
-				"list": "categorymembers",
-				"cmtitle": "Category:" + this.title,
-				"cmlimit": "max",
-				...options
-			}).then(data => data.query.categorymembers);
+			return bot
+				.request({
+					action: 'query',
+					list: 'categorymembers',
+					cmtitle: 'Category:' + this.title,
+					cmlimit: 'max',
+					...options,
+				})
+				.then((data) => data.query.categorymembers);
 		}
 
 		async *membersGen(options?: ApiQueryCategoryMembersParams): AsyncGenerator<ApiPageInfo> {
 			let continuedQuery = bot.continuedQueryGen({
-				"action": "query",
-				"list": "categorymembers",
-				"cmtitle": "Category:" + this.title,
-				"cmlimit": "max",
-				...options
+				action: 'query',
+				list: 'categorymembers',
+				cmtitle: 'Category:' + this.title,
+				cmlimit: 'max',
+				...options,
 			});
 			for await (let json of continuedQuery) {
 				for (let result of json.query.categorymembers) {
@@ -67,7 +67,6 @@ export default function (bot: mwn) {
 			}
 		}
 
-
 		/**
 		 * Get all pages in the category - does not include subcategories or files
 		 * @param {Object} options - additional API parameters
@@ -75,7 +74,7 @@ export default function (bot: mwn) {
 		 * { pageid: 324234, ns: 0, title: 'Main Page' }
 		 */
 		pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
-			return this.members({"cmtype": ["page"], ...options});
+			return this.members({ cmtype: ['page'], ...options });
 		}
 
 		/**
@@ -85,7 +84,7 @@ export default function (bot: mwn) {
 		 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
 		 */
 		subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
-			return this.members({"cmtype": ["subcat"], ...options});
+			return this.members({ cmtype: ['subcat'], ...options });
 		}
 
 		/**
@@ -95,11 +94,9 @@ export default function (bot: mwn) {
 		 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
 		 */
 		files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
-			return this.members({"cmtype": ["file"], ...options});
+			return this.members({ cmtype: ['file'], ...options });
 		}
-
 	}
 
 	return Category as MwnCategoryStatic;
-
 }

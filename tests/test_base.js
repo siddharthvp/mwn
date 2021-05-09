@@ -1,6 +1,6 @@
 /** Base libraries used in tests */
 
-const {mwn} = require('..');
+const { mwn } = require('..');
 const log = mwn.log;
 const crypto = require('crypto');
 
@@ -21,4 +21,4 @@ function verifyTokenAndSiteInfo(bot) {
 	expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
 }
 
-module.exports = {mwn, log, crypto, expect, assert, sinon, verifyTokenAndSiteInfo};
+module.exports = { mwn, log, crypto, expect, assert, sinon, verifyTokenAndSiteInfo };

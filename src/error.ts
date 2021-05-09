@@ -1,13 +1,13 @@
-import type {RawRequestParams} from "./core";
+import type { RawRequestParams } from './core';
 
 // make this extend AxiosError?
 export type MwnErrorConfig = {
-	code: string,
-	info?: string,
-	response?: Record<string, unknown>,
-	request?: RawRequestParams,
-	disableRetry?: boolean
-}
+	code: string;
+	info?: string;
+	response?: Record<string, unknown>;
+	request?: RawRequestParams;
+	disableRetry?: boolean;
+};
 
 export class MwnError extends Error {
 	/**
@@ -19,7 +19,7 @@ export class MwnError extends Error {
 		}
 		// If it's an mwn internal error, don't put the error code (begins with "mwn")
 		// in the error message
-		const code = (!config.code || config.code.startsWith('mwn')) ? '' : config.code + ': ';
+		const code = !config.code || config.code.startsWith('mwn') ? '' : config.code + ': ';
 		const info = config.info || '';
 		super(code + info);
 		Object.assign(this, config);
@@ -30,10 +30,10 @@ export class MwnError extends Error {
 			super({
 				code: 'missingtitle',
 				info: "The page you specified doesn't exist.",
-				...config
+				...config,
 			});
 		}
-	}
+	};
 }
 
 /**
@@ -44,7 +44,7 @@ export class MwnError extends Error {
  */
 export function rejectWithErrorCode(errorCode: string): Promise<never> {
 	return rejectWithError({
-		code: errorCode
+		code: errorCode,
 	});
 }
 

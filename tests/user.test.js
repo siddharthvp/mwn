@@ -1,25 +1,25 @@
 'use strict';
 
-const { bot, expect, setup, teardown} = require('./test_wiki');
+const { bot, expect, setup, teardown } = require('./test_wiki');
 
-describe('User', async function() {
+describe('User', async function () {
 	this.timeout(7000);
 
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
 
-	it('gets user contribs', function() {
+	it('gets user contribs', function () {
 		let u = new bot.user('SD0001');
-		return u.contribs().then(response => {
+		return u.contribs().then((response) => {
 			expect(response).to.be.instanceOf(Array).of.length.greaterThan(500);
 			expect(response[0].user).to.equal('SD0001');
 			expect(response[0].title).to.be.a('string');
 		});
 	});
 
-	it('gets user logs', async function() {
+	it('gets user logs', async function () {
 		let u = new bot.user('SD0001');
-		return u.logs().then(response => {
+		return u.logs().then((response) => {
 			expect(response).to.be.instanceOf(Array).of.length.greaterThan(10);
 			expect(response[0].logid).to.be.a('number');
 			expect(response[0].user).to.equal('SD0001');
@@ -42,14 +42,14 @@ describe('User', async function() {
 		}
 	});
 
-	it('userpage and talkpage', function() {
+	it('userpage and talkpage', function () {
 		let u = new bot.user('SD0001');
 		expect(u.userpage).to.be.instanceOf(bot.page).that.has.property('title').which.equals('SD0001');
 		expect(u.userpage.namespace).to.equal(2);
 		expect(u.talkpage).to.be.instanceOf(bot.page).that.has.property('title').which.equals('SD0001');
 		expect(u.talkpage.namespace).to.equal(3);
 	});
-	
+
 	it('info and globalinfo', async function () {
 		let u = new bot.user('SD0001');
 		let info = await u.info();
@@ -57,5 +57,4 @@ describe('User', async function() {
 		let globalinfo = await u.globalinfo();
 		expect(globalinfo).to.include.keys('home', 'id', 'name');
 	});
-
 });

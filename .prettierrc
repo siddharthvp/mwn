@@ -1,0 +1,21 @@
+{
+	"useTabs": true,
+	"singleQuote": true,
+	"quoteProps": "consistent",
+	"trailingComma": "all",
+	"overrides": [
+		{
+			"files": "*.yml",
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2
+			}
+		},
+		{
+			"files": "*.md",
+			"options": {
+				"trailingComma": "none"
+			}
+		}
+	]
+}

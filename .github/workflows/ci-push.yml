@@ -4,7 +4,7 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
       - 'src/**'
       - 'tests/**'
@@ -12,7 +12,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 10.x, 12.x, 14.x ]
+        node-version: [10.x, 12.x, 14.x]
     needs: build
     steps:
       - uses: actions/checkout@v2

@@ -4,16 +4,11 @@
 		"mocha": true,
 		"node": true
 	},
-	"extends": [
-		"eslint:recommended",
-		"plugin:chai-expect/recommended"
-	],
+	"extends": ["eslint:recommended", "plugin:chai-expect/recommended"],
 	"parserOptions": {
 		"ecmaVersion": 2018
 	},
-	"plugins": [
-		"chai-expect"
-	],
+	"plugins": ["chai-expect"],
 	"rules": {
 		"indent": ["error", "tab", { "SwitchCase": 1 }],
 		"linebreak-style": ["error", "unix"],

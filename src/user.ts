@@ -1,13 +1,12 @@
-import type {mwn, MwnPage} from "./bot";
+import type { mwn, MwnPage } from './bot';
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
 	ApiQueryLogEventsParams,
 	ApiQueryUserContribsParams,
-	ApiUnblockParams
-} from "./api_params";
-import {rejectWithError} from "./error";
-
+	ApiUnblockParams,
+} from './api_params';
+import { rejectWithError } from './error';
 
 export interface MwnUserStatic {
 	new (username: string): MwnUser;
@@ -22,7 +21,7 @@ export interface MwnUser {
 	logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
 	logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>;
 	info(props?: string | string[]): Promise<any>;
-	globalinfo(props?: ("groups" | "rights" | "merged" | "unattached" | "editcount")[]): Promise<any>;
+	globalinfo(props?: ('groups' | 'rights' | 'merged' | 'unattached' | 'editcount')[]): Promise<any>;
 	sendMessage(header: string, message: string): Promise<any>;
 	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any>;
 	block(options: ApiBlockParams): Promise<any>;
@@ -30,39 +29,38 @@ export interface MwnUser {
 }
 
 export type UserContribution = {
-	userid: number
-	user: string
-	pageid: number
-	revid: number
-	parentid: number
-	ns: number
-	title: string
-	timestamp: string
-	new: boolean
-	minor: boolean
-	top: boolean
-	comment: string
-	size: number
-}
+	userid: number;
+	user: string;
+	pageid: number;
+	revid: number;
+	parentid: number;
+	ns: number;
+	title: string;
+	timestamp: string;
+	new: boolean;
+	minor: boolean;
+	top: boolean;
+	comment: string;
+	size: number;
+};
 
 export type LogEvent = {
-	logid: number
-	ns: number
-	title: string
-	pageid: number
-	logpage: number
-	params: any
-	type: string
-	action: string
-	user: string
-	timestamp: string
-	comment: string
-}
+	logid: number;
+	ns: number;
+	title: string;
+	pageid: number;
+	logpage: number;
+	params: any;
+	type: string;
+	action: string;
+	user: string;
+	timestamp: string;
+	comment: string;
+};
 
-export default function(bot: mwn) {
-
+export default function (bot: mwn) {
 	class User implements MwnUser {
-		username: string
+		username: string;
 
 		/**
 		 * @constructor
@@ -90,13 +88,15 @@ export default function(bot: mwn) {
 		 * @returns {Promise<Object[]>}
 		 */
 		contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]> {
-			return bot.request({
-				action: 'query',
-				list: 'usercontribs',
-				ucuser: this.username,
-				uclimit: 'max',
-				...options
-			}).then(data => data.query.usercontribs);
+			return bot
+				.request({
+					action: 'query',
+					list: 'usercontribs',
+					ucuser: this.username,
+					uclimit: 'max',
+					...options,
+				})
+				.then((data) => data.query.usercontribs);
 		}
 
 		async *contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution> {
@@ -105,7 +105,7 @@ export default function(bot: mwn) {
 				list: 'usercontribs',
 				ucuser: this.username,
 				uclimit: 'max',
-				...options
+				...options,
 			});
 			for await (let json of continuedQuery) {
 				for (let edit of json.query.usercontribs) {
@@ -120,13 +120,15 @@ export default function(bot: mwn) {
 		 * @returns {Promise<Object[]>}
 		 */
 		logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]> {
-			return bot.request({
-				action: 'query',
-				list: 'logevents',
-				leuser: this.username,
-				lelimit: 'max',
-				...options
-			}).then(data => data.query.logevents);
+			return bot
+				.request({
+					action: 'query',
+					list: 'logevents',
+					leuser: this.username,
+					lelimit: 'max',
+					...options,
+				})
+				.then((data) => data.query.logevents);
 		}
 
 		async *logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent> {
@@ -135,7 +137,7 @@ export default function(bot: mwn) {
 				list: 'logevents',
 				leuser: this.username,
 				lelimit: 'max',
-				...options
+				...options,
 			});
 			for await (let json of continuedQuery) {
 				for (let action of json.query.logevents) {
@@ -150,28 +152,34 @@ export default function(bot: mwn) {
 		 * @returns {Promise<Object>}
 		 */
 		info(props?: string | string[]): Promise<any> {
-			return bot.request({
-				action: 'query',
-				list: 'users',
-				ususers: this.username,
-				usprop: props || 'editcount|registration|blockinfo|emailable|gender|' +
-					'rights|groups|groupmemberships|implicitgroups'
-			}).then(data => data.query.users[0]);
+			return bot
+				.request({
+					action: 'query',
+					list: 'users',
+					ususers: this.username,
+					usprop:
+						props ||
+						'editcount|registration|blockinfo|emailable|gender|' +
+							'rights|groups|groupmemberships|implicitgroups',
+				})
+				.then((data) => data.query.users[0]);
 		}
 
 		/**
 		 * Get global user info for wikis with CentralAuth
 		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props
 		 */
-		globalinfo(props?: ("groups"|"rights"|"merged"|"unattached"|"editcount")[]): Promise<any> {
-			return bot.request({
-				"action": "query",
-				"meta": "globaluserinfo",
-				"guiuser": this.username,
-				"guiprop": props || ''
-			}).then(data => {
-				return data.query.globaluserinfo;
-			});
+		globalinfo(props?: ('groups' | 'rights' | 'merged' | 'unattached' | 'editcount')[]): Promise<any> {
+			return bot
+				.request({
+					action: 'query',
+					meta: 'globaluserinfo',
+					guiuser: this.username,
+					guiprop: props || '',
+				})
+				.then((data) => {
+					return data.query.globaluserinfo;
+				});
 		}
 
 		/**
@@ -184,31 +192,32 @@ export default function(bot: mwn) {
 			return this.talkpage.newSection(header, message);
 		}
 
-
 		/**
 		 * Send the user an email
 		 */
 		email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any> {
-			return bot.request({
-				action: 'emailuser',
-				target: this.username,
-				subject: subject,
-				text: message,
-				token: bot.csrfToken,
-				...options
-			}).then(response => {
-				let data = response.emailuser;
-				if (data.result === 'Success') {
-					return data;
-				} else {
-					return rejectWithError({
-						// try to get an error code and info
-						code: data.errors?.[0]?.code,
-						info: data.errors?.[0]?.info,
-						...data
-					});
-				}
-			});
+			return bot
+				.request({
+					action: 'emailuser',
+					target: this.username,
+					subject: subject,
+					text: message,
+					token: bot.csrfToken,
+					...options,
+				})
+				.then((response) => {
+					let data = response.emailuser;
+					if (data.result === 'Success') {
+						return data;
+					} else {
+						return rejectWithError({
+							// try to get an error code and info
+							code: data.errors?.[0]?.code,
+							info: data.errors?.[0]?.info,
+							...data,
+						});
+					}
+				});
 		}
 
 		/**
@@ -216,12 +225,14 @@ export default function(bot: mwn) {
 		 * @param {Object} options - additional API options
 		 */
 		block(options: ApiBlockParams): Promise<any> {
-			return bot.request({
-				action: 'block',
-				user: this.username,
-				token: bot.csrfToken,
-				...options
-			}).then(data => data.block);
+			return bot
+				.request({
+					action: 'block',
+					user: this.username,
+					token: bot.csrfToken,
+					...options,
+				})
+				.then((data) => data.block);
 		}
 
 		/**
@@ -229,16 +240,16 @@ export default function(bot: mwn) {
 		 * @param {Object} options - additional API options
 		 */
 		unblock(options: ApiUnblockParams): Promise<any> {
-			return bot.request({
-				action: 'unblock',
-				user: this.username,
-				token: bot.csrfToken,
-				...options
-			}).then(data => data.unblock);
+			return bot
+				.request({
+					action: 'unblock',
+					user: this.username,
+					token: bot.csrfToken,
+					...options,
+				})
+				.then((data) => data.unblock);
 		}
-
 	}
 
 	return User as MwnUserStatic;
-
 }

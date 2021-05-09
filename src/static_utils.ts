@@ -2,7 +2,7 @@
  * Static functions on mwn
  */
 
-import type {MwnTitle} from "./bot";
+import type { MwnTitle } from './bot';
 
 /**
  * Get wikitext for a new link
@@ -13,10 +13,13 @@ export function link(target: string | MwnTitle, displaytext?: string): string {
 	if (typeof target === 'string') {
 		return '[[' + target + (displaytext ? '|' + displaytext : '') + ']]';
 	}
-	return '[[' + target.toText() +
+	return (
+		'[[' +
+		target.toText() +
 		(target.fragment ? '#' + target.fragment : '') +
 		(displaytext ? '|' + displaytext : '') +
-		']]';
+		']]'
+	);
 }
 
 /**
@@ -24,7 +27,7 @@ export function link(target: string | MwnTitle, displaytext?: string): string {
  * @param title
  * @param [parameters={}] - template parameters as object
  */
-export function template(title: string | MwnTitle, parameters: {[parameter: string]: string} = {}): string {
+export function template(title: string | MwnTitle, parameters: { [parameter: string]: string } = {}): string {
 	if (typeof title !== 'string') {
 		if (title.namespace === 10) {
 			title = title.getMainText(); // skip namespace name for templates
@@ -34,19 +37,25 @@ export function template(title: string | MwnTitle, parameters: {[parameter: stri
 			title = title.toText();
 		}
 	}
-	return '{{' + title +
-		Object.entries(parameters).map(([key, val]) => {
-			if (!val) { // skip parameter if no value provided
-				return '';
-			}
-			return '|' + key + '=' + val;
-		}).join('') +
-		'}}';
+	return (
+		'{{' +
+		title +
+		Object.entries(parameters)
+			.map(([key, val]) => {
+				if (!val) {
+					// skip parameter if no value provided
+					return '';
+				}
+				return '|' + key + '=' + val;
+			})
+			.join('') +
+		'}}'
+	);
 }
 
 export class table {
-	text: string
-	multiline: boolean
+	text: string;
+	multiline: boolean;
 
 	/**
 	 * @param {Object} [config={}]
@@ -57,12 +66,14 @@ export class table {
 	 * this causes no visual changes, but the wikitext representation is different.
 	 * This is more reliable. (default: true)
 	 */
-	constructor(config: {
-		plain?: boolean
-		sortable?: boolean
-		style?: string
-		multiline?: boolean
-	} = {}) {
+	constructor(
+		config: {
+			plain?: boolean;
+			sortable?: boolean;
+			style?: string;
+			multiline?: boolean;
+		} = {},
+	) {
 		let classes = [];
 		if (!config.plain) {
 			classes.push('wikitable');
@@ -83,7 +94,7 @@ export class table {
 		this.text += '\n';
 	}
 
-	_makecell(cell: string | {[attribute: string]: string}, isHeader?: boolean): string {
+	_makecell(cell: string | { [attribute: string]: string }, isHeader?: boolean): string {
 		// typeof null is also object!
 		if (cell && typeof cell === 'object') {
 			let text = isHeader ? `scope="col"` : ``;
@@ -102,12 +113,12 @@ export class table {
 	 * Add the headers
 	 * @param headers - array of header items
 	 */
-	addHeaders(headers: (string | {[attribute: string]: string})[]): void {
+	addHeaders(headers: (string | { [attribute: string]: string })[]): void {
 		this.text += `|-\n`; // row separator
 		if (this.multiline) {
-			this.text += headers.map(e => `! ${this._makecell(e, true)} \n`).join('');
+			this.text += headers.map((e) => `! ${this._makecell(e, true)} \n`).join('');
 		} else {
-			this.text += `! ` + headers.map(e => this._makecell(e, true)).join(' !! ') + '\n';
+			this.text += `! ` + headers.map((e) => this._makecell(e, true)).join(' !! ') + '\n';
 		}
 	}
 
@@ -116,16 +127,16 @@ export class table {
 	 * @param fields - array of items on the row,
 	 * @param attributes - row attributes
 	 */
-	addRow(fields: string[], attributes: {[attribute: string]: string} = {}): void {
+	addRow(fields: string[], attributes: { [attribute: string]: string } = {}): void {
 		let attributetext = '';
 		Object.entries(attributes).forEach(([key, value]) => {
 			attributetext += ` ${key}="${value}"`;
 		});
 		this.text += `|-${attributetext}\n`; // row separator
 		if (this.multiline) {
-			this.text += fields.map(e => `| ${this._makecell(e)} \n`).join('');
+			this.text += fields.map((e) => `| ${this._makecell(e)} \n`).join('');
 		} else {
-			this.text += `| ` + fields.map(f => this._makecell(f)).join(' || ') + '\n';
+			this.text += `| ` + fields.map((f) => this._makecell(f)).join(' || ') + '\n';
 		}
 	}
 
@@ -141,10 +152,14 @@ export class table {
  * @param {string} str String to be encoded.
  * @return {string} Encoded string
  */
-function rawurlencode(str: string ): string {
-	return encodeURIComponent( String( str ) )
-		.replace( /!/g, '%21' ).replace( /'/g, '%27' ).replace( /\(/g, '%28' )
-		.replace( /\)/g, '%29' ).replace( /\*/g, '%2A' ).replace( /~/g, '%7E' );
+function rawurlencode(str: string): string {
+	return encodeURIComponent(String(str))
+		.replace(/!/g, '%21')
+		.replace(/'/g, '%27')
+		.replace(/\(/g, '%28')
+		.replace(/\)/g, '%29')
+		.replace(/\*/g, '%2A')
+		.replace(/~/g, '%7E');
 }
 
 /**
@@ -153,15 +168,15 @@ function rawurlencode(str: string ): string {
  * @param {boolean} [allowBlock=false]
  * @return {boolean}
  */
-function isIPv4Address( address: string, allowBlock?: boolean ): boolean {
+function isIPv4Address(address: string, allowBlock?: boolean): boolean {
 	let block,
 		RE_IP_BYTE = '(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|0?[0-9]?[0-9])',
 		RE_IP_ADD = '(?:' + RE_IP_BYTE + '\\.){3}' + RE_IP_BYTE;
-	if ( typeof address !== 'string' ) {
+	if (typeof address !== 'string') {
 		return false;
 	}
 	block = allowBlock ? '(?:\\/(?:3[0-2]|[12]?\\d))?' : '';
-	return ( new RegExp( '^' + RE_IP_ADD + block + '$' ).test( address ) );
+	return new RegExp('^' + RE_IP_ADD + block + '$').test(address);
 }
 
 /**
@@ -170,9 +185,9 @@ function isIPv4Address( address: string, allowBlock?: boolean ): boolean {
  * @param {boolean} [allowBlock=false]
  * @return {boolean}
  */
-function isIPv6Address( address: string, allowBlock?: boolean ): boolean {
+function isIPv6Address(address: string, allowBlock?: boolean): boolean {
 	let block, RE_IPV6_ADD;
-	if ( typeof address !== 'string' ) {
+	if (typeof address !== 'string') {
 		return false;
 	}
 	block = allowBlock ? '(?:\\/(?:12[0-8]|1[01][0-9]|[1-9]?\\d))?' : '';
@@ -192,20 +207,12 @@ function isIPv6Address( address: string, allowBlock?: boolean ): boolean {
 		'[0-9A-Fa-f]{1,4}' +
 		'){7}' +
 		')';
-	if ( new RegExp( '^' + RE_IPV6_ADD + block + '$' ).test( address ) ) {
+	if (new RegExp('^' + RE_IPV6_ADD + block + '$').test(address)) {
 		return true;
 	}
 	// contains one "::" in the middle (single '::' check below)
-	RE_IPV6_ADD =
-		'[0-9A-Fa-f]{1,4}' +
-		'(?:::?' +
-		'[0-9A-Fa-f]{1,4}' +
-		'){1,6}';
-	return (
-		new RegExp( '^' + RE_IPV6_ADD + block + '$' ).test( address ) &&
-		/::/.test( address ) &&
-		!/::.*::/.test( address )
-	);
+	RE_IPV6_ADD = '[0-9A-Fa-f]{1,4}' + '(?:::?' + '[0-9A-Fa-f]{1,4}' + '){1,6}';
+	return new RegExp('^' + RE_IPV6_ADD + block + '$').test(address) && /::/.test(address) && !/::.*::/.test(address);
 }
 
 /**
@@ -215,9 +222,9 @@ function isIPv6Address( address: string, allowBlock?: boolean ): boolean {
  * @param {string} str String to escape
  * @return {string} Escaped string
  */
-function escapeRegExp( str: string ): string {
+function escapeRegExp(str: string): string {
 	// eslint-disable-next-line no-useless-escape
-	return str.replace( /([\\{}()|.?*+\-^$\[\]])/g, '\\$1' );
+	return str.replace(/([\\{}()|.?*+\-^$\[\]])/g, '\\$1');
 }
 
 /**
@@ -229,19 +236,19 @@ function escapeRegExp( str: string ): string {
  * @param {string} s - The string to escape
  * @return {string} HTML
  */
-function escapeHtml( s: string ): string {
-	return s.replace( /['"<>&]/g, function escapeCallback( s ) {
-		switch ( s ) {
-		case '\'':
-			return '&#039;';
-		case '"':
-			return '&quot;';
-		case '<':
-			return '&lt;';
-		case '>':
-			return '&gt;';
-		case '&':
-			return '&amp;';
+function escapeHtml(s: string): string {
+	return s.replace(/['"<>&]/g, function escapeCallback(s) {
+		switch (s) {
+			case "'":
+				return '&#039;';
+			case '"':
+				return '&quot;';
+			case '<':
+				return '&lt;';
+			case '>':
+				return '&gt;';
+			case '&':
+				return '&amp;';
 		}
 	});
 }
@@ -256,21 +263,23 @@ function escapeHtml( s: string ): string {
  * @param {string} str String to be encoded.
  * @return {string} Encoded string
  */
-function wikiUrlencode( str: string ): string {
-	return rawurlencode( str )
-		.replace( /%20/g, '_' )
-		// wfUrlencode replacements
-		.replace( /%3B/g, ';' )
-		.replace( /%40/g, '@' )
-		.replace( /%24/g, '$' )
-		.replace( /%21/g, '!' )
-		.replace( /%2A/g, '*' )
-		.replace( /%28/g, '(' )
-		.replace( /%29/g, ')' )
-		.replace( /%2C/g, ',' )
-		.replace( /%2F/g, '/' )
-		.replace( /%7E/g, '~' )
-		.replace( /%3A/g, ':' );
+function wikiUrlencode(str: string): string {
+	return (
+		rawurlencode(str)
+			.replace(/%20/g, '_')
+			// wfUrlencode replacements
+			.replace(/%3B/g, ';')
+			.replace(/%40/g, '@')
+			.replace(/%24/g, '$')
+			.replace(/%21/g, '!')
+			.replace(/%2A/g, '*')
+			.replace(/%28/g, '(')
+			.replace(/%29/g, ')')
+			.replace(/%2C/g, ',')
+			.replace(/%2F/g, '/')
+			.replace(/%7E/g, '~')
+			.replace(/%3A/g, ':')
+	);
 }
 
 /**
@@ -279,9 +288,16 @@ function wikiUrlencode( str: string ): string {
  * @param {boolean} [allowBlock=false] True if a block of IPs should be allowed
  * @return {boolean}
  */
-function isIPAddress( address: string, allowBlock?: boolean ): boolean {
-	return isIPv4Address( address, allowBlock ) ||
-		isIPv6Address( address, allowBlock );
+function isIPAddress(address: string, allowBlock?: boolean): boolean {
+	return isIPv4Address(address, allowBlock) || isIPv6Address(address, allowBlock);
 }
 
-export const util = { escapeRegExp, escapeHtml, rawurlencode, wikiUrlencode, isIPv4Address, isIPv6Address, isIPAddress };
+export const util = {
+	escapeRegExp,
+	escapeHtml,
+	rawurlencode,
+	wikiUrlencode,
+	isIPv4Address,
+	isIPv6Address,
+	isIPAddress,
+};

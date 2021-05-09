@@ -39,96 +39,111 @@ import * as http from 'http';
 import * as https from 'https';
 
 // NPM modules
-import axios, {AxiosResponse} from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
 axiosCookieJarSupport(axios);
 
 // Nested classes of mwn
-import MwnDateFactory, {MwnDate} from './date';
-import MwnTitleFactory, {MwnTitle, siteinfoqueryResponse} from './title';
-import MwnPageFactory, {MwnPage, ApiPage, ApiRevision} from './page';
-import MwnWikitextFactory, {MwnWikitext} from './wikitext';
-import MwnUserFactory, {MwnUser} from './user';
-import MwnCategoryFactory, {MwnCategory} from './category';
-import MwnFileFactory, {MwnFile} from './file';
-import MwnStreamFactory, {MwnStream} from './eventstream';
+import MwnDateFactory, { MwnDate } from './date';
+import MwnTitleFactory, { MwnTitle, siteinfoqueryResponse } from './title';
+import MwnPageFactory, { MwnPage, ApiPage, ApiRevision } from './page';
+import MwnWikitextFactory, { MwnWikitext } from './wikitext';
+import MwnUserFactory, { MwnUser } from './user';
+import MwnCategoryFactory, { MwnCategory } from './category';
+import MwnFileFactory, { MwnFile } from './file';
+import MwnStreamFactory, { MwnStream } from './eventstream';
 
 // Export them too
-export {MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream,
-	ApiPage, ApiRevision};
+export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
 
-import {Request, Response, RawRequestParams} from "./core";
-import {log, updateLoggingConfig} from './log';
-import {MwnError, rejectWithError, rejectWithErrorCode} from "./error";
-import {link, template, table, util} from './static_utils';
-import {ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles} from './utils';
+import { Request, Response, RawRequestParams } from './core';
+import { log, updateLoggingConfig } from './log';
+import { MwnError, rejectWithError, rejectWithErrorCode } from './error';
+import { link, template, table, util } from './static_utils';
+import { ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles } from './utils';
 
 import type {
-	ApiDeleteParams, ApiEditPageParams, ApiMoveParams, ApiParseParams,
-	ApiPurgeParams, ApiQueryAllMessagesParams, ApiQueryAllPagesParams, ApiQueryCategoryMembersParams,
-	ApiQuerySearchParams, ApiQueryUserInfoParams, ApiRollbackParams, ApiUndeleteParams, ApiUploadParams
-} from "./api_params";
+	ApiDeleteParams,
+	ApiEditPageParams,
+	ApiMoveParams,
+	ApiParseParams,
+	ApiPurgeParams,
+	ApiQueryAllMessagesParams,
+	ApiQueryAllPagesParams,
+	ApiQueryCategoryMembersParams,
+	ApiQuerySearchParams,
+	ApiQueryUserInfoParams,
+	ApiRollbackParams,
+	ApiUndeleteParams,
+	ApiUploadParams,
+} from './api_params';
 
 export interface MwnOptions {
-	silent?: boolean
-	apiUrl?: string
-	userAgent?: string
-	username?: string
-	password?: string
+	silent?: boolean;
+	apiUrl?: string;
+	userAgent?: string;
+	username?: string;
+	password?: string;
 	OAuthCredentials?: {
-		consumerToken: string,
-		consumerSecret: string,
-		accessToken: string,
-		accessSecret: string
-	}
-	maxRetries?: number
-	retryPause?: number
+		consumerToken: string;
+		consumerSecret: string;
+		accessToken: string;
+		accessSecret: string;
+	};
+	maxRetries?: number;
+	retryPause?: number;
 	shutoff?: {
-		intervalDuration?: number
-		page?: string
-		condition?: RegExp | ((text: string) => boolean)
-		onShutoff?: ((text: string) => void)
-	}
-	defaultParams?: ApiParams
-	suppressAPIWarnings?: boolean
-	editConfig?: editConfigType
+		intervalDuration?: number;
+		page?: string;
+		condition?: RegExp | ((text: string) => boolean);
+		onShutoff?: (text: string) => void;
+	};
+	defaultParams?: ApiParams;
+	suppressAPIWarnings?: boolean;
+	editConfig?: editConfigType;
 	suppressInvalidDateWarning?: boolean;
 }
 
 type editConfigType = {
-	conflictRetries?: number
-	suppressNochangeWarning?: boolean
-	exclusionRegex?: RegExp
-}
+	conflictRetries?: number;
+	suppressNochangeWarning?: boolean;
+	exclusionRegex?: RegExp;
+};
 
 export type ApiParams = {
-	[param: string]: string | string[] | boolean | number | number[] | Date | {
-		stream: ReadableStream
-		name: string
-	}
-}
+	[param: string]:
+		| string
+		| string[]
+		| boolean
+		| number
+		| number[]
+		| Date
+		| {
+				stream: ReadableStream;
+				name: string;
+		  };
+};
 
 export interface ApiResponse {
-	query?: Record<string, any>
-	[prop: string]: any
+	query?: Record<string, any>;
+	[prop: string]: any;
 }
 
-type ApiEditResponse = { // fix
-	result: string
-	pageid: number
-	title: string
-	contentmodel: string
-	nochange?: boolean
-	oldrevid: number
-	newrevid: number
-	newtimestamp: string
-}
-
+type ApiEditResponse = {
+	// fix
+	result: string;
+	pageid: number;
+	title: string;
+	contentmodel: string;
+	nochange?: boolean;
+	oldrevid: number;
+	newrevid: number;
+	newtimestamp: string;
+};
 
 export class mwn {
-
 	/**
 	 * Bot instance Login State
 	 * Is received from the MW Login API and contains token, userid, etc.
@@ -171,7 +186,7 @@ export class mwn {
 			consumerToken: null,
 			consumerSecret: null,
 			accessToken: null,
-			accessSecret: null
+			accessSecret: null,
 		},
 
 		// max number of times to retry the same request on errors due to
@@ -186,14 +201,14 @@ export class mwn {
 			intervalDuration: 10000,
 			page: null,
 			condition: /^\s*$/,
-			onShutoff() {}
+			onShutoff() {},
 		},
 
 		// default parameters included in every API request
 		defaultParams: {
 			format: 'json',
 			formatversion: '2',
-			maxlag: 5
+			maxlag: 5,
 		},
 
 		// suppress logging of warnings received from the API
@@ -206,8 +221,8 @@ export class mwn {
 			// suppress warning on an edit resulting in no change to the page
 			suppressNochangeWarning: false,
 			// abort edit if exclusionRegex matches on the page content
-			exclusionRegex: null
-		}
+			exclusionRegex: null,
+		},
 	};
 
 	/**
@@ -215,7 +230,7 @@ export class mwn {
 	 * Mix of the default options, the custom options and later changes
 	 * @type {Object}
 	 */
-	options: MwnOptions
+	options: MwnOptions;
 
 	/**
 	 * Cookie jar for the bot instance - holds session and login cookies
@@ -225,7 +240,7 @@ export class mwn {
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
-			'Accept-Encoding': 'gzip'
+			'Accept-Encoding': 'gzip',
 		},
 
 		// keep-alive pools and reuses TCP connections, for better performance
@@ -233,31 +248,34 @@ export class mwn {
 		httpsAgent: new https.Agent({ keepAlive: true }),
 
 		timeout: 60000, // 60 seconds
-	}
+	};
 
 	/**
 	 * Request options for the axios library.
 	 * Change the defaults using setRequestOptions()
 	 * @type {Object}
 	 */
-	requestOptions: RawRequestParams = mergeDeep1({
-		responseType: 'json'
-	}, mwn.requestDefaults);
+	requestOptions: RawRequestParams = mergeDeep1(
+		{
+			responseType: 'json',
+		},
+		mwn.requestDefaults,
+	);
 
 	/**
 	 * Emergency shutoff config
 	 * @type {{hook: NodeJS.Timeout, state: boolean}}
 	 */
-	shutoff: {state: boolean, hook: NodeJS.Timeout} = {
+	shutoff: { state: boolean; hook: NodeJS.Timeout } = {
 		state: false,
-		hook: null
+		hook: null,
 	};
 
 	hasApiHighLimit = false;
 
-	oauth: OAuth
+	oauth: OAuth;
 
-	usingOAuth: boolean
+	usingOAuth: boolean;
 
 	static Error = MwnError;
 
@@ -270,7 +288,6 @@ export class mwn {
 	static table = table;
 
 	static util = util;
-
 
 	/**
 	 * Title class associated with the bot instance
@@ -312,7 +329,6 @@ export class mwn {
 	 */
 	date = MwnDateFactory(this);
 
-
 	/**
 	 * Constructs a new bot instance
 	 * It is advised to create one bot instance for every API to use
@@ -321,11 +337,12 @@ export class mwn {
 	 * @param [customOptions] - Custom options
 	 */
 	constructor(customOptions?: MwnOptions | string) {
-
 		if (process.versions.node) {
 			let majorVersion = parseInt(process.versions.node);
 			if (majorVersion < 10) {
-				log(`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v10.x and above`);
+				log(
+					`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v10.x and above`,
+				);
 			}
 		}
 
@@ -339,7 +356,6 @@ export class mwn {
 		}
 		this.options = mergeDeep1(this.defaultOptions, customOptions);
 	}
-
 
 	/**
 	 * Initialize a bot object. Login to the wiki and fetch editing tokens. If OAuth
@@ -359,7 +375,6 @@ export class mwn {
 		}
 		return bot;
 	}
-
 
 	/**
 	 * Set and overwrite mwn options
@@ -412,8 +427,7 @@ export class mwn {
 		if (typeof creds !== 'object') {
 			return false;
 		}
-		if (!creds.consumerToken || !creds.consumerSecret ||
-			!creds.accessToken || !creds.accessSecret) {
+		if (!creds.consumerToken || !creds.consumerSecret || !creds.accessToken || !creds.accessSecret) {
 			return false;
 		}
 		return true;
@@ -432,24 +446,19 @@ export class mwn {
 			this.oauth = new OAuth({
 				consumer: {
 					key: this.options.OAuthCredentials.consumerToken,
-					secret: this.options.OAuthCredentials.consumerSecret
+					secret: this.options.OAuthCredentials.consumerSecret,
 				},
 				signature_method: 'HMAC-SHA1',
 				// based on example at https://www.npmjs.com/package/oauth-1.0a
 				hash_function(base_string, key) {
-					return crypto
-						.createHmac('sha1', key)
-						.update(base_string)
-						.digest('base64');
-				}
+					return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+				},
 			});
 			this.usingOAuth = true;
 		} catch (err) {
 			throw new Error('Failed to construct OAuth object. ' + err);
 		}
 	}
-
-
 
 	/************ CORE REQUESTS ***************/
 
@@ -460,22 +469,27 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	rawRequest(requestOptions: RawRequestParams): Promise<AxiosResponse> {
-
 		if (!requestOptions.url) {
 			return rejectWithError({
 				code: 'mwn_nourl',
 				info: 'No URL provided for API request!',
 				disableRetry: true,
-				request: requestOptions
+				request: requestOptions,
 			});
 		}
-		return axios(mergeDeep1({}, mwn.requestDefaults, {
-			method: 'get',
-			headers: {
-				'User-Agent': this.options.userAgent
-			},
-		}, requestOptions));
-
+		return axios(
+			mergeDeep1(
+				{},
+				mwn.requestDefaults,
+				{
+					method: 'get',
+					headers: {
+						'User-Agent': this.options.userAgent,
+					},
+				},
+				requestOptions,
+			),
+		);
 	}
 
 	/**
@@ -486,11 +500,10 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	async request(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<ApiResponse> {
-
 		if (this.shutoff.state) {
 			return rejectWithError({
 				code: 'bot-shutoff',
-				info: `Bot was shut off (check ${this.options.shutoff.page})`
+				info: `Bot was shut off (check ${this.options.shutoff.page})`,
 			});
 		}
 
@@ -498,32 +511,25 @@ export class mwn {
 		await req.process();
 
 		return this.rawRequest(req.requestParams).then(
-			(fullResponse: AxiosResponse<ApiResponse>) => new Response(this, req.apiParams, req.requestParams).process(fullResponse),
-			error => new Response(this, req.apiParams, req.requestParams).handleRequestFailure(error)
+			(fullResponse: AxiosResponse<ApiResponse>) =>
+				new Response(this, req.apiParams, req.requestParams).process(fullResponse),
+			(error) => new Response(this, req.apiParams, req.requestParams).handleRequestFailure(error),
 		);
-
 	}
 
-
 	/************** CORE FUNCTIONS *******************/
-
 
 	/**
 	 * Executes a Login
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 * @returns {Promise}
 	 */
-	async login(loginOptions?: {
-		username?: string
-		password?: string
-		apiUrl?: string
-	}): Promise<ApiResponse> {
-
+	async login(loginOptions?: { username?: string; password?: string; apiUrl?: string }): Promise<ApiResponse> {
 		this.options = merge(this.options, loginOptions);
 		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
 			return rejectWithError({
 				code: 'mwn_nologincredentials',
-				info: 'Incomplete login credentials!'
+				info: 'Incomplete login credentials!',
 			});
 		}
 
@@ -536,7 +542,7 @@ export class mwn {
 			type: 'login',
 			// unset the assert parameter (in case it's given by the user as a default
 			// option), as it will invariably fail until login is performed.
-			assert: undefined
+			assert: undefined,
 		});
 		if (!loginTokenResponse?.query?.tokens?.logintoken) {
 			log('[E] [mwn] Login failed with invalid response: ' + loginString);
@@ -548,14 +554,13 @@ export class mwn {
 		}
 		Object.assign(this.state, loginTokenResponse.query.tokens);
 
-
 		// Step 2: Post login request
 		const loginResponse = await this.request({
 			action: 'login',
 			lgname: this.options.username,
 			lgpassword: this.options.password,
 			lgtoken: loginTokenResponse.query.tokens.logintoken,
-			assert: undefined // as above, assert won't work till the user is logged in
+			assert: undefined, // as above, assert won't work till the user is logged in
 		});
 
 		let reason;
@@ -569,16 +574,19 @@ export class mwn {
 				}
 
 				// Step 3: fetch tokens for editing, and info about namespaces for MwnTitle
-				await this.getTokensAndSiteInfo().catch(err => {
+				await this.getTokensAndSiteInfo().catch((err) => {
 					log(`[W] ${err}`);
 				});
 
 				return data;
-
 			} else if (data.result === 'Aborted') {
-				if (data.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.') {
+				if (
+					data.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.'
+				) {
 					reason = `Already logged in as ${this.options.username}, logout first to re-login`;
-				} else if (data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.') {
+				} else if (
+					data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.'
+				) {
 					reason = `Cannot use login/logout while using OAuth`;
 				} else if (data.reason) {
 					reason = data.result + ': ' + data.reason;
@@ -591,7 +599,7 @@ export class mwn {
 		return rejectWithError({
 			code: 'mwn_failedlogin',
 			info: reason || 'Login failed',
-			response: loginResponse
+			response: loginResponse,
 		});
 	}
 
@@ -606,8 +614,9 @@ export class mwn {
 		}
 		return this.request({
 			action: 'logout',
-			token: this.csrfToken
-		}).then(() => { // returns an empty response ({}) if successful
+			token: this.csrfToken,
+		}).then(() => {
+			// returns an empty response ({}) if successful
 			this.loggedIn = false;
 			this.state = {};
 			this.csrfToken = '%notoken%';
@@ -622,7 +631,8 @@ export class mwn {
 	 * @param password
 	 */
 	async createAccount(username: string, password: string): Promise<any> {
-		if (!this.state.createaccounttoken) { // not logged in
+		if (!this.state.createaccounttoken) {
+			// not logged in
 			await this.getTokens();
 		}
 		return this.request({
@@ -631,16 +641,17 @@ export class mwn {
 			createtoken: this.state.createaccounttoken,
 			username: username,
 			password: password,
-			retype: password
-		}).then(json => {
+			retype: password,
+		}).then((json) => {
 			let data = json.createaccount;
 			if (data.status === 'FAIL') {
 				return rejectWithError({
 					code: data.messagecode,
 					info: data.message,
-					...data
+					...data,
 				});
-			} else { // status === 'PASS' or other value
+			} else {
+				// status === 'PASS' or other value
 				return data;
 			}
 		});
@@ -655,8 +666,8 @@ export class mwn {
 		return this.request({
 			action: 'query',
 			meta: 'userinfo',
-			...options
-		}).then(response => response.query.userinfo);
+			...options,
+		}).then((response) => response.query.userinfo);
 	}
 
 	/**
@@ -669,7 +680,7 @@ export class mwn {
 		return this.request({
 			action: 'query',
 			meta: 'siteinfo',
-			siprop: 'general|namespaces|namespacealiases'
+			siprop: 'general|namespaces|namespacealiases',
 		}).then((result: siteinfoqueryResponse) => {
 			this.title.processNamespaceData(result);
 		});
@@ -703,7 +714,7 @@ export class mwn {
 			meta: 'tokens|siteinfo|userinfo',
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
 			siprop: 'general|namespaces|namespacealiases',
-			uiprop: 'rights'
+			uiprop: 'rights',
 		}).then((response: ApiResponse & siteinfoqueryResponse) => {
 			this.title.processNamespaceData(response);
 			if (response.query.userinfo.rights.includes('apihighlimit')) {
@@ -716,7 +727,7 @@ export class mwn {
 				return rejectWithError({
 					code: 'mwn_notoken',
 					info: 'Could not get token',
-					response
+					response,
 				});
 			}
 		});
@@ -730,9 +741,9 @@ export class mwn {
 	getTokenType(action: string): Promise<string> {
 		return this.request({
 			action: 'paraminfo',
-			modules: action
-		}).then(response => {
-			return response.paraminfo.modules[0].parameters.find(p => p.name === 'token').tokentype;
+			modules: action,
+		}).then((response) => {
+			return response.paraminfo.modules[0].parameters.find((p) => p.name === 'token').tokentype;
 		});
 	}
 
@@ -754,8 +765,8 @@ export class mwn {
 	getServerTime(): Promise<string> {
 		return this.request({
 			action: 'query',
-			curtimestamp: true
-		}).then(data => {
+			curtimestamp: true,
+		}).then((data) => {
 			return data.curtimestamp;
 		});
 	}
@@ -766,10 +777,10 @@ export class mwn {
 	 * @returns {Promise<Object>} parsed JSON object
 	 */
 	parseJsonPage(title: string): Promise<any> {
-		return this.read(title).then(data => {
+		return this.read(title).then((data) => {
 			try {
 				return JSON.parse(data.revisions[0].content);
-			} catch(e) {
+			} catch (e) {
 				return rejectWithErrorCode('invalidjson');
 			}
 		});
@@ -782,10 +793,10 @@ export class mwn {
 	 */
 	getMessages(messages: string | string[], options: ApiQueryAllMessagesParams = {}) {
 		return this.request({
-			"action": "query",
-			"meta": "allmessages",
-			"ammessages": messages,
-			...options
+			action: 'query',
+			meta: 'allmessages',
+			ammessages: messages,
+			...options,
 		}).then((data) => {
 			let result: Record<string, string> = {};
 			data.query.allmessages.forEach((obj) => {
@@ -801,20 +812,17 @@ export class mwn {
 	 * Enable bot emergency shutoff
 	 */
 	enableEmergencyShutoff(shutoffOptions?: {
-		page?: string
-		intervalDuration?: number
-		condition?: RegExp | ((text: string) => boolean)
-		onShutoff?: ((text: string) => void)
+		page?: string;
+		intervalDuration?: number;
+		condition?: RegExp | ((text: string) => boolean);
+		onShutoff?: (text: string) => void;
 	}): void {
 		Object.assign(this.options.shutoff, shutoffOptions);
 
 		this.shutoff.hook = setInterval(async () => {
 			let text = await new this.page(this.options.shutoff.page).text();
 			let cond = this.options.shutoff.condition;
-			if (
-				(cond instanceof RegExp && !cond.test(text)) ||
-				(cond instanceof Function && !cond(text))
-			) {
+			if ((cond instanceof RegExp && !cond.test(text)) || (cond instanceof Function && !cond(text))) {
 				this.shutoff.state = true;
 				this.disableEmergencyShutoff();
 				// user callback executed last, so that an error thrown by
@@ -844,20 +852,23 @@ export class mwn {
 	 * @param {Object} [options]
 	 * @returns {Promise<ApiPage>}
 	 */
-	read(titles: string | number | MwnTitle, options?: ApiParams): Promise<ApiPage>
-	read(titles: string[] | number[] | MwnTitle[], options?: ApiParams): Promise<ApiPage[]>
+	read(titles: string | number | MwnTitle, options?: ApiParams): Promise<ApiPage>;
+	read(titles: string[] | number[] | MwnTitle[], options?: ApiParams): Promise<ApiPage[]>;
 	read(titles: any, options?: any): any {
-		let pages = Array.isArray(titles) ? titles : [ titles ];
+		let pages = Array.isArray(titles) ? titles : [titles];
 		let batchFieldName = typeof pages[0] === 'number' ? 'pageids' : 'titles';
-		return this.massQuery({
-			action: 'query',
-			...makeTitles(titles),
-			prop: 'revisions',
-			rvprop: 'content|timestamp',
-			rvslots: 'main',
-			redirects: true,
-			...options
-		}, batchFieldName).then((jsons: Array<ApiResponse>) => {
+		return this.massQuery(
+			{
+				action: 'query',
+				...makeTitles(titles),
+				prop: 'revisions',
+				rvprop: 'content|timestamp',
+				rvslots: 'main',
+				redirects: true,
+				...options,
+			},
+			batchFieldName,
+		).then((jsons: Array<ApiResponse>) => {
 			let data = jsons.reduce((data, json) => {
 				json.query.pages.forEach((pg: ApiPage) => {
 					if (pg.revisions) {
@@ -873,15 +884,18 @@ export class mwn {
 	}
 
 	async *readGen(titles: string[], options?: ApiParams): AsyncGenerator<ApiPage> {
-		let massQueryResponses = this.massQueryGen({
-			action: 'query',
-			...makeTitles(titles),
-			prop: 'revisions',
-			rvprop: 'content|timestamp',
-			rvslots: 'main',
-			redirects: true,
-			...options
-		}, typeof titles[0] === 'number' ? 'pageids' : 'titles');
+		let massQueryResponses = this.massQueryGen(
+			{
+				action: 'query',
+				...makeTitles(titles),
+				prop: 'revisions',
+				rvprop: 'content|timestamp',
+				rvslots: 'main',
+				redirects: true,
+				...options,
+			},
+			typeof titles[0] === 'number' ? 'pageids' : 'titles',
+		);
 
 		for await (let response of massQueryResponses) {
 			if (response && response.query && response.query.pages) {
@@ -899,27 +913,27 @@ export class mwn {
 
 	// adapted from mw.Api().edit
 	/**
-	* @param {string|number|MwnTitle} title - Page title or page ID or MwnTitle object
-	* @param {Function} transform - Callback that prepares the edit. It takes one
-	* argument that is an { content: 'string: page content', timestamp: 'string:
-	* time of last edit' } object. This function should return an object with
-	* edit API parameters or just the updated text, or a promise providing one of
-	* those.
-	* @param {Object} [editConfig] - Overridden edit options. Available options:
-	* conflictRetries, suppressNochangeWarning, exclusionRegex
-	* @config conflictRetries - maximum number of times to retry edit after encountering edit
-	* conflicts.
-	* @config suppressNochangeWarning - don't show the warning when no change is actually
-	* made to the page on an successful edit
-	* @config exclusionRegex - don't edit if the page text matches this regex. Used for bot
-	* per-page exclusion compliance.
-	* @return {Promise<Object>} Edit API response
-	*/
-	edit(title: string | number,
-		transform: ((rev: {content: string, timestamp: string}) => string | ApiEditPageParams),
-		editConfig?: editConfigType
+	 * @param {string|number|MwnTitle} title - Page title or page ID or MwnTitle object
+	 * @param {Function} transform - Callback that prepares the edit. It takes one
+	 * argument that is an { content: 'string: page content', timestamp: 'string:
+	 * time of last edit' } object. This function should return an object with
+	 * edit API parameters or just the updated text, or a promise providing one of
+	 * those.
+	 * @param {Object} [editConfig] - Overridden edit options. Available options:
+	 * conflictRetries, suppressNochangeWarning, exclusionRegex
+	 * @config conflictRetries - maximum number of times to retry edit after encountering edit
+	 * conflicts.
+	 * @config suppressNochangeWarning - don't show the warning when no change is actually
+	 * made to the page on an successful edit
+	 * @config exclusionRegex - don't edit if the page text matches this regex. Used for bot
+	 * per-page exclusion compliance.
+	 * @return {Promise<Object>} Edit API response
+	 */
+	edit(
+		title: string | number,
+		transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams,
+		editConfig?: editConfigType,
 	): Promise<ApiEditResponse> {
-
 		editConfig = editConfig || this.options.editConfig;
 
 		let basetimestamp: string, curtimestamp: string;
@@ -931,69 +945,76 @@ export class mwn {
 			rvprop: ['content', 'timestamp'],
 			rvslots: 'main',
 			formatversion: '2',
-			curtimestamp: true
-		}).then((data: ApiResponse) => {
-			let page, revision, revisionContent;
-			if (!data.query || !data.query.pages) {
-				return rejectWithErrorCode('unknown');
-			}
-			page = data.query.pages[0];
-			if (!page || page.invalid) {
-				return rejectWithErrorCode('invalidtitle');
-			}
-			if (page.missing) {
-				return Promise.reject(new mwn.Error.MissingPage());
-			}
-			revision = page.revisions[0];
-			try {
-				revisionContent = revision.slots.main.content;
-			} catch(err) {
-				return rejectWithErrorCode('unknown');
-			}
-			basetimestamp = revision.timestamp;
-			curtimestamp = data.curtimestamp;
+			curtimestamp: true,
+		})
+			.then((data: ApiResponse) => {
+				let page, revision, revisionContent;
+				if (!data.query || !data.query.pages) {
+					return rejectWithErrorCode('unknown');
+				}
+				page = data.query.pages[0];
+				if (!page || page.invalid) {
+					return rejectWithErrorCode('invalidtitle');
+				}
+				if (page.missing) {
+					return Promise.reject(new mwn.Error.MissingPage());
+				}
+				revision = page.revisions[0];
+				try {
+					revisionContent = revision.slots.main.content;
+				} catch (err) {
+					return rejectWithErrorCode('unknown');
+				}
+				basetimestamp = revision.timestamp;
+				curtimestamp = data.curtimestamp;
 
-			if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revisionContent)) {
-				return rejectWithErrorCode('bot-denied');
-			}
+				if (editConfig.exclusionRegex && editConfig.exclusionRegex.test(revisionContent)) {
+					return rejectWithErrorCode('bot-denied');
+				}
 
-			return transform({
-				timestamp: revision.timestamp,
-				content: revisionContent
-			});
-
-		}).then(returnVal => {
-			if (typeof returnVal !== 'string' && !returnVal) {
-				return { edit: { result: 'aborted' } };
-			}
-			const editParams = typeof returnVal === 'object' ? returnVal : {
-				text: String(returnVal)
-			};
-			return this.request({
-				action: 'edit',
-				...makeTitle(title),
-				formatversion: '2',
-				basetimestamp: basetimestamp,
-				starttimestamp: curtimestamp,
-				nocreate: true,
-				bot: true,
-				token: this.csrfToken,
-				...editParams
-			});
-
-		}).then(data => {
-			if (data.edit && data.edit.nochange && !editConfig.suppressNochangeWarning) {
-				log(`[W] No change from edit to ${data.edit.title}`);
-			}
-			return data.edit;
-		}, err => {
-			if (err.code === 'editconflict' && editConfig.conflictRetries > 0) {
-				editConfig.conflictRetries--;
-				return this.edit(title, transform, editConfig);
-			} else {
-				return rejectWithError(err);
-			}
-		});
+				return transform({
+					timestamp: revision.timestamp,
+					content: revisionContent,
+				});
+			})
+			.then((returnVal) => {
+				if (typeof returnVal !== 'string' && !returnVal) {
+					return { edit: { result: 'aborted' } };
+				}
+				const editParams =
+					typeof returnVal === 'object'
+						? returnVal
+						: {
+								text: String(returnVal),
+						  };
+				return this.request({
+					action: 'edit',
+					...makeTitle(title),
+					formatversion: '2',
+					basetimestamp: basetimestamp,
+					starttimestamp: curtimestamp,
+					nocreate: true,
+					bot: true,
+					token: this.csrfToken,
+					...editParams,
+				});
+			})
+			.then(
+				(data) => {
+					if (data.edit && data.edit.nochange && !editConfig.suppressNochangeWarning) {
+						log(`[W] No change from edit to ${data.edit.title}`);
+					}
+					return data.edit;
+				},
+				(err) => {
+					if (err.code === 'editconflict' && editConfig.conflictRetries > 0) {
+						editConfig.conflictRetries--;
+						return this.edit(title, transform, editConfig);
+					} else {
+						return rejectWithError(err);
+					}
+				},
+			);
 	}
 
 	/**
@@ -1006,14 +1027,25 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	save(title: string | number, content: string, summary?: string, options?: ApiEditPageParams): Promise<ApiEditResponse> {
-		return this.request(merge({
-			action: 'edit',
-			text: content,
-			summary: summary,
-			bot: true,
-			token: this.csrfToken
-		}, makeTitle(title), options)).then(data => data.edit);
+	save(
+		title: string | number,
+		content: string,
+		summary?: string,
+		options?: ApiEditPageParams,
+	): Promise<ApiEditResponse> {
+		return this.request(
+			merge(
+				{
+					action: 'edit',
+					text: content,
+					summary: summary,
+					bot: true,
+					token: this.csrfToken,
+				},
+				makeTitle(title),
+				options,
+			),
+		).then((data) => data.edit);
 	}
 
 	/**
@@ -1027,15 +1059,20 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	create(title: string, content: string, summary?: string, options?: ApiEditPageParams): Promise<ApiEditResponse> {
-		return this.request(merge({
-			action: 'edit',
-			title: String(title),
-			text: content,
-			summary: summary,
-			createonly: true,
-			bot: true,
-			token: this.csrfToken
-		}, options)).then(data => data.edit);
+		return this.request(
+			merge(
+				{
+					action: 'edit',
+					title: String(title),
+					text: content,
+					summary: summary,
+					createonly: true,
+					bot: true,
+					token: this.csrfToken,
+				},
+				options,
+			),
+		).then((data) => data.edit);
 	}
 
 	/**
@@ -1046,17 +1083,27 @@ export class mwn {
 	 * @param {string} message wikitext message
 	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
 	 */
-	newSection(title: string | number, header: string, message: string, additionalParams?: ApiEditPageParams): Promise<ApiEditResponse> {
-		return this.request(merge({
-			action: 'edit',
-			section: 'new',
-			summary: header,
-			text: message,
-			bot: true,
-			token: this.csrfToken
-		}, makeTitle(title), additionalParams)).then(data => data.edit);
+	newSection(
+		title: string | number,
+		header: string,
+		message: string,
+		additionalParams?: ApiEditPageParams,
+	): Promise<ApiEditResponse> {
+		return this.request(
+			merge(
+				{
+					action: 'edit',
+					section: 'new',
+					summary: header,
+					text: message,
+					bot: true,
+					token: this.csrfToken,
+				},
+				makeTitle(title),
+				additionalParams,
+			),
+		).then((data) => data.edit);
 	}
-
 
 	/**
 	 * Deletes a page
@@ -1067,11 +1114,17 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	delete(title: string | number, summary: string, options?: ApiDeleteParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'delete',
-			reason: summary,
-			token: this.csrfToken
-		}, makeTitle(title), options)).then(data => data.delete);
+		return this.request(
+			merge(
+				{
+					action: 'delete',
+					reason: summary,
+					token: this.csrfToken,
+				},
+				makeTitle(title),
+				options,
+			),
+		).then((data) => data.delete);
 	}
 
 	/**
@@ -1084,12 +1137,17 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	undelete(title: string, summary: string, options?: ApiUndeleteParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'undelete',
-			title: String(title),
-			reason: summary,
-			token: this.csrfToken
-		}, options)).then(data => data.undelete);
+		return this.request(
+			merge(
+				{
+					action: 'undelete',
+					title: String(title),
+					reason: summary,
+					token: this.csrfToken,
+				},
+				options,
+			),
+		).then((data) => data.undelete);
 	}
 
 	/**
@@ -1101,14 +1159,19 @@ export class mwn {
 	 * @param {object}  [options]
 	 */
 	move(fromtitle: string, totitle: string, summary: string, options?: ApiMoveParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'move',
-			from: fromtitle,
-			to: totitle,
-			reason: summary,
-			movetalk: true,
-			token: this.csrfToken
-		}, options)).then(data => data.move);
+		return this.request(
+			merge(
+				{
+					action: 'move',
+					from: fromtitle,
+					to: totitle,
+					reason: summary,
+					movetalk: true,
+					token: this.csrfToken,
+				},
+				options,
+			),
+		).then((data) => data.move);
 	}
 
 	/**
@@ -1120,12 +1183,17 @@ export class mwn {
 	 * @return {Promise<string>}
 	 */
 	parseWikitext(content: string, additionalParams?: ApiParseParams): Promise<string> {
-		return this.request(merge({
-			text: String(content),
-			formatversion: 2,
-			action: 'parse',
-			contentmodel: 'wikitext'
-		}, additionalParams)).then(function(data) {
+		return this.request(
+			merge(
+				{
+					text: String(content),
+					formatversion: 2,
+					action: 'parse',
+					contentmodel: 'wikitext',
+				},
+				additionalParams,
+			),
+		).then(function (data) {
 			return data.parse.text;
 		});
 	}
@@ -1139,16 +1207,20 @@ export class mwn {
 	 * @return {Promise<string>}
 	 */
 	parseTitle(title: string, additionalParams?: ApiParseParams): Promise<string> {
-		return this.request(merge({
-			page: String(title),
-			formatversion: 2,
-			action: 'parse',
-			contentmodel: 'wikitext'
-		}, additionalParams)).then( function ( data ) {
+		return this.request(
+			merge(
+				{
+					page: String(title),
+					formatversion: 2,
+					action: 'parse',
+					contentmodel: 'wikitext',
+				},
+				additionalParams,
+			),
+		).then(function (data) {
 			return data.parse.text;
 		});
 	}
-
 
 	/**
 	 * Upload an image from a the local disk to the wiki.
@@ -1160,22 +1232,25 @@ export class mwn {
 	 * @returns {Promise<Object>}
 	 */
 	upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
-		return this.request({
-			action: 'upload',
-			file: {
-				stream: fs.createReadStream(filepath),
-				name: path.basename(filepath)
+		return this.request(
+			{
+				action: 'upload',
+				file: {
+					stream: fs.createReadStream(filepath),
+					name: path.basename(filepath),
+				},
+				filename: title,
+				text: text,
+				ignorewarnings: true,
+				token: this.csrfToken,
+				...options,
 			},
-			filename: title,
-			text: text,
-			ignorewarnings: true,
-			token: this.csrfToken,
-			...options
-		}, {
-			headers: {
-				'Content-Type': 'multipart/form-data'
-			}
-		}).then(data => {
+			{
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			},
+		).then((data) => {
 			if (data.upload.warnings) {
 				log(`[W] The API returned warnings while uploading to ${title}:`);
 				log(data.upload.warnings);
@@ -1183,7 +1258,6 @@ export class mwn {
 			return data.upload;
 		});
 	}
-
 
 	/**
 	 * Upload an image from a web URL to the wiki
@@ -1196,14 +1270,19 @@ export class mwn {
 	 * @returns {Promise<Object>}
 	 */
 	uploadFromUrl(url: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'upload',
-			url: url,
-			filename: title || path.basename(url),
-			text: text,
-			ignorewarnings: true,
-			token: this.csrfToken
-		}, options)).then(data => {
+		return this.request(
+			merge(
+				{
+					action: 'upload',
+					url: url,
+					filename: title || path.basename(url),
+					text: text,
+					ignorewarnings: true,
+					token: this.csrfToken,
+				},
+				options,
+			),
+		).then((data) => {
 			if (data.upload.warnings) {
 				log('[W] The API returned warnings while uploading to ' + title + ':');
 				log(data.upload.warnings);
@@ -1223,11 +1302,16 @@ export class mwn {
 	 * @returns {Promise<void>}
 	 */
 	download(file: string | number, localname: string): Promise<void> {
-		return this.request(merge({
-			action: 'query',
-			prop: 'imageinfo',
-			iiprop: 'url'
-		}, makeTitles(file))).then(data => {
+		return this.request(
+			merge(
+				{
+					action: 'query',
+					prop: 'imageinfo',
+					iiprop: 'url',
+				},
+				makeTitles(file),
+			),
+		).then((data) => {
 			const url = data.query.pages[0].imageinfo[0].url;
 			const name = new this.title(data.query.pages[0].title).getMainText();
 			return this.downloadFromUrl(url, localname || name);
@@ -1245,8 +1329,8 @@ export class mwn {
 		return this.rawRequest({
 			method: 'get',
 			url: url,
-			responseType: 'stream'
-		}).then(response => {
+			responseType: 'stream',
+		}).then((response) => {
 			const writeStream = (response.data as stream).pipe(fs.createWriteStream(localname || path.basename(url)));
 			return new Promise((resolve, reject) => {
 				writeStream.on('finish', () => {
@@ -1267,7 +1351,7 @@ export class mwn {
 		return this.request({
 			action: 'options',
 			change: Object.entries(options).map(([key, val]) => key + '=' + val),
-			token: this.csrfToken
+			token: this.csrfToken,
 		});
 	}
 
@@ -1280,11 +1364,17 @@ export class mwn {
 	 * @return {Promise}
 	 */
 	rollback(page: string | number, user: string, params?: ApiRollbackParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'rollback',
-			user: user,
-			token: this.state.rollbacktoken
-		}, makeTitle(page), params)).then(data => {
+		return this.request(
+			merge(
+				{
+					action: 'rollback',
+					user: user,
+					token: this.state.rollbacktoken,
+				},
+				makeTitle(page),
+				params,
+			),
+		).then((data) => {
 			return data.rollback;
 		});
 	}
@@ -1297,9 +1387,15 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	purge(titles: string[] | string | number[] | number, options?: ApiPurgeParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'purge',
-		}, makeTitles(titles), options)).then(data => data.purge);
+		return this.request(
+			merge(
+				{
+					action: 'purge',
+				},
+				makeTitles(titles),
+				options,
+			),
+		).then((data) => data.purge);
 	}
 
 	/**
@@ -1314,13 +1410,18 @@ export class mwn {
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
 		}
-		return this.request(merge({
-			"action": "query",
-			"list": "allpages",
-			"apprefix": title.title,
-			"apnamespace": title.namespace,
-			"aplimit": "max"
-		}, otherParams)).then((data) => {
+		return this.request(
+			merge(
+				{
+					action: 'query',
+					list: 'allpages',
+					apprefix: title.title,
+					apnamespace: title.namespace,
+					aplimit: 'max',
+				},
+				otherParams,
+			),
+		).then((data) => {
 			return data.query.allpages.map((pg: ApiPage) => pg.title);
 		});
 	}
@@ -1334,12 +1435,12 @@ export class mwn {
 	getPagesInCategory(category: string, otherParams?: ApiQueryCategoryMembersParams): Promise<string[]> {
 		const title = this.title.newFromText(category, 14);
 		return this.request({
-			"action": "query",
-			"list": "categorymembers",
-			"cmtitle": title.toText(),
-			"cmlimit": "max",
-			...otherParams
-		}).then(data => {
+			action: 'query',
+			list: 'categorymembers',
+			cmtitle: title.toText(),
+			cmlimit: 'max',
+			...otherParams,
+		}).then((data) => {
 			return data.query.categorymembers.map((pg: ApiPage) => pg.title);
 		});
 	}
@@ -1353,22 +1454,40 @@ export class mwn {
 	 * @param {Object} otherParams
 	 * @returns {Promise<Object>}
 	 */
-	search(searchTerm: string, limit: number, props: ("size" | "timestamp" | "wordcount" |
-		"snippet" | "redirectitle" | "sectiontitle" | "redirectsnippet" | "titlesnippet" |
-		"sectionsnippet" | "categorysnippet")[], otherParams?: ApiQuerySearchParams): Promise<ApiResponse> {
-		return this.request(merge({
-			action: 'query',
-			list: 'search',
-			srsearch: searchTerm,
-			srlimit: limit,
-			srprop: props || 'size|wordcount|timestamp',
-		}, otherParams)).then(data => {
+	search(
+		searchTerm: string,
+		limit: number,
+		props: (
+			| 'size'
+			| 'timestamp'
+			| 'wordcount'
+			| 'snippet'
+			| 'redirectitle'
+			| 'sectiontitle'
+			| 'redirectsnippet'
+			| 'titlesnippet'
+			| 'sectionsnippet'
+			| 'categorysnippet'
+		)[],
+		otherParams?: ApiQuerySearchParams,
+	): Promise<ApiResponse> {
+		return this.request(
+			merge(
+				{
+					action: 'query',
+					list: 'search',
+					srsearch: searchTerm,
+					srlimit: limit,
+					srprop: props || 'size|wordcount|timestamp',
+				},
+				otherParams,
+			),
+		).then((data) => {
 			return data.query.search;
 		});
 	}
 
 	/************* BULK PROCESSING FUNCTIONS ************/
-
 
 	/**
 	 * Send an API query that automatically continues till the limit is reached.
@@ -1380,7 +1499,7 @@ export class mwn {
 	continuedQuery(query?: ApiParams, limit = 10): Promise<ApiResponse[]> {
 		let responses: ApiResponse[] = [];
 		let callApi = (query: ApiParams, count: number): Promise<ApiResponse[]> => {
-			return this.request(query).then(response => {
+			return this.request(query).then((response) => {
 				if (!this.options.silent) {
 					log(`[+] Got part ${count} of continuous API query`);
 				}
@@ -1402,7 +1521,7 @@ export class mwn {
 	 * @param {number} [limit=Infinity]
 	 * @yields {Object} a single page of the response
 	 */
-	async *continuedQueryGen(query?: ApiParams, limit = Infinity): AsyncGenerator<ApiResponse>  {
+	async *continuedQueryGen(query?: ApiParams, limit = Infinity): AsyncGenerator<ApiResponse> {
 		let response: ApiResponse = { continue: {} };
 		for (let i = 0; i < limit; i++) {
 			if (response.continue) {
@@ -1440,7 +1559,7 @@ export class mwn {
 	 * @returns {Promise<Object[]>} - promise resolved when all the API queries have
 	 * settled, with the array of responses.
 	 */
-	massQuery(query?: ApiParams, batchFieldName='titles'): Promise<ApiResponse[]> {
+	massQuery(query?: ApiParams, batchFieldName = 'titles'): Promise<ApiResponse[]> {
 		let batchValues = query[batchFieldName];
 		if (!Array.isArray(batchValues)) {
 			throw new Error(`massQuery: batch field in query must be an array`);
@@ -1453,7 +1572,7 @@ export class mwn {
 		}
 		batches[numBatches - 1] = new Array(batchValues.length % limit);
 		for (let i = 0; i < batchValues.length; i++) {
-			batches[Math.floor(i/limit)][i % limit] = batchValues[i];
+			batches[Math.floor(i / limit)][i % limit] = batchValues[i];
 		}
 		let responses = new Array(numBatches);
 		return new Promise((resolve) => {
@@ -1462,13 +1581,18 @@ export class mwn {
 					return resolve(responses);
 				}
 				query[batchFieldName] = batches[idx];
-				this.request(query, { method: 'post' }).then(response => {
-					responses[idx] = response;
-				}, (err: MwnError) => {
-					responses[idx] = err;
-				}).finally(() => {
-					sendQuery(idx + 1);
-				});
+				this.request(query, { method: 'post' })
+					.then(
+						(response) => {
+							responses[idx] = response;
+						},
+						(err: MwnError) => {
+							responses[idx] = err;
+						},
+					)
+					.finally(() => {
+						sendQuery(idx + 1);
+					});
 			};
 			sendQuery(0);
 		});
@@ -1512,27 +1636,30 @@ export class mwn {
 	 */
 	batchOperation<T>(
 		list: T[],
-		worker: ((item: T, index: number) => Promise<any>),
+		worker: (item: T, index: number) => Promise<any>,
 		concurrency = 5,
-		retries = 0
-	): Promise<{failures: { [item: string]: Error }}> {
-
+		retries = 0,
+	): Promise<{ failures: { [item: string]: Error } }> {
 		let counts = {
 			successes: 0,
-			failures: 0
+			failures: 0,
 		};
-		let failures: ({item: T, error: Error})[] = [];
+		let failures: { item: T; error: Error }[] = [];
 		let incrementSuccesses = () => {
 			counts.successes++;
 		};
 		const incrementFailures = (item: T, error: Error) => {
 			counts.failures++;
-			failures.push({item, error});
+			failures.push({ item, error });
 		};
 		const updateStatusText = () => {
-			const percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
-			const percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
-			const statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
+			const percentageFinished = Math.round(((counts.successes + counts.failures) / list.length) * 100);
+			const percentageSuccesses = Math.round((counts.successes / (counts.successes + counts.failures)) * 100);
+			const statusText = `[+] Finished ${counts.successes + counts.failures}/${
+				list.length
+			} (${percentageFinished}%) tasks, of which ${
+				counts.successes
+			} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
 			if (!this.options.silent) {
 				log(statusText);
 			}
@@ -1541,10 +1668,8 @@ export class mwn {
 
 		return new Promise((resolve) => {
 			const sendBatch = (batchIdx: number) => {
-
 				// Last batch
 				if (batchIdx === numBatches - 1) {
-
 					const numItemsInLastBatch = list.length - batchIdx * concurrency;
 					const finalBatchPromises = new Array(numItemsInLastBatch);
 
@@ -1563,19 +1688,28 @@ export class mwn {
 						finalBatchSettledPromises[i] = new Promise((resolve) => {
 							return finalBatchPromises[i].then(resolve, resolve);
 						});
-						finalBatchPromises[i].then(incrementSuccesses, (err: Error) => {
-							incrementFailures(list[idx], err);
-						}).finally(function() {
-							updateStatusText();
-							finalBatchSettledPromises[i] = Promise.resolve();
-						});
+						finalBatchPromises[i]
+							.then(incrementSuccesses, (err: Error) => {
+								incrementFailures(list[idx], err);
+							})
+							.finally(function () {
+								updateStatusText();
+								finalBatchSettledPromises[i] = Promise.resolve();
+							});
 					}
 					Promise.all(finalBatchSettledPromises).then(() => {
 						if (counts.failures !== 0 && retries > 0) {
-							resolve(this.batchOperation(failures.map(f => f.item), worker, concurrency, retries - 1));
+							resolve(
+								this.batchOperation(
+									failures.map((f) => f.item),
+									worker,
+									concurrency,
+									retries - 1,
+								),
+							);
 						} else {
-							let keyedFailuresObject: {[item: string]: Error} = {};
-							for (let {item, error} of failures) {
+							let keyedFailuresObject: { [item: string]: Error } = {};
+							for (let { item, error } of failures) {
 								keyedFailuresObject[String(item)] = error;
 							}
 							resolve({ failures: keyedFailuresObject });
@@ -1591,17 +1725,18 @@ export class mwn {
 					if (!ispromise(promise)) {
 						throw new Error('batchOperation worker function must return a promise');
 					}
-					promise.then(incrementSuccesses, (err: Error) => {
-						incrementFailures(list[idx], err);
-					}).finally(() => {
-						updateStatusText();
-						// last item in batch: trigger the next batch's API calls
-						if (i === concurrency - 1) {
-							sendBatch(batchIdx + 1);
-						}
-					});
+					promise
+						.then(incrementSuccesses, (err: Error) => {
+							incrementFailures(list[idx], err);
+						})
+						.finally(() => {
+							updateStatusText();
+							// last item in batch: trigger the next batch's API calls
+							if (i === concurrency - 1) {
+								sendBatch(batchIdx + 1);
+							}
+						});
 				}
-
 			};
 			sendBatch(0);
 		});
@@ -1624,27 +1759,30 @@ export class mwn {
 	 */
 	async seriesBatchOperation<T>(
 		list: T[],
-		worker: ((item: T, index: number) => Promise<any>),
-		delay=5000,
-		retries=0
-	): Promise<{failures: {[item: string]: Error}}> {
-
+		worker: (item: T, index: number) => Promise<any>,
+		delay = 5000,
+		retries = 0,
+	): Promise<{ failures: { [item: string]: Error } }> {
 		let counts = {
 			successes: 0,
-			failures: 0
+			failures: 0,
 		};
-		let failures: ({item: T, err: Error}[]) = [];
+		let failures: { item: T; err: Error }[] = [];
 		const incrementSuccesses = () => {
 			counts.successes++;
 		};
 		const incrementFailures = (item: T, err: Error) => {
 			counts.failures++;
-			failures.push({item, err});
+			failures.push({ item, err });
 		};
 		const updateStatusText = () => {
-			const percentageFinished = Math.round((counts.successes + counts.failures) / list.length * 100);
-			const percentageSuccesses = Math.round(counts.successes / (counts.successes + counts.failures) * 100);
-			const statusText = `[+] Finished ${counts.successes + counts.failures}/${list.length} (${percentageFinished}%) tasks, of which ${counts.successes} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
+			const percentageFinished = Math.round(((counts.successes + counts.failures) / list.length) * 100);
+			const percentageSuccesses = Math.round((counts.successes / (counts.successes + counts.failures)) * 100);
+			const statusText = `[+] Finished ${counts.successes + counts.failures}/${
+				list.length
+			} (${percentageFinished}%) tasks, of which ${
+				counts.successes
+			} (${percentageSuccesses}%) were successful, and ${counts.failures} failed.`;
 			if (!this.options.silent) {
 				log(statusText);
 			}
@@ -1656,9 +1794,9 @@ export class mwn {
 				if (counts.failures === 0) {
 					break;
 				}
-				worklist = failures.map(f => f.item);
+				worklist = failures.map((f) => f.item);
 				failures = [];
-				counts.successes = 0, counts.failures = 0;
+				(counts.successes = 0), (counts.failures = 0);
 			}
 			for (let idx = 0; idx < worklist.length; idx++) {
 				await worker(worklist[idx], idx).then(incrementSuccesses, function (err) {
@@ -1671,16 +1809,14 @@ export class mwn {
 			}
 		}
 
-		let errors: {[item: string]: Error} = {};
-		for (let {item, err} of failures) {
+		let errors: { [item: string]: Error } = {};
+		for (let { item, err } of failures) {
 			errors[String(item)] = err;
 		}
 		return { failures: errors };
 	}
 
-
 	/********** SUPPLEMENTARY FUNCTIONS **************/
-
 
 	/**
 	 * Execute an ASK Query
@@ -1693,23 +1829,24 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	askQuery(query: string, apiUrl: string, customRequestOptions?: RawRequestParams): Promise<any> {
-
 		apiUrl = apiUrl || this.options.apiUrl;
 
-		let requestOptions = merge({
-			method: 'get',
-			url: apiUrl,
-			responseType: 'json',
-			params: {
-				action: 'ask',
-				format: 'json',
-				query: query
-			}
-		}, customRequestOptions);
+		let requestOptions = merge(
+			{
+				method: 'get',
+				url: apiUrl,
+				responseType: 'json',
+				params: {
+					action: 'ask',
+					format: 'json',
+					query: query,
+				},
+			},
+			customRequestOptions,
+		);
 
-		return this.rawRequest(requestOptions).then(response => response.data);
+		return this.rawRequest(requestOptions).then((response) => response.data);
 	}
-
 
 	/**
 	 * Executes a SPARQL Query
@@ -1722,20 +1859,22 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	sparqlQuery(query: string, endpointUrl: string, customRequestOptions?: RawRequestParams): Promise<any> {
-
 		endpointUrl = endpointUrl || this.options.apiUrl;
 
-		let requestOptions = merge({
-			method: 'get',
-			url: endpointUrl,
-			responseType: 'json',
-			params: {
-				format: 'json',
-				query: query
-			}
-		}, customRequestOptions);
+		let requestOptions = merge(
+			{
+				method: 'get',
+				url: endpointUrl,
+				responseType: 'json',
+				params: {
+					format: 'json',
+					query: query,
+				},
+			},
+			customRequestOptions,
+		);
 
-		return this.rawRequest(requestOptions).then(response => response.data);
+		return this.rawRequest(requestOptions).then((response) => response.data);
 	}
 
 	/**
@@ -1744,25 +1883,31 @@ export class mwn {
 	 * @param {string[]} models
 	 * @param {string[]|number[]|string|number} revisions  ID(s)
 	 */
-	oresQueryRevisions(endpointUrl: string, models: string[], revisions: string[] | number[] | string | number): Promise<any> {
+	oresQueryRevisions(
+		endpointUrl: string,
+		models: string[],
+		revisions: string[] | number[] | string | number,
+	): Promise<any> {
 		let response = {};
-		const chunks = arrayChunk(
-			(revisions instanceof Array) ? revisions : [revisions],
-			50
-		);
-		return this.seriesBatchOperation(chunks, (chunk) => {
-			return this.rawRequest({
-				method: 'get',
-				url: endpointUrl,
-				params: {
-					models: models.join('|'),
-					revids: chunk.join('|')
-				},
-				responseType: 'json'
-			}).then(oresResponse => {
-				Object.assign(response, Object.values(oresResponse.data)[0].scores);
-			});
-		}, 0, 2).then(() => {
+		const chunks = arrayChunk(revisions instanceof Array ? revisions : [revisions], 50);
+		return this.seriesBatchOperation(
+			chunks,
+			(chunk) => {
+				return this.rawRequest({
+					method: 'get',
+					url: endpointUrl,
+					params: {
+						models: models.join('|'),
+						revids: chunk.join('|'),
+					},
+					responseType: 'json',
+				}).then((oresResponse) => {
+					Object.assign(response, Object.values(oresResponse.data)[0].scores);
+				});
+			},
+			0,
+			2,
+		).then(() => {
 			return response;
 		});
 	}
@@ -1773,7 +1918,9 @@ export class mwn {
 	 * Supported for EN, DE, ES, EU, TR Wikipedias only
 	 * @see https://api.wikiwho.net/
 	 */
-	async queryAuthors(title: string): Promise<{ totalBytes: number; users: ({ id: number; name: string; bytes: number; percent: number; })[]; }> {
+	async queryAuthors(
+		title: string,
+	): Promise<{ totalBytes: number; users: { id: number; name: string; bytes: number; percent: number }[] }> {
 		let langcodematch = this.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
 		if (!langcodematch || !langcodematch[1]) {
 			throw new Error('WikiWho API is not supported for bot API URL. Re-check.');
@@ -1782,25 +1929,26 @@ export class mwn {
 		let json;
 		try {
 			json = await this.rawRequest({
-				url: `https://api.wikiwho.net/${langcodematch[1]}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(title)}/?editor=true`
-			}).then(response => response.data);
-		} catch(err) {
-			throw new Error(err && err.response && err.response.data
-				&& err.response.data.Error);
+				url: `https://api.wikiwho.net/${
+					langcodematch[1]
+				}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(title)}/?editor=true`,
+			}).then((response) => response.data);
+		} catch (err) {
+			throw new Error(err && err.response && err.response.data && err.response.data.Error);
 		}
 
 		const tokens = Object.values(json.revisions[0])[0].tokens;
 
 		let data = {
 			totalBytes: 0,
-			users: []
+			users: [],
 		};
 		let userdata: {
 			[editor: string]: {
-				name?: number
-				bytes: number
-				percent?: number
-			}
+				name?: number;
+				bytes: number;
+				percent?: number;
+			};
 		} = {};
 
 		for (let token of tokens) {
@@ -1810,12 +1958,13 @@ export class mwn {
 				userdata[editor] = { bytes: 0 };
 			}
 			userdata[editor].bytes += token.str.length;
-			if (editor.startsWith('0|')) { // IP
+			if (editor.startsWith('0|')) {
+				// IP
 				userdata[editor].name = editor.slice(2);
 			}
 		}
 
-		Object.entries(userdata).map(([userid, {bytes}]) => {
+		Object.entries(userdata).map(([userid, { bytes }]) => {
 			userdata[userid].percent = bytes / data.totalBytes;
 			if (userdata[userid].percent < 0.02) {
 				delete userdata[userid];
@@ -1823,33 +1972,34 @@ export class mwn {
 		});
 
 		await this.request({
-			"action": "query",
-			"list": "users",
-			"ususerids": Object.keys(userdata).filter(us => !us.startsWith('0|')) // don't lookup IPs
-		}).then(json => {
+			action: 'query',
+			list: 'users',
+			ususerids: Object.keys(userdata).filter((us) => !us.startsWith('0|')), // don't lookup IPs
+		}).then((json) => {
 			json.query.users.forEach((us: any) => {
 				userdata[String(us.userid)].name = us.name;
 			});
 		});
 
-		data.users = Object.entries(userdata).map(([userid, {bytes, name, percent}]) => {
-			return {
-				id: userid,
-				name: name,
-				bytes: bytes,
-				percent: percent
-			};
-		}).sort((a, b) => {
-			return a.bytes < b.bytes ? 1 : -1;
-		});
+		data.users = Object.entries(userdata)
+			.map(([userid, { bytes, name, percent }]) => {
+				return {
+					id: userid,
+					name: name,
+					bytes: bytes,
+					percent: percent,
+				};
+			})
+			.sort((a, b) => {
+				return a.bytes < b.bytes ? 1 : -1;
+			});
 
 		return data;
 	}
 
 	/**
-	* Promisified version of setTimeout
-	* @param {number} duration - of sleep in milliseconds
-	*/
+	 * Promisified version of setTimeout
+	 * @param {number} duration - of sleep in milliseconds
+	 */
 	sleep = sleep;
-
 }

@@ -2,14 +2,13 @@ name: Node.js CI
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [master]
     paths:
       - 'src/**'
       - 'tests/**'
       - '.github/workflows/ci-pull-request.yml'
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -44,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 10.x, 12.x, 14.x ]
+        node-version: [10.x, 12.x, 14.x]
     needs: build
     steps:
       - uses: actions/checkout@v2

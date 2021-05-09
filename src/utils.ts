@@ -2,12 +2,11 @@
  * Private utilities
  */
 
-import type {MwnTitle} from "./bot";
+import type { MwnTitle } from './bot';
 
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
 export function ispromise(obj: any): boolean {
-	return !!obj && (typeof obj === 'object' || typeof obj === 'function') &&
-		typeof obj.then === 'function';
+	return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
 }
 
 /** Check whether an object is plain object, from https://github.com/sindresorhus/is-plain-obj/blob/master/index.js */
@@ -41,7 +40,7 @@ export function merge(...objects: any[]) {
  * @returns {Object}
  */
 export function mergeDeep1(...objects: any[]) {
-	let args = [...objects].filter(e => e); // skip null/undefined values
+	let args = [...objects].filter((e) => e); // skip null/undefined values
 	for (let options of args.slice(1)) {
 		for (let [key, val] of Object.entries(options)) {
 			if (isplainobject(val)) {
@@ -63,29 +62,31 @@ export function mergeDeep1(...objects: any[]) {
 export function arrayChunk<T>(arr: T[], size: number): T[][] {
 	const numChunks = Math.ceil(arr.length / size);
 	let result = new Array(numChunks);
-	for (let i=0; i<numChunks; i++) {
+	for (let i = 0; i < numChunks; i++) {
 		result[i] = arr.slice(i * size, (i + 1) * size);
 	}
 	return result;
 }
 
 export function sleep(duration: number): Promise<void> {
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		setTimeout(resolve, duration);
 	});
 }
 
-export function makeTitles(pages: string | string[] | number | number[] | MwnTitle | MwnTitle[]): {titles: string[]} | {pageids: number[]} {
+export function makeTitles(
+	pages: string | string[] | number | number[] | MwnTitle | MwnTitle[],
+): { titles: string[] } | { pageids: number[] } {
 	let pagesArray = Array.isArray(pages) ? pages : [pages];
 	if (typeof pagesArray[0] === 'number') {
-		return {pageids: pagesArray as number[]};
+		return { pageids: pagesArray as number[] };
 	} else {
 		// .join casts array elements to strings and then joins
-		return {titles: pagesArray as string[]};
+		return { titles: pagesArray as string[] };
 	}
 }
 
-export function makeTitle(page: string | number | MwnTitle): {title: string} | {pageid: number} {
+export function makeTitle(page: string | number | MwnTitle): { title: string } | { pageid: number } {
 	if (typeof page === 'number') {
 		return { pageid: page };
 	} else {

@@ -14,10 +14,10 @@
  */
 
 const fs = require('fs');
-const {exec} = require('child_process');
+const { exec } = require('child_process');
 
 var packageJson = require('./package.json');
-var versionNums = packageJson.version.split('.').map(n => parseInt(n));
+var versionNums = packageJson.version.split('.').map((n) => parseInt(n));
 
 switch (process.argv[2]) {
 	case 'major':
@@ -41,7 +41,9 @@ packageJson.version = versionNums.join('.');
 
 exec('git diff --name-only | grep package.json', (err, stdout) => {
 	if (stdout.trim()) {
-		console.log(`[E] There are unstaged changes to package.json. Please stage or commit or stash these changes first`);
+		console.log(
+			`[E] There are unstaged changes to package.json. Please stage or commit or stash these changes first`,
+		);
 		process.exit(1);
 	}
 
