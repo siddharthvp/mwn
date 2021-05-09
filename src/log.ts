@@ -19,16 +19,15 @@ const prettyjson = require('prettyjson');
 export const logConfig = {
 	printYaml: false,
 	printDebug: true,
-	printVerbose: true
+	printVerbose: true,
 };
 
-export function updateLoggingConfig(options: typeof logConfig): void {
+export function updateLoggingConfig(options: Partial<typeof logConfig>): void {
 	Object.assign(logConfig, options);
 }
 
 /** Type of item logged */
 type item = any;
-
 
 /**
  * Custom Logging function
@@ -50,7 +49,6 @@ export function log(obj: item): void {
 // Functions below are exported only for unit testing
 
 export function message(msg: item) {
-
 	if (typeof msg !== 'string') {
 		try {
 			msg = '' + JSON.stringify(msg);
@@ -72,7 +70,6 @@ export function message(msg: item) {
 	} else {
 		console.log(msg);
 	}
-
 }
 
 /**
@@ -80,18 +77,16 @@ export function message(msg: item) {
  * @param obj
  */
 export function debug(obj: item) {
-
 	if (logConfig.printYaml) {
 		// Print YAML
 		let options = {
 			keysColor: 'white',
 			dashColor: 'white',
 			stringColor: 'yellow',
-			numberColor: 'blue'
+			numberColor: 'blue',
 		};
 
 		console.log(chalk.gray('---\n') + prettyjson.render(obj, options));
-
 	} else {
 		// Print indented JSON
 		let msg = JSON.stringify(obj, null, 4);
@@ -118,23 +113,22 @@ export function error(obj: Error) {
  * @returns {string}
  */
 export function colorize(msg: item) {
-
 	let colorMap = {
-		'[E]': 'red',         // ERROR
-		'[W]': 'yellow',      // WARNING
-		'[?]': 'yellow',      // MISSING
-		'[S]': 'green',       // SUCCESS
-		'[i]': 'blue',        // INFO
-		'[+]': 'green',       // ADDED
-		'[-]': 'red',         // REMOVED
-		'[C]': 'cyan',        // CHANGED
-		'[U]': 'grey',        // UNCHANGED
-		'[=]': 'grey',        // EQUAL
-		'[/]': 'grey',        // SKIPPED
-		'[V]': 'magenta',     // VERBOSE
-		'[D]': 'magenta',     // DEBUG
-		'[T]': 'magenta',     // TO-DO
-		'[TODO]': 'magenta'   // TO-DO
+		'[E]': 'red', // ERROR
+		'[W]': 'yellow', // WARNING
+		'[?]': 'yellow', // MISSING
+		'[S]': 'green', // SUCCESS
+		'[i]': 'blue', // INFO
+		'[+]': 'green', // ADDED
+		'[-]': 'red', // REMOVED
+		'[C]': 'cyan', // CHANGED
+		'[U]': 'grey', // UNCHANGED
+		'[=]': 'grey', // EQUAL
+		'[/]': 'grey', // SKIPPED
+		'[V]': 'magenta', // VERBOSE
+		'[D]': 'magenta', // DEBUG
+		'[T]': 'magenta', // TO-DO
+		'[TODO]': 'magenta', // TO-DO
 	};
 
 	for (let [code, color] of Object.entries(colorMap)) {
@@ -145,7 +139,6 @@ export function colorize(msg: item) {
 
 	return msg;
 }
-
 
 /**
  * Pad a number with n digits
@@ -174,7 +167,7 @@ export function getDateArray(date: Date) {
 		pad(date.getHours(), 2),
 		pad(date.getMinutes(), 2),
 		pad(date.getSeconds(), 2),
-		pad(date.getMilliseconds(), 2)
+		pad(date.getMilliseconds(), 2),
 	];
 }
 
