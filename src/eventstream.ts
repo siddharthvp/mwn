@@ -14,8 +14,8 @@ export interface MwnStreamStatic {
 	): MwnStream;
 
 	recentchange(
-		filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
-		action: (data: recentchangeProps) => void,
+		filter: Partial<RecentChangeStreamEvent> | ((data: RecentChangeStreamEvent) => boolean),
+		action: (data: RecentChangeStreamEvent) => void,
 	): MwnStream;
 }
 
@@ -23,7 +23,7 @@ export interface MwnStream {
 	addListener(filter: ((data: any) => boolean) | any, action: (data: any) => void): void;
 }
 
-export type recentchangeProps = {
+export type RecentChangeStreamEvent = {
 	$schema: string;
 	meta: {
 		uri: string;
@@ -73,6 +73,12 @@ export type recentchangeProps = {
 	log_params: any;
 	log_action_comment: string;
 };
+
+/**
+ * @deprecated
+ * Renamed to RecentChangeStreamEvent
+ */
+export type recentchangeProps = RecentChangeStreamEvent;
 
 export default function (bot: mwn) {
 	class EventStream extends EventSource implements MwnStream {
@@ -146,8 +152,8 @@ export default function (bot: mwn) {
 		 * @param {Function} action
 		 */
 		static recentchange(
-			filter: Partial<recentchangeProps> | ((data: recentchangeProps) => boolean),
-			action: (data: recentchangeProps) => void,
+			filter: Partial<RecentChangeStreamEvent> | ((data: RecentChangeStreamEvent) => boolean),
+			action: (data: RecentChangeStreamEvent) => void,
 		): EventStream {
 			let stream = new EventStream('recentchange');
 			stream.addListener(filter, action);
