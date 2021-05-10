@@ -51,12 +51,14 @@ export default function (bot: mwn) {
 					let match = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(args[0]);
 					let dateParts = match.slice(1).map((e) => parseInt(e));
 					super(
-						dateParts[0],
-						dateParts[1] - 1, // fix month
-						dateParts[2],
-						dateParts[3],
-						dateParts[4],
-						dateParts[5],
+						Date.UTC(
+							dateParts[0],
+							dateParts[1] - 1, // fix month
+							dateParts[2],
+							dateParts[3],
+							dateParts[4],
+							dateParts[5],
+						),
 					);
 				} else {
 					// Attempt to remove a comma and paren-wrapped timezone, to get MediaWiki

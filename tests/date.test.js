@@ -1,11 +1,14 @@
-const { bot, expect } = require('./local_wiki');
+const {bot, expect} = require('./local_wiki');
 
 // Includes some tests copied from https://github.com/wikimedia-gadgets/twinkle/blob/master/tests/morebits.date.js
 
 describe('date', async function () {
 	it('date constructor', function () {
 		let mwTs = new bot.date('20120304050607');
-		expect(mwTs.getTime()).to.equal(new Date(2012, 2, 4, 5, 6, 7).getTime());
+		expect(mwTs.getTime()).to.equal(
+			// MW timestamps are UTC
+			new Date(Date.UTC(2012, 2, 4, 5, 6, 7)).getTime()
+		);
 
 		let mwSig = new bot.date('13:14, 3 August 2017 (UTC)');
 		expect(mwSig.getTime()).to.equal(new Date('13:14 3 August 2017 UTC').getTime());
