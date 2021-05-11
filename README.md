@@ -34,7 +34,7 @@ Or obtain the latest development copy:
 git clone https://github.com/siddharthvp/mwn.git
 cd mwn
 npm install		# install dependencies
-npm run build   # generate JS files from TS
+npm run build   # generate JS files from TS. The type errors raised can be ignored.
 ```
 
 #### Node.js compatibility
@@ -44,7 +44,6 @@ Mwn is written in TypeScript v4. The repository contains JavaScript files compil
 If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. You can install a more recent version of node to your home directory, using:
 
 ```sh
-npm install npm@latest		# update npm first to the latest version
 npm install n				# install a node package manager
 export N_PREFIX=~
 ./node_modules/n/bin/n lts	# get the latest LTS version of node
@@ -53,7 +52,7 @@ export PATH=~/bin:$PATH
 
 Check that your `.profile` or `.bashrc` file includes the line `PATH="$HOME/bin:$PATH"`, so that the path includes your home directory every time you open the shell.
 
-If you're using mwn for a Toolforge webservice, use the Kubernetes backend which provides node v10. Mwn is not supported for the legacy Grid Engine backend since it uses node v8.11.1. The [toolforge-node-app-base](https://github.com/siddharthvp/toolforge-node-app-base) template repository can quickly get you started with a basic web tool boilerplate.
+If you're using mwn for a Toolforge webservice, use the [Kubernetes backend](https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web/Node.js#Kubernetes_Configuration) which provides node v10. Mwn is not supported for the [legacy Grid Engine backend](https://wikitech.wikimedia.org/wiki/Help:Toolforge/Web/Node.js#Grid_Engine_Configuration) since it uses node v8.11.1. The [toolforge-node-app-base](https://github.com/siddharthvp/toolforge-node-app-base) template repository can quickly get you started with a basic web tool boilerplate.
 
 #### MediaWiki compatibility
 
@@ -102,7 +101,7 @@ Specialised derivatives exist to fulfill common needs:
 -   `new bot.user('User name').contribsGen()` - fetch user contributions
 -   `new bot.user('User name').logsGen()` - fetch user logs
 
-Every method names that end in `Gen` is an async generator.
+Every method with a name that ends in `Gen` is an async generator.
 
 **Emergency shutoff**: Mwn exploits Node's asynchronous event loop to efficiently implement emergency shutoff.
 
