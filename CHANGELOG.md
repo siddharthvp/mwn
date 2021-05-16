@@ -1,5 +1,8 @@
 Only breaking changes, deprecations and the like are documented in this change log.
 
+#### 0.11.0
+- mwn#queryAuthors() now requires `getSiteInfo()` to have run first. Also, it is deprecated in favour of using the `queryAuthors()` method on a page object.
+
 #### 0.10.0
 
 -   `loginGetToken()` is now deprecated in favour of `login()` which will now fetch tokens as well.

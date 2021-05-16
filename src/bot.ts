@@ -1917,84 +1917,12 @@ export class mwn {
 	 * This API has a throttling of 2000 requests a day.
 	 * Supported for EN, DE, ES, EU, TR Wikipedias only
 	 * @see https://api.wikiwho.net/
+	 * @deprecated Use queryAuthors on the page object directly instead
 	 */
 	async queryAuthors(
 		title: string,
 	): Promise<{ totalBytes: number; users: { id: number; name: string; bytes: number; percent: number }[] }> {
-		let langcodematch = this.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
-		if (!langcodematch || !langcodematch[1]) {
-			throw new Error('WikiWho API is not supported for bot API URL. Re-check.');
-		}
-
-		let json;
-		try {
-			json = await this.rawRequest({
-				url: `https://api.wikiwho.net/${
-					langcodematch[1]
-				}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(title)}/?editor=true`,
-			}).then((response) => response.data);
-		} catch (err) {
-			throw new Error(err && err.response && err.response.data && err.response.data.Error);
-		}
-
-		const tokens = Object.values(json.revisions[0])[0].tokens;
-
-		let data = {
-			totalBytes: 0,
-			users: [],
-		};
-		let userdata: {
-			[editor: string]: {
-				name?: number;
-				bytes: number;
-				percent?: number;
-			};
-		} = {};
-
-		for (let token of tokens) {
-			data.totalBytes += token.str.length;
-			let editor = token['editor'];
-			if (!userdata[editor]) {
-				userdata[editor] = { bytes: 0 };
-			}
-			userdata[editor].bytes += token.str.length;
-			if (editor.startsWith('0|')) {
-				// IP
-				userdata[editor].name = editor.slice(2);
-			}
-		}
-
-		Object.entries(userdata).map(([userid, { bytes }]) => {
-			userdata[userid].percent = bytes / data.totalBytes;
-			if (userdata[userid].percent < 0.02) {
-				delete userdata[userid];
-			}
-		});
-
-		await this.request({
-			action: 'query',
-			list: 'users',
-			ususerids: Object.keys(userdata).filter((us) => !us.startsWith('0|')), // don't lookup IPs
-		}).then((json) => {
-			json.query.users.forEach((us: any) => {
-				userdata[String(us.userid)].name = us.name;
-			});
-		});
-
-		data.users = Object.entries(userdata)
-			.map(([userid, { bytes, name, percent }]) => {
-				return {
-					id: userid,
-					name: name,
-					bytes: bytes,
-					percent: percent,
-				};
-			})
-			.sort((a, b) => {
-				return a.bytes < b.bytes ? 1 : -1;
-			});
-
-		return data;
+		return new this.page(title).queryAuthors();
 	}
 
 	/**

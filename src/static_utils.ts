@@ -29,6 +29,7 @@ export function link(target: string | MwnTitle, displaytext?: string): string {
  */
 export function template(title: string | MwnTitle, parameters: { [parameter: string]: string } = {}): string {
 	if (typeof title !== 'string') {
+		// title object provided
 		if (title.namespace === 10) {
 			title = title.getMainText(); // skip namespace name for templates
 		} else if (title.namespace === 0) {
@@ -41,13 +42,8 @@ export function template(title: string | MwnTitle, parameters: { [parameter: str
 		'{{' +
 		title +
 		Object.entries(parameters)
-			.map(([key, val]) => {
-				if (!val) {
-					// skip parameter if no value provided
-					return '';
-				}
-				return '|' + key + '=' + val;
-			})
+			.filter(([, value]) => !!value) // ignore params with no value
+			.map(([name, value]) => `|${name}=${value}`)
 			.join('') +
 		'}}'
 	);
