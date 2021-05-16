@@ -1609,7 +1609,7 @@ export class mwn {
 		if (!Array.isArray(batchValues)) {
 			throw new Error(`massQuery: batch field in query must be an array`);
 		}
-		const limit = batchSize || this.hasApiHighLimit ? 500 : 50;
+		const limit = batchSize || (this.hasApiHighLimit ? 500 : 50);
 		const batches = arrayChunk(batchValues, limit);
 		const numBatches = batches.length;
 
