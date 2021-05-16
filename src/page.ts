@@ -600,7 +600,22 @@ export default function (bot: mwn): MwnPageStatic {
 
 			return bot
 				.rawRequest({
-					url: `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${project}/${access}/${agent}/${this.toString()}/${granularity}/${startString}/${endString}`,
+					url:
+						'https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article' +
+						'/' +
+						project +
+						'/' +
+						access +
+						'/' +
+						agent +
+						'/' +
+						encodeURIComponent(this.toString()) +
+						'/' +
+						granularity +
+						'/' +
+						startString +
+						'/' +
+						endString,
 					headers: {
 						'User-Agent': bot.options.userAgent,
 					},
