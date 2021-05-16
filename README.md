@@ -16,7 +16,7 @@ Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_ver
 
 Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
-Complete API documentation is available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html)** ([alternative link](https://mwn.toolforge.org/docs/classes/_bot_.mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API and WikiWho API.
+Complete API documentation is available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html)** ([alternative link](https://mwn.toolforge.org/docs/classes/_bot_.mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
 
 Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions are automatically retried.
 

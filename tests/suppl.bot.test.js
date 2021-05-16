@@ -3,8 +3,9 @@ const { mwn, expect, sinon } = require('./test_base');
 describe('supplementary functions', function () {
 	this.timeout(5000);
 
-	var bot = new mwn({
+	const bot = new mwn({
 		apiUrl: 'https://en.wikipedia.org/w/api.php',
+		userAgent: 'https://github.com/siddharthvp/mwn (CI testing)'
 	});
 
 	it('ores (enwiki)', function () {
@@ -81,4 +82,24 @@ describe('supplementary functions', function () {
 			}
 		}, 500);
 	});
+
+	it('pageviews', async function () {
+		this.timeout(20000);
+		await bot.getSiteInfo();
+		let page = new bot.page('Albert Einstein');
+		let views = await page.pageViews();
+		expect(views).to.be.instanceOf(Array).of.length(1);
+		expect(views[0]).to.be.an('object').with.property('article').that.equals('Albert_Einstein');
+
+		views = await page.pageViews({
+			agent: 'user',
+			start: new bot.date('1 January 2021'),
+			end: new bot.date('5 March 2021')
+		});
+		expect(views).to.be.instanceOf(Array).of.length(2);
+		expect(views[0]).to.be.an('object').with.property('agent').that.equals('user');
+		expect(views[0]).to.be.an('object').with.property('timestamp').that.equals('2021010100');
+		expect(views[1]).to.be.an('object').with.property('timestamp').that.equals('2021020100');
+	});
+
 });

@@ -38,6 +38,23 @@ export type logprop =
 	| 'tags'
 	| 'userid';
 
+export interface PageViewOptions {
+	access?: 'all-access' | 'desktop' | 'mobile-app' | 'mobile-web';
+	agent?: 'all-agents' | 'user' | 'spider' | 'automated';
+	granularity?: 'daily' | 'monthly';
+	start?: Date;
+	end?: Date;
+}
+export interface PageViewData {
+	project: string;
+	article: string;
+	granularity: string;
+	timestamp: string;
+	access: string;
+	agent: string;
+	views: number;
+}
+
 export interface ApiPage {
 	pageid: number;
 	ns: number;
@@ -135,6 +152,7 @@ export interface MwnPage extends MwnTitle {
 		type?: string,
 		customOptions?: ApiQueryLogEventsParams,
 	): AsyncGenerator<LogEvent>;
+	pageViews(options?: PageViewOptions): Promise<PageViewData[]>;
 	edit(transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams): Promise<any>;
 	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>;
 	newSection(header: string, message: string, additionalParams?: ApiEditPageParams): Promise<any>;
@@ -546,6 +564,50 @@ export default function (bot: mwn): MwnPageStatic {
 					yield event;
 				}
 			}
+		}
+
+		/**
+		 * Get page views data (only for Wikimedia wikis)
+		 * @see https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews
+		 * @param options
+		 */
+		async pageViews(options: PageViewOptions = {}): Promise<PageViewData[]> {
+			let project = bot.options.apiUrl.match(/.*\/(.*?)\.(?:org|com|net)/)?.[1];
+			if (!project) {
+				throw new Error('Invalid API URL for using pageViews(). Only Wikimedia wikis are supported.');
+			}
+
+			// Set defaults
+			let { access, agent, granularity, start, end } = options;
+			access = access || 'all-access';
+			agent = agent || 'all-agents';
+			granularity = granularity || 'monthly';
+			if (granularity === 'daily') {
+				let date = new bot.date();
+				date.setUTCDate(date.getUTCDate() - 1);
+				start = start || date;
+				end = end || new bot.date();
+			} else if (granularity === 'monthly') {
+				let date = new bot.date();
+				date.setUTCDate(1);
+				date.setUTCMonth(date.getUTCMonth() - 1);
+				start = start || date;
+				end = end || new bot.date().setUTCDate(1);
+			}
+
+			let startString = new bot.date(start).format('YYYYMMDD'),
+				endString = new bot.date(end).format('YYYYMMDD');
+
+			return bot
+				.rawRequest({
+					url: `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${project}/${access}/${agent}/${this.toString()}/${granularity}/${startString}/${endString}`,
+					headers: {
+						'User-Agent': bot.options.userAgent,
+					},
+				})
+				.then((response) => {
+					return response.data.items;
+				});
 		}
 
 		/**** Post operations *****/
