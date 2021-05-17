@@ -1,4 +1,5 @@
 import type { mwn } from './bot';
+import { Unbinder } from './wikitext';
 
 /**
  * Wrapper around the native JS Date() for ease of
@@ -210,9 +211,7 @@ export default function (bot: mwn) {
 				Y: Y,
 			};
 
-			// as long as only unbind() and rebind() methods of bot.wikitext are used,
-			// there shouldn't be problems from not having called getSiteInfo() on the bot object
-			let unbinder = new bot.wikitext(formatstr); // escape stuff between [...]
+			let unbinder = new Unbinder(formatstr); // escape stuff between [...]
 			unbinder.unbind('\\[', '\\]');
 			unbinder.text = unbinder.text.replace(
 				/* Regex notes:
