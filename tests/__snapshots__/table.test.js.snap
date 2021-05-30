@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`table table 1`] = `
+"{| class=\\"wikitable sortable\\"
+|-
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | Header text
+|- 
+| Example
+| Example
+| Example
+|- 
+| Example
+| Example
+| Example
+|}"
+`;
+
+exports[`table table 2`] = `
+"{| class=\\"wikitable sortable\\"
+|-
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | Header text
+|- 
+| Example
+| Example Example
+| Example
+|- 
+| Example
+| Example Example
+| Example
+|}"
+`;
+
+exports[`table table 3`] = `
+"{| class=\\"wikitable sortable\\"
+|-
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | Header text
+! scope=\\"col\\" | New column
+|- 
+| Example
+| Example Example
+| c1
+| Example
+|- 
+| Example
+| Example Example
+| c2
+| Example
+|}"
+`;

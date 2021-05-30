@@ -13,8 +13,11 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type { mwn, MwnTitle } from './bot';
-import type { ApiParseParams } from './api_params';
+import type { mwn, MwnTitle } from '../bot';
+import type { ApiParseParams } from '../api_params';
+import { parseTable } from './table';
+
+export * from './table';
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;
@@ -390,83 +393,6 @@ function processTemplateText(
 	return template;
 }
 
-/** See {@link MwnWikitextStatic.parseTable} */
-export function parseTable(text: string): { [column: string]: string }[] {
-	text = text.trim();
-	const indexOfRawPipe = function (text: string) {
-		// number of unclosed brackets
-		let tlevel = 0,
-			llevel = 0;
-
-		let n = text.length;
-		for (let i = 0; i < n; i++) {
-			if (text[i] === '{' && text[i + 1] === '{') {
-				tlevel++;
-				i++;
-			} else if (text[i] === '[' && text[i + 1] === '[') {
-				llevel++;
-				i++;
-			} else if (text[i] === '}' && text[i + 1] === '}') {
-				tlevel--;
-				i++;
-			} else if (text[i] === ']' && text[i + 1] === ']') {
-				llevel--;
-				i++;
-			} else if (text[i] === '|' && tlevel === 0 && llevel === 0) {
-				return i;
-			}
-		}
-	};
-	if (!text.startsWith('{|') || !text.endsWith('|}')) {
-		throw new Error('failed to parse table. Unexpected starting or ending');
-	}
-	// remove front matter and final matter
-	// including table attributes and caption, and unnecessary |- at the top
-	text = text.replace(/^\{\|.*$((\n\|-)?\n\|\+.*$)?(\n\|-)?/m, '').replace(/^\|\}$/m, '');
-
-	let [header, ...rows] = text.split(/^\|-/m).map((r) => r.trim());
-
-	// remove cell attributes, extracts data
-	const extractData = (cell: string) => {
-		return cell.slice(indexOfRawPipe(cell) + 1).trim();
-	};
-
-	// XXX: handle the case where there are is no header row
-	let cols = header.split('\n').map((e) => e.replace(/^!/, ''));
-
-	if (cols.length === 1) {
-		// non-multilined table?
-		cols = cols[0].split('!!');
-	}
-	cols = cols.map(extractData);
-
-	let numcols = cols.length;
-
-	let output = new Array(rows.length);
-
-	rows.forEach((row, idx) => {
-		let cells = row.split(/^\|/m).slice(1); // slice(1) removes the emptiness or the row styles if present
-
-		if (cells.length === 1) {
-			// non-multilined
-			// cells are separated by ||
-			cells = cells[0].replace(/^\|/, '').split('||');
-		}
-
-		cells = cells.map(extractData);
-
-		if (cells.length !== numcols) {
-			throw new Error(`failed to parse table: found ${cells.length} cells on row ${idx}, expected ${numcols}`);
-		}
-
-		output[idx] = {}; // output[idx] represents a row
-		for (let i = 0; i < numcols; i++) {
-			output[idx][cols[i]] = cells[i];
-		}
-	});
-
-	return output;
-}
 
 /** See {@link MwnWikitext.parseSections} */
 export function parseSections(text: string): Section[] {
