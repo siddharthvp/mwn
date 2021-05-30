@@ -15,3 +15,5 @@ build/*
 docs/*
 .nyc_output/*
 coverage/*
+src/**/*.js
+*.js.map
