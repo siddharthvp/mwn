@@ -16,7 +16,7 @@
 const fs = require('fs');
 const { exec } = require('child_process');
 
-var packageJson = require('./package.json');
+var packageJson = require('../package.json');
 var versionNums = packageJson.version.split('.').map((n) => parseInt(n));
 
 switch (process.argv[2]) {

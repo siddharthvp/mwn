@@ -1,0 +1,5 @@
+{
+	"tsconfig": "./tsconfig.json",
+	"entryPoints": ["./src/bot.ts"],
+	"out": "./docs"
+}
