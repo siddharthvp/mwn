@@ -1,5 +1,5 @@
 import type { mwn } from './bot';
-import { Unbinder } from './wikitext';
+import { Unbinder } from './wikitext/index';
 
 /**
  * Wrapper around the native JS Date() for ease of
