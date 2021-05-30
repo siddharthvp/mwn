@@ -176,6 +176,11 @@ export class Template {
 	 */
 	name: string | number;
 
+	// Spacing around pipes, equals signs, end braces (defaults)
+	pipeStyle = ' |';
+	equalsStyle = '=';
+	endBracesStyle = '}}';
+
 	/**
 	 * @param {String} wikitext Wikitext of a template transclusion,
 	 * starting with '{{' and ending with '}}'.
@@ -348,6 +353,13 @@ function processTemplateText(
 	while (/(\[\[[^\]]*?)\|(.*?\]\])/g.test(text)) {
 		text = text.replace(/(\[\[[^\]]*?)\|(.*?\]\])/g, '$1\x01$2');
 	}
+
+	// Figure out most-used spacing styles for pipes/equals
+	template.pipeStyle = mostFrequent(text.match(/[\s\n]*\|[\s\n]*/g)) || ' |';
+	template.equalsStyle = mostFrequent(text.replace(/(=[^|]*)=+/g, '$1').match(/[\s\n]*=[\s\n]*/g)) || '=';
+	// Figure out end-braces style
+	const endSpacing = text.match(/[\s\n]*$/);
+	template.endBracesStyle = (endSpacing ? endSpacing[0] : '') + '}}';
 
 	const [name, ...parameterChunks] = text.split('|').map((chunk) => {
 		// change '\x01' control characters back to pipes
@@ -601,4 +613,26 @@ class Stack extends Array {
 
 function strReplaceAt(string: string, index: number, char: string): string {
 	return string.slice(0, index) + char + string.slice(index + 1);
+}
+
+/**
+ * Returns the most frequently occuring item within an array,
+ * e.g. `mostFrequent(["apple", "apple", "orange"])` returns `"apple"`
+ * @param array
+ * @returns item with the highest frequency
+ */
+// Attribution: https://github.com/wikimedia-gadgets/xfdcloser/blob/fec463806/xfdcloser-src/util.js#L440
+function mostFrequent(array: string[]): string | null {
+	if (!array || !Array.isArray(array) || array.length === 0) {
+		return null;
+	}
+	const map: Record<string, number> = {};
+	let mostFreq: string = null;
+	array.forEach((item: string) => {
+		map[item] = (map[item] || 0) + 1;
+		if (mostFreq === null || map[item] > map[mostFreq]) {
+			mostFreq = item;
+		}
+	});
+	return mostFreq;
 }
