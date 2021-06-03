@@ -58,6 +58,12 @@ describe('mwn', async function () {
 		});
 	});
 
+	it('does a query', function () {
+		return bot.query({}).then((result) => {
+			expect(result).to.deep.equal({batchcomplete: true});
+		});
+	});
+
 	it('parses a JSON page', async function () {
 		let jsonpage = await bot.parseJsonPage('Test JSONL page');
 		expect(jsonpage).to.be.a('object');

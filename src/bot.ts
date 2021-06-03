@@ -519,6 +519,10 @@ export class mwn {
 		);
 	}
 
+	async query(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<ApiResponse> {
+		return this.request(Object.assign({ action: 'query' }, params), customRequestOptions);
+	}
+
 	/************** CORE FUNCTIONS *******************/
 
 	/**
