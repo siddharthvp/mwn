@@ -1,7 +1,9 @@
 'use strict';
 
 const { sinon, bot, bot2, expect, setup, teardown } = require('./local_wiki');
-const { Request } = require('../build/core');
+const nock = require('nock');
+const { Request, Response } = require('../build/core');
+const utils = require('../build/utils');
 
 describe('testing for error recoveries', function () {
 	this.timeout(10000);
@@ -94,4 +96,59 @@ describe('testing for error recoveries', function () {
 				expect(response.result).to.equal('Success');
 			});
 	});
+
+	it('retries on maxlag errors', async function () {
+		const maxlagErrorBody = {
+			error: {
+				code: 'maxlag',
+				info: '6 seconds lagged',
+				lag: 6
+			}
+		};
+
+		mockApi(1, maxlagErrorBody, { 'Retry-After': '6' });
+		const retrySpy = sinon.spy(Response.prototype, 'retry');
+		const sleepStub = sinon.stub(utils, 'sleep');
+		sleepStub.resolves();
+
+		await bot.query({});
+		expect(retrySpy).to.have.been.called;
+		expect(sleepStub).to.have.been.calledOnceWith(6000);
+		sleepStub.resetHistory();
+		retrySpy.resetHistory();
+
+		mockApi(1, maxlagErrorBody); // without Retry-After header
+		await bot.query({});
+		expect(retrySpy).to.have.been.called;
+		expect(sleepStub).to.have.been.calledOnceWith(5000);
+		sleepStub.restore();
+		retrySpy.restore();
+	});
+
+	it('retries on readonly errors', async () => {
+		mockApi(1, {
+			error: {
+				code: 'readonly'
+			}
+		});
+		const retrySpy = sinon.spy(Response.prototype, 'retry');
+		const sleepStub = sinon.stub(utils, 'sleep');
+		sleepStub.resolves();
+		await bot.query({});
+		expect(retrySpy).to.have.been.called;
+		expect(sleepStub).to.have.been.calledWith(5000);
+		sleepStub.restore();
+		retrySpy.restore();
+	});
 });
+
+function mockApi(times, body, headers) {
+	nock('http://localhost:8080/api.php', { allowUnmocked: true })
+		.get(/.*?/)
+		.times(times)
+		.reply(
+			200,
+			body,
+			headers
+		);
+}
