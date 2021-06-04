@@ -28,7 +28,7 @@ describe('batch operations', function () {
 								resolve();
 								debug(`[S] resolved ${idx}`);
 							}
-						}, idx * 10);
+						}, 11);
 					});
 				},
 				7,
@@ -52,7 +52,7 @@ describe('batch operations', function () {
 								resolve();
 								debug(`[S] resolved ${idx}`);
 							}
-						}, idx * 10);
+						}, 11);
 					});
 				},
 				7,
@@ -77,7 +77,7 @@ describe('batch operations', function () {
 								resolve();
 								debug(`[S] resolved ${idx}`);
 							}
-						}, idx * 10);
+						}, 11);
 					});
 				},
 				7,
@@ -102,7 +102,7 @@ describe('batch operations', function () {
 								resolve();
 								debug(`[S] resolved ${idx}`);
 							}
-						}, idx * 10);
+						}, 11);
 					});
 				},
 				4,
@@ -126,7 +126,7 @@ describe('batch operations', function () {
 								resolve();
 								debug(`[S] resolved ${idx}`);
 							}
-						}, idx * 10);
+						}, 11);
 					});
 				},
 				3,
@@ -153,7 +153,7 @@ describe('batch operations', function () {
 								resolve();
 								debug(`[S] resolved ${idx}`);
 							}
-						}, idx * 10);
+						}, 11);
 					});
 				},
 				3,
