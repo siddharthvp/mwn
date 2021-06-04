@@ -2,7 +2,6 @@
 
 const { mwn } = require('..');
 const log = mwn.log;
-const crypto = require('crypto');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -23,4 +22,4 @@ function verifyTokenAndSiteInfo(bot) {
 	expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
 }
 
-module.exports = { mwn, log, crypto, expect, assert, sinon, verifyTokenAndSiteInfo };
+module.exports = { mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo };

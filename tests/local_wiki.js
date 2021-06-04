@@ -1,4 +1,4 @@
-const { mwn, log, crypto, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
+const { mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
 
 const baseConfig = {
 	silent: true,
@@ -28,4 +28,4 @@ async function setup() {
 async function teardown() {}
 
 // Export everything
-module.exports = { mwn, bot, bot2, log, crypto, expect, assert, sinon, setup, teardown };
+module.exports = { mwn, bot, bot2, log, expect, assert, sinon, setup, teardown };
