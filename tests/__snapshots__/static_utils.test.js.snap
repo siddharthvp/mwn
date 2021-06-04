@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`static utils table & wikitext.parseTable 1`] = `
+"{| class=\\"wikitable sortable\\"
+|-
+! scope=\\"col\\" class=\\"foobar\\" | Header1 text 
+! scope=\\"col\\" style=\\"width: 5em;\\" | Header2 text 
+! scope=\\"col\\" | Header3 text 
+|-
+| Example11 
+| Example12 
+| Example13 
+|-
+|  class=\\"sampleclass\\" | Example21 
+| Example22 
+| Example23 
+|}"
+`;
+
+exports[`static utils table & wikitext.parseTable 2`] = `
+"{| class=\\"plainlinks wikitable sortable\\"
+|-
+! Header text !! Header text !! Header text
+|-
+| Example || Example || Example
+|-
+| Example || Example || Example
+|}"
+`;
+
+exports[`static utils table & wikitext.parseTable 3`] = `
+"{| class=\\"plainlinks wikitable sortable\\"
+|-
+! Header text 
+! Header text 
+! Header text 
+|-
+| Example 
+|  class=\\"sampleclass\\" | Example21 
+| Example 
+|-
+| Example 
+| Example 
+| Example 
+|}"
+`;

@@ -107,21 +107,6 @@ describe('static utils', function () {
 			`{| style="text-align: center"\n|}`,
 		);
 
-		var expected3 = `{| class="wikitable sortable"
-|-
-! scope="col" class="foobar" | Header1 text 
-! scope="col" style="width: 5em;" | Header2 text 
-! scope="col" | Header3 text 
-|-
-| Example11 
-| Example12 
-| Example13 
-|-
-|  class="sampleclass" | Example21 
-| Example22 
-| Example23 
-|}`;
-
 		table = new mwn.table();
 		table.addHeaders([
 			{ label: 'Header1 text', class: 'foobar' },
@@ -130,7 +115,7 @@ describe('static utils', function () {
 		]);
 		table.addRow(['Example11', 'Example12', 'Example13']);
 		table.addRow([{ label: 'Example21', class: 'sampleclass' }, 'Example22', 'Example23']);
-		expect(table.getText()).to.equal(expected3);
+		expect(table.getText()).toMatchSnapshot();
 
 		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
 		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
@@ -138,20 +123,18 @@ describe('static utils', function () {
 			`{| style="text-align: center"\n|}`,
 		);
 
-		var expected4 = `{| class="plainlinks wikitable sortable"
-|-
-! Header text !! Header text !! Header text
-|-
-| Example || Example || Example
-|-
-| Example || Example || Example
-|}`;
-
 		table = new mwn.table({ multiline: false, classes: ['plainlinks'] });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', 'Example', 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
-		expect(table.getText()).to.equal(expected4);
+		expect(table.getText()).toMatchSnapshot();
+
+		// With multiline
+		table = new mwn.table({ classes: ['plainlinks'] });
+		table.addHeaders(['Header text', 'Header text', 'Header text']);
+		table.addRow(['Example', { label: 'Example21', class: 'sampleclass' }, 'Example']);
+		table.addRow(['Example', 'Example', 'Example']);
+		expect(table.getText()).toMatchSnapshot();
 	});
 
 	describe('mwn.util', function () {

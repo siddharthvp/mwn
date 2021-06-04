@@ -7,6 +7,8 @@ const crypto = require('crypto');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
+const { jestSnapshotPlugin } = require("mocha-chai-jest-snapshot");
+chai.use(jestSnapshotPlugin());
 const expect = chai.expect;
 const assert = require('assert');
 const sinon = require('sinon');
