@@ -6,8 +6,16 @@ const log = mwn.log;
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
+
+// Get CI working on node v10:
+// Yargs dependency of mocha-chai-jest-snapshot isn't supported on Node.js v10 and
+// throws an error when used, this hack prevents that, but only because of
+// https://github.com/yargs/yargs/blob/HEAD/lib/cjs.ts#L16
+process.env.YARGS_MIN_NODE_VERSION = '10';
+
 const { jestSnapshotPlugin } = require("mocha-chai-jest-snapshot");
 chai.use(jestSnapshotPlugin());
+
 const expect = chai.expect;
 const assert = require('assert');
 const sinon = require('sinon');
