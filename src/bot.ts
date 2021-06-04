@@ -43,6 +43,7 @@ import axios, { AxiosResponse } from 'axios';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
+
 axiosCookieJarSupport(axios);
 
 // Nested classes of mwn
@@ -120,6 +121,7 @@ export type ApiParams = {
 		| number
 		| number[]
 		| Date
+		| File
 		| {
 				stream: ReadableStream;
 				name: string;
@@ -468,7 +470,7 @@ export class mwn {
 	 * @param {Object} requestOptions
 	 * @returns {Promise}
 	 */
-	rawRequest(requestOptions: RawRequestParams): Promise<AxiosResponse> {
+	async rawRequest(requestOptions: RawRequestParams): Promise<AxiosResponse> {
 		if (!requestOptions.url) {
 			return rejectWithError({
 				code: 'mwn_nourl',
@@ -608,7 +610,7 @@ export class mwn {
 	 * Should not be used if authenticating via OAuth.
 	 * @returns {Promise<void>}
 	 */
-	logout(): Promise<void> {
+	async logout(): Promise<void> {
 		if (this.usingOAuth) {
 			throw new Error("Can't use logout() while using OAuth");
 		}
@@ -662,7 +664,7 @@ export class mwn {
 	 * @param [options]
 	 * @returns {Promise}
 	 */
-	userinfo(options: ApiQueryUserInfoParams = {}): Promise<any> {
+	async userinfo(options: ApiQueryUserInfoParams = {}): Promise<any> {
 		return this.request({
 			action: 'query',
 			meta: 'userinfo',
@@ -676,7 +678,7 @@ export class mwn {
 	 * where mwn needs to be used without logging in.
 	 * @returns {Promise<void>}
 	 */
-	getSiteInfo(): Promise<void> {
+	async getSiteInfo(): Promise<void> {
 		return this.request({
 			action: 'query',
 			meta: 'siteinfo',
@@ -690,7 +692,7 @@ export class mwn {
 	 * Get tokens and saves them in this.state
 	 * @returns {Promise<void>}
 	 */
-	getTokens(): Promise<void> {
+	async getTokens(): Promise<void> {
 		return this.getTokensAndSiteInfo();
 	}
 
@@ -1033,19 +1035,15 @@ export class mwn {
 		summary?: string,
 		options?: ApiEditPageParams,
 	): Promise<ApiEditResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'edit',
-					text: content,
-					summary: summary,
-					bot: true,
-					token: this.csrfToken,
-				},
-				makeTitle(title),
-				options,
-			),
-		).then((data) => data.edit);
+		return this.request({
+			action: 'edit',
+			...makeTitle(title),
+			text: content,
+			summary: summary,
+			bot: true,
+			token: this.csrfToken,
+			...options,
+		}).then((data) => data.edit);
 	}
 
 	/**
@@ -1059,20 +1057,16 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	create(title: string, content: string, summary?: string, options?: ApiEditPageParams): Promise<ApiEditResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'edit',
-					title: String(title),
-					text: content,
-					summary: summary,
-					createonly: true,
-					bot: true,
-					token: this.csrfToken,
-				},
-				options,
-			),
-		).then((data) => data.edit);
+		return this.request({
+			action: 'edit',
+			title: String(title),
+			text: content,
+			summary: summary,
+			createonly: true,
+			bot: true,
+			token: this.csrfToken,
+			...options,
+		}).then((data) => data.edit);
 	}
 
 	/**
@@ -1089,20 +1083,16 @@ export class mwn {
 		message: string,
 		additionalParams?: ApiEditPageParams,
 	): Promise<ApiEditResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'edit',
-					section: 'new',
-					summary: header,
-					text: message,
-					bot: true,
-					token: this.csrfToken,
-				},
-				makeTitle(title),
-				additionalParams,
-			),
-		).then((data) => data.edit);
+		return this.request({
+			action: 'edit',
+			...makeTitle(title),
+			section: 'new',
+			summary: header,
+			text: message,
+			bot: true,
+			token: this.csrfToken,
+			...additionalParams,
+		}).then((data) => data.edit);
 	}
 
 	/**
@@ -1114,17 +1104,13 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	delete(title: string | number, summary: string, options?: ApiDeleteParams): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'delete',
-					reason: summary,
-					token: this.csrfToken,
-				},
-				makeTitle(title),
-				options,
-			),
-		).then((data) => data.delete);
+		return this.request({
+			action: 'delete',
+			...makeTitle(title),
+			reason: summary,
+			token: this.csrfToken,
+			...options,
+		}).then((data) => data.delete);
 	}
 
 	/**
@@ -1137,17 +1123,13 @@ export class mwn {
 	 * @returns {Promise}
 	 */
 	undelete(title: string, summary: string, options?: ApiUndeleteParams): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'undelete',
-					title: String(title),
-					reason: summary,
-					token: this.csrfToken,
-				},
-				options,
-			),
-		).then((data) => data.undelete);
+		return this.request({
+			action: 'undelete',
+			title: String(title),
+			reason: summary,
+			token: this.csrfToken,
+			...options,
+		}).then((data) => data.undelete);
 	}
 
 	/**
@@ -1159,19 +1141,15 @@ export class mwn {
 	 * @param {object}  [options]
 	 */
 	move(fromtitle: string, totitle: string, summary: string, options?: ApiMoveParams): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'move',
-					from: fromtitle,
-					to: totitle,
-					reason: summary,
-					movetalk: true,
-					token: this.csrfToken,
-				},
-				options,
-			),
-		).then((data) => data.move);
+		return this.request({
+			action: 'move',
+			from: fromtitle,
+			to: totitle,
+			reason: summary,
+			movetalk: true,
+			token: this.csrfToken,
+			...options,
+		}).then((data) => data.move);
 	}
 
 	/**
@@ -1182,18 +1160,16 @@ export class mwn {
 	 *   redirects, sectionpreview.  prop should not be overridden.
 	 * @return {Promise<string>}
 	 */
-	parseWikitext(content: string, additionalParams?: ApiParseParams): Promise<string> {
-		return this.request(
-			merge(
-				{
-					text: String(content),
-					formatversion: 2,
-					action: 'parse',
-					contentmodel: 'wikitext',
-				},
-				additionalParams,
-			),
-		).then(function (data) {
+	async parseWikitext(content: string, additionalParams?: ApiParseParams): Promise<string> {
+		return this.request({
+			action: 'parse',
+			text: String(content),
+			contentmodel: 'wikitext',
+			disablelimitreport: true,
+			disableeditsection: true,
+			formatversion: 2,
+			...additionalParams,
+		}).then(function (data) {
 			return data.parse.text;
 		});
 	}
@@ -1206,18 +1182,14 @@ export class mwn {
 	 *   redirects, sectionpreview.  prop should not be overridden.
 	 * @return {Promise<string>}
 	 */
-	parseTitle(title: string, additionalParams?: ApiParseParams): Promise<string> {
-		return this.request(
-			merge(
-				{
-					page: String(title),
-					formatversion: 2,
-					action: 'parse',
-					contentmodel: 'wikitext',
-				},
-				additionalParams,
-			),
-		).then(function (data) {
+	async parseTitle(title: string, additionalParams?: ApiParseParams): Promise<string> {
+		return this.request({
+			page: String(title),
+			formatversion: 2,
+			action: 'parse',
+			contentmodel: 'wikitext',
+			...additionalParams,
+		}).then(function (data) {
 			return data.parse.text;
 		});
 	}
@@ -1231,7 +1203,7 @@ export class mwn {
 	 * @param {object} options
 	 * @returns {Promise<Object>}
 	 */
-	upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
+	async upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
 		return this.request(
 			{
 				action: 'upload',
@@ -1269,20 +1241,16 @@ export class mwn {
 	 * @param {Object} options
 	 * @returns {Promise<Object>}
 	 */
-	uploadFromUrl(url: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'upload',
-					url: url,
-					filename: title || path.basename(url),
-					text: text,
-					ignorewarnings: true,
-					token: this.csrfToken,
-				},
-				options,
-			),
-		).then((data) => {
+	async uploadFromUrl(url: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
+		return this.request({
+			action: 'upload',
+			url: url,
+			filename: title || path.basename(url),
+			text: text,
+			ignorewarnings: true,
+			token: this.csrfToken,
+			...options,
+		}).then((data) => {
 			if (data.upload.warnings) {
 				log('[W] The API returned warnings while uploading to ' + title + ':');
 				log(data.upload.warnings);
@@ -1301,17 +1269,13 @@ export class mwn {
 	 * defaults to current directory with same file name as on the wiki.
 	 * @returns {Promise<void>}
 	 */
-	download(file: string | number, localname: string): Promise<void> {
-		return this.request(
-			merge(
-				{
-					action: 'query',
-					prop: 'imageinfo',
-					iiprop: 'url',
-				},
-				makeTitles(file),
-			),
-		).then((data) => {
+	async download(file: string | number, localname: string): Promise<void> {
+		return this.request({
+			action: 'query',
+			...makeTitles(file),
+			prop: 'imageinfo',
+			iiprop: 'url',
+		}).then((data) => {
 			const url = data.query.pages[0].imageinfo[0].url;
 			const name = new this.title(data.query.pages[0].title).getMainText();
 			return this.downloadFromUrl(url, localname || name);
@@ -1325,7 +1289,7 @@ export class mwn {
 	 * defaults to current directory with same file name as that of the web image.
 	 * @returns {Promise<void>}
 	 */
-	downloadFromUrl(url: string, localname: string): Promise<void> {
+	async downloadFromUrl(url: string, localname: string): Promise<void> {
 		return this.rawRequest({
 			method: 'get',
 			url: url,
@@ -1343,11 +1307,11 @@ export class mwn {
 		});
 	}
 
-	saveOption(option: string, value: string) {
+	async saveOption(option: string, value: string) {
 		return this.saveOptions({ [option]: value });
 	}
 
-	saveOptions(options: Record<string, string>) {
+	async saveOptions(options: Record<string, string>) {
 		return this.request({
 			action: 'options',
 			change: Object.entries(options).map(([key, val]) => key + '=' + val),
@@ -1363,18 +1327,14 @@ export class mwn {
 	 * @param {Object} [params] Additional parameters
 	 * @return {Promise}
 	 */
-	rollback(page: string | number, user: string, params?: ApiRollbackParams): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'rollback',
-					user: user,
-					token: this.state.rollbacktoken,
-				},
-				makeTitle(page),
-				params,
-			),
-		).then((data) => {
+	async rollback(page: string | number, user: string, params?: ApiRollbackParams): Promise<ApiResponse> {
+		return this.request({
+			action: 'rollback',
+			...makeTitle(page),
+			user: user,
+			token: this.state.rollbacktoken,
+			...params,
+		}).then((data) => {
 			return data.rollback;
 		});
 	}
@@ -1386,16 +1346,12 @@ export class mwn {
 	 * @param {Object} options
 	 * @returns {Promise}
 	 */
-	purge(titles: string[] | string | number[] | number, options?: ApiPurgeParams): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'purge',
-				},
-				makeTitles(titles),
-				options,
-			),
-		).then((data) => data.purge);
+	async purge(titles: string[] | string | number[] | number, options?: ApiPurgeParams): Promise<ApiResponse> {
+		return this.request({
+			action: 'purge',
+			...makeTitles(titles),
+			...options,
+		}).then((data) => data.purge);
 	}
 
 	/**
@@ -1405,23 +1361,19 @@ export class mwn {
 	 *
 	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
 	 */
-	getPagesByPrefix(prefix: string, otherParams?: ApiQueryAllPagesParams): Promise<string[]> {
+	async getPagesByPrefix(prefix: string, otherParams?: ApiQueryAllPagesParams): Promise<string[]> {
 		const title = this.title.newFromText(prefix);
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
 		}
-		return this.request(
-			merge(
-				{
-					action: 'query',
-					list: 'allpages',
-					apprefix: title.title,
-					apnamespace: title.namespace,
-					aplimit: 'max',
-				},
-				otherParams,
-			),
-		).then((data) => {
+		return this.request({
+			action: 'query',
+			list: 'allpages',
+			apprefix: title.title,
+			apnamespace: title.namespace,
+			aplimit: 'max',
+			...otherParams,
+		}).then((data) => {
 			return data.query.allpages.map((pg: ApiPage) => pg.title);
 		});
 	}
@@ -1432,7 +1384,7 @@ export class mwn {
 	 * @param {Object} [otherParams]
 	 * @returns {Promise<string[]>}
 	 */
-	getPagesInCategory(category: string, otherParams?: ApiQueryCategoryMembersParams): Promise<string[]> {
+	async getPagesInCategory(category: string, otherParams?: ApiQueryCategoryMembersParams): Promise<string[]> {
 		const title = this.title.newFromText(category, 14);
 		return this.request({
 			action: 'query',
@@ -1454,10 +1406,10 @@ export class mwn {
 	 * @param {Object} otherParams
 	 * @returns {Promise<Object>}
 	 */
-	search(
+	async search(
 		searchTerm: string,
-		limit: number,
-		props: (
+		limit = 50,
+		props?: (
 			| 'size'
 			| 'timestamp'
 			| 'wordcount'
@@ -1471,18 +1423,14 @@ export class mwn {
 		)[],
 		otherParams?: ApiQuerySearchParams,
 	): Promise<ApiResponse> {
-		return this.request(
-			merge(
-				{
-					action: 'query',
-					list: 'search',
-					srsearch: searchTerm,
-					srlimit: limit,
-					srprop: props || 'size|wordcount|timestamp',
-				},
-				otherParams,
-			),
-		).then((data) => {
+		return this.request({
+			action: 'query',
+			list: 'search',
+			srsearch: searchTerm,
+			srlimit: limit,
+			srprop: props || ['size', 'wordcount', 'timestamp'],
+			...otherParams,
+		}).then((data) => {
 			return data.query.search;
 		});
 	}
