@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/classes/_bot_.mwn.html)**
+**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)**
 
 **Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
@@ -16,7 +16,8 @@ Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_ver
 
 Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
-Complete API documentation is available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html)** ([alternative link](https://mwn.toolforge.org/docs/classes/_bot_.mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
+Complete API documentation is available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)** ([alternative link](https://
+.org/docs/classes/_bot_.mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
 
 Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions are automatically retried.
 
@@ -350,9 +351,9 @@ Creating a page object opens up further possibilities:
 let page = new bot.page('Main Page');
 ```
 
-See [list of methods available on page object](https://mwn.toolforge.org/docs/interfaces/_page_.mwnpage.html).
+See [list of methods available on page object](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwnpage.html).
 
-[Files](https://mwn.toolforge.org/docs/interfaces/_file_.mwnfile.html#text) and [categories](https://mwn.toolforge.org/docs/interfaces/_category_.mwncategory.html) have their own subclasses that add a few additional methods.
+[Files](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwnfile.html) and [categories](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
 
 ### Working with titles
 
@@ -374,7 +375,7 @@ title = bot.title.newFromText('cateEogrY:living people'); // titles will be norm
 title.toText(); // 'Category:Living people'
 ```
 
-The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://mwn.toolforge.org/docs/interfaces/_title_.mwntitle.html).
+The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwntitle.html).
 
 ### Working with wikitext
 

@@ -292,42 +292,50 @@ export class mwn {
 	static util = util;
 
 	/**
-	 * Title class associated with the bot instance
+	 * Title class associated with the bot instance.
+	 * See {@link MwnTitle} interface for methods on title objects.
 	 */
 	title = MwnTitleFactory();
 
 	/**
-	 * Page class associated with the bot instance
+	 * Page class associated with the bot instance.
+	 * See {@link MwnPage} interface for methods on page objects.
 	 */
 	page = MwnPageFactory(this);
 
 	/**
-	 * Category class associated with the bot instance
+	 * Category class associated with the bot instance.
+	 * See {@link MwnCategory} interface for methods on category objects.
 	 */
 	category = MwnCategoryFactory(this);
 
 	/**
-	 * File class associated with the bot instance
+	 * File class associated with the bot instance.
+	 * See {@link MwnFile} interface for methods on file objects.
 	 */
 	file = MwnFileFactory(this);
 
 	/**
-	 * User class associated with the bot instance
+	 * User class associated with the bot instance.
+	 * See {@link MwnUser} interface for methods on user objects.
 	 */
 	user = MwnUserFactory(this);
 
 	/**
-	 * Wikitext class associated with the bot instance
+	 * Wikitext class associated with the bot instance.
+	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
 	wikitext = MwnWikitextFactory(this);
 
 	/**
-	 * Stream class associated with the bot instance
+	 * Stream class associated with the bot instance.
+	 * See {@link MwnStream} interface for methods on stream objects.
 	 */
 	stream = MwnStreamFactory(this);
 
 	/**
-	 * Date class associated with the bot instance
+	 * Date class associated with the bot instance.
+	 * See {@link MwnDate} interface for methods on date objects.
 	 */
 	date = MwnDateFactory(this);
 
