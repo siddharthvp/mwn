@@ -15,6 +15,69 @@ export type ApiEditResponse = {
 	newtimestamp: string;
 };
 
+export type ApiBlockResponse = ApiResponse;
+
+export type ApiUnblockResponse = ApiResponse;
+
+export type ApiEmailUserResponse = ApiResponse;
+
+export type ApiQueryUsersResponse = ApiResponse;
+
+export type ApiQueryGlobalUserInfoResponse = ApiResponse;
+
+export interface ApiParseResponse {
+	title: string;
+	pageid: number;
+	revid: number;
+	text: string;
+	langlinks: Array<{
+		lang: string; // language code
+		url: string;
+		langname: string;
+		autonym: string;
+		title: string;
+	}>;
+	categories: Array<{
+		sortkey: string;
+		category: string;
+		hidden?: true;
+	}>;
+	links: Array<{
+		ns: number;
+		title: string;
+		exists: boolean;
+	}>;
+	templates: Array<{
+		ns: number;
+		title: string;
+		exists: boolean;
+	}>;
+	images: string[];
+	externallinks: string[];
+	sections: Array<{
+		toclevel: number;
+		level: string; // int
+		line: string;
+		number: string; // int
+		index: string; // int
+		fromtitle: string;
+		byteoffset: number;
+		anchor: string;
+	}>;
+	parsewarnings: Array<any>;
+	displaytitle: string;
+	iwlinks: Array<{
+		prefix: string;
+		url: string;
+		title: string;
+	}>;
+	properties: {
+		notoc: '';
+		noindex: '';
+		[name: string]: string;
+	};
+}
+
 export type ApiSearchResult = {
 	ns: number;
 	title: string;

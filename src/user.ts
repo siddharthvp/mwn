@@ -9,7 +9,16 @@ import type {
 	ApiUnblockParams,
 } from './api_params';
 import { rejectWithError } from './error';
-import { LogEvent, UserContribution } from './api_response_types';
+import {
+	ApiBlockResponse,
+	ApiEditResponse,
+	ApiEmailUserResponse,
+	ApiQueryGlobalUserInfoResponse,
+	ApiQueryUsersResponse,
+	ApiUnblockResponse,
+	LogEvent,
+	UserContribution,
+} from './api_response_types';
 
 export interface MwnUserStatic {
 	new (username: string): MwnUser;
@@ -23,12 +32,12 @@ export interface MwnUser {
 	contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution>;
 	logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
 	logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>;
-	info(props?: ApiQueryUsersParams['usprop']): Promise<any>;
-	globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<any>;
-	sendMessage(header: string, message: string): Promise<any>;
-	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any>;
-	block(options: ApiBlockParams): Promise<any>;
-	unblock(options: ApiUnblockParams): Promise<any>;
+	info(props?: ApiQueryUsersParams['usprop']): Promise<ApiQueryUsersResponse>;
+	globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse>;
+	sendMessage(header: string, message: string): Promise<ApiEditResponse>;
+	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<ApiEmailUserResponse>;
+	block(options: ApiBlockParams): Promise<ApiBlockResponse>;
+	unblock(options: ApiUnblockParams): Promise<ApiUnblockResponse>;
 }
 
 export default function (bot: mwn) {
@@ -142,7 +151,7 @@ export default function (bot: mwn) {
 		 * Get global user info for wikis with CentralAuth
 		 * @param {string|string[]} props
 		 */
-		globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<any> {
+		globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse> {
 			return bot
 				.request({
 					action: 'query',
@@ -161,14 +170,14 @@ export default function (bot: mwn) {
 		 * @param {string} message
 		 * @returns {Promise}
 		 */
-		sendMessage(header: string, message: string) {
+		sendMessage(header: string, message: string): Promise<ApiEditResponse> {
 			return this.talkpage.newSection(header, message);
 		}
 
 		/**
 		 * Send the user an email
 		 */
-		email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any> {
+		email(subject: string, message: string, options?: ApiEmailUserParams): Promise<ApiEmailUserResponse> {
 			return bot
 				.request({
 					action: 'emailuser',
@@ -197,7 +206,7 @@ export default function (bot: mwn) {
 		 * Block the user
 		 * @param {Object} options - additional API options
 		 */
-		block(options: ApiBlockParams): Promise<any> {
+		block(options: ApiBlockParams): Promise<ApiBlockResponse> {
 			return bot
 				.request({
 					action: 'block',
@@ -212,7 +221,7 @@ export default function (bot: mwn) {
 		 * Unblock the user
 		 * @param {Object} options - additional API options
 		 */
-		unblock(options: ApiUnblockParams): Promise<any> {
+		unblock(options: ApiUnblockParams): Promise<ApiUnblockResponse> {
 			return bot
 				.request({
 					action: 'unblock',

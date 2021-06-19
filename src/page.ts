@@ -12,34 +12,7 @@ import type {
 	ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams,
 } from './api_params';
-import { ApiPage, ApiRevision, LogEvent } from './api_response_types';
-
-export interface PageViewOptions {
-	access?: 'all-access' | 'desktop' | 'mobile-app' | 'mobile-web';
-	agent?: 'all-agents' | 'user' | 'spider' | 'automated';
-	granularity?: 'daily' | 'monthly';
-	start?: Date;
-	end?: Date;
-}
-export interface PageViewData {
-	project: string;
-	article: string;
-	granularity: string;
-	timestamp: string;
-	access: string;
-	agent: string;
-	views: number;
-}
-
-export interface AuthorshipData {
-	totalBytes: number;
-	users: Array<{
-		id: number;
-		name: string;
-		bytes: number;
-		percent: number;
-	}>;
-}
+import { ApiPage, ApiParseResponse, ApiRevision, LogEvent } from './api_response_types';
 
 export interface MwnPageStatic {
 	new (title: MwnTitle | string, namespace?: number): MwnPage;
@@ -50,27 +23,9 @@ export interface MwnPage extends MwnTitle {
 	getTalkPage(): MwnPage;
 	getSubjectPage(): MwnPage;
 	text(): Promise<string>;
-	categories(): Promise<
-		{
-			sortkey: string;
-			category: string;
-			hidden: boolean;
-		}[]
-	>;
-	templates(): Promise<
-		{
-			ns: number;
-			title: string;
-			exists: boolean;
-		}[]
-	>;
-	links(): Promise<
-		{
-			ns: number;
-			title: string;
-			exists: boolean;
-		}[]
-	>;
+	categories(): Promise<ApiParseResponse['categories']>;
+	templates(): Promise<ApiParseResponse['templates']>;
+	links(): Promise<ApiParseResponse['links']>;
 	backlinks(): Promise<string[]>;
 	transclusions(): Promise<string[]>;
 	images(): Promise<string[]>;
@@ -163,7 +118,7 @@ export default function (bot: mwn): MwnPageStatic {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { sortkey: '...', category: '...', hidden: true }
 		 */
-		categories(): Promise<{ sortkey: string; category: string; hidden: boolean }[]> {
+		categories(): Promise<ApiParseResponse['categories']> {
 			return bot
 				.request({
 					action: 'parse',
@@ -178,7 +133,7 @@ export default function (bot: mwn): MwnPageStatic {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { ns: 10, title: 'Template:Cite web', exists: true }
 		 */
-		templates(): Promise<{ ns: number; title: string; exists: boolean }[]> {
+		templates(): Promise<ApiParseResponse['templates']> {
 			return bot
 				.request({
 					action: 'parse',
@@ -193,7 +148,7 @@ export default function (bot: mwn): MwnPageStatic {
 		 * @returns {Promise<Object[]>} Resolved with array of objects like
 		 * { ns: 0, title: 'Main Page', exists: true }
 		 */
-		links(): Promise<{ ns: number; title: string; exists: boolean }[]> {
+		links(): Promise<ApiParseResponse['links']> {
 			return bot
 				.request({
 					action: 'parse',
@@ -685,4 +640,31 @@ export default function (bot: mwn): MwnPageStatic {
 	}
 
 	return Page as MwnPageStatic;
+}
+
+export interface PageViewOptions {
+	access?: 'all-access' | 'desktop' | 'mobile-app' | 'mobile-web';
+	agent?: 'all-agents' | 'user' | 'spider' | 'automated';
+	granularity?: 'daily' | 'monthly';
+	start?: Date;
+	end?: Date;
+}
+export interface PageViewData {
+	project: string;
+	article: string;
+	granularity: string;
+	timestamp: string;
+	access: string;
+	agent: string;
+	views: number;
+}
+
+export interface AuthorshipData {
+	totalBytes: number;
+	users: Array<{
+		id: number;
+		name: string;
+		bytes: number;
+		percent: number;
+	}>;
 }
