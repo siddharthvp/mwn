@@ -12,31 +12,7 @@ import type {
 	ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams,
 } from './api_params';
-import type { LogEvent } from './user';
-
-export type revisionprop =
-	| 'content'
-	| 'timestamp'
-	| 'user'
-	| 'comment'
-	| 'parsedcomment'
-	| 'ids'
-	| 'flags'
-	| 'size'
-	| 'tags'
-	| 'userid'
-	| 'contentmodel';
-export type logprop =
-	| 'type'
-	| 'user'
-	| 'comment'
-	| 'details'
-	| 'timestamp'
-	| 'title'
-	| 'parsedcomment'
-	| 'ids'
-	| 'tags'
-	| 'userid';
+import { ApiPage, ApiRevision, LogEvent } from './api_response_types';
 
 export interface PageViewOptions {
 	access?: 'all-access' | 'desktop' | 'mobile-app' | 'mobile-web';
@@ -63,43 +39,6 @@ export interface AuthorshipData {
 		bytes: number;
 		percent: number;
 	}>;
-}
-
-export interface ApiPage {
-	pageid: number;
-	ns: number;
-	title: string;
-	missing?: true;
-	invalid?: true;
-	revisions?: ApiRevision[];
-}
-
-// If rvslots is not used revisions slot info is part of revision object
-export interface ApiRevision extends ApiRevisionSlot {
-	revid?: number;
-	parentid?: number;
-	minor?: boolean;
-	userhidden?: true;
-	anon?: true;
-	user?: string;
-	userid?: number;
-	timestamp?: string;
-	roles?: string[];
-	commenthidden?: true;
-	comment?: string;
-	parsedcomment?: string;
-	slots?: {
-		main: ApiRevisionSlot;
-		[slotname: string]: ApiRevisionSlot;
-	};
-}
-
-export interface ApiRevisionSlot {
-	size?: number;
-	sha1?: string;
-	contentmodel?: string;
-	contentformat?: string;
-	content?: string;
 }
 
 export interface MwnPageStatic {
@@ -143,22 +82,22 @@ export interface MwnPage extends MwnTitle {
 	getDeletingAdmin(): Promise<string>;
 	getDescription(customOptions?: any): Promise<string>;
 	history(
-		props: revisionprop[] | revisionprop,
+		props: ApiQueryRevisionsParams['rvprop'],
 		limit: number,
 		customOptions?: ApiQueryRevisionsParams,
 	): Promise<ApiRevision[]>;
 	historyGen(
-		props: revisionprop[] | revisionprop,
+		props: ApiQueryRevisionsParams['rvprop'],
 		customOptions?: ApiQueryRevisionsParams,
 	): AsyncGenerator<ApiRevision>;
 	logs(
-		props: logprop | logprop[],
+		props: ApiQueryLogEventsParams['leprop'],
 		limit?: number,
 		type?: string,
 		customOptions?: ApiQueryLogEventsParams,
 	): Promise<LogEvent[]>;
 	logsGen(
-		props: logprop | logprop[],
+		props: ApiQueryLogEventsParams['leprop'],
 		type?: string,
 		customOptions?: ApiQueryLogEventsParams,
 	): AsyncGenerator<LogEvent>;
@@ -466,7 +405,7 @@ export default function (bot: mwn): MwnPageStatic {
 
 		/**
 		 * Get the edit history of the page
-		 * @param {revisionprop[]} props - revision properties to fetch, by default content is
+		 * @param {string|string[]} props - revision properties to fetch, by default content is
 		 * excluded
 		 * @param {number} [limit=50] - number of revisions to fetch data about
 		 * @param {Object} customOptions - custom API options
@@ -475,7 +414,7 @@ export default function (bot: mwn): MwnPageStatic {
 		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
 		 */
 		history(
-			props: revisionprop[] | revisionprop,
+			props: ApiQueryRevisionsParams['rvprop'],
 			limit = 50,
 			customOptions?: ApiQueryRevisionsParams,
 		): Promise<ApiRevision[]> {
@@ -498,7 +437,7 @@ export default function (bot: mwn): MwnPageStatic {
 		}
 
 		async *historyGen(
-			props: revisionprop[] | revisionprop,
+			props: ApiQueryRevisionsParams['rvprop'],
 			customOptions?: ApiQueryRevisionsParams,
 		): AsyncGenerator<ApiRevision> {
 			let continuedQuery = bot.continuedQueryGen({
@@ -518,7 +457,7 @@ export default function (bot: mwn): MwnPageStatic {
 
 		/**
 		 * Get the page logs.
-		 * @param {logprop[]} props - data about log entries to fetch
+		 * @param {string|string[]} props - data about log entries to fetch
 		 * @param {number} limit - max number of log entries to fetch
 		 * @param {string} type - type of log to fetch, can either be an letype or leaction
 		 * Leave undefined (or null) to fetch all log types
@@ -528,7 +467,7 @@ export default function (bot: mwn): MwnPageStatic {
 		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
 		 */
 		logs(
-			props: logprop | logprop[],
+			props: ApiQueryLogEventsParams['leprop'],
 			limit?: number,
 			type?: string,
 			customOptions?: ApiQueryLogEventsParams,
@@ -553,7 +492,7 @@ export default function (bot: mwn): MwnPageStatic {
 		}
 
 		async *logsGen(
-			props: logprop | logprop[],
+			props: ApiQueryLogEventsParams['leprop'],
 			type?: string,
 			customOptions?: ApiQueryLogEventsParams,
 		): AsyncGenerator<LogEvent> {

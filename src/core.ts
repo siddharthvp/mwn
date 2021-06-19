@@ -8,10 +8,11 @@ import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import * as formData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
 
-import type { mwn, ApiParams, ApiResponse } from './bot';
+import type { mwn, ApiParams } from './bot';
 import { log } from './log';
 import { rejectWithError } from './error';
 import { merge, mergeDeep1, sleep } from './utils';
+import { ApiResponse } from './api_response_types';
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number;

@@ -2,11 +2,14 @@ import type { mwn, MwnPage } from './bot';
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
+	ApiQueryGlobalUserInfoParams,
 	ApiQueryLogEventsParams,
 	ApiQueryUserContribsParams,
+	ApiQueryUsersParams,
 	ApiUnblockParams,
 } from './api_params';
 import { rejectWithError } from './error';
+import { LogEvent, UserContribution } from './api_response_types';
 
 export interface MwnUserStatic {
 	new (username: string): MwnUser;
@@ -20,43 +23,13 @@ export interface MwnUser {
 	contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution>;
 	logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
 	logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>;
-	info(props?: string | string[]): Promise<any>;
-	globalinfo(props?: ('groups' | 'rights' | 'merged' | 'unattached' | 'editcount')[]): Promise<any>;
+	info(props?: ApiQueryUsersParams['usprop']): Promise<any>;
+	globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<any>;
 	sendMessage(header: string, message: string): Promise<any>;
 	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<any>;
 	block(options: ApiBlockParams): Promise<any>;
 	unblock(options: ApiUnblockParams): Promise<any>;
 }
-
-export type UserContribution = {
-	userid: number;
-	user: string;
-	pageid: number;
-	revid: number;
-	parentid: number;
-	ns: number;
-	title: string;
-	timestamp: string;
-	new: boolean;
-	minor: boolean;
-	top: boolean;
-	comment: string;
-	size: number;
-};
-
-export type LogEvent = {
-	logid: number;
-	ns: number;
-	title: string;
-	pageid: number;
-	logpage: number;
-	params: any;
-	type: string;
-	action: string;
-	user: string;
-	timestamp: string;
-	comment: string;
-};
 
 export default function (bot: mwn) {
 	class User implements MwnUser {
@@ -148,10 +121,10 @@ export default function (bot: mwn) {
 
 		/**
 		 * Get public information about the user
-		 * @param {Array} props - properties to fetch
+		 * @param {string|string[]} props - properties to fetch
 		 * @returns {Promise<Object>}
 		 */
-		info(props?: string | string[]): Promise<any> {
+		info(props?: ApiQueryUsersParams['usprop']): Promise<any> {
 			return bot
 				.request({
 					action: 'query',
@@ -167,9 +140,9 @@ export default function (bot: mwn) {
 
 		/**
 		 * Get global user info for wikis with CentralAuth
-		 * @param {("groups"|"rights"|"merged"|"unattached"|"editcount")[]} props
+		 * @param {string|string[]} props
 		 */
-		globalinfo(props?: ('groups' | 'rights' | 'merged' | 'unattached' | 'editcount')[]): Promise<any> {
+		globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<any> {
 			return bot
 				.request({
 					action: 'query',

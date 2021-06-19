@@ -44,26 +44,20 @@ import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
 
-axiosCookieJarSupport(axios);
-
 // Nested classes of mwn
 import MwnDateFactory, { MwnDate } from './date';
 import MwnTitleFactory, { MwnTitle, siteinfoqueryResponse } from './title';
-import MwnPageFactory, { MwnPage, ApiPage, ApiRevision } from './page';
+import MwnPageFactory, { MwnPage } from './page';
 import MwnWikitextFactory, { MwnWikitext } from './wikitext';
 import MwnUserFactory, { MwnUser } from './user';
 import MwnCategoryFactory, { MwnCategory } from './category';
 import MwnFileFactory, { MwnFile } from './file';
 import MwnStreamFactory, { MwnStream } from './eventstream';
-
-// Export them too
-export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
-
-import { Request, Response, RawRequestParams } from './core';
+import { RawRequestParams, Request, Response } from './core';
 import { log, updateLoggingConfig } from './log';
 import { MwnError, rejectWithError, rejectWithErrorCode } from './error';
-import { link, template, table, util } from './static_utils';
-import { ispromise, merge, mergeDeep1, arrayChunk, sleep, makeTitle, makeTitles } from './utils';
+import { link, table, template, util } from './static_utils';
+import { arrayChunk, ispromise, makeTitle, makeTitles, merge, mergeDeep1, sleep } from './utils';
 
 import type {
 	ApiDeleteParams,
@@ -80,6 +74,11 @@ import type {
 	ApiUndeleteParams,
 	ApiUploadParams,
 } from './api_params';
+import { ApiEditResponse, ApiPage, ApiResponse, ApiRevision, ApiSearchResult } from './api_response_types';
+
+axiosCookieJarSupport(axios);
+
+export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
 
 export interface MwnOptions {
 	silent?: boolean;
@@ -126,39 +125,6 @@ export type ApiParams = {
 				stream: ReadableStream;
 				name: string;
 		  };
-};
-
-export interface ApiResponse {
-	query?: Record<string, any>;
-	[prop: string]: any;
-}
-
-type ApiEditResponse = {
-	// fix
-	result: string;
-	pageid: number;
-	title: string;
-	contentmodel: string;
-	nochange?: boolean;
-	oldrevid: number;
-	newrevid: number;
-	newtimestamp: string;
-};
-
-type ApiSearchResult = {
-	ns: number;
-	title: string;
-	pageid: number;
-	size: number;
-	wordcount: number;
-	snippet: string;
-	timestamp: string;
-	isfilematch: boolean;
-	titlesnippet: string;
-	categorysnippet: string;
-	sectionsnippet?: string;
-	redirecttitle?: string;
-	redirectsnippet?: string;
 };
 
 export class mwn {
