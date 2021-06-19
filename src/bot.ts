@@ -145,6 +145,22 @@ type ApiEditResponse = {
 	newtimestamp: string;
 };
 
+type ApiSearchResult = {
+	ns: number;
+	title: string;
+	pageid: number;
+	size: number;
+	wordcount: number;
+	snippet: string;
+	timestamp: string;
+	isfilematch: boolean;
+	titlesnippet: string;
+	categorysnippet: string;
+	sectionsnippet?: string;
+	redirecttitle?: string;
+	redirectsnippet?: string;
+};
+
 export class mwn {
 	/**
 	 * Bot instance Login State
@@ -1421,20 +1437,9 @@ export class mwn {
 	async search(
 		searchTerm: string,
 		limit = 50,
-		props?: (
-			| 'size'
-			| 'timestamp'
-			| 'wordcount'
-			| 'snippet'
-			| 'redirectitle'
-			| 'sectiontitle'
-			| 'redirectsnippet'
-			| 'titlesnippet'
-			| 'sectionsnippet'
-			| 'categorysnippet'
-		)[],
+		props?: ApiQuerySearchParams['srprop'],
 		otherParams?: ApiQuerySearchParams,
-	): Promise<ApiResponse> {
+	): Promise<ApiSearchResult[]> {
 		return this.request({
 			action: 'query',
 			list: 'search',
