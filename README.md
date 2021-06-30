@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)**
+**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/classes/mwn.html)**
 
 **Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
@@ -16,8 +16,7 @@ Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_ver
 
 Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
-Complete API documentation is available **[here](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)** ([alternative link](https://
-.org/docs/classes/_bot_.mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
+Complete API documentation is available **[here](https://mwn.toolforge.org/docs/classes/mwn.html)** ([alternative link](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
 
 Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions are automatically retried.
 
@@ -42,7 +41,7 @@ npm run build   # generate JS files from TS. The type errors raised can be ignor
 
 Mwn is written in TypeScript v4. The repository contains JavaScript files compiled to CommonJS module system for ES2018 target, which corresponds to Node 10.x.
 
-If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. You can install a more recent version of node to your home directory, using:
+If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. You can install a more recent version of node to your home directory using a version manager like [nvm](https://github.com/nvm-sh/nvm) or [n](http://npmjs.com/package/n). Like:
 
 ```sh
 npm install n				# install a node package manager
@@ -108,19 +107,16 @@ Every method with a name that ends in `Gen` is an async generator.
 
 ```js
 bot.enableEmergencyShutoff({
-	page: 'User:ExampleBot/shutoff', // The name of the page to check
-	intervalDuration: 5000, // check shutoff page every 5 seconds
+	page: 'User:ExampleBot/shutoff', 		// The name of the page to check
+	intervalDuration: 5000, 				// check shutoff page every 5 seconds
 	condition: function (pagetext) {
-		// function to determine whether the bot should continue to run or not
-		if (pagetext !== 'running') {
-			// Example implementation: if some one changes the text to something
-			return false; // other than "running", let's decide to stop!
-		} else return true;
+		if (pagetext !== 'running') {		// function to determine whether the bot should continue to run or not
+			return false;					// Example implementation: if some one changes the text to something
+		} else return true;					// other than "running", let's decide to stop!
 	},
-	onShutoff: function (pagetext) {
-		// function to trigger when shutoff is activated
-		process.exit(); // let's just exit, though we could also terminate
-	} // any open connections, close files, etc.
+	onShutoff: function (pagetext) {		// function to trigger when shutoff is activated
+		process.exit(); 					// let's just exit, though we could also terminate
+	} 										// any open connections, close files, etc.
 });
 ```
 
@@ -225,9 +221,9 @@ The bot options can also be set using `setOptions` rather than through the const
 
 ```js
 bot.setOptions({
-	silent: false, // suppress messages (except error messages)
-	retryPause: 5000, // pause for 5000 milliseconds (5 seconds) on maxlag error.
-	maxRetries: 3 // attempt to retry a failing requests upto 3 times
+	silent: false, 		// suppress messages (except error messages)
+	retryPause: 5000, 	// pause for 5000 milliseconds (5 seconds) on maxlag error.
+	maxRetries: 3 		// attempt to retry a failing requests upto 3 times
 });
 ```
 
@@ -351,9 +347,9 @@ Creating a page object opens up further possibilities:
 let page = new bot.page('Main Page');
 ```
 
-See [list of methods available on page object](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwnpage.html).
+See [list of methods available on page object](https://mwn.toolforge.org/docs/interfaces/mwnpage.html).
 
-[Files](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwnfile.html) and [categories](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
+[Files](https://mwn.toolforge.org/docs/interfaces/mwnfile.html) and [categories](https://mwn.toolforge.org/docs/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
 
 ### Working with titles
 
@@ -375,7 +371,7 @@ title = bot.title.newFromText('cateEogrY:living people'); // titles will be norm
 title.toText(); // 'Category:Living people'
 ```
 
-The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://tools-static.wmflabs.org/mwn/docs/interfaces/mwntitle.html).
+The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://mwn.toolforge.org/docs/interfaces/mwntitle.html).
 
 ### Working with wikitext
 
