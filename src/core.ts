@@ -4,7 +4,8 @@
  * the Request and Response classes defined in this file.
  */
 
-import type { AxiosResponse, AxiosRequestConfig } from 'axios';
+import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
+import axiosCookieJarSupport from 'axios-cookiejar-support';
 import * as formData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
 
@@ -13,6 +14,8 @@ import { log } from './log';
 import { rejectWithError } from './error';
 import { merge, mergeDeep1, sleep } from './utils';
 import { ApiResponse } from './api_response_types';
+
+axiosCookieJarSupport(axios);
 
 export interface RawRequestParams extends AxiosRequestConfig {
 	retryNumber?: number;

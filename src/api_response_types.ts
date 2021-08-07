@@ -9,11 +9,24 @@ export type ApiEditResponse = {
 	pageid: number;
 	title: string;
 	contentmodel: string;
-	nochange?: boolean;
+	nochange?: true;
 	oldrevid: number;
 	newrevid: number;
 	newtimestamp: string;
 };
+
+// TODO: make these more specific
+export type ApiMoveResponse = ApiResponse;
+
+export type ApiDeleteResponse = ApiResponse;
+
+export type ApiUndeleteResponse = ApiResponse;
+
+export type ApiProtectResponse = ApiResponse;
+
+export type ApiUploadResponse = ApiResponse;
+
+export type ApiRollbackResponse = ApiResponse;
 
 export type ApiBlockResponse = ApiResponse;
 
@@ -124,7 +137,6 @@ export type LogEvent = {
 	comment: string;
 };
 
-// If rvslots is not used revisions slot info is part of revision object
 export interface ApiPage {
 	pageid: number;
 	ns: number;
@@ -134,6 +146,7 @@ export interface ApiPage {
 	revisions?: ApiRevision[];
 }
 
+// If rvslots is not used revisions slot info is part of revision object
 export interface ApiRevision extends ApiRevisionSlot {
 	revid?: number;
 	parentid?: number;

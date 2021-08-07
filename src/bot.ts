@@ -42,7 +42,6 @@ import * as https from 'https';
 import axios, { AxiosResponse } from 'axios';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
-import axiosCookieJarSupport from 'axios-cookiejar-support';
 
 // Nested classes of mwn
 import MwnDateFactory, { MwnDate } from './date';
@@ -74,9 +73,18 @@ import type {
 	ApiUndeleteParams,
 	ApiUploadParams,
 } from './api_params';
-import { ApiEditResponse, ApiPage, ApiResponse, ApiRevision, ApiSearchResult } from './api_response_types';
-
-axiosCookieJarSupport(axios);
+import {
+	ApiDeleteResponse,
+	ApiEditResponse,
+	ApiMoveResponse,
+	ApiPage,
+	ApiResponse,
+	ApiRevision,
+	ApiRollbackResponse,
+	ApiSearchResult,
+	ApiUndeleteResponse,
+	ApiUploadResponse,
+} from './api_response_types';
 
 export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
 
@@ -696,7 +704,7 @@ export class mwn {
 	 * This is only compatible with MW >= 1.24
 	 * @returns {Promise<string>}
 	 */
-	getCsrfToken(): Promise<string> {
+	async getCsrfToken(): Promise<string> {
 		return this.getTokens().then(() => this.csrfToken);
 	}
 
@@ -704,7 +712,7 @@ export class mwn {
 	 * Get the tokens and siteinfo in one request
 	 * @returns {Promise<void>}
 	 */
-	getTokensAndSiteInfo(): Promise<void> {
+	async getTokensAndSiteInfo(): Promise<void> {
 		return this.request({
 			action: 'query',
 			meta: 'tokens|siteinfo|userinfo',
@@ -734,7 +742,7 @@ export class mwn {
 	 * @param {string} action - API action parameter
 	 * @returns {Promise<string>}
 	 */
-	getTokenType(action: string): Promise<string> {
+	async getTokenType(action: string): Promise<string> {
 		return this.request({
 			action: 'paraminfo',
 			modules: action,
@@ -750,7 +758,7 @@ export class mwn {
 	 * @param [loginOptions]
 	 * @returns {Promise<void>}
 	 */
-	loginGetToken(loginOptions?: MwnOptions): Promise<void> {
+	async loginGetToken(loginOptions?: MwnOptions): Promise<void> {
 		return this.login(loginOptions).then();
 	}
 
@@ -758,7 +766,7 @@ export class mwn {
 	 * Get the wiki's server time
 	 * @returns {Promise<string>}
 	 */
-	getServerTime(): Promise<string> {
+	async getServerTime(): Promise<string> {
 		return this.request({
 			action: 'query',
 			curtimestamp: true,
@@ -772,7 +780,7 @@ export class mwn {
 	 * @param {string} title - page title
 	 * @returns {Promise<Object>} parsed JSON object
 	 */
-	parseJsonPage(title: string): Promise<any> {
+	async parseJsonPage(title: string): Promise<any> {
 		return this.read(title).then((data) => {
 			try {
 				return JSON.parse(data.revisions[0].content);
@@ -787,7 +795,7 @@ export class mwn {
 	 * @param messages
 	 * @param options
 	 */
-	getMessages(messages: string | string[], options: ApiQueryAllMessagesParams = {}) {
+	async getMessages(messages: string | string[], options: ApiQueryAllMessagesParams = {}) {
 		return this.request({
 			action: 'query',
 			meta: 'allmessages',
@@ -925,7 +933,7 @@ export class mwn {
 	 * per-page exclusion compliance.
 	 * @return {Promise<Object>} Edit API response
 	 */
-	edit(
+	async edit(
 		title: string | number,
 		transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams,
 		editConfig?: editConfigType,
@@ -1023,7 +1031,7 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	save(
+	async save(
 		title: string | number,
 		content: string,
 		summary?: string,
@@ -1050,7 +1058,12 @@ export class mwn {
 	 *
 	 * @returns {Promise}
 	 */
-	create(title: string, content: string, summary?: string, options?: ApiEditPageParams): Promise<ApiEditResponse> {
+	async create(
+		title: string,
+		content: string,
+		summary?: string,
+		options?: ApiEditPageParams,
+	): Promise<ApiEditResponse> {
 		return this.request({
 			action: 'edit',
 			title: String(title),
@@ -1071,7 +1084,7 @@ export class mwn {
 	 * @param {string} message wikitext message
 	 * @param {Object} [additionalParams] Additional API parameters, e.g. `{ redirect: true }`
 	 */
-	newSection(
+	async newSection(
 		title: string | number,
 		header: string,
 		message: string,
@@ -1097,7 +1110,7 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	delete(title: string | number, summary: string, options?: ApiDeleteParams): Promise<ApiResponse> {
+	async delete(title: string | number, summary: string, options?: ApiDeleteParams): Promise<ApiDeleteResponse> {
 		return this.request({
 			action: 'delete',
 			...makeTitle(title),
@@ -1116,7 +1129,7 @@ export class mwn {
 	 * @param {object}  [options]
 	 * @returns {Promise}
 	 */
-	undelete(title: string, summary: string, options?: ApiUndeleteParams): Promise<ApiResponse> {
+	async undelete(title: string, summary: string, options?: ApiUndeleteParams): Promise<ApiUndeleteResponse> {
 		return this.request({
 			action: 'undelete',
 			title: String(title),
@@ -1134,7 +1147,7 @@ export class mwn {
 	 * @param {string}  [summary]
 	 * @param {object}  [options]
 	 */
-	move(fromtitle: string, totitle: string, summary: string, options?: ApiMoveParams): Promise<ApiResponse> {
+	async move(fromtitle: string, totitle: string, summary: string, options?: ApiMoveParams): Promise<ApiMoveResponse> {
 		return this.request({
 			action: 'move',
 			from: fromtitle,
@@ -1197,7 +1210,7 @@ export class mwn {
 	 * @param {object} options
 	 * @returns {Promise<Object>}
 	 */
-	async upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
+	async upload(filepath: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiUploadResponse> {
 		return this.request(
 			{
 				action: 'upload',
@@ -1235,7 +1248,12 @@ export class mwn {
 	 * @param {Object} options
 	 * @returns {Promise<Object>}
 	 */
-	async uploadFromUrl(url: string, title: string, text: string, options?: ApiUploadParams): Promise<ApiResponse> {
+	async uploadFromUrl(
+		url: string,
+		title: string,
+		text: string,
+		options?: ApiUploadParams,
+	): Promise<ApiUploadResponse> {
 		return this.request({
 			action: 'upload',
 			url: url,
@@ -1321,7 +1339,7 @@ export class mwn {
 	 * @param {Object} [params] Additional parameters
 	 * @return {Promise}
 	 */
-	async rollback(page: string | number, user: string, params?: ApiRollbackParams): Promise<ApiResponse> {
+	async rollback(page: string | number, user: string, params?: ApiRollbackParams): Promise<ApiRollbackResponse> {
 		return this.request({
 			action: 'rollback',
 			...makeTitle(page),
