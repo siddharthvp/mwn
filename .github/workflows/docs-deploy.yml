@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'website/**'
       - 'README.md'
+      - '.github/workflows/docs-deploy.yml'
   workflow_dispatch:
 
 jobs:
@@ -31,7 +32,7 @@ jobs:
       - name: Copy docs to Toolforge
         uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
         with:
-          local: /home/runner/work/mwn/mwn/docs.zip
+          local: /home/runner/work/mwn/mwn/website/build/docs.zip
           remote: /data/project/mwn/docs.zip
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
@@ -45,6 +46,7 @@ jobs:
             shopt -s extglob
             rm -r -- !(coverage)
             unzip /data/project/mwn/docs.zip -d .
+            rm /data/project/mwn/docs.zip
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
