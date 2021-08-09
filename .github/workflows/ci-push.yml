@@ -87,7 +87,10 @@ jobs:
     needs: test
     steps:
       - uses: actions/download-artifact@v2
-      - run: zip -r coverage.zip coverage/lcov-report
+      - name: Zip coverage report
+        run: |
+          mv coverage/lcov-report/* coverage
+          zip -r coverage.zip coverage
       - name: Upload coverage reports to Toolforge
         uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
         with:
@@ -100,14 +103,10 @@ jobs:
       - name: Coverage
         uses: garygrossgarten/github-action-ssh@2b10f41b5a33808f6d24eafd253296766308b7c4
         with:
-          command: >-
-            cd /data/project/mwn &&
-            rm -rf coverage &&
-            unzip coverage.zip &&
-            rm -rf public_html/coverage &&
-            rm -rf www/static/coverage &&
-            cp -r coverage public_html &&
-            cp -r coverage www/static
+          command: |
+            cd /data/project/mwn
+            rm -rf www/static/coverage
+            unzip coverage.zip -d www/static
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
