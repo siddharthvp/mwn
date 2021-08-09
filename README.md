@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/api/classes/mwn.html)**
+**Quick links: [Getting Started](#user-content-getting-started) — [Docs](https://mwn.toolforge.org/) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/api/classes/mwn.html)**
 
 **Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
@@ -81,7 +81,7 @@ Use `bot.continuedQueryGen` everytime you want to fetch more results than what t
 The following example generates a list of all active users on the wiki (which may be more than 5000).
 
 ```js
-var activeusers = [];
+let activeusers = [];
 for await (let json of bot.continuedQueryGen({
 	action: 'query',
 	list: 'allusers',
@@ -254,7 +254,7 @@ bot.edit('Page title', (rev) => {
 	// rev.content gives the revision text
 	// rev.timestamp gives the revision timestamp
 
-	var text = rev.content.replace(/foo/g, 'bar');
+	let text = rev.content.replace(/foo/g, 'bar');
 
 	return {
 		// return parameters needed for [[mw:API:Edit]]

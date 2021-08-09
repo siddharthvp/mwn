@@ -7,7 +7,7 @@ Use `bot.continuedQueryGen` everytime you want to fetch more results than what t
 The following example generates a list of all active users on the wiki (which may be more than 5000).
 
 ```js
-var activeusers = [];
+let activeusers = [];
 for await (let json of bot.continuedQueryGen({
 	action: 'query',
 	list: 'allusers',

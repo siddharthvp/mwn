@@ -17,3 +17,5 @@ title.getNamespaceId(); // 4
 title = bot.title.newFromText('catEgorY:living people'); // titles will be normalised!
 title.toText(); // 'Category:Living people'
 ```
+
+The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://mwn.toolforge.org/docs/api/interfaces/mwntitle.html).

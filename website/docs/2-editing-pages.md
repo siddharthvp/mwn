@@ -7,7 +7,7 @@ bot.edit('Page title', (rev) => {
 	// rev.content gives the revision text
 	// rev.timestamp gives the revision timestamp
 
-	var text = rev.content.replace(/foo/g, 'bar');
+	let text = rev.content.replace(/foo/g, 'bar');
 
 	return {
 		// return parameters needed for [[mw:API:Edit]]

@@ -67,8 +67,8 @@ Creating a page object opens up further possibilities:
 let page = new bot.page('Main Page');
 ```
 
-See [list of methods available on page object](https://mwn.toolforge.org/docs/interfaces/mwnpage.html).
+See [list of methods available on page object](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html).
 
-[Files](https://mwn.toolforge.org/docs/interfaces/mwnfile.html) and [categories](https://mwn.toolforge.org/docs/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
+[Files](https://mwn.toolforge.org/docs/api/interfaces/mwnfile.html) and [categories](https://mwn.toolforge.org/docs/api/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
 
 
