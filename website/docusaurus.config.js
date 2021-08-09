@@ -18,7 +18,7 @@ module.exports = {
 			},
 			items: [
 				{ to: '/', label: 'Home', position: 'right' },
-				{ href: 'https://mwn.toolforge.org/docs/', label: 'API Documentation', position: 'right' },
+				{ href: 'https://mwn.toolforge.org/docs/api', label: 'API Documentation', position: 'right' },
 				{
 					href: 'https://github.com/siddharthvp/mwn',
 					label: 'GitHub',
