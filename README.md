@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/classes/mwn.html)**
+**Quick links: [Getting Started](#user-content-getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [API Documentation](https://mwn.toolforge.org/docs/api/classes/mwn.html)**
 
 **Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
@@ -16,7 +16,7 @@ Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_ver
 
 Versioning: while mwn is in version 0, changes may be made to the public interface with a change in the minor version number.
 
-Complete API documentation is available **[here](https://mwn.toolforge.org/docs/classes/mwn.html)** ([alternative link](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
+Complete API documentation is available **[here](https://mwn.toolforge.org/docs/api/classes/mwn.html)** ([alternative link](https://tools-static.wmflabs.org/mwn/docs/classes/mwn.html)). In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
 
 Amongst the major highlights are `batchOperation` and `seriesBatchOperation` which allow you run a large number of tasks with control over concurrency and sleep time between tasks. Failing actions are automatically retried.
 
@@ -44,7 +44,7 @@ Mwn is written in TypeScript v4. The repository contains JavaScript files compil
 If your bot is hosted on [Toolforge](https://tools.wmflabs.org/), note that the system version of node there is v8.11.1. You can install a more recent version of node to your home directory using a version manager like [nvm](https://github.com/nvm-sh/nvm) or [n](http://npmjs.com/package/n). Like:
 
 ```sh
-npm install n				# install a node package manager
+npm install n				# install a node version manager
 export N_PREFIX=~
 ./node_modules/n/bin/n lts	# get the latest LTS version of node
 export PATH=~/bin:$PATH
@@ -347,9 +347,9 @@ Creating a page object opens up further possibilities:
 let page = new bot.page('Main Page');
 ```
 
-See [list of methods available on page object](https://mwn.toolforge.org/docs/interfaces/mwnpage.html).
+See [list of methods available on page object](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html).
 
-[Files](https://mwn.toolforge.org/docs/interfaces/mwnfile.html) and [categories](https://mwn.toolforge.org/docs/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
+[Files](https://mwn.toolforge.org/docs/api/interfaces/mwnfile.html) and [categories](https://mwn.toolforge.org/docs/api/interfaces/mwncategory.html) have their own subclasses that add a few additional methods.
 
 ### Working with titles
 
@@ -367,11 +367,11 @@ title = new bot.title('Aritcles for deletion', 4);
 title.getMainText(); // 'Articles for deletion'
 title.getNamespaceId(); // 4
 
-title = bot.title.newFromText('cateEogrY:living people'); // titles will be normalised!
+title = bot.title.newFromText('catEgorY:living people'); // titles will be normalised!
 title.toText(); // 'Category:Living people'
 ```
 
-The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://mwn.toolforge.org/docs/interfaces/mwntitle.html).
+The API of this class is based on that of [mw.Title](https://doc.wikimedia.org/mediawiki-core/master/js/#!/api/mw.Title) in the on-site JS interface. See [full list of methods](https://mwn.toolforge.org/docs/api/interfaces/mwntitle.html).
 
 ### Working with wikitext
 

@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - 'src/**'
+      - 'website/**'
       - 'README.md'
   workflow_dispatch:
 
@@ -12,14 +13,19 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
-      - name: npm install
+      - name: Install dependencies
         run: npm ci
-      - name: build docs
-        run: npm run docs
-      - name: zipping docs
-        run: zip -r docs.zip docs
+      - name: Build docs
+        run: |
+          npm run docs
+          cd website && npm run build && cd -
+      - name: Zip docs
+        run: |
+          mv docs website/build/docs/api
+          cd website/build
+          zip -r docs.zip .
       - name: Copy docs to Toolforge
         uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
         with:
@@ -29,17 +35,14 @@ jobs:
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
           rmRemote: true
-      - name: unzip and copy
+      - name: Unzip
         uses: garygrossgarten/github-action-ssh@2b10f41b5a33808f6d24eafd253296766308b7c4
         with:
-          command: >-
-            cd /data/project/mwn &&
-            rm -rf docs &&
-            unzip docs.zip &&
-            rm -rf public_html/docs &&
-            rm -rf www/static/docs &&
-            cp -r docs public_html &&
-            cp -r docs www/static
+          command: |
+            cd /data/project/mwn/www/static
+            shopt -s extglob
+            rm -r -- !(coverage)
+            unzip /data/project/mwn/docs.zip -d .
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
