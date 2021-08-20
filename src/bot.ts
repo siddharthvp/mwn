@@ -30,7 +30,7 @@
  *
  */
 
-// Node internal module
+// Node internal modules
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -87,6 +87,10 @@ import {
 } from './api_response_types';
 
 export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
+// Export, if only for the sake of getting generated documentation
+export * from './api_response_types';
+export type { PageViewData, PageViewOptions, AuthorshipData } from './page';
+export type { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
 
 export interface MwnOptions {
 	silent?: boolean;

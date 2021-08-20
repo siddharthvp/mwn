@@ -74,19 +74,20 @@ export interface TemplateConfig {
 // by Evad37 (cc-by-sa-3.0/GFDL)
 // TODO: expand from evad37/xfdcloser
 /**
- * Represents the wikitext of template transclusion. Used by #parseTemplates.
- * @prop {string} name Name of the template
- * @prop {string} wikitext Full wikitext of the transclusion
- * @prop {Object[]} parameters Parameters used in the translcusion, in order, of form:
-		{
-			name: {string|number} parameter name, or position for unnamed parameters,
-			value: {string} Wikitext passed to the parameter (whitespace trimmed),
-			wikitext: {string} Full wikitext (including leading pipe, parameter name/equals sign (if applicable), value, and any whitespace)
-		}
+ * Represents the wikitext of template transclusion. Used by {@link parseTemplates}.
  */
 export class Template {
+	/**
+	 * Full wikitext of the transclusion
+	 */
 	wikitext: string;
+	/**
+	 * Parameters used in the transclusion
+	 */
 	parameters: Array<Parameter>;
+	/**
+	 * Name of the template
+	 */
 	name: string | number;
 
 	/**
@@ -115,9 +116,21 @@ export class Template {
 	}
 }
 
+/**
+ * Represents a template parameter
+ */
 export class Parameter {
+	/**
+	 * parameter name, or position for unnamed parameters
+	 */
 	name: string | number;
+	/**
+	 * Wikitext passed to the parameter (whitespace trimmed)
+	 */
 	value: string;
+	/**
+	 * Full wikitext (including leading pipe, parameter name/equals sign (if applicable), value, and any whitespace)
+	 */
 	wikitext: string;
 
 	constructor(name: string | number, val: string, wikitext: string) {

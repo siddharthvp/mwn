@@ -23,3 +23,11 @@
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
 }
+
+code {
+	white-space: pre-wrap !important;
+}
+
+code .token.comment {
+	color: rgb(173 174 183) !important;
+}

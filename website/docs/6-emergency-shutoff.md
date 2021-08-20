@@ -4,19 +4,27 @@ Mwn exploits Node's asynchronous event loop to efficiently implement emergency s
 
 ```js
 bot.enableEmergencyShutoff({
-	page: 'User:ExampleBot/shutoff', // The name of the page to check
-	intervalDuration: 5000, // check shutoff page every 5 seconds
+	// The name of the page to check
+	page: 'User:ExampleBot/shutoff',
+
+	// check shutoff page every 5 seconds
+	intervalDuration: 5000,
+	
+	// function to determine whether the bot should continue to run or not
 	condition: function (pagetext) {
-		// function to determine whether the bot should continue to run or not
+		// Example implementation: if some one changes the text to something
+		// other than "running", let's decide to stop!
 		if (pagetext !== 'running') {
-			// Example implementation: if some one changes the text to something
-			return false; // other than "running", let's decide to stop!
+			return false; 
 		} else return true;
 	},
+	
+	// function to trigger when shutoff is activated
 	onShutoff: function (pagetext) {
-		// function to trigger when shutoff is activated
-		process.exit(); // let's just exit, though we could also terminate
-	} // any open connections, close files, etc.
+		// let's just exit, though we could also terminate
+		// any open connections, close files, etc.
+		process.exit(); 
+	}
 });
 ```
 
