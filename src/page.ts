@@ -22,20 +22,91 @@ export interface MwnPage extends MwnTitle {
 	data: any;
 	getTalkPage(): MwnPage;
 	getSubjectPage(): MwnPage;
+	/**
+	 * Get page wikitext
+	 */
 	text(): Promise<string>;
+	/**
+	 * Get page categories
+	 * @returns {Promise<Object[]>} Resolved with array of objects like
+	 * { sortkey: '...', category: '...', hidden: true }
+	 */
 	categories(): Promise<ApiParseResponse['categories']>;
+	/**
+	 * Get templates transcluded on the page
+	 * @returns {Promise<Object[]>} Resolved with array of objects like
+	 * { ns: 10, title: 'Template:Cite web', exists: true }
+	 */
 	templates(): Promise<ApiParseResponse['templates']>;
+	/**
+	 * Get links on the page
+	 * @returns {Promise<Object[]>} Resolved with array of objects like
+	 * { ns: 0, title: 'Main Page', exists: true }
+	 */
 	links(): Promise<ApiParseResponse['links']>;
+	/**
+	 * Get list of pages linking to this page
+	 * @returns {Promise<String[]>}
+	 */
 	backlinks(): Promise<string[]>;
+	/**
+	 * Get list of pages transcluding this page
+	 * @returns {Promise<String[]>}
+	 */
 	transclusions(): Promise<string[]>;
+	/**
+	 * Returns list of images on the page
+	 * @returns {Promise<String[]>} - array elements don't include File: prefix
+	 */
 	images(): Promise<string[]>;
+	/**
+	 * Returns list of external links on the page
+	 * @returns {Promise<String[]>}
+	 */
 	externallinks(): Promise<string[]>;
+	/**
+	 * Returns list of subpages of the page
+	 * @returns {Promise<String[]>}
+	 */
 	subpages(options?: ApiQueryAllPagesParams): Promise<string[]>;
+	/**
+	 * Check if page is redirect or not
+	 * @returns {Promise<boolean>}
+	 */
 	isRedirect(): Promise<boolean>;
+	/**
+	 * Get redirect target.
+	 * Returns the same page name if the page is not a redirect.
+	 * @returns {Promise<string>}
+	 */
 	getRedirectTarget(): Promise<string>;
+	/**
+	 * Get username of the page creator
+	 * @returns {Promise<string>}
+	 */
 	getCreator(): Promise<string>;
+	/**
+	 * Get username of the last deleting admin (or null)
+	 * @returns {Promise<string>}
+	 */
 	getDeletingAdmin(): Promise<string>;
+	/**
+	 * Get short description, either the local one (for English Wikipedia)
+	 * or the one from wikidata.
+	 * @param {Object} customOptions
+	 * @returns {Promise<string>}
+	 */
 	getDescription(customOptions?: any): Promise<string>;
+	/**
+	 * Get the edit history of the page
+	 * @param {string|string[]} props - revision properties to fetch, by default content is
+	 * excluded
+	 * @param {number} [limit=50] - number of revisions to fetch data about
+	 * @param {Object} customOptions - custom API options
+	 * @returns {Promise<Object[]>} - resolved with array of objects representing
+	 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
+	 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
+	 */
 	history(
 		props: ApiQueryRevisionsParams['rvprop'],
 		limit: number,
@@ -45,6 +116,17 @@ export interface MwnPage extends MwnTitle {
 		props: ApiQueryRevisionsParams['rvprop'],
 		customOptions?: ApiQueryRevisionsParams,
 	): AsyncGenerator<ApiRevision>;
+	/**
+	 * Get the page logs.
+	 * @param {string|string[]} props - data about log entries to fetch
+	 * @param {number} limit - max number of log entries to fetch
+	 * @param {string} type - type of log to fetch, can either be an letype or leaction
+	 * Leave undefined (or null) to fetch all log types
+	 * @param {Object} customOptions
+	 * @returns {Promise<Object[]>} - resolved with array of objects representing
+	 * log entries, eg. { ns: '0', title: 'Main Page', type: 'delete', user: 'Example',
+	 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
+	 */
 	logs(
 		props: ApiQueryLogEventsParams['leprop'],
 		limit?: number,
@@ -56,7 +138,18 @@ export interface MwnPage extends MwnTitle {
 		type?: string,
 		customOptions?: ApiQueryLogEventsParams,
 	): AsyncGenerator<LogEvent>;
+	/**
+	 * Get page views data (only for Wikimedia wikis)
+	 * @see https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews
+	 * @param options
+	 */
 	pageViews(options?: PageViewOptions): Promise<PageViewData[]>;
+	/**
+	 * Query the top contributors to the article using the WikiWho API.
+	 * This API has a throttling of 2000 requests a day.
+	 * Supported for EN, DE, ES, EU, TR Wikipedias only
+	 * @see https://api.wikiwho.net/
+	 */
 	queryAuthors(): Promise<AuthorshipData>;
 	edit(transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams): Promise<any>;
 	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>;
@@ -97,9 +190,7 @@ export default function (bot: mwn): MwnPageStatic {
 
 		/**** Get operations *****/
 
-		/**
-		 * Get page wikitext
-		 */
+		/** @inheritDoc */
 		text(): Promise<string> {
 			return bot
 				.request({
@@ -113,11 +204,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Get page categories
-		 * @returns {Promise<Object[]>} Resolved with array of objects like
-		 * { sortkey: '...', category: '...', hidden: true }
-		 */
+		/** @inheritDoc */
 		categories(): Promise<ApiParseResponse['categories']> {
 			return bot
 				.request({
@@ -128,11 +215,7 @@ export default function (bot: mwn): MwnPageStatic {
 				.then((data) => data.parse.categories);
 		}
 
-		/**
-		 * Get templates transcluded on the page
-		 * @returns {Promise<Object[]>} Resolved with array of objects like
-		 * { ns: 10, title: 'Template:Cite web', exists: true }
-		 */
+		/** @inheritDoc */
 		templates(): Promise<ApiParseResponse['templates']> {
 			return bot
 				.request({
@@ -143,11 +226,7 @@ export default function (bot: mwn): MwnPageStatic {
 				.then((data) => data.parse.templates);
 		}
 
-		/**
-		 * Get links on the page
-		 * @returns {Promise<Object[]>} Resolved with array of objects like
-		 * { ns: 0, title: 'Main Page', exists: true }
-		 */
+		/** @inheritDoc */
 		links(): Promise<ApiParseResponse['links']> {
 			return bot
 				.request({
@@ -158,10 +237,7 @@ export default function (bot: mwn): MwnPageStatic {
 				.then((data) => data.parse.links);
 		}
 
-		/**
-		 * Get list of pages linking to this page
-		 * @returns {Promise<String[]>}
-		 */
+		/** @inheritDoc */
 		backlinks(): Promise<string[]> {
 			return bot
 				.continuedQuery({
@@ -181,10 +257,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Get list of pages transcluding this page
-		 * @returns {Promise<String[]>}
-		 */
+		/** @inheritDoc */
 		transclusions(): Promise<string[]> {
 			return bot
 				.continuedQuery({
@@ -204,10 +277,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Returns list of images on the page
-		 * @returns {Promise<String[]>} - array elements don't include File: prefix
-		 */
+		/** @inheritDoc */
 		images(): Promise<string[]> {
 			return bot
 				.request({
@@ -218,10 +288,7 @@ export default function (bot: mwn): MwnPageStatic {
 				.then((data) => data.parse.images);
 		}
 
-		/**
-		 * Returns list of external links on the page
-		 * @returns {Promise<String[]>}
-		 */
+		/** @inheritDoc */
 		externallinks(): Promise<string[]> {
 			return bot
 				.request({
@@ -232,10 +299,7 @@ export default function (bot: mwn): MwnPageStatic {
 				.then((data) => data.parse.externallinks);
 		}
 
-		/**
-		 * Returns list of subpages of the page
-		 * @returns {Promise<String[]>}
-		 */
+		/** @inheritDoc */
 		subpages(options?: ApiQueryAllPagesParams): Promise<string[]> {
 			return bot
 				.request({
@@ -251,21 +315,14 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Check if page is redirect or not
-		 * @returns {Promise<boolean>}
-		 */
+		/** @inheritDoc */
 		isRedirect(): Promise<boolean> {
 			return this.getRedirectTarget().then((target) => {
 				return this.toText() !== target;
 			});
 		}
 
-		/**
-		 * Get redirect target.
-		 * Returns the same page name if the page is not a redirect.
-		 * @returns {Promise<string>}
-		 */
+		/** @inheritDoc */
 		getRedirectTarget(): Promise<string> {
 			if (this.data.text) {
 				let target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
@@ -289,10 +346,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Get username of the page creator
-		 * @returns {Promise<string>}
-		 */
+		/** @inheritDoc */
 		getCreator(): Promise<string> {
 			return bot
 				.request({
@@ -312,10 +366,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Get username of the last deleting admin (or null)
-		 * @returns {Promise<string>}
-		 */
+		/** @inheritDoc */
 		getDeletingAdmin(): Promise<string> {
 			return bot
 				.request({
@@ -334,12 +385,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Get short description, either the local one (for English Wikipedia)
-		 * or the one from wikidata.
-		 * @param {Object} customOptions
-		 * @returns {Promise<string>}
-		 */
+		/** @inheritDoc */
 		getDescription(customOptions: WikibaseClientApiDescriptionParams) {
 			// ApiParams
 			return bot
@@ -358,16 +404,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Get the edit history of the page
-		 * @param {string|string[]} props - revision properties to fetch, by default content is
-		 * excluded
-		 * @param {number} [limit=50] - number of revisions to fetch data about
-		 * @param {Object} customOptions - custom API options
-		 * @returns {Promise<Object[]>} - resolved with array of objects representing
-		 * revisions, eg. { revid: 951809097, parentid: 951809097, timestamp:
-		 * "2020-04-19T00:45:35Z", comment: "Edit summary" }
-		 */
+		/** @inheritDoc */
 		history(
 			props: ApiQueryRevisionsParams['rvprop'],
 			limit = 50,
@@ -410,17 +447,7 @@ export default function (bot: mwn): MwnPageStatic {
 			}
 		}
 
-		/**
-		 * Get the page logs.
-		 * @param {string|string[]} props - data about log entries to fetch
-		 * @param {number} limit - max number of log entries to fetch
-		 * @param {string} type - type of log to fetch, can either be an letype or leaction
-		 * Leave undefined (or null) to fetch all log types
-		 * @param {Object} customOptions
-		 * @returns {Promise<Object[]>} - resolved with array of objects representing
-		 * log entries, eg. { ns: '0', title: 'Main Page', type: 'delete', user: 'Example',
-		 * action: 'revision', timestamp: '2020-05-05T17:13:34Z', comment: 'edit summary' }
-		 */
+		/** @inheritDoc */
 		logs(
 			props: ApiQueryLogEventsParams['leprop'],
 			limit?: number,
@@ -471,11 +498,7 @@ export default function (bot: mwn): MwnPageStatic {
 			}
 		}
 
-		/**
-		 * Get page views data (only for Wikimedia wikis)
-		 * @see https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews
-		 * @param options
-		 */
+		/** @inheritDoc */
 		async pageViews(options: PageViewOptions = {}): Promise<PageViewData[]> {
 			let project = bot.options.apiUrl.match(/.*\/(.*?)\.(?:org|com|net)/)?.[1];
 			if (!project) {
@@ -517,12 +540,7 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
-		/**
-		 * Query the top contributors to the article using the WikiWho API.
-		 * This API has a throttling of 2000 requests a day.
-		 * Supported for EN, DE, ES, EU, TR Wikipedias only
-		 * @see https://api.wikiwho.net/
-		 */
+		/** @inheritDoc */
 		async queryAuthors(): Promise<AuthorshipData> {
 			let langcodematch = bot.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
 			if (!langcodematch || !langcodematch[1]) {

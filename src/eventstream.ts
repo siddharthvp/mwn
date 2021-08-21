@@ -20,9 +20,17 @@ export interface MwnStreamStatic {
 }
 
 export interface MwnStream {
+	/**
+	 * Register a function to trigger for every message data from the source.
+	 * @param {Function | Object} [filter={}]
+	 * @param {Function} action
+	 */
 	addListener(filter: ((data: any) => boolean) | any, action: (data: any) => void): void;
 }
 
+/**
+ * Represents an event in the recentchange stream.
+ */
 export type RecentChangeStreamEvent = {
 	$schema: string;
 	meta: {
@@ -117,11 +125,7 @@ export default function (bot: mwn) {
 				};
 		}
 
-		/**
-		 * Register a function to trigger for every message data from the source.
-		 * @param {Function | Object} [filter={}]
-		 * @param {Function} action
-		 */
+		/** @inheritDoc */
 		addListener(filter: ((data: any) => boolean) | any = {}, action: (data: any) => void): void {
 			let filterer =
 				typeof filter === 'function'

@@ -18,12 +18,33 @@ import type { ApiParseParams } from './api_params';
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;
+
+	/** Static version of {@link MwnWikitext.parseTemplates} */
 	parseTemplates(wikitext: string, config: TemplateConfig): Template[];
+
+	/**
+	 * Simple table parser.
+	 * Parses tables provided:
+	 *  1. It doesn't have any merged or joined cells.
+	 *  2. It doesn't use any templates to produce any table markup.
+	 *  3. Further restrictions may apply.
+	 *
+	 * Tables generated via mwn.table() class are intended to be parsable.
+	 *
+	 * This method throws when it finds an inconsistency (rather than silently
+	 * cause undesired behaviour).
+	 *
+	 * @param {string} text
+	 * @returns {Object[]} - each object in the returned array represents a row,
+	 * with its keys being column names, and values the cell content
+	 */
 	parseTable(
 		text: string,
 	): {
 		[column: string]: string;
 	}[];
+
+	/** Static version of {@link MwnWikitext.parseSections} */
 	parseSections(text: string): Section[];
 }
 export interface MwnWikitext extends Unbinder {
@@ -32,10 +53,53 @@ export interface MwnWikitext extends Unbinder {
 	files: Array<FileLink>;
 	categories: Array<CategoryLink>;
 	sections: Array<Section>;
+	/** Parse links, file usages and categories from the wikitext */
 	parseLinks(): void;
+	/**
+	 * Parses templates from wikitext.
+	 * Returns an array of Template objects
+	 * ```js
+	 * let templates = parseTemplates("Hello {{foo |Bar|baz=qux |2=loremipsum|3=}} world");
+	 *  console.log(templates[0]); // gives:
+	 *		{
+	 *			name: "foo",
+	 *			wikitext:"{{foo |Bar|baz=qux | 2 = loremipsum  |3=}}",
+	 *			parameters: [ { name: 1, value: 'Bar', wikitext: '|Bar' },
+	 *				{ name: 'baz', value: 'qux', wikitext: '|baz=qux ' },
+	 *				{ name: '2', value: 'loremipsum', wikitext: '| 2 = loremipsum  ' },
+	 *				{ name: '3', value: '', wikitext: '|3=' }
+	 *			]
+	 *		}
+	 *```
+	 * @param {TemplateConfig} config
+	 * @returns {Template[]}
+	 */
 	parseTemplates(config: TemplateConfig): Template[];
+	/**
+	 * Remove a template, link, file or category from the text
+	 * CAUTION: If an entity with the very same wikitext exists earlier in the text,
+	 * that one will be removed instead.
+	 * @param {Object|Template} entity - anything with a wikitext attribute
+	 * and end index
+	 */
 	removeEntity(entity: Link | Template): void;
+	/**
+	 * Parse sections from wikitext
+	 * CAUTION: section header syntax in comments, nowiki tags,
+	 * pre, source or syntaxhighlight tags can lead to wrong results.
+	 * You're advised to run unbind() first.
+	 * @returns {Section[]} array of
+	 * section objects. Each section object has the level, header, index (of beginning) and content.
+	 * Content *includes* the equal signs and the header.
+	 * The top is represented as level 1, with header `null`.
+	 */
 	parseSections(): Section[];
+	/**
+	 * Parse the text using the API.
+	 * @see https://www.mediawiki.org/wiki/API:Parsing_wikitext
+	 * @param {Object} [options] - additional API options
+	 * @returns {Promise<string>}
+	 */
 	apiParse(options: ApiParseParams): Promise<string>;
 }
 
@@ -63,10 +127,29 @@ export interface Section {
 	content?: string;
 }
 
+/**
+ * Configuration for parsing templates.
+ */
 export interface TemplateConfig {
+	/**
+	 * Also parse templates within subtemplates. The other config parameters
+	 * (namePredicate, templatePredicate, count) are *not* compatible
+	 * with recursive mode. Expect unexpected results if used.
+	 */
 	recursive?: boolean;
+	/**
+	 * Include template in result only if the its name matches this predicate.
+	 * More efficient than templatePredicate as the template parameters
+	 * aren't parsed if name didn't match.
+	 */
 	namePredicate?: (name: string) => boolean;
+	/**
+	 * Include template in result only if it matches this predicate
+	 */
 	templatePredicate?: (template: Template) => boolean;
+	/**
+	 * Max number of templates to be parsed
+	 */
 	count?: number;
 }
 
@@ -145,9 +228,7 @@ export class Parameter {
 // which was in turn adapted from https://en.wikipedia.org/wiki/User:SD0001/parseAllTemplates.js
 // written by me. (cc-by-sa/GFDL)
 
-/**
- * @inheritdoc
- */
+/** See {@link MwnWikitext.parseTemplates} */
 export function parseTemplates(wikitext: string, config: TemplateConfig): Template[] {
 	config = config || {
 		recursive: false,
@@ -309,22 +390,7 @@ function processTemplateText(
 	return template;
 }
 
-/**
- * Simple table parser.
- * Parses tables provided:
- *  1. It doesn't have any merged or joined cells.
- *  2. It doesn't use any templates to produce any table markup.
- *  3. Further restrictions may apply.
- *
- * Tables generated via mwn.table() class are intended to be parsable.
- *
- * This method throws when it finds an inconsistency (rather than silently
- * cause undesired behaviour).
- *
- * @param {string} text
- * @returns {Object[]} - each object in the returned array represents a row,
- * with its keys being column names, and values the cell content
- */
+/** See {@link MwnWikitextStatic.parseTable} */
 export function parseTable(text: string): { [column: string]: string }[] {
 	text = text.trim();
 	const indexOfRawPipe = function (text: string) {
@@ -402,10 +468,7 @@ export function parseTable(text: string): { [column: string]: string }[] {
 	return output;
 }
 
-// XXX: fix jsdocs
-/**
- * @inheritdoc
- */
+/** See {@link MwnWikitext.parseSections} */
 export function parseSections(text: string): Section[] {
 	const rgx = /^(=+)(.*?)\1/gm;
 	let sections: Section[] = [
@@ -514,7 +577,7 @@ export default function (bot: mwn) {
 			super(wikitext);
 		}
 
-		/** Parse links, file usages and categories from the wikitext */
+		/** @inheritDoc */
 		parseLinks(): void {
 			this.links = [];
 			this.files = [];
@@ -538,68 +601,22 @@ export default function (bot: mwn) {
 			}
 		}
 
-		/**
-		 * Parses templates from wikitext.
-		 * Returns an array of Template objects
-		 * var templates = parseTemplates("Hello {{foo |Bar|baz=qux |2=loremipsum|3=}} world");
-		 *  console.log(templates[0]); // gives:
-			{
-				name: "foo",
-				wikitext:"{{foo |Bar|baz=qux | 2 = loremipsum  |3=}}",
-				parameters: [ { name: 1, value: 'Bar', wikitext: '|Bar' },
-					{ name: 'baz', value: 'qux', wikitext: '|baz=qux ' },
-					{ name: '2', value: 'loremipsum', wikitext: '| 2 = loremipsum  ' },
-					{ name: '3', value: '', wikitext: '|3=' }
-				]
-			}
-		 * @param {{recursive: boolean, namePredicate: function, templatePredicate: function,
-		 * count: number}} config
-		 * @config {boolean} recursive - also parse templates within subtemplates. The other
-		 * config parameters (namePredicate, templatePredicate, count) are *not* compatible
-		 * with recursive mode. Expect unexpected results if used.
-		 * @config {function} namePredicate - include template in result only if the its name
-		 * matches this predicate. More efficient than templatePredicate as the template parameters
-		 * aren't parsed if name didn't match.
-		 * @config {function} templatePredicate - include template in result only if it matches
-		 * this predicate
-		 * @config {number} count - max number of templates to be parsed.
-		 * @returns {Template[]}
-		 */
+		/** @inheritDoc */
 		parseTemplates(config: TemplateConfig): Template[] {
 			return (this.templates = parseTemplates(this.text, config));
 		}
 
-		/**
-		 * Remove a template, link, file or category from the text
-		 * CAUTION: If an entity with the very same wikitext exists earlier in the text,
-		 * that one will be removed instead.
-		 * @param {Object|Template} entity - anything with a wikitext attribute
-		 * and end index
-		 */
+		/** @inheritDoc */
 		removeEntity(entity: Link | Template) {
 			this.text = this.text.replace(entity.wikitext, '');
 		}
 
-		/**
-		 * Parse the text using the API.
-		 * @see https://www.mediawiki.org/wiki/API:Parsing_wikitext
-		 * @param {Object} [options] - additional API options
-		 * @returns {Promise<string>}
-		 */
+		/** @inheritDoc */
 		apiParse(options?: ApiParseParams): Promise<string> {
 			return bot.parseWikitext(this.text, options);
 		}
 
-		/**
-		 * Parse sections from wikitext
-		 * CAUTION: section header syntax in comments, nowiki tags,
-		 * pre, source or syntaxhighlight tags can lead to wrong results.
-		 * You're advised to run unbind() first.
-		 * @returns {{level: number, header: string, index: number, content: string}[]} array of
-		 * section objects. Each section object has the level, header, index (of beginning) and content.
-		 * Content *includes* the equal signs and the header.
-		 * The top is represented as level 1, with header `null`.
-		 */
+		/** @inheritDoc */
 		parseSections(): Section[] {
 			return (this.sections = parseSections(this.text));
 		}

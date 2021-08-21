@@ -50,4 +50,4 @@ Fetch the list of top contributors to an article. Available for limited number o
 const page = new bot.page('Lorem ipsum');
 const contributorData = await page.queryAuthors();
 ```
-Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/authorshipdata.html)">AuthorshipData</a>>.
+Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/authorshipdata.html">AuthorshipData</a>>.

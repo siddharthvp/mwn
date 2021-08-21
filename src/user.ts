@@ -28,15 +28,51 @@ export interface MwnUser {
 	username: string;
 	userpage: MwnPage;
 	talkpage: MwnPage;
+	/**
+	 * Get user's recent contributions
+	 * @param {Object} options - additional API options
+	 * @returns {Promise<Object[]>}
+	 */
 	contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]>;
 	contribsGen(options?: ApiQueryUserContribsParams): AsyncGenerator<UserContribution>;
+	/**
+	 * Get user's recent log actions
+	 * @param {Object} options - additional API options
+	 * @returns {Promise<Object[]>}
+	 */
 	logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]>;
 	logsGen(options?: ApiQueryLogEventsParams): AsyncGenerator<LogEvent>;
+	/**
+	 * Get public information about the user
+	 * @param {string|string[]} props - properties to fetch
+	 * @returns {Promise<Object>}
+	 */
 	info(props?: ApiQueryUsersParams['usprop']): Promise<ApiQueryUsersResponse>;
+	/**
+	 * Get global user info for wikis with CentralAuth
+	 * @param {string|string[]} props
+	 */
 	globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse>;
+	/**
+	 * Post a message on user's talk page
+	 * @param {string} header
+	 * @param {string} message
+	 * @returns {Promise}
+	 */
 	sendMessage(header: string, message: string): Promise<ApiEditResponse>;
+	/**
+	 * Send the user an email
+	 */
 	email(subject: string, message: string, options?: ApiEmailUserParams): Promise<ApiEmailUserResponse>;
+	/**
+	 * Block the user
+	 * @param {Object} options - additional API options
+	 */
 	block(options: ApiBlockParams): Promise<ApiBlockResponse>;
+	/**
+	 * Unblock the user
+	 * @param {Object} options - additional API options
+	 */
 	unblock(options: ApiUnblockParams): Promise<ApiUnblockResponse>;
 }
 
@@ -64,11 +100,7 @@ export default function (bot: mwn) {
 
 		// XXX: should these yield rather than return?
 
-		/**
-		 * Get user's recent contributions
-		 * @param {Object} options - additional API options
-		 * @returns {Promise<Object[]>}
-		 */
+		/** @inheritDoc */
 		contribs(options?: ApiQueryUserContribsParams): Promise<UserContribution[]> {
 			return bot
 				.request({
@@ -96,11 +128,7 @@ export default function (bot: mwn) {
 			}
 		}
 
-		/**
-		 * Get user's recent log actions
-		 * @param {Object} options - additional API options
-		 * @returns {Promise<Object[]>}
-		 */
+		/** @inheritDoc */
 		logs(options?: ApiQueryLogEventsParams): Promise<LogEvent[]> {
 			return bot
 				.request({
@@ -128,11 +156,7 @@ export default function (bot: mwn) {
 			}
 		}
 
-		/**
-		 * Get public information about the user
-		 * @param {string|string[]} props - properties to fetch
-		 * @returns {Promise<Object>}
-		 */
+		/** @inheritDoc */
 		info(props?: ApiQueryUsersParams['usprop']): Promise<any> {
 			return bot
 				.request({
@@ -147,10 +171,7 @@ export default function (bot: mwn) {
 				.then((data) => data.query.users[0]);
 		}
 
-		/**
-		 * Get global user info for wikis with CentralAuth
-		 * @param {string|string[]} props
-		 */
+		/** @inheritDoc */
 		globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse> {
 			return bot
 				.request({
@@ -164,19 +185,12 @@ export default function (bot: mwn) {
 				});
 		}
 
-		/**
-		 * Post a message on user's talk page
-		 * @param {string} header
-		 * @param {string} message
-		 * @returns {Promise}
-		 */
+		/** @inheritDoc */
 		sendMessage(header: string, message: string): Promise<ApiEditResponse> {
 			return this.talkpage.newSection(header, message);
 		}
 
-		/**
-		 * Send the user an email
-		 */
+		/** @inheritDoc */
 		email(subject: string, message: string, options?: ApiEmailUserParams): Promise<ApiEmailUserResponse> {
 			return bot
 				.request({
@@ -202,10 +216,7 @@ export default function (bot: mwn) {
 				});
 		}
 
-		/**
-		 * Block the user
-		 * @param {Object} options - additional API options
-		 */
+		/** @inheritDoc */
 		block(options: ApiBlockParams): Promise<ApiBlockResponse> {
 			return bot
 				.request({
@@ -217,10 +228,7 @@ export default function (bot: mwn) {
 				.then((data) => data.block);
 		}
 
-		/**
-		 * Unblock the user
-		 * @param {Object} options - additional API options
-		 */
+		/** @inheritDoc */
 		unblock(options: ApiUnblockParams): Promise<ApiUnblockResponse> {
 			return bot
 				.request({

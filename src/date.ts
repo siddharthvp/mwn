@@ -6,15 +6,6 @@ import { Unbinder } from './wikitext';
  * handling dates, as well as a constructor that
  * can parse MediaWiki dating formats.
  */
-
-export interface MwnDateStatic {
-	new (...args: any[]): MwnDate;
-	getMonthName(monthNum: number): string;
-	getMonthNameAbbrev(monthNum: number): string;
-	getDayName(dayNum: number): string;
-	getDayNameAbbrev(dayNum: number): string;
-}
-
 export interface MwnDate extends Date {
 	isValid(): boolean;
 	isBefore(date: Date | MwnDate): boolean;
@@ -27,24 +18,72 @@ export interface MwnDate extends Date {
 	getUTCDayNameAbbrev(): string;
 	getDayName(): string;
 	getDayNameAbbrev(): string;
+
+	/**
+	 * Add a given number of minutes, hours, days, months or years to the date.
+	 * This is done in-place. The modified date object is also returned, allowing chaining.
+	 * @param {number} number - should be an integer
+	 * @param {string} unit
+	 * @throws {Error} if invalid or unsupported unit is given
+	 * @returns {XDate}
+	 */
 	add(number: number, unit: timeUnit): MwnDate;
+
+	/**
+	 * Subtracts a given number of minutes, hours, days, months or years to the date.
+	 * This is done in-place. The modified date object is also returned, allowing chaining.
+	 * @param {number} number - should be an integer
+	 * @param {string} unit
+	 * @throws {Error} if invalid or unsupported unit is given
+	 * @returns {XDate}
+	 */
 	subtract(number: number, unit: timeUnit): MwnDate;
+
+	/**
+	 * Formats the date into a string per the given format string.
+	 * Replacement syntax is a subset of that in moment.js.
+	 * @param {string} formatstr
+	 * @param {(string|number)} [zone=utc] - 'system' (for system-default time zone),
+	 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC.
+	 * @returns {string}
+	 */
 	format(formatstr: string, zone?: number | 'utc' | 'system'): string;
+
+	/**
+	 * Gives a readable relative time string such as "Yesterday at 6:43 PM" or "Last Thursday at 11:45 AM".
+	 * Similar to calendar in moment.js, but with time zone support.
+	 * @param {(string|number)} [zone=system] - 'system' (for browser-default time zone),
+	 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC
+	 * @returns {string}
+	 */
 	calendar(zone?: number | 'utc' | 'system'): string;
 }
-
-/**
- * Wrapper around the native JS Date() for ease of
- * handling dates, as well as a constructor that
- * can parse MediaWiki dating formats.
- */
+export interface MwnDateStatic {
+	/**
+	 * Create a date object. MediaWiki timestamp format is also acceptable,
+	 * in addition to everything that JS Date() accepts.
+	 */
+	new (...args: any[]): MwnDate;
+	/**
+	 * Get month name from month number (1-indexed)
+	 */
+	getMonthName(monthNum: number): string;
+	/**
+	 * Get abbreviated month name from month number (1-indexed)
+	 */
+	getMonthNameAbbrev(monthNum: number): string;
+	/**
+	 * Get day name from day number (1-indexed, starting from Sunday)
+	 */
+	getDayName(dayNum: number): string;
+	/**
+	 * Get abbreviated day name from day number (1-indexed, starting from Sunday)
+	 */
+	getDayNameAbbrev(dayNum: number): string;
+}
 
 export default function (bot: mwn) {
 	class XDate extends Date implements MwnDate {
-		/**
-		 * Create a date object. MediaWiki timestamp format is also acceptable,
-		 * in addition to everything that JS Date() accepts.
-		 */
 		constructor(...args: any[]) {
 			if (args.length === 1 && typeof args[0] === 'string') {
 				// parse MediaWiki format: YYYYMMDDHHmmss
@@ -123,14 +162,7 @@ export default function (bot: mwn) {
 			return XDate.localeData.daysShort[this.getDay()];
 		}
 
-		/**
-		 * Add a given number of minutes, hours, days, months or years to the date.
-		 * This is done in-place. The modified date object is also returned, allowing chaining.
-		 * @param {number} number - should be an integer
-		 * @param {string} unit
-		 * @throws {Error} if invalid or unsupported unit is given
-		 * @returns {XDate}
-		 */
+		/** @inheritDoc */
 		add(number: number, unit: timeUnit): XDate {
 			// @ts-ignore
 			let unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
@@ -142,26 +174,12 @@ export default function (bot: mwn) {
 			throw new Error('Invalid unit "' + unit + '": Only ' + Object.keys(unitMap).join(', ') + ' are allowed.');
 		}
 
-		/**
-		 * Subtracts a given number of minutes, hours, days, months or years to the date.
-		 * This is done in-place. The modified date object is also returned, allowing chaining.
-		 * @param {number} number - should be an integer
-		 * @param {string} unit
-		 * @throws {Error} if invalid or unsupported unit is given
-		 * @returns {XDate}
-		 */
+		/** @inheritDoc */
 		subtract(number: number, unit: timeUnit): XDate {
 			return this.add(-number, unit);
 		}
 
-		/**
-		 * Formats the date into a string per the given format string.
-		 * Replacement syntax is a subset of that in moment.js.
-		 * @param {string} formatstr
-		 * @param {(string|number)} [zone=utc] - 'system' (for system-default time zone),
-		 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC.
-		 * @returns {string}
-		 */
+		/** @inheritDoc */
 		format(formatstr: string, zone: number | 'utc' | 'system' = 'utc'): string {
 			if (!this.isValid()) {
 				return ''; // avoid bogus NaNs in output
@@ -227,13 +245,7 @@ export default function (bot: mwn) {
 			return unbinder.rebind().replace(/\[(.*?)\]/g, '$1');
 		}
 
-		/**
-		 * Gives a readable relative time string such as "Yesterday at 6:43 PM" or "Last Thursday at 11:45 AM".
-		 * Similar to calendar in moment.js, but with time zone support.
-		 * @param {(string|number)} [zone=system] - 'system' (for browser-default time zone),
-		 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC
-		 * @returns {string}
-		 */
+		/** @inheritDoc */
 		calendar(zone: number | 'utc' | 'system' = 'utc'): string {
 			// Zero out the hours, minutes, seconds and milliseconds - keeping only the date;
 			// find the difference. Note that setHours() returns the same thing as getTime().
@@ -282,30 +294,22 @@ export default function (bot: mwn) {
 			},
 		};
 
-		/**
-		 * Get month name from month number (1-indexed)
-		 */
+		/** @inheritDoc */
 		static getMonthName(monthNum: number): string {
 			return XDate.localeData.months[monthNum - 1];
 		}
 
-		/**
-		 * Get abbreviated month name from month number (1-indexed)
-		 */
+		/** @inheritDoc */
 		static getMonthNameAbbrev(monthNum: number): string {
 			return XDate.localeData.monthsShort[monthNum - 1];
 		}
 
-		/**
-		 * Get day name from day number (1-indexed, starting from Sunday)
-		 */
+		/** @inheritDoc */
 		static getDayName(dayNum: number): string {
 			return XDate.localeData.days[dayNum - 1];
 		}
 
-		/**
-		 * Get abbreviated day name from day number (1-indexed, starting from Sunday)
-		 */
+		/** @inheritDoc */
 		static getDayNameAbbrev(dayNum: number): string {
 			return XDate.localeData.daysShort[dayNum - 1];
 		}

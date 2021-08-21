@@ -8,23 +8,47 @@ type ApiPageInfo = {
 };
 
 export interface MwnCategoryStatic {
-	new (title: MwnTitle | string): MwnCategory;
+	/**
+	 * @param {string} name - name of the category
+	 */
+	new (name: MwnTitle | string): MwnCategory;
 }
 
 export interface MwnCategory extends MwnPage {
+	/**
+	 * Get all members in the category - this includes subcategories, pages and files
+	 * @param {Object} options - additional API parameters
+	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+	 * { pageid: 324234, ns: 0, title: 'Main Page' }
+	 */
 	members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
 	membersGen(options?: ApiQueryCategoryMembersParams): AsyncGenerator<ApiPageInfo>;
+	/**
+	 * Get all pages in the category - does not include subcategories or files
+	 * @param {Object} options - additional API parameters
+	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+	 * { pageid: 324234, ns: 0, title: 'Main Page' }
+	 */
 	pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
+	/**
+	 * Get all subcategories of the category
+	 * @param {Object} options - additional API parameters
+	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+	 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
+	 */
 	subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
+	/**
+	 * Get all files in the category
+	 * @param {Object} options - additional API parameters
+	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
+	 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
+	 */
 	files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
 }
 
 export default function (bot: mwn) {
 	class Category extends bot.page implements MwnCategory {
-		/**
-		 * @constructor
-		 * @param {string} name - name of the category
-		 */
+		/** @inheritDoc */
 		constructor(name: MwnTitle | string) {
 			super(name, 14);
 			if (this.namespace !== 14) {
@@ -34,12 +58,7 @@ export default function (bot: mwn) {
 
 		// TODO: Add recursive modes
 
-		/**
-		 * Get all members in the category - this includes subcategories, pages and files
-		 * @param {Object} options - additional API parameters
-		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
-		 * { pageid: 324234, ns: 0, title: 'Main Page' }
-		 */
+		/** @inheritDoc */
 		members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
 			return bot
 				.request({
@@ -67,32 +86,17 @@ export default function (bot: mwn) {
 			}
 		}
 
-		/**
-		 * Get all pages in the category - does not include subcategories or files
-		 * @param {Object} options - additional API parameters
-		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
-		 * { pageid: 324234, ns: 0, title: 'Main Page' }
-		 */
+		/** @inheritDoc */
 		pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
 			return this.members({ cmtype: ['page'], ...options });
 		}
 
-		/**
-		 * Get all subcategories of the category
-		 * @param {Object} options - additional API parameters
-		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
-		 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
-		 */
+		/** @inheritDoc */
 		subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
 			return this.members({ cmtype: ['subcat'], ...options });
 		}
 
-		/**
-		 * Get all files in the category
-		 * @param {Object} options - additional API parameters
-		 * @returns {Promise<Object[]>} - Resolved with array of objects of form
-		 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
-		 */
+		/** @inheritDoc */
 		files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
 			return this.members({ cmtype: ['file'], ...options });
 		}

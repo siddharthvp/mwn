@@ -29,19 +29,87 @@ export interface MwnTitle {
 	title: string;
 	namespace: number;
 	fragment: string;
+	/**
+	 * Get the namespace number
+	 *
+	 * Example: 6 for "File:Example_image.svg".
+	 */
 	getNamespaceId(): number;
+	/**
+	 * Get the namespace prefix (in the content language)
+	 *
+	 * Example: "File:" for "File:Example_image.svg".
+	 * In #NS_MAIN this is '', otherwise namespace name plus ':'
+	 */
+	getNamespacePrefix(): string;
+	/**
+	 * Get the main page name
+	 *
+	 * Example: "Example_image.svg" for "File:Example_image.svg".
+	 */
 	getMain(): string;
+	/**
+	 * Get the main page name (transformed by #text)
+	 * Example: "Example image.svg" for "File:Example_image.svg".
+	 */
 	getMainText(): string;
+	/**
+	 * Get the full page name
+	 *
+	 * Example: "File:Example_image.svg".
+	 * Most useful for API calls, anything that must identify the "title".
+	 */
 	getPrefixedDb(): string;
+	/**
+	 * Get the full page name (transformed by #text)
+	 *
+	 * Example: "File:Example image.svg" for "File:Example_image.svg".
+	 */
 	getPrefixedText(): string;
+	/**
+	 * Get the fragment (if any).
+	 *
+	 * Note that this method (by design) does not include the hash character and
+	 * the value is not url encoded.
+	 */
 	getFragment(): string | null;
+	/**
+	 * Check if the title is in a talk namespace
+	 */
 	isTalkPage(): boolean;
+	/**
+	 * Get the title for the associated talk page
+	 * Returns null if not available
+	 */
 	getTalkPage(): MwnTitle | null;
+	/**
+	 * Get the title for the subject page of a talk page
+	 * Returns null if not available
+	 */
 	getSubjectPage(): MwnTitle | null;
+	/**
+	 * Check if the title can have an associated talk page
+	 */
 	canHaveTalkPage(): boolean;
+	/**
+	 * Get the extension of the page name (if any)
+	 */
 	getExtension(): string | null;
+	/**
+	 * Shortcut for appendable string to form the main page name.
+	 *
+	 * Returns a string like ".json", or "" if no extension.
+	 */
 	getDotExtension(): string;
+	/**
+	 * @alias #getPrefixedDb
+	 * @method
+	 */
 	toString(): string;
+	/**
+	 * @alias #getPrefixedText
+	 * @method
+	 */
 	toText(): string;
 }
 
@@ -128,30 +196,17 @@ export default function () {
 			this.fragment = parsed.fragment;
 		}
 
-		/**
-		 * Get the namespace number
-		 *
-		 * Example: 6 for "File:Example_image.svg".
-		 */
+		/** @inheritDoc */
 		getNamespaceId(): number {
 			return this.namespace;
 		}
 
-		/**
-		 * Get the namespace prefix (in the content language)
-		 *
-		 * Example: "File:" for "File:Example_image.svg".
-		 * In #NS_MAIN this is '', otherwise namespace name plus ':'
-		 */
+		/** @inheritDoc */
 		getNamespacePrefix(): string {
 			return getNamespacePrefix(this.namespace);
 		}
 
-		/**
-		 * Get the main page name
-		 *
-		 * Example: "Example_image.svg" for "File:Example_image.svg".
-		 */
+		/** @inheritDoc */
 		getMain(): string {
 			if (Title.caseSensitiveNamespaces.indexOf(this.namespace) !== -1 || !this.title.length) {
 				return this.title;
@@ -159,54 +214,32 @@ export default function () {
 			return Title.phpCharToUpper(this.title[0]) + this.title.slice(1);
 		}
 
-		/**
-		 * Get the main page name (transformed by #text)
-		 * Example: "Example image.svg" for "File:Example_image.svg".
-		 */
+		/** @inheritDoc */
 		getMainText(): string {
 			return this.getMain().replace(/_/g, ' ');
 		}
 
-		/**
-		 * Get the full page name
-		 *
-		 * Example: "File:Example_image.svg".
-		 * Most useful for API calls, anything that must identify the "title".
-		 */
+		/** @inheritDoc */
 		getPrefixedDb(): string {
 			return this.getNamespacePrefix() + this.getMain();
 		}
 
-		/**
-		 * Get the full page name (transformed by #text)
-		 *
-		 * Example: "File:Example image.svg" for "File:Example_image.svg".
-		 */
+		/** @inheritDoc */
 		getPrefixedText(): string {
 			return this.getPrefixedDb().replace(/_/g, ' ');
 		}
 
-		/**
-		 * Get the fragment (if any).
-		 *
-		 * Note that this method (by design) does not include the hash character and
-		 * the value is not url encoded.
-		 */
+		/** @inheritDoc */
 		getFragment(): string | null {
 			return this.fragment;
 		}
 
-		/**
-		 * Check if the title is in a talk namespace
-		 */
+		/** @inheritDoc */
 		isTalkPage(): boolean {
 			return Title.isTalkNamespace(this.getNamespaceId());
 		}
 
-		/**
-		 * Get the title for the associated talk page
-		 * Returns null if not available
-		 */
+		/** @inheritDoc */
 		getTalkPage(): Title | null {
 			if (!this.canHaveTalkPage()) {
 				return null;
@@ -214,24 +247,17 @@ export default function () {
 			return this.isTalkPage() ? this : Title.makeTitle(this.getNamespaceId() + 1, this.getMainText());
 		}
 
-		/**
-		 * Get the title for the subject page of a talk page
-		 * Returns null if not available
-		 */
+		/** @inheritDoc */
 		getSubjectPage(): Title | null {
 			return this.isTalkPage() ? Title.makeTitle(this.getNamespaceId() - 1, this.getMainText()) : this;
 		}
 
-		/**
-		 * Check if the title can have an associated talk page
-		 */
+		/** @inheritDoc */
 		canHaveTalkPage(): boolean {
 			return this.getNamespaceId() >= NS_MAIN;
 		}
 
-		/**
-		 * Get the extension of the page name (if any)
-		 */
+		/** @inheritDoc */
 		getExtension(): string | null {
 			let lastDot = this.title.lastIndexOf('.');
 			if (lastDot === -1) {
@@ -240,11 +266,7 @@ export default function () {
 			return this.title.slice(lastDot + 1) || null;
 		}
 
-		/**
-		 * Shortcut for appendable string to form the main page name.
-		 *
-		 * Returns a string like ".json", or "" if no extension.
-		 */
+		/** @inheritDoc */
 		getDotExtension(): string {
 			let ext = this.getExtension();
 			return ext === null ? '' : '.' + ext;
@@ -309,18 +331,12 @@ export default function () {
 			return toUpperMap[chr] || chr.toUpperCase();
 		}
 
-		/**
-		 * @alias #getPrefixedDb
-		 * @method
-		 */
+		/** @inheritDoc */
 		toString(): string {
 			return this.getPrefixedDb();
 		}
 
-		/**
-		 * @alias #getPrefixedText
-		 * @method
-		 */
+		/** @inheritDoc */
 		toText(): string {
 			return this.getPrefixedText();
 		}
