@@ -1,4 +1,5 @@
-FROM mediawiki
+ARG MW_VERSION
+FROM mediawiki:${MW_VERSION}
 
 WORKDIR /var/www/html
 

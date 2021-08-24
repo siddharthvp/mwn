@@ -1,7 +1,10 @@
 version: '3' # MediaWiki with MariaDB, Access via "http://localhost:8080"
 services:
   mediawiki:
-    build: .
+    build:
+      context: .
+      args:
+        MW_VERSION: "${MW_VERSION}"
     restart: always
     ports:
       - 8080:80
