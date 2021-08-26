@@ -243,7 +243,9 @@ export class Response {
 
 	async handleErrors(): Promise<void | ApiResponse> {
 		// TODO: support non-legacy error formats
-		const error = this.response.error;
+		let error =
+			this.response.error || // errorformat=bc (default)
+			this.response.errors?.[0]; // other error formats
 		if (error) {
 			if (this.requestOptions.retryNumber < this.bot.options.maxRetries) {
 				switch (error.code) {
@@ -256,7 +258,7 @@ export class Response {
 							this.bot.getTokens(),
 						]).then(([tokentype]) => {
 							if (!tokentype || !this.bot.state[tokentype + 'token']) {
-								return this.dieWithError();
+								return this.dieWithError(error);
 							}
 							this.params.token = this.bot.state[tokentype + 'token'];
 							return this.retry();
@@ -292,7 +294,7 @@ export class Response {
 					case 'assertuserfailed':
 						// this shouldn't have happened if we're using OAuth
 						if (this.bot.usingOAuth) {
-							return this.dieWithError();
+							return this.dieWithError(error);
 						}
 
 						// Possibly due to session loss: retry after logging in again
@@ -317,14 +319,14 @@ export class Response {
 								return this.retry();
 							});
 						} else {
-							return this.dieWithError();
+							return this.dieWithError(error);
 						}
 
 					default:
-						return this.dieWithError();
+						return this.dieWithError(error);
 				}
 			} else {
-				return this.dieWithError();
+				return this.dieWithError(error);
 			}
 		}
 	}
@@ -334,10 +336,10 @@ export class Response {
 		return this.bot.request(this.params, this.requestOptions);
 	}
 
-	dieWithError(): Promise<never> {
+	dieWithError(error: any): Promise<never> {
 		let response = this.rawResponse,
 			requestOptions = this.requestOptions;
-		let errorData = Object.assign({}, response.data.error, {
+		let errorData = Object.assign({}, error, {
 			// Enhance error object with additional information:
 			// the full API response: everything in AxiosResponse object except
 			// config (not needed) and request (included as errorData.request instead)

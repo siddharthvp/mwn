@@ -4,6 +4,8 @@ import type { RawRequestParams } from './core';
 export type MwnErrorConfig = {
 	code: string;
 	info?: string;
+	html?: string; // errorformat html
+	text?: string; // errorformat plaintext/wikitext
 	response?: Record<string, unknown>;
 	request?: RawRequestParams;
 	disableRetry?: boolean;
@@ -20,7 +22,7 @@ export class MwnError extends Error {
 		// If it's an mwn internal error, don't put the error code (begins with "mwn")
 		// in the error message
 		const code = !config.code || config.code.startsWith('mwn') ? '' : config.code + ': ';
-		const info = config.info || '';
+		const info = config.info || config.text || config.html || '';
 		super(code + info);
 		Object.assign(this, config);
 	}
