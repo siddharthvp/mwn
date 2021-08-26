@@ -234,9 +234,25 @@ export class Response {
 
 	showWarnings() {
 		if (this.response.warnings && !this.bot.options.suppressAPIWarnings) {
-			for (let [key, info] of Object.entries(this.response.warnings)) {
-				// @ts-ignore
-				log(`[W] Warning received from API: ${key}: ${info.warnings}`);
+			if (Array.isArray(this.response.warnings)) {
+				// new error formats
+				for (let { code, module, info, html, text } of this.response.warnings) {
+					if (code === 'deprecation-help') {
+						// skip
+						continue;
+					}
+					const msg =
+						info || // errorformat=bc
+						text || // errorformat=wikitext/plaintext
+						html; // errorformat=html
+					log(`[W] Warning received from API: ${module}: ${msg}`);
+				}
+			} else {
+				// legacy error format (bc)
+				for (let [key, info] of Object.entries(this.response.warnings)) {
+					// @ts-ignore
+					log(`[W] Warning received from API: ${key}: ${info.warnings}`);
+				}
 			}
 		}
 	}
