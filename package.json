@@ -17,7 +17,8 @@
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coveralls": "nyc report --reporter=text-lcov | coveralls",
 		"test:ts": "ts-mocha -p tsconfig.json tests/ts/*",
-		"docs": "node scripts/generate-docs.js"
+		"docs": "cd website && npm start",
+		"docs:api": "node scripts/generate-docs.js"
 	},
 	"engines": {
 		"node": ">=10"

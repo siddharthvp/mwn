@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Setting up Mwn
+# Getting started
 
 Installation: `npm install mwn`
 
@@ -25,10 +25,16 @@ import { mwn } from 'mwn';
 
 If you're migrating from mwbot, note that:
 
--   `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
--   If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
+- `edit` in mwbot is different from `edit` in mwn. You want to use `save` instead.
+- If you were using the default formatversion=1 output format, set formatversion: 1 in the config options.
 
-Create a new bot instance:
+#### Set up a bot password or OAuth credentials
+
+Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wiki/Manual:Bot_passwords) and [OAuth 1.0a](https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers). Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also more secure.
+
+Bot passwords, however, are a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page.
+
+#### Initializing bot object
 
 ```js
 const bot = await mwn.init({

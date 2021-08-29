@@ -7,11 +7,6 @@ let bot = new mwn({
 	...loginCredentials.account1,
 	userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
 });
-let bot2 = new mwn({
-	silent: true,
-	userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
-	...loginCredentials.account2,
-});
 
 async function setup() {
 	// Switching to BotPassword authentication due to OAuth being unreliable in CI due to
@@ -28,4 +23,4 @@ async function setup() {
 async function teardown() {}
 
 // Export everything
-module.exports = { mwn, bot, bot2, log, expect, assert, sinon, setup, teardown };
+module.exports = { mwn, bot, log, expect, assert, sinon, setup, teardown };

@@ -20,10 +20,10 @@ jobs:
         run: |
           npm ci
           cd website && npm install && cd -
-      - name: Build docs
-        run: |
-          npm run docs
-          cd website && npm run build && cd -
+      - name: Build documentation
+        run: cd website && npm run build && cd -
+      - name: Build API documentation
+        run: npm run docs:api
       - name: Zip docs
         run: |
           mv docs website/build/docs/api
@@ -32,11 +32,11 @@ jobs:
       - name: Copy docs to Toolforge
         uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
         with:
-          local: /home/runner/work/mwn/mwn/website/build/docs.zip
+          local: ${{github.workspace}}/website/build/docs.zip
           remote: /data/project/mwn/docs.zip
           host: login.toolforge.org
-          username: ${{ secrets.TOOLFORGE_USERNAME }}
-          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          username: ${{secrets.TOOLFORGE_USERNAME}}
+          privateKey: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
           rmRemote: true
       - name: Unzip
         uses: garygrossgarten/github-action-ssh@2b10f41b5a33808f6d24eafd253296766308b7c4
@@ -48,5 +48,5 @@ jobs:
             unzip /data/project/mwn/docs.zip -d .
             rm /data/project/mwn/docs.zip
           host: login.toolforge.org
-          username: ${{ secrets.TOOLFORGE_USERNAME }}
-          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          username: ${{secrets.TOOLFORGE_USERNAME}}
+          privateKey: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
