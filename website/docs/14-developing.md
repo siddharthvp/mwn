@@ -2,7 +2,7 @@
 
 Obtain the latest development copy:
 
-```sh
+```bash
 git clone https://github.com/siddharthvp/mwn.git
 cd mwn
 npm install		# install dependencies
