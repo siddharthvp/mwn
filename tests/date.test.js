@@ -35,6 +35,8 @@ describe('date', async function () {
 		let date = new bot.date('2012-05-09');
 		expect(date.format('YYYY-MM-DD[T]HH:mm:ss[Z]')).to.equal('2012-05-09T00:00:00Z');
 		expect(date.format('YYYY-[MM]-DD[T]HH:mm:ss[Z]')).to.equal('2012-MM-09T00:00:00Z');
+
+		expect(date.toString()).to.equal('9 May 2012, 00:00:00 (UTC)');
 	});
 
 	it('adds and subtracts dates', function () {

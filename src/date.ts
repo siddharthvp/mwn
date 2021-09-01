@@ -266,6 +266,10 @@ export default function (bot: mwn) {
 			}
 		}
 
+		toString(): string {
+			return this.format('D MMMM YYYY, HH:mm:ss (UTC)', 'utc');
+		}
+
 		static localeData = {
 			months: [
 				'January',
