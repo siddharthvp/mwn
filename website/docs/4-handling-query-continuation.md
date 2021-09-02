@@ -21,10 +21,10 @@ for await (let json of bot.continuedQueryGen({
 
 Specialised derivatives exist to fulfill common needs:
 
--   `new bot.page('Page name').historyGen()` - fetch page history
--   `new bot.page('Page name').logsGen()` - fetch page logs
--   `new bot.category('Page name').membersGen()` - fetch category members
--   `new bot.user('User name').contribsGen()` - fetch user contributions
--   `new bot.user('User name').logsGen()` - fetch user logs
+- `new bot.page('Page name').historyGen()` - fetch page history
+- `new bot.page('Page name').logsGen()` - fetch page logs
+- `new bot.category('Page name').membersGen()` - fetch category members
+- `new bot.user('User name').contribsGen()` - fetch user contributions
+- `new bot.user('User name').logsGen()` - fetch user logs
 
 Every method with a name that ends in `Gen` is an async generator.

@@ -9,7 +9,8 @@
 		"format": "prettier --write .",
 		"build": "tsc || echo",
 		"quickbuild": "babel src --extensions \".ts\" --out-dir build",
-		"lint": "eslint src tests",
+		"lint": "eslint src tests && markdownlint-cli2",
+		"lint:fix": "eslint --fix src tests && markdownlint-cli2-fix",
 		"test:testwiki": "cd tests && mocha bot.test.js category.test.js file.test.js login.bot.test.js oauth.test.js page.test.js suppl.bot.test.js user.test.js wikitext.test.js",
 		"setuplocalwiki": "cd tests/docker && bash main.sh",
 		"test:localwiki": "cd tests && mocha edit.bot.test.js user.edit.test.js errors.test.js shutoff.test.js core.test.js",
@@ -66,6 +67,7 @@
 		"eslint-plugin-chai-expect": "^2.2.0",
 		"husky": "^4.3.8",
 		"lint-staged": "^11.0.0",
+		"markdownlint-cli2": "^0.3.0",
 		"mocha": "^8.2.1",
 		"mocha-chai-jest-snapshot": "^1.1.2",
 		"nock": "^13.1.0",
@@ -83,6 +85,7 @@
 		}
 	},
 	"lint-staged": {
-		"*.ts(x)?": "prettier --write"
+		"*.ts(x)?": "prettier --write",
+		"*.md": "markdownlint-cli2-fix"
 	}
 }

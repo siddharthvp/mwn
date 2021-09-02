@@ -1,6 +1,6 @@
 # Direct API calls
 
-The `request` method is for directly querying the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options. 
+The `request` method is for directly querying the API. See [mw:API](https://www.mediawiki.org/wiki/API:Main_page) for options.
 
 You can create and test your queries in [Special:ApiSandbox](https://www.mediawiki.org/wiki/Special:ApiSandbox). However, note that ApiSandbox uses json formatversion=1 by default whereas Mwn defaults to formatversion=2. So you should set formatversion: 2 in the format=json options, otherwise the output can be formatted differently for certain API endpoints. Use of the legacy formatversion is not recommended.
 

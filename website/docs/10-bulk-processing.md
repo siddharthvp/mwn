@@ -1,6 +1,7 @@
 # Bulk processing
 
 ### continuedQuery / continuedQueryGen
+
 See [Handling query continuation](/docs/handling-query-continuation) for more details.
 
 continuedQuery returns a promised resolved with the array of all individual API response.
@@ -8,6 +9,7 @@ continuedQuery returns a promised resolved with the array of all individual API 
 Use of `continuedQueryGen` is recommended since continuedQuery will fetch the results of all the API calls before it begins to do anything with the results. `continuedQueryGen` gets the result of each API call and processes them one at a time.
 
 ### massQuery / massQueryGen
+
 MediaWiki sets a limit of 500 (50 for non-bots) on the number of pages that can be queried in a single API call. To query more than that, `massQuery` or `massQueryGen` can be used. This splits the page list into batches of 500 and sends individual queries and returns a promise resolved with the array of all individual API call responses.
 
 Example: get the protection status of a large number of pages:
@@ -33,7 +35,7 @@ massQueryGen is the generator equivalent that yields each API response as when t
 
 Perform asynchronous tasks (involving API usage) over a number of pages (or other arbitrary items). `batchOperation` uses a default concurrency of 5. Customise this according to how expensive the API operation is. Higher concurrency limits could lead to more frequent API errors.
 
--   `batchOperation(pageList, workerFunction, concurrency, maxRetries)`: The `workerFunction` must return a promise.
+- `batchOperation(pageList, workerFunction, concurrency, maxRetries)`: The `workerFunction` must return a promise.
 
 ```js
 bot.batchOperation(
@@ -48,7 +50,7 @@ bot.batchOperation(
 );
 ```
 
--   `bot.seriesBatchOperation(pageList, workerFunction, sleepDuration, retries)` can be used for serial operations, with a sleep duration between each task (default 5 seconds).
+- `bot.seriesBatchOperation(pageList, workerFunction, sleepDuration, retries)` can be used for serial operations, with a sleep duration between each task (default 5 seconds).
 
 ```js
 bot.seriesBatchOperation(

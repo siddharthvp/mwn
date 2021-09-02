@@ -1,11 +1,6 @@
----
-sidebar_position: 1
----
-
 # Getting started
 
 Installation: `npm install mwn`
-
 
 Importing mwn:
 

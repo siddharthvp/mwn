@@ -11,4 +11,4 @@ log('[W] Warning message');
 log('[E] Error message');
 ```
 
-Based on the character within `[]`, colouration happens automatically. 
+Based on the character within `[]`, colouration happens automatically.

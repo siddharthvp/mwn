@@ -1,0 +1,14 @@
+{
+	"config": {
+		"line-length": false,
+		"header-increment": false,
+		"first-line-heading": false,
+		"no-inline-html": false,
+		"ol-prefix": false,
+		"no-hard-tabs": false
+	},
+	"globs": [
+		"*.md",
+		"website/docs/*.md"
+	]
+}
