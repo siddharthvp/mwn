@@ -12,9 +12,11 @@
 
 Mwn works with both JavaScript and TypeScript. It is created with a design philosophy of allowing bot developers to easily and quickly write bot code, without having to deal with the MediaWiki API complications and idiosyncrasies such as logins, tokens, maxlag, query continuations and error handling. [Making raw API calls](https://mwn.toolforge.org/docs/direct-api-calls) is also supported for complete flexibility where needed. Mwn uses [JSON with formatversion 2](https://www.mediawiki.org/wiki/API:JSON_version_2#Using_the_new_JSON_results_format) by default. The [axios](https://www.npmjs.com/package/axios) library is used for HTTP requests.
 
+This library provides TypeScript type definitions for all its functions, as well as for MediaWiki API request objects (MW core + several extensions). API responses are also typed for the common operations.  
+
 In addition to the MediaWiki Action API, the library also provides methods to talk to the Wikimedia EventStreams API, the ORES API, Pageviews API and WikiWho API.
 
-This library uses mocha for tests and has extensive test coverage covering all commonly used code paths. Testing is automated using a CI workflow on Github Actions.
+This library uses mocha for tests and has extensive test coverage. Testing is automated using a CI workflow on GitHub Actions.
 
 To install, run `npm install mwn`.
 

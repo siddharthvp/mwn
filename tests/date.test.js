@@ -67,4 +67,13 @@ describe('date', async function () {
 		expect(bot.date.getMonthName(1)).to.eq('January');
 		expect(bot.date.getMonthNameAbbrev(1)).to.eq('Jan');
 	});
+
+	it('loads locale data using API', async function () {
+		bot.options.defaultParams.assert = undefined; // avoid sign-in
+		await bot.date.populateLocaleData('fr');
+		expect(bot.date.localeData.months[0]).to.equal('janvier');
+		expect(bot.date.localeData.monthsShort[0]).to.equal('janv.');
+		expect(bot.date.localeData.days[0]).to.equal('dimanche');
+		expect(bot.date.localeData.daysShort[0]).to.equal('dim.');
+	});
 });

@@ -25,7 +25,7 @@ export interface MwnDate extends Date {
 	 * @param {number} number - should be an integer
 	 * @param {string} unit
 	 * @throws {Error} if invalid or unsupported unit is given
-	 * @returns {XDate}
+	 * @returns {MwnDate}
 	 */
 	add(number: number, unit: timeUnit): MwnDate;
 
@@ -35,13 +35,38 @@ export interface MwnDate extends Date {
 	 * @param {number} number - should be an integer
 	 * @param {string} unit
 	 * @throws {Error} if invalid or unsupported unit is given
-	 * @returns {XDate}
+	 * @returns {MwnDate}
 	 */
 	subtract(number: number, unit: timeUnit): MwnDate;
 
 	/**
 	 * Formats the date into a string per the given format string.
-	 * Replacement syntax is a subset of that in moment.js.
+	 * Replacement syntax is a subset of that in moment.js:
+	 *
+	 * | Syntax | Output |
+	 * |--------|--------|
+	 * | H | Hours (24-hour) |
+	 * | HH | Hours (24-hour, padded to 2 digits) |
+	 * | h | Hours (12-hour) |
+	 * | hh | Hours (12-hour, padded to 2 digits) |
+	 * | A | AM or PM |
+	 * | m | Minutes |
+	 * | mm | Minutes (padded to 2 digits) |
+	 * | s | Seconds |
+	 * | ss | Seconds (padded to 2 digits) |
+	 * | d | Day number of the week (Sun=0) |
+	 * | ddd | Abbreviated day name |
+	 * | dddd | Full day name |
+	 * | D | Date |
+	 * | DD | Date (padded to 2 digits) |
+	 * | M | Month number (1-indexed) |
+	 * | MM | Month number (1-indexed, padded to 2 digits) |
+	 * | MMM | Abbreviated month name |
+	 * | MMMM | Full month name |
+	 * | Y | Year |
+	 * | YY | Final two digits of year (20 for 2020, 42 for 1942) |
+	 * | YYYY | Year (same as `Y`) |
+	 *
 	 * @param {string} formatstr
 	 * @param {(string|number)} [zone=utc] - 'system' (for system-default time zone),
 	 * 'utc' (for UTC), or specify a time zone as number of minutes past UTC.
@@ -80,6 +105,16 @@ export interface MwnDateStatic {
 	 * Get abbreviated day name from day number (1-indexed, starting from Sunday)
 	 */
 	getDayNameAbbrev(dayNum: number): string;
+
+	localeData: any;
+
+	/**
+	 * Customize language used for day and month names. This fetches the
+	 * the data from MediaWiki API. By default it is English.
+	 * @param lang - Defaults to the content language of the wiki the bot
+	 * is logged into.
+	 */
+	populateLocaleData(lang?: string): Promise<void>;
 }
 
 export default function (bot: mwn) {
@@ -297,6 +332,24 @@ export default function (bot: mwn) {
 				other: 'YYYY-MM-DD',
 			},
 		};
+
+		/** @inheritDoc */
+		static async populateLocaleData(lang?: string) {
+			const monthsKeys = 'january|february|march|april|may_long|june|july|august|september|october|november|december'.split(
+				'|',
+			);
+			const monthsShortKeys = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec'.split('|');
+			const daysKeys = 'sunday|monday|tuesday|wednesday|thursday|friday|saturday'.split('|');
+			const daysShortKeys = 'sun|mon|tue|wed|thu|fri|sat'.split('|');
+
+			const messages = await bot.getMessages([...monthsKeys, ...monthsShortKeys, ...daysKeys, ...daysShortKeys], {
+				amlang: lang || 'content',
+			});
+			this.localeData.months = monthsKeys.map((key) => messages[key]);
+			this.localeData.monthsShort = monthsShortKeys.map((key) => messages[key]);
+			this.localeData.days = daysKeys.map((key) => messages[key]);
+			this.localeData.daysShort = daysShortKeys.map((key) => messages[key]);
+		}
 
 		/** @inheritDoc */
 		static getMonthName(monthNum: number): string {
