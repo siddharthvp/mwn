@@ -4,14 +4,14 @@
  * the Request and Response classes defined in this file.
  */
 
-import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
 import * as formData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
 
-import type { mwn, ApiParams } from './bot';
+import type { ApiParams, mwn } from './bot';
 import { log } from './log';
-import { rejectWithError } from './error';
+import { MwnError, rejectWithError } from './error';
 import { merge, mergeDeep1, sleep } from './utils';
 import { ApiResponse } from './api_response_types';
 
@@ -258,10 +258,10 @@ export class Response {
 	}
 
 	async handleErrors(): Promise<void | ApiResponse> {
-		// TODO: support non-legacy error formats
-		let error =
+		let error = new MwnError(
 			this.response.error || // errorformat=bc (default)
-			this.response.errors?.[0]; // other error formats
+				this.response.errors?.[0], // other error formats
+		);
 		if (error) {
 			if (this.requestOptions.retryNumber < this.bot.options.maxRetries) {
 				switch (error.code) {

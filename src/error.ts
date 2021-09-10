@@ -12,6 +12,11 @@ export type MwnErrorConfig = {
 };
 
 export class MwnError extends Error {
+	// The error object can have arbitrary properties
+	[key: string]: any;
+	code?: string;
+	info?: string;
+
 	/**
 	 * @param {Object} config
 	 */
@@ -24,7 +29,9 @@ export class MwnError extends Error {
 		const code = !config.code || config.code.startsWith('mwn') ? '' : config.code + ': ';
 		const info = config.info || config.text || config.html || '';
 		super(code + info);
+
 		Object.assign(this, config);
+		this.info = info; // not already present in case of html/wikitext/plaintext error formats
 	}
 
 	static MissingPage = class MwnErrorMissingPage extends MwnError {
