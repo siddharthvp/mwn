@@ -152,7 +152,7 @@ describe('methods which modify the wiki', function () {
 				.uploadFromUrl(
 					'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png',
 					'Random-' + Math.random() + '.png',
-					'Test upload using mwn',
+					'Test upload using mwn'
 				)
 				.then((data) => {
 					expect(data.result).to.equal('Success');

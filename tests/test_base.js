@@ -13,7 +13,7 @@ chai.use(chaiAsPromised);
 // https://github.com/yargs/yargs/blob/HEAD/lib/cjs.ts#L16
 process.env.YARGS_MIN_NODE_VERSION = '10';
 
-const { jestSnapshotPlugin } = require("mocha-chai-jest-snapshot");
+const { jestSnapshotPlugin } = require('mocha-chai-jest-snapshot');
 chai.use(jestSnapshotPlugin());
 
 const expect = chai.expect;

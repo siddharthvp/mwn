@@ -39,7 +39,7 @@ export interface MwnWikitextStatic {
 	 * with its keys being column names, and values the cell content
 	 */
 	parseTable(
-		text: string,
+		text: string
 	): {
 		[column: string]: string;
 	}[];
@@ -269,7 +269,7 @@ export function parseTemplates(wikitext: string, config: TemplateConfig): Templa
 					let processed = processTemplateText(
 						templateWikitext,
 						config.namePredicate,
-						config.templatePredicate,
+						config.templatePredicate
 					);
 					if (processed) {
 						result.push(processed);
@@ -335,7 +335,7 @@ export function parseTemplates(wikitext: string, config: TemplateConfig): Templa
 function processTemplateText(
 	text: string,
 	namePredicate: (name: string | number) => boolean,
-	templatePredicate: (template: Template) => boolean,
+	templatePredicate: (template: Template) => boolean
 ) {
 	// eslint-disable-next-line no-control-regex
 	const template = new Template('{{' + text.replace(/\x01/g, '|') + '}}');

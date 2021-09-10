@@ -255,7 +255,7 @@ export class mwn {
 		{
 			responseType: 'json',
 		},
-		mwn.requestDefaults,
+		mwn.requestDefaults
 	);
 
 	/**
@@ -345,7 +345,7 @@ export class mwn {
 			let majorVersion = parseInt(process.versions.node);
 			if (majorVersion < 10) {
 				log(
-					`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v10.x and above`,
+					`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v10.x and above`
 				);
 			}
 		}
@@ -491,8 +491,8 @@ export class mwn {
 						'User-Agent': this.options.userAgent,
 					},
 				},
-				requestOptions,
-			),
+				requestOptions
+			)
 		);
 	}
 
@@ -517,7 +517,7 @@ export class mwn {
 		return this.rawRequest(req.requestParams).then(
 			(fullResponse: AxiosResponse<ApiResponse>) =>
 				new Response(this, req.apiParams, req.requestParams).process(fullResponse),
-			(error) => new Response(this, req.apiParams, req.requestParams).handleRequestFailure(error),
+			(error) => new Response(this, req.apiParams, req.requestParams).handleRequestFailure(error)
 		);
 	}
 
@@ -875,7 +875,7 @@ export class mwn {
 				redirects: true,
 				...options,
 			},
-			batchFieldName,
+			batchFieldName
 		).then((jsons: Array<ApiResponse>) => {
 			let data = jsons.reduce((data, json) => {
 				json.query.pages.forEach((pg: ApiPage) => {
@@ -902,7 +902,7 @@ export class mwn {
 				redirects: true,
 				...options,
 			},
-			typeof titles[0] === 'number' ? 'pageids' : 'titles',
+			typeof titles[0] === 'number' ? 'pageids' : 'titles'
 		);
 
 		for await (let response of massQueryResponses) {
@@ -940,7 +940,7 @@ export class mwn {
 	async edit(
 		title: string | number,
 		transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams,
-		editConfig?: editConfigType,
+		editConfig?: editConfigType
 	): Promise<ApiEditResponse> {
 		editConfig = editConfig || this.options.editConfig;
 
@@ -1021,7 +1021,7 @@ export class mwn {
 					} else {
 						return rejectWithError(err);
 					}
-				},
+				}
 			);
 	}
 
@@ -1039,7 +1039,7 @@ export class mwn {
 		title: string | number,
 		content: string,
 		summary?: string,
-		options?: ApiEditPageParams,
+		options?: ApiEditPageParams
 	): Promise<ApiEditResponse> {
 		return this.request({
 			action: 'edit',
@@ -1066,7 +1066,7 @@ export class mwn {
 		title: string,
 		content: string,
 		summary?: string,
-		options?: ApiEditPageParams,
+		options?: ApiEditPageParams
 	): Promise<ApiEditResponse> {
 		return this.request({
 			action: 'edit',
@@ -1092,7 +1092,7 @@ export class mwn {
 		title: string | number,
 		header: string,
 		message: string,
-		additionalParams?: ApiEditPageParams,
+		additionalParams?: ApiEditPageParams
 	): Promise<ApiEditResponse> {
 		return this.request({
 			action: 'edit',
@@ -1232,7 +1232,7 @@ export class mwn {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 				},
-			},
+			}
 		).then((data) => {
 			if (data.upload.warnings) {
 				log(`[W] The API returned warnings while uploading to ${title}:`);
@@ -1256,7 +1256,7 @@ export class mwn {
 		url: string,
 		title: string,
 		text: string,
-		options?: ApiUploadParams,
+		options?: ApiUploadParams
 	): Promise<ApiUploadResponse> {
 		return this.request({
 			action: 'upload',
@@ -1426,7 +1426,7 @@ export class mwn {
 		searchTerm: string,
 		limit = 50,
 		props?: ApiQuerySearchParams['srprop'],
-		otherParams?: ApiQuerySearchParams,
+		otherParams?: ApiQuerySearchParams
 	): Promise<ApiSearchResult[]> {
 		return this.request({
 			action: 'query',
@@ -1541,7 +1541,7 @@ export class mwn {
 						},
 						(err: MwnError) => {
 							responses[idx] = err;
-						},
+						}
 					)
 					.finally(() => {
 						sendQuery(idx + 1);
@@ -1591,7 +1591,7 @@ export class mwn {
 		list: T[],
 		worker: (item: T, index: number) => Promise<any>,
 		concurrency = 5,
-		retries = 0,
+		retries = 0
 	): Promise<{ failures: { [item: string]: Error } }> {
 		let counts = {
 			successes: 0,
@@ -1657,8 +1657,8 @@ export class mwn {
 									failures.map((f) => f.item),
 									worker,
 									concurrency,
-									retries - 1,
-								),
+									retries - 1
+								)
 							);
 						} else {
 							let keyedFailuresObject: { [item: string]: Error } = {};
@@ -1714,7 +1714,7 @@ export class mwn {
 		list: T[],
 		worker: (item: T, index: number) => Promise<any>,
 		delay = 5000,
-		retries = 0,
+		retries = 0
 	): Promise<{ failures: { [item: string]: Error } }> {
 		let counts = {
 			successes: 0,
@@ -1795,7 +1795,7 @@ export class mwn {
 					query: query,
 				},
 			},
-			customRequestOptions,
+			customRequestOptions
 		);
 
 		return this.rawRequest(requestOptions).then((response) => response.data);
@@ -1824,7 +1824,7 @@ export class mwn {
 					query: query,
 				},
 			},
-			customRequestOptions,
+			customRequestOptions
 		);
 
 		return this.rawRequest(requestOptions).then((response) => response.data);
@@ -1839,7 +1839,7 @@ export class mwn {
 	oresQueryRevisions(
 		endpointUrl: string,
 		models: string[],
-		revisions: string[] | number[] | string | number,
+		revisions: string[] | number[] | string | number
 	): Promise<any> {
 		let response = {};
 		const chunks = arrayChunk(revisions instanceof Array ? revisions : [revisions], 50);
@@ -1859,7 +1859,7 @@ export class mwn {
 				});
 			},
 			0,
-			2,
+			2
 		).then(() => {
 			return response;
 		});
@@ -1873,7 +1873,7 @@ export class mwn {
 	 * @deprecated Use queryAuthors on the page object directly instead
 	 */
 	async queryAuthors(
-		title: string,
+		title: string
 	): Promise<{ totalBytes: number; users: { id: number; name: string; bytes: number; percent: number }[] }> {
 		return new this.page(title).queryAuthors();
 	}

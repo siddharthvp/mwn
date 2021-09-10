@@ -32,7 +32,7 @@ export interface MwnFile extends MwnPage {
 	 * ns: 0, title: 'Main Page', redirect: false } like objects.
 	 */
 	usages(
-		options?: ApiQueryBacklinkspropParams,
+		options?: ApiQueryBacklinkspropParams
 	): Promise<
 		{
 			pageid: number;

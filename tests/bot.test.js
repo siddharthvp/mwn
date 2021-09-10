@@ -60,7 +60,7 @@ describe('mwn', async function () {
 
 	it('does a query', function () {
 		return bot.query({}).then((result) => {
-			expect(result).to.deep.equal({batchcomplete: true});
+			expect(result).to.deep.equal({ batchcomplete: true });
 		});
 	});
 
@@ -143,7 +143,7 @@ describe('mwn', async function () {
 		return bot.parseWikitext('[[link]]s.').then((parsedtext) => {
 			expect(parsedtext).to.be.a('string');
 			assert(
-				parsedtext.startsWith(`<div class="mw-parser-output"><p><a href="/wiki/Link" title="Link">links</a>.`),
+				parsedtext.startsWith(`<div class="mw-parser-output"><p><a href="/wiki/Link" title="Link">links</a>.`)
 			);
 		});
 	});

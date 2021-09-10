@@ -110,11 +110,11 @@ export interface MwnPage extends MwnTitle {
 	history(
 		props: ApiQueryRevisionsParams['rvprop'],
 		limit: number,
-		customOptions?: ApiQueryRevisionsParams,
+		customOptions?: ApiQueryRevisionsParams
 	): Promise<ApiRevision[]>;
 	historyGen(
 		props: ApiQueryRevisionsParams['rvprop'],
-		customOptions?: ApiQueryRevisionsParams,
+		customOptions?: ApiQueryRevisionsParams
 	): AsyncGenerator<ApiRevision>;
 	/**
 	 * Get the page logs.
@@ -131,12 +131,12 @@ export interface MwnPage extends MwnTitle {
 		props: ApiQueryLogEventsParams['leprop'],
 		limit?: number,
 		type?: string,
-		customOptions?: ApiQueryLogEventsParams,
+		customOptions?: ApiQueryLogEventsParams
 	): Promise<LogEvent[]>;
 	logsGen(
 		props: ApiQueryLogEventsParams['leprop'],
 		type?: string,
-		customOptions?: ApiQueryLogEventsParams,
+		customOptions?: ApiQueryLogEventsParams
 	): AsyncGenerator<LogEvent>;
 	/**
 	 * Get page views data (only for Wikimedia wikis)
@@ -408,7 +408,7 @@ export default function (bot: mwn): MwnPageStatic {
 		history(
 			props: ApiQueryRevisionsParams['rvprop'],
 			limit = 50,
-			customOptions?: ApiQueryRevisionsParams,
+			customOptions?: ApiQueryRevisionsParams
 		): Promise<ApiRevision[]> {
 			return bot
 				.request({
@@ -430,7 +430,7 @@ export default function (bot: mwn): MwnPageStatic {
 
 		async *historyGen(
 			props: ApiQueryRevisionsParams['rvprop'],
-			customOptions?: ApiQueryRevisionsParams,
+			customOptions?: ApiQueryRevisionsParams
 		): AsyncGenerator<ApiRevision> {
 			let continuedQuery = bot.continuedQueryGen({
 				action: 'query',
@@ -452,7 +452,7 @@ export default function (bot: mwn): MwnPageStatic {
 			props: ApiQueryLogEventsParams['leprop'],
 			limit?: number,
 			type?: string,
-			customOptions?: ApiQueryLogEventsParams,
+			customOptions?: ApiQueryLogEventsParams
 		): Promise<LogEvent[]> {
 			let logtypeObj: ApiQueryLogEventsParams = {};
 			if (type) {
@@ -476,7 +476,7 @@ export default function (bot: mwn): MwnPageStatic {
 		async *logsGen(
 			props: ApiQueryLogEventsParams['leprop'],
 			type?: string,
-			customOptions?: ApiQueryLogEventsParams,
+			customOptions?: ApiQueryLogEventsParams
 		): AsyncGenerator<LogEvent> {
 			let logtypeObj: ApiQueryLogEventsParams = {};
 			if (type) {
@@ -529,7 +529,7 @@ export default function (bot: mwn): MwnPageStatic {
 			return bot
 				.rawRequest({
 					url: `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${project}/${access}/${agent}/${encodeURIComponent(
-						this.toString(),
+						this.toString()
 					)}/${granularity}/${startString}/${endString}`,
 					headers: {
 						'User-Agent': bot.options.userAgent,

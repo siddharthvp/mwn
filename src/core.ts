@@ -86,7 +86,7 @@ export class Request {
 				retryNumber: 0,
 			},
 			this.bot.requestOptions,
-			this.requestParams,
+			this.requestParams
 		);
 
 		if (method === 'get') {
@@ -124,7 +124,7 @@ export class Request {
 			this.bot.oauth.authorize(params, {
 				key: this.bot.options.OAuthCredentials.accessToken,
 				secret: this.bot.options.OAuthCredentials.accessSecret,
-			}),
+			})
 		);
 	}
 
@@ -260,7 +260,7 @@ export class Response {
 	async handleErrors(): Promise<void | ApiResponse> {
 		let error = new MwnError(
 			this.response.error || // errorformat=bc (default)
-				this.response.errors?.[0], // other error formats
+				this.response.errors?.[0] // other error formats
 		);
 		if (error) {
 			if (this.requestOptions.retryNumber < this.bot.options.maxRetries) {
@@ -284,7 +284,7 @@ export class Response {
 						log(
 							`[W] Encountered readonly error, waiting for ${
 								this.bot.options.retryPause / 1000
-							} seconds before retrying`,
+							} seconds before retrying`
 						);
 						return sleep(this.bot.options.retryPause).then(() => {
 							return this.retry();
@@ -300,7 +300,7 @@ export class Response {
 						}
 
 						log(
-							`[W] Encountered maxlag: ${error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`,
+							`[W] Encountered maxlag: ${error.lag} seconds lagged. Waiting for ${pause} seconds before retrying`
 						);
 						return sleep(pause * 1000).then(() => {
 							return this.retry();
@@ -329,7 +329,7 @@ export class Response {
 							log(
 								`[W] Retrying failed OAuth authentication in ${
 									this.bot.options.retryPause / 1000
-								} seconds`,
+								} seconds`
 							);
 							return sleep(this.bot.options.retryPause).then(() => {
 								return this.retry();

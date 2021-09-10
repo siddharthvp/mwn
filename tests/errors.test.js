@@ -102,8 +102,8 @@ describe('testing for error recoveries', function () {
 			error: {
 				code: 'maxlag',
 				info: '6 seconds lagged',
-				lag: 6
-			}
+				lag: 6,
+			},
 		};
 
 		mockApi(1, maxlagErrorBody, { 'Retry-After': '6' });
@@ -128,8 +128,8 @@ describe('testing for error recoveries', function () {
 	it('retries on readonly errors', async () => {
 		mockApi(1, {
 			error: {
-				code: 'readonly'
-			}
+				code: 'readonly',
+			},
 		});
 		const retrySpy = sinon.spy(Response.prototype, 'retry');
 		const sleepStub = sinon.stub(utils, 'sleep');
@@ -143,12 +143,5 @@ describe('testing for error recoveries', function () {
 });
 
 function mockApi(times, body, headers) {
-	nock('http://localhost:8080/api.php', { allowUnmocked: true })
-		.get(/.*?/)
-		.times(times)
-		.reply(
-			200,
-			body,
-			headers
-		);
+	nock('http://localhost:8080/api.php', { allowUnmocked: true }).get(/.*?/).times(times).reply(200, body, headers);
 }

@@ -85,7 +85,8 @@
 		}
 	},
 	"lint-staged": {
-		"*.ts(x)?": "prettier --write",
+		"src/**/*.ts,tests/**/*.js": "eslint --fix",
+		"*.{ts,js,json,yml}": "prettier --write",
 		"*.md": "markdownlint-cli2-fix"
 	}
 }

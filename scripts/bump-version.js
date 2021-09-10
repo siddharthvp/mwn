@@ -42,7 +42,7 @@ packageJson.version = versionNums.join('.');
 exec('git diff --name-only | grep package.json', (err, stdout) => {
 	if (stdout.trim()) {
 		console.log(
-			`[E] There are unstaged changes to package.json. Please stage or commit or stash these changes first`,
+			`[E] There are unstaged changes to package.json. Please stage or commit or stash these changes first`
 		);
 		process.exit(1);
 	}

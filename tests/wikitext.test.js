@@ -345,7 +345,7 @@ some text here for 2-3`;
 	{{WikiProject Women's sport
 	 |class=C
 	 |importance=}}`,
-			'First: Correct parameter value',
+			'First: Correct parameter value'
 		);
 		assert.equal(
 			parsed[0].parameters[0].wikitext,
@@ -367,7 +367,7 @@ some text here for 2-3`;
 	 |class=C
 	 |importance=}}
 	`,
-			'First: Correct parameter wikitext',
+			'First: Correct parameter wikitext'
 		);
 		assert.equal(
 			parsed[0].wikitext,
@@ -389,7 +389,7 @@ some text here for 2-3`;
 	 |class=C
 	 |importance=}}
 	}}`,
-			'First: Correct wikitext',
+			'First: Correct wikitext'
 		);
 	});
 

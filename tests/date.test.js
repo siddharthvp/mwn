@@ -1,4 +1,4 @@
-const {bot, expect} = require('./local_wiki');
+const { bot, expect } = require('./local_wiki');
 
 // Includes some tests copied from https://github.com/wikimedia-gadgets/twinkle/blob/master/tests/morebits.date.js
 
@@ -57,7 +57,7 @@ describe('date', async function () {
 		expect(date.calendar(600)).to.eq('2020-11-08');
 		expect(new bot.date(now).calendar('utc')).to.eq('Today at ' + new bot.date(now).format('h:mm A', 'utc'));
 		expect(new bot.date(now).subtract(1, 'day').calendar('utc')).to.eq(
-			'Yesterday at ' + new bot.date(now).format('h:mm A', 'utc'),
+			'Yesterday at ' + new bot.date(now).format('h:mm A', 'utc')
 		);
 	});
 

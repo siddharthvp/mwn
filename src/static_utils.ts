@@ -69,7 +69,7 @@ export class table {
 			style?: string;
 			multiline?: boolean;
 			classes?: string[];
-		} = {},
+		} = {}
 	) {
 		let classes = new Set(config.classes);
 		if (!config.plain) {

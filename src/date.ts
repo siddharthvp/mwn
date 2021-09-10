@@ -132,8 +132,8 @@ export default function (bot: mwn) {
 							dateParts[2],
 							dateParts[3],
 							dateParts[4],
-							dateParts[5],
-						),
+							dateParts[5]
+						)
 					);
 				} else {
 					// Attempt to remove a comma and paren-wrapped timezone, to get MediaWiki
@@ -275,7 +275,7 @@ export default function (bot: mwn) {
 				function (match) {
 					// @ts-ignore
 					return replacementMap[match];
-				},
+				}
 			);
 			return unbinder.rebind().replace(/\[(.*?)\]/g, '$1');
 		}
@@ -336,7 +336,7 @@ export default function (bot: mwn) {
 		/** @inheritDoc */
 		static async populateLocaleData(lang?: string) {
 			const monthsKeys = 'january|february|march|april|may_long|june|july|august|september|october|november|december'.split(
-				'|',
+				'|'
 			);
 			const monthsShortKeys = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec'.split('|');
 			const daysKeys = 'sunday|monday|tuesday|wednesday|thursday|friday|saturday'.split('|');

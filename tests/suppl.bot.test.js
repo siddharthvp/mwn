@@ -5,7 +5,7 @@ describe('supplementary functions', function () {
 
 	const bot = new mwn({
 		apiUrl: 'https://en.wikipedia.org/w/api.php',
-		userAgent: 'https://github.com/siddharthvp/mwn (CI testing)'
+		userAgent: 'https://github.com/siddharthvp/mwn (CI testing)',
 	});
 
 	it('ores (enwiki)', function () {
@@ -13,7 +13,7 @@ describe('supplementary functions', function () {
 			.oresQueryRevisions(
 				'https://ores.wikimedia.org/v3/scores/enwiki/',
 				['articlequality', 'drafttopic'],
-				'955155786',
+				'955155786'
 			)
 			.then((data) => {
 				expect(data).to.be.an('object');
@@ -29,7 +29,7 @@ describe('supplementary functions', function () {
 			.oresQueryRevisions(
 				'https://ores.wikimedia.org/v3/scores/enwiki/',
 				['articlequality', 'drafttopic'],
-				['955155786', '955155756'],
+				['955155786', '955155756']
 			)
 			.then((data) => {
 				expect(data).to.be.an('object');
@@ -68,7 +68,7 @@ describe('supplementary functions', function () {
 			expect(data).to.be.an('object');
 			expect(new bot.date(data.timestamp * 1000)).to.be.within(
 				new bot.date(sinceTime).subtract(5, 'minutes'),
-				new bot.date(sinceTime).add(10, 'minutes'),
+				new bot.date(sinceTime).add(10, 'minutes')
 			);
 			expect(data).to.have.property('wiki').that.is.a('string');
 		}
@@ -94,7 +94,7 @@ describe('supplementary functions', function () {
 		views = await page.pageViews({
 			agent: 'user',
 			start: new bot.date('1 January 2021'),
-			end: new bot.date('5 March 2021')
+			end: new bot.date('5 March 2021'),
 		});
 		expect(views).to.be.instanceOf(Array).of.length(2);
 		expect(views[0]).to.be.an('object').with.property('agent').that.equals('user');
@@ -106,7 +106,7 @@ describe('supplementary functions', function () {
 		this.timeout(10000);
 		await bot.getSiteInfo();
 		let page = new bot.page('Dairy in India');
-		let data  = await page.queryAuthors();
+		let data = await page.queryAuthors();
 		expect(data).to.be.an('object').with.property('totalBytes').that.is.a('number');
 		expect(data).to.have.property('users').that.is.instanceOf(Array).of.length.greaterThan(1);
 		expect(data.users[0]).to.be.an('object').with.property('id').that.is.a('number');
@@ -114,5 +114,4 @@ describe('supplementary functions', function () {
 		expect(data.users[0]).to.have.property('percent').that.is.a('number');
 		expect(data.users[0]).to.have.property('bytes').that.is.a('number');
 	});
-
 });

@@ -28,7 +28,7 @@ describe('static utils', function () {
 				date: '14 January 2012',
 				url: 'https://example.com',
 				1: 'web',
-			}),
+			})
 		).to.equal('{{cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 
 		expect(
@@ -37,7 +37,7 @@ describe('static utils', function () {
 				date: '14 January 2012',
 				url: 'https://example.com',
 				1: 'web',
-			}),
+			})
 		).to.equal('{{Cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 
 		// mainspace template
@@ -47,7 +47,7 @@ describe('static utils', function () {
 				date: '14 January 2012',
 				url: 'https://example.com',
 				1: 'web',
-			}),
+			})
 		).to.equal('{{:Cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 	});
 
@@ -104,7 +104,7 @@ describe('static utils', function () {
 		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
 		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
 		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
-			`{| style="text-align: center"\n|}`,
+			`{| style="text-align: center"\n|}`
 		);
 
 		table = new mwn.table();
@@ -120,7 +120,7 @@ describe('static utils', function () {
 		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
 		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
 		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
-			`{| style="text-align: center"\n|}`,
+			`{| style="text-align: center"\n|}`
 		);
 
 		table = new mwn.table({ multiline: false, classes: ['plainlinks'] });
@@ -158,12 +158,12 @@ describe('static utils', function () {
 					mwn.util.escapeHtml();
 				},
 				TypeError,
-				'throw a TypeError if argument is not a string',
+				'throw a TypeError if argument is not a string'
 			);
 			assert.strictEqual(
 				mwn.util.escapeHtml('<mw awesome="awesome" value=\'test\' />'),
 				'&lt;mw awesome=&quot;awesome&quot; value=&#039;test&#039; /&gt;',
-				'Escape special characters to html entities',
+				'Escape special characters to html entities'
 			);
 		});
 
@@ -251,7 +251,7 @@ describe('static utils', function () {
 				'fc:100:a:d:1:e:ac:0',
 			].map(function (el) {
 				return [true, el, el + ' is a valid IP'];
-			}),
+			})
 		);
 
 		it('isIPv6Address', function () {

@@ -365,7 +365,7 @@ export default function () {
 					// XML/HTML character references produce similar issues.
 					'|&[\\dA-Za-z\u0080-\uFFFF]+;' +
 					'|&#\\d+;' +
-					'|&#x[\\dA-Fa-f]+;',
+					'|&#x[\\dA-Fa-f]+;'
 			);
 
 		namespace = defaultNamespace === undefined ? NS_MAIN : defaultNamespace;

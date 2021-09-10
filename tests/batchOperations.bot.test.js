@@ -31,7 +31,7 @@ describe('batch operations', function () {
 						}, 11);
 					});
 				},
-				7,
+				7
 			)
 			.then((res) => {
 				expect(Object.keys(res.failures)).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
@@ -56,7 +56,7 @@ describe('batch operations', function () {
 					});
 				},
 				7,
-				1,
+				1
 			)
 			.then((res) => {
 				expect(Object.keys(res.failures)).to.deep.equal(['a', 'q']);
@@ -81,7 +81,7 @@ describe('batch operations', function () {
 					});
 				},
 				7,
-				2,
+				2
 			)
 			.then((res) => {
 				expect(Object.keys(res.failures)).to.deep.equal(['a']);
@@ -105,7 +105,7 @@ describe('batch operations', function () {
 						}, 11);
 					});
 				},
-				4,
+				4
 			)
 			.then((res) => {
 				expect(Object.keys(res.failures)).to.deep.equal(['a', 'e', 'i', 'm', 'q']);
@@ -130,7 +130,7 @@ describe('batch operations', function () {
 					});
 				},
 				3,
-				1,
+				1
 			)
 			.then((res) => {
 				// first round failures: a, e, i, m, q
@@ -157,7 +157,7 @@ describe('batch operations', function () {
 					});
 				},
 				3,
-				2,
+				2
 			)
 			.then((res) => {
 				expect(Object.keys(res.failures)).to.deep.equal(['a']);

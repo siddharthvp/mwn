@@ -10,12 +10,12 @@ export interface MwnStreamStatic {
 			since?: Date | MwnDate | string;
 			onopen?: () => void;
 			onerror?: (evt: MessageEvent) => void;
-		},
+		}
 	): MwnStream;
 
 	recentchange(
 		filter: Partial<RecentChangeStreamEvent> | ((data: RecentChangeStreamEvent) => boolean),
-		action: (data: RecentChangeStreamEvent) => void,
+		action: (data: RecentChangeStreamEvent) => void
 	): MwnStream;
 }
 
@@ -100,7 +100,7 @@ export default function (bot: mwn) {
 				since?: Date | MwnDate | string;
 				onopen?: () => void;
 				onerror?: (evt: MessageEvent) => void;
-			} = {},
+			} = {}
 		) {
 			if (Array.isArray(streams)) {
 				streams = streams.join(',');
@@ -157,7 +157,7 @@ export default function (bot: mwn) {
 		 */
 		static recentchange(
 			filter: Partial<RecentChangeStreamEvent> | ((data: RecentChangeStreamEvent) => boolean),
-			action: (data: RecentChangeStreamEvent) => void,
+			action: (data: RecentChangeStreamEvent) => void
 		): EventStream {
 			let stream = new EventStream('recentchange');
 			stream.addListener(filter, action);

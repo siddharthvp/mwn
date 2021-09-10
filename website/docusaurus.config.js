@@ -33,8 +33,7 @@ module.exports = {
 			{
 				docs: {
 					sidebarPath: require.resolve('./sidebars.js'),
-					editUrl:
-						'https://github.com/siddharthvp/mwn/edit/master/website/',
+					editUrl: 'https://github.com/siddharthvp/mwn/edit/master/website/',
 				},
 				theme: {
 					customCss: require.resolve('./src/css/custom.css'),

@@ -27,7 +27,7 @@ describe('OAuth', async function () {
 				},
 				{
 					method: 'post',
-				},
+				}
 			)
 			.then((data) => {
 				expect(data.query.tokens.csrftoken.length).to.be.gt(10);
@@ -54,7 +54,7 @@ describe('OAuth', async function () {
 					headers: {
 						'Content-Type': 'multipart/form-data',
 					},
-				},
+				}
 			)
 			.then((data) => {
 				expect(data.query.tokens.csrftoken.length).to.be.gt(10);

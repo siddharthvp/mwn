@@ -2,7 +2,7 @@
 	"useTabs": true,
 	"singleQuote": true,
 	"quoteProps": "consistent",
-	"trailingComma": "all",
+	"trailingComma": "es5",
 	"overrides": [
 		{
 			"files": "*.yml",

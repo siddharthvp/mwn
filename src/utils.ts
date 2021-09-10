@@ -75,7 +75,7 @@ export function sleep(duration: number): Promise<void> {
 }
 
 export function makeTitles(
-	pages: string | string[] | number | number[] | MwnTitle | MwnTitle[],
+	pages: string | string[] | number | number[] | MwnTitle | MwnTitle[]
 ): { titles: string[] } | { pageids: number[] } {
 	let pagesArray = Array.isArray(pages) ? pages : [pages];
 	if (typeof pagesArray[0] === 'number') {

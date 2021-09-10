@@ -44,7 +44,6 @@ describe('core', function () {
 	});
 
 	describe('Response', function () {
-
 		before('logs in and gets token & namespaceInfo', setup);
 		after('teardown', teardown);
 
@@ -53,7 +52,7 @@ describe('core', function () {
 		it('default legacy error format (bc)', async () => {
 			await expect(bot.request({ action: 'qwertyuiop' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
-				.then(function(error) {
+				.then(function (error) {
 					expect(error).to.be.an.instanceOf(MwnError);
 					expect(error).to.have.property('code', 'badvalue');
 					expect(error).to.have.property('info', 'Unrecognized value for parameter "action": qwertyuiop.');
@@ -61,9 +60,9 @@ describe('core', function () {
 		});
 
 		it('errorformat=html', async () => {
-			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'html'}))
+			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'html' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
-				.then(function(error) {
+				.then(function (error) {
 					expect(error).to.be.an.instanceOf(MwnError);
 					expect(error).to.have.property('code', 'badvalue');
 					expect(error).to.have.property('html', 'Unrecognized value for parameter "action": qwertyuiop.');
@@ -71,9 +70,9 @@ describe('core', function () {
 		});
 
 		it('errorformat=plaintext', async () => {
-			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'plaintext'}))
+			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'plaintext' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
-				.then(function(error) {
+				.then(function (error) {
 					expect(error).to.be.an.instanceOf(MwnError);
 					expect(error).to.have.property('code', 'badvalue');
 					expect(error).to.have.property('text', 'Unrecognized value for parameter "action": qwertyuiop.');
@@ -81,9 +80,9 @@ describe('core', function () {
 		});
 
 		it('errorformat=wikitext', async () => {
-			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'wikitext'}))
+			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'wikitext' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
-				.then(function(error) {
+				.then(function (error) {
 					expect(error).to.be.an.instanceOf(MwnError);
 					expect(error).to.have.property('code', 'badvalue');
 					expect(error).to.have.property('text', 'Unrecognized value for parameter "action": qwertyuiop.');
@@ -101,19 +100,38 @@ describe('core', function () {
 
 		it('shows warnings (new errorformats)', async () => {
 			sinon.spy(logger, 'log');
-			await bot.request({ errorformat: 'html', action: 'query', titles: 'Main Page', prop: 'revisions', rvprop: 'content' });
+			await bot.request({
+				errorformat: 'html',
+				action: 'query',
+				titles: 'Main Page',
+				prop: 'revisions',
+				rvprop: 'content',
+			});
 			expect(logger.log).to.have.been.calledOnce;
-			expect(logger.log.firstCall.firstArg).to.include("[W] Warning received from API: query+revisions: Because");
+			expect(logger.log.firstCall.firstArg).to.include('[W] Warning received from API: query+revisions: Because');
 
-			await bot.request({ errorformat: 'wikitext', action: 'query', titles: 'Main Page', prop: 'revisions', rvprop: 'content' });
+			await bot.request({
+				errorformat: 'wikitext',
+				action: 'query',
+				titles: 'Main Page',
+				prop: 'revisions',
+				rvprop: 'content',
+			});
 			expect(logger.log).to.have.been.calledTwice;
-			expect(logger.log.secondCall.firstArg).to.include("[W] Warning received from API: query+revisions: Because");
+			expect(logger.log.secondCall.firstArg).to.include(
+				'[W] Warning received from API: query+revisions: Because'
+			);
 
-			await bot.request({ errorformat: 'plaintext', action: 'query', titles: 'Main Page', prop: 'revisions', rvprop: 'content' });
+			await bot.request({
+				errorformat: 'plaintext',
+				action: 'query',
+				titles: 'Main Page',
+				prop: 'revisions',
+				rvprop: 'content',
+			});
 			expect(logger.log).to.have.been.calledThrice;
-			expect(logger.log.thirdCall.firstArg).to.include("[W] Warning received from API: query+revisions: Because");
+			expect(logger.log.thirdCall.firstArg).to.include('[W] Warning received from API: query+revisions: Because');
 			sinon.restore();
 		});
-
 	});
 });

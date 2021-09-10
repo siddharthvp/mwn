@@ -248,12 +248,12 @@ describe('title', function () {
 		assert.strictEqual(title.getNamespaceId(), 2, 'Case-insensitive namespace prefix');
 
 		title = new Title(
-			'Foo \u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u2028\u2029\u202F\u205F\u3000 bar',
+			'Foo \u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u2028\u2029\u202F\u205F\u3000 bar'
 		);
 		assert.strictEqual(
 			title.getMain(),
 			'Foo_bar',
-			'Merge multiple types of whitespace/underscores into a single underscore',
+			'Merge multiple types of whitespace/underscores into a single underscore'
 		);
 
 		title = new Title('Foo\u200E\u200F\u202A\u202B\u202C\u202D\u202Ebar');
@@ -277,7 +277,7 @@ describe('title', function () {
 		assert.strictEqual(
 			title.getNamespaceId(),
 			6,
-			'Titles can contain namespace prefixes, which are otherwise ignored',
+			'Titles can contain namespace prefixes, which are otherwise ignored'
 		);
 
 		title = new Title('Example', 6);
@@ -314,7 +314,7 @@ describe('title', function () {
 		assert.strictEqual(
 			title.getSubjectPage().getPrefixedText(),
 			'User:Foo',
-			'getSubjectPage on a subject page is a no-op',
+			'getSubjectPage on a subject page is a no-op'
 		);
 
 		title = title.getTalkPage();
@@ -322,7 +322,7 @@ describe('title', function () {
 		assert.strictEqual(
 			title.getTalkPage().getPrefixedText(),
 			'User talk:Foo',
-			'getTalkPage on a talk page is a no-op',
+			'getTalkPage on a talk page is a no-op'
 		);
 		assert.strictEqual(title.isTalkPage(), true, 'Talk page is detected as such');
 
@@ -335,20 +335,20 @@ describe('title', function () {
 		assert.strictEqual(
 			title.getSubjectPage().getPrefixedText(),
 			'Special:AllPages',
-			'getSubjectPage is self for special pages',
+			'getSubjectPage is self for special pages'
 		);
 
 		title = new Title('Category:Project:Maintenance');
 		assert.strictEqual(
 			title.getTalkPage().getPrefixedText(),
 			'Category talk:Project:Maintenance',
-			'getTalkPage is not confused by colon in main text',
+			'getTalkPage is not confused by colon in main text'
 		);
 		title = new Title('Category talk:Project:Maintenance');
 		assert.strictEqual(
 			title.getSubjectPage().getPrefixedText(),
 			'Category:Project:Maintenance',
-			'getSubjectPage is not confused by colon in main text',
+			'getSubjectPage is not confused by colon in main text'
 		);
 
 		title = new Title('Foo#Caption');
@@ -374,7 +374,7 @@ describe('title', function () {
 		assert.strictEqual(
 			title.toString(),
 			'Article',
-			'Default config: No sensitive namespaces by default. First-letter becomes uppercase',
+			'Default config: No sensitive namespaces by default. First-letter becomes uppercase'
 		);
 
 		title = new Title('ß');
@@ -390,14 +390,14 @@ describe('title', function () {
 		assert.strictEqual(
 			title.toString(),
 			'article',
-			'$wgCapitalLinks=false: Article namespace is sensitive, first-letter case stays lowercase',
+			'$wgCapitalLinks=false: Article namespace is sensitive, first-letter case stays lowercase'
 		);
 
 		title = new Title('john', 2);
 		assert.strictEqual(
 			title.toString(),
 			'User:John',
-			'$wgCapitalLinks=false: User namespace is insensitive, first-letter becomes uppercase',
+			'$wgCapitalLinks=false: User namespace is insensitive, first-letter becomes uppercase'
 		);
 	});
 
