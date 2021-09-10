@@ -258,11 +258,12 @@ export class Response {
 	}
 
 	async handleErrors(): Promise<void | ApiResponse> {
-		let error = new MwnError(
+		let error =
 			this.response.error || // errorformat=bc (default)
-				this.response.errors?.[0] // other error formats
-		);
+			this.response.errors?.[0]; // other error formats
 		if (error) {
+			error = new MwnError(error);
+
 			if (this.requestOptions.retryNumber < this.bot.options.maxRetries) {
 				switch (error.code) {
 					// This will not work if the token type to be used is defined by an

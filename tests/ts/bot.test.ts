@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 /**
  * Basic tests to check that the library works with TypeScript
- * mocha --require ts-node/register tests/ts/bot.test.ts
+ * ts-mocha tests/ts/bot.test.ts
  */
 
 const loginCredentials = require('../mocking/loginCredentials');
