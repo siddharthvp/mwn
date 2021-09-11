@@ -202,11 +202,12 @@ export default function (bot: mwn) {
 			// @ts-ignore
 			let unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
 			if (unitNorm) {
+				let newDate = new bot.date(this.getTime());
 				// @ts-ignore
-				this['set' + unitNorm](this['get' + unitNorm]() + number);
-				return this;
+				newDate['set' + unitNorm](newDate['get' + unitNorm]() + number);
+				return newDate;
 			}
-			throw new Error('Invalid unit "' + unit + '": Only ' + Object.keys(unitMap).join(', ') + ' are allowed.');
+			throw new Error(`Invalid unit "${unit}": Only ${Object.keys(unitMap).join(', ')} are allowed.`);
 		}
 
 		/** @inheritDoc */
