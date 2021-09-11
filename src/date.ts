@@ -373,19 +373,6 @@ export default function (bot: mwn) {
 		}
 	}
 
-	// Tweak set* methods (setHours, setUTCMinutes, etc) so that they
-	// return the modified XDate object rather than the seconds-since-epoch
-	// representation which is what JS Date() gives
-	Object.getOwnPropertyNames(Date.prototype)
-		.filter((f) => f.startsWith('set'))
-		.forEach((func) => {
-			let proxy = XDate.prototype[func];
-			XDate.prototype[func] = function (...args) {
-				proxy.call(this, ...args);
-				return this;
-			};
-		});
-
 	return XDate as MwnDateStatic;
 }
 
