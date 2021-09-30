@@ -76,6 +76,11 @@ describe('Page', async function () {
 		});
 	});
 
+	it('exists', async function () {
+		await expect(page.exists()).to.eventually.equal(true);
+		await expect(new bot.page('werfsd').exists()).to.eventually.equal(false);
+	});
+
 	it('getDeletingAdmin', function () {
 		new bot.page('File:Mwn-0.22011644726991153.png').getDeletingAdmin().then((admin) => {
 			expect(admin).to.equal('SD0001');

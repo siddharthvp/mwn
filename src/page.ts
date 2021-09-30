@@ -23,6 +23,10 @@ export interface MwnPage extends MwnTitle {
 	getTalkPage(): MwnPage;
 	getSubjectPage(): MwnPage;
 	/**
+	 * Check if page exists.
+	 */
+	exists(): Promise<boolean>;
+	/**
 	 * Get page wikitext
 	 */
 	text(): Promise<string>;
@@ -189,6 +193,17 @@ export default function (bot: mwn): MwnPageStatic {
 		}
 
 		/**** Get operations *****/
+
+		/** @inheritDoc */
+		exists(): Promise<boolean> {
+			return bot
+				.query({
+					titles: this.toString(),
+				})
+				.then((data) => {
+					return data.query.pages[0].missing !== true;
+				});
+		}
 
 		/** @inheritDoc */
 		text(): Promise<string> {
