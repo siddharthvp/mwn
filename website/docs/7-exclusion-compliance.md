@@ -4,7 +4,9 @@ Mwn's edit() method can be configured to respect {{nobots}} or equivalent. If th
 
 ```js
 bot.setOptions({
-	exclusionRegex: /\{\{nobots\}\}/i
+	editConfig: {
+		exclusionRegex: /\{\{nobots\}\}/i
+	}
 });
 ```
 
