@@ -372,6 +372,10 @@ export class Response {
 		return rejectWithError(errorData);
 	}
 
+	/**
+	 * This handles errors at the network level
+	 * @param {Object} error
+	 */
 	handleRequestFailure(error: any) {
 		if (
 			!error.disableRetry &&
@@ -381,6 +385,7 @@ export class Response {
 		) {
 			// error might be transient, give it another go!
 			log(`[W] Encountered ${error}, retrying in ${this.bot.options.retryPause / 1000} seconds`);
+			console.log(error); // log the full error for upstream reporting if required
 			return sleep(this.bot.options.retryPause).then(() => {
 				return this.retry();
 			});
