@@ -381,7 +381,12 @@ export class Response {
 			!error.disableRetry &&
 			this.requestOptions.retryNumber < this.bot.options.maxRetries &&
 			// ENOTFOUND usually means bad apiUrl is provided, retrying is pointless and annoying
-			error.code !== 'ENOTFOUND'
+			error.code !== 'ENOTFOUND' &&
+			(
+				!error.response?.status ||
+				// Vaguely retriable error codes
+				[408, 409, 425, 429, 500, 502, 503, 504].includes(error.response.status)
+			)
 		) {
 			// error might be transient, give it another go!
 			log(`[W] Encountered ${error}, retrying in ${this.bot.options.retryPause / 1000} seconds`);
