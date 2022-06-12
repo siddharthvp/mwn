@@ -52,6 +52,7 @@ export function template(title: string | MwnTitle, parameters: { [parameter: str
 export class table {
 	text: string;
 	multiline: boolean;
+	numRows = 0;
 
 	/**
 	 * @param {Object} [config={}]
@@ -125,6 +126,7 @@ export class table {
 	 * @param attributes - row attributes
 	 */
 	addRow(fields: string[], attributes: { [attribute: string]: string } = {}): void {
+		this.numRows++;
 		let attributetext = '';
 		Object.entries(attributes).forEach(([key, value]) => {
 			attributetext += ` ${key}="${value}"`;
@@ -135,6 +137,10 @@ export class table {
 		} else {
 			this.text += `| ` + fields.map((f) => this._makecell(f)).join(' || ') + '\n';
 		}
+	}
+
+	getNumRows() {
+		return this.numRows;
 	}
 
 	/** Returns the final table wikitext */
