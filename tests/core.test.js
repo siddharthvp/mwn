@@ -1,4 +1,4 @@
-const { Request } = require('../build/core');
+const { Request, Response } = require('../build/core');
 const logger = require('../build/log');
 const { MwnError } = require('../build/error');
 
@@ -35,11 +35,13 @@ describe('core', function () {
 
 		it("doesn't retry on ENOTFOUND rejection", async function () {
 			const bot2 = new mwn({ apiUrl: 'https://somewebsite2342978653424.org/w/api.php' });
-			// this test relies on no retry taking place since they won't take place within the 2 second timeout
+			sinon.spy(Response.prototype, 'handleRequestFailure');
 			await expect(bot2.getSiteInfo())
 				.to.be.eventually.rejectedWith(Error)
 				.that.has.property('code')
 				.which.equals('ENOTFOUND');
+			expect(Response.prototype.handleRequestFailure).to.have.been.calledOnce;
+			sinon.restore();
 		});
 	});
 

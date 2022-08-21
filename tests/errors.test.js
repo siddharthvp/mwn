@@ -4,6 +4,8 @@ const { sinon, bot, bot2, expect, setup, teardown } = require('./local_wiki');
 const nock = require('nock');
 const { Request, Response } = require('../build/core');
 const utils = require('../build/utils');
+const { mwn } = require('../build/bot');
+const logger = require('../build/log');
 
 describe('testing for error recoveries', function () {
 	this.timeout(10000);
@@ -21,33 +23,39 @@ describe('testing for error recoveries', function () {
 
 	after('logs out', teardown);
 
-	it('recovers from badtoken errors', function () {
+	it('recovers from badtoken errors', async function () {
 		bot.csrfToken = 'invalid-value';
-		return bot
-			.edit(testPage, function (rev) {
-				return {
-					text: rev.content + '\n\nappended text',
-					summary: 'testing mwn',
-				};
-			})
-			.then((edit) => {
-				expect(edit.result).to.equal('Success');
-			});
+		sinon.spy(mwn.prototype, 'getTokens');
+		sinon.spy(logger, 'log');
+		let edit = await bot.edit(testPage, function (rev) {
+			return {
+				text: rev.content + '\n\nappended text',
+				summary: 'testing mwn',
+			};
+		});
+		expect(mwn.prototype.getTokens).to.have.been.calledOnce;
+		expect(logger.log).to.have.been.calledOnceWith(
+			'[W] Encountered badtoken error, fetching new token and retrying'
+		);
+		expect(edit.result).to.equal('Success');
+		sinon.restore();
 	});
 
 	it('recovers from session loss failure', async function () {
 		bot2.setDefaultParams({ assert: 'user' });
 		await bot2.logout();
-		return bot2
-			.edit(testPage, function (rev) {
-				return {
-					text: rev.content + '\n\nappended text',
-					summary: 'Test edit after session loss',
-				};
-			})
-			.then((edit) => {
-				expect(edit.result).to.equal('Success');
-			});
+		sinon.spy(mwn.prototype, 'login');
+		sinon.spy(logger, 'log');
+		let edit = await bot2.edit(testPage, function (rev) {
+			return {
+				text: rev.content + '\n\nappended text',
+				summary: 'Test edit after session loss',
+			};
+		});
+		expect(mwn.prototype.login).to.be.calledOnce;
+		expect(logger.log).to.have.been.calledOnceWith('[W] Received assertuserfailed, attempting to log in and retry');
+		expect(edit.result).to.equal('Success');
+		sinon.restore();
 	});
 
 	it('makes large edits (multipart/form-data) after session loss', async function () {

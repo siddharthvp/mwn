@@ -30,11 +30,12 @@ describe('login', async function () {
 		});
 	});
 
-	it('raises correct error on trying to login while using OAuth', async function () {
+	it('raises correct error on trying to login while using OAuth', function (done) {
 		let client = new mwn({ ...testwiki.account1, ...testwiki.account1_oauth });
 		client.initOAuth();
-		return client.login().catch((err) => {
+		client.login().catch((err) => {
 			expect(err.info).to.eq(`Cannot use login/logout while using OAuth`);
+			done(); // using done() here to test that catch callback gets called
 		});
 	});
 

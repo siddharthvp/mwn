@@ -43,7 +43,7 @@ describe('methods which modify the wiki', function () {
 			});
 	});
 
-	it('shows warning (see above) on a no-op edit', function () {
+	it('shows warning on a no-op edit', function () {
 		sinon.spy(logger, 'log');
 		return bot
 			.edit(randPage, (rev) => {
@@ -51,6 +51,7 @@ describe('methods which modify the wiki', function () {
 			})
 			.then(() => {
 				expect(logger.log).to.have.been.calledOnce;
+				sinon.restore();
 			});
 	});
 

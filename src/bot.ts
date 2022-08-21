@@ -593,7 +593,7 @@ export class mwn {
 				) {
 					reason = `Already logged in as ${this.options.username}, logout first to re-login`;
 				} else if (
-					data.reason === 'Cannot log in when using MediaWiki\\Extensions\\OAuth\\SessionProvider sessions.'
+					data.reason === 'Cannot log in when using MediaWiki\\Extension\\OAuth\\SessionProvider sessions.'
 				) {
 					reason = `Cannot use login/logout while using OAuth`;
 				} else if (data.reason) {
