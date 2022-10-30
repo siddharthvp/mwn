@@ -699,7 +699,22 @@ export class mwn {
 	 * @returns {Promise<void>}
 	 */
 	async getTokens(): Promise<void> {
-		return this.getTokensAndSiteInfo();
+		return this.request({
+			action: 'query',
+			meta: 'tokens',
+			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
+		}).then((response: ApiResponse) => {
+			if (response.query && response.query.tokens) {
+				this.csrfToken = response.query.tokens.csrftoken;
+				this.state = merge(this.state, response.query.tokens);
+			} else {
+				return rejectWithError({
+					code: 'mwn_notoken',
+					info: 'Could not get token',
+					response,
+				});
+			}
+		});
 	}
 
 	/**
@@ -713,7 +728,7 @@ export class mwn {
 	}
 
 	/**
-	 * Get the tokens and siteinfo in one request
+	 * Get tokens and siteinfo (using a single API request) and save them in the bot state.
 	 * @returns {Promise<void>}
 	 */
 	async getTokensAndSiteInfo(): Promise<void> {

@@ -77,6 +77,14 @@ describe('mwn', async function () {
 		});
 	});
 
+	it('gets tokens', function () {
+		bot.state = {};
+		return bot.getTokens().then(() => {
+			expect(bot.csrfToken.endsWith('+\\')).to.be.true;
+			expect(bot.csrfToken.length).to.be.greaterThan(5);
+		});
+	});
+
 	it('correctly sets logging config', function () {
 		const { logConfig } = require('../build/log');
 		mwn.setLoggingConfig({
