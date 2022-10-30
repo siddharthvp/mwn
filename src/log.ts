@@ -106,6 +106,24 @@ export function error(obj: Error) {
 	}
 }
 
+let colorMap = {
+	'[E]': 'red', // ERROR
+	'[W]': 'yellow', // WARNING
+	'[?]': 'yellow', // MISSING
+	'[S]': 'green', // SUCCESS
+	'[i]': 'blue', // INFO
+	'[+]': 'green', // ADDED
+	'[-]': 'red', // REMOVED
+	'[C]': 'cyan', // CHANGED
+	'[U]': 'grey', // UNCHANGED
+	'[=]': 'grey', // EQUAL
+	'[/]': 'grey', // SKIPPED
+	'[V]': 'magenta', // VERBOSE
+	'[D]': 'magenta', // DEBUG
+	'[T]': 'magenta', // TO-DO
+	'[TODO]': 'magenta', // TO-DO
+};
+
 /**
  * Colors the messages by searching for specific indicator strings
  *
@@ -113,24 +131,6 @@ export function error(obj: Error) {
  * @returns {string}
  */
 export function colorize(msg: item) {
-	let colorMap = {
-		'[E]': 'red', // ERROR
-		'[W]': 'yellow', // WARNING
-		'[?]': 'yellow', // MISSING
-		'[S]': 'green', // SUCCESS
-		'[i]': 'blue', // INFO
-		'[+]': 'green', // ADDED
-		'[-]': 'red', // REMOVED
-		'[C]': 'cyan', // CHANGED
-		'[U]': 'grey', // UNCHANGED
-		'[=]': 'grey', // EQUAL
-		'[/]': 'grey', // SKIPPED
-		'[V]': 'magenta', // VERBOSE
-		'[D]': 'magenta', // DEBUG
-		'[T]': 'magenta', // TO-DO
-		'[TODO]': 'magenta', // TO-DO
-	};
-
 	for (let [code, color] of Object.entries(colorMap)) {
 		if (msg && msg.indexOf && msg.startsWith(code)) {
 			return chalk[color](msg);
