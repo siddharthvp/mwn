@@ -25,7 +25,7 @@ If you're migrating from mwbot, note that:
 
 #### Set up a bot password or OAuth credentials
 
-Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wiki/Manual:Bot_passwords) and [OAuth 1.0a](https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers). Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also more secure.
+Mwn supports authentication via both [BotPasswords](https://www.mediawiki.org/wiki/Manual:Bot_passwords) and [OAuth](https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers). Use of OAuth is recommended as it does away the need for separate API requests for logging in, and is also more secure. Both OAuth versions, 1.0a and 2, are supported.
 
 Bot passwords, however, are a bit easier to set up. To generate one, go to the wiki's [Special:BotPasswords](https://en.wikipedia.org/wiki/Special:BotPasswords) page.
 
@@ -39,8 +39,11 @@ const bot = await mwn.init({
 	username: 'YourBotUsername',
 	password: 'YourBotPassword',
 
-	// Instead of username and password, you can use OAuth 1.0a to authenticate,
+	// Instead of username and password, you can use OAuth 2 to authenticate (recommended),
 	// if the wiki has Extension:OAuth enabled
+	OAuth2AccessToken: "YouOAuth2AccessToken",
+
+	// Or use OAuth 1.0a (also only applicable for wikis with Extension:OAuth)
 	OAuthCredentials: {
 		consumerToken: '16_DIGIT_ALPHANUMERIC_KEY',
 		consumerSecret: '20_DIGIT_ALPHANUMERIC_KEY',
@@ -58,7 +61,7 @@ const bot = await mwn.init({
 });
 ```
 
-This creates a bot instance, signs in and fetches tokens needed for editing.
+This creates a bot instance, signs in and fetches tokens needed for editing. (If credentials for multiple authentication methods are provided, OAuth 2 takes precedence, followed by OAuth 1.0a and bot passwords.)
 
 You can also create a bot instance synchronously (without using await):
 

@@ -104,6 +104,7 @@ export interface MwnOptions {
 		accessToken: string;
 		accessSecret: string;
 	};
+	OAuth2AccessToken?: string;
 	maxRetries?: number;
 	retryPause?: number;
 	shutoff?: {
@@ -272,6 +273,7 @@ export class mwn {
 	oauth: OAuth;
 
 	usingOAuth: boolean;
+	usingOAuth2: boolean;
 
 	static Error = MwnError;
 
@@ -371,7 +373,7 @@ export class mwn {
 	 */
 	static async init(config: MwnOptions): Promise<mwn> {
 		const bot = new mwn(config);
-		if (bot._usingOAuth()) {
+		if (bot.options.OAuth2AccessToken || bot._usingOAuth()) {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
 		} else {
@@ -441,6 +443,11 @@ export class mwn {
 	 * Initialize OAuth instance
 	 */
 	initOAuth() {
+		if (this.options.OAuth2AccessToken) {
+			this.usingOAuth2 = true;
+			return;
+		}
+
 		if (!this._usingOAuth()) {
 			// without this, the API would return a confusing
 			// mwoauth-invalid-authorization invalid consumer error

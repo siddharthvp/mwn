@@ -11,6 +11,10 @@ module.exports = {
 		username: realCredentials.username2,
 		password: realCredentials.password2,
 	},
+	account1_oauth2: {
+		apiUrl: 'https://test.wikipedia.org/w/api.php',
+		OAuth2AccessToken: realCredentials.oauth2_access_token,
+	},
 	account1_oauth: {
 		apiUrl: 'https://test.wikipedia.org/w/api.php',
 		OAuthCredentials: {
