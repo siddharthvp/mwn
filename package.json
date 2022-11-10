@@ -68,7 +68,7 @@
 		"husky": "^4.3.8",
 		"lint-staged": "^11.0.0",
 		"markdownlint-cli2": "^0.3.0",
-		"mocha": "^8.2.1",
+		"mocha": "^10.1.0",
 		"mocha-chai-jest-snapshot": "^1.1.2",
 		"nock": "^13.1.0",
 		"nyc": "^15.1.0",
