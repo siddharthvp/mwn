@@ -3,6 +3,10 @@ export interface ApiResponse {
 	[prop: string]: any;
 }
 
+export interface ApiResponseSubType {
+	[prop: string]: any;
+}
+
 export type ApiEditResponse = {
 	// fix
 	result: string;

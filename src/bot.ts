@@ -81,6 +81,7 @@ import {
 	ApiRevision,
 	ApiRollbackResponse,
 	ApiSearchResult,
+	ApiResponseSubType,
 	ApiUndeleteResponse,
 	ApiUploadResponse,
 } from './api_response_types';
@@ -134,7 +135,7 @@ export type ApiParams = {
 		| Date
 		| File
 		| {
-				stream: ReadableStream;
+				stream: NodeJS.ReadableStream;
 				name: string;
 		  };
 };
@@ -232,7 +233,7 @@ export class mwn {
 	 * Cookie jar for the bot instance - holds session and login cookies
 	 * @type {tough.CookieJar}
 	 */
-	cookieJar = new tough.CookieJar();
+	cookieJar: tough.CookieJar = new tough.CookieJar();
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
@@ -766,7 +767,8 @@ export class mwn {
 			action: 'paraminfo',
 			modules: action,
 		}).then((response) => {
-			return response.paraminfo.modules[0].parameters.find((p) => p.name === 'token').tokentype;
+			return response.paraminfo.modules[0].parameters.find((p: ApiResponseSubType) => p.name === 'token')
+				.tokentype;
 		});
 	}
 
@@ -822,7 +824,7 @@ export class mwn {
 			...options,
 		}).then((data) => {
 			let result: Record<string, string> = {};
-			data.query.allmessages.forEach((obj) => {
+			data.query.allmessages.forEach((obj: ApiResponseSubType) => {
 				if (!obj.missing) {
 					result[obj.name] = obj.content;
 				}
@@ -1578,7 +1580,7 @@ export class mwn {
 			throw new Error(`massQuery: batch field in query must be an array`);
 		}
 		const limit = batchSize || (this.hasApiHighLimit ? 500 : 50);
-		const batches = arrayChunk(batchValues, limit);
+		const batches = arrayChunk(<string[]>batchValues, limit);
 		const numBatches = batches.length;
 
 		for (let i = 0; i < numBatches; i++) {
@@ -1870,7 +1872,7 @@ export class mwn {
 					},
 					responseType: 'json',
 				}).then((oresResponse) => {
-					Object.assign(response, Object.values(oresResponse.data)[0].scores);
+					Object.assign(response, Object.values<ApiResponseSubType>(oresResponse.data)[0].scores);
 				});
 			},
 			0,

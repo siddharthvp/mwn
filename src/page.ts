@@ -12,7 +12,7 @@ import type {
 	ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams,
 } from './api_params';
-import { ApiPage, ApiParseResponse, ApiRevision, LogEvent } from './api_response_types';
+import { ApiPage, ApiParseResponse, ApiRevision, ApiResponseSubType, LogEvent } from './api_response_types';
 
 export interface MwnPageStatic {
 	new (title: MwnTitle | string, namespace?: number): MwnPage;
@@ -535,7 +535,13 @@ export default function (bot: mwn): MwnPageStatic {
 				date.setUTCDate(1);
 				date.setUTCMonth(date.getUTCMonth() - 1);
 				start = start || date;
-				end = end || new bot.date().setUTCDate(1);
+				end =
+					end ||
+					(function () {
+						let d = new bot.date();
+						d.setUTCDate(1);
+						return d;
+					})();
 			}
 
 			let startString = new bot.date(start).format('YYYYMMDD'),
@@ -578,7 +584,7 @@ export default function (bot: mwn): MwnPageStatic {
 				throw new Error(err && err.response && err.response.data && err.response.data.Error);
 			}
 
-			const tokens = Object.values(json.revisions[0])[0].tokens;
+			const tokens = Object.values<ApiResponseSubType>(json.revisions[0])[0].tokens;
 
 			let data: AuthorshipData = {
 				totalBytes: 0,

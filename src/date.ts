@@ -119,6 +119,8 @@ export interface MwnDateStatic {
 
 export default function (bot: mwn) {
 	class XDate extends Date implements MwnDate {
+		constructor(...args: ConstructorParameters<DateConstructor>);
+		constructor(timestamp: string);
 		constructor(...args: any[]) {
 			if (args.length === 1 && typeof args[0] === 'string') {
 				// parse MediaWiki format: YYYYMMDDHHmmss
@@ -371,19 +373,6 @@ export default function (bot: mwn) {
 			return XDate.localeData.daysShort[dayNum - 1];
 		}
 	}
-
-	// Tweak set* methods (setHours, setUTCMinutes, etc) so that they
-	// return the modified XDate object rather than the seconds-since-epoch
-	// representation which is what JS Date() gives
-	Object.getOwnPropertyNames(Date.prototype)
-		.filter((f) => f.startsWith('set'))
-		.forEach((func) => {
-			let proxy = XDate.prototype[func];
-			XDate.prototype[func] = function (...args) {
-				proxy.call(this, ...args);
-				return this;
-			};
-		});
 
 	return XDate as MwnDateStatic;
 }
