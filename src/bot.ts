@@ -747,7 +747,7 @@ export class mwn {
 			uiprop: 'rights',
 		}).then((response: ApiResponse & siteinfoqueryResponse) => {
 			this.title.processNamespaceData(response);
-			if (response.query.userinfo.rights.includes('apihighlimit')) {
+			if (response.query.userinfo.rights.includes('apihighlimits')) {
 				this.hasApiHighLimit = true;
 			}
 			if (response.query && response.query.tokens) {
