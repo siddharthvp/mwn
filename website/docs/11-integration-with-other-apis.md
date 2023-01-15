@@ -1,6 +1,6 @@
 # Integration with other APIs
 
-Apart from the [MediaWiki API](https://www.mediawiki.org/wiki/API:Main_page), Mwn integrates with a few other APIs:
+Apart from the [MediaWiki API](https://www.mediawiki.org/wiki/API:Main_page), Mwn integrates with a few other APIs for Wikimedia wikis:
 
 ### ORES
 
@@ -10,7 +10,7 @@ Get ORES scores for revisions:
 ```js
 await bot.oresQueryRevisions(
 	'https://ores.wikimedia.org/',		// ORES endpoint URL
-	['articlequality', 'drafttopic'],	// ORES modes       
+	['articlequality', 'drafttopic'],	// ORES models       
 	['76923582', '2387429']				// Revision IDs
 );
 ```
@@ -46,16 +46,3 @@ const pageViewData = await page.pageViews({
 ```
 
 The [PageViewOptions](https://mwn.toolforge.org/docs/api/interfaces/pageviewoptions.html) argument is optional. Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/pageviewdata.html">PageViewData</a>[]>.
-
-### WikiWho
-
-See <https://wikiwho.wmflabs.org/>
-
-Fetch the list of top contributors to an article. Available for limited number of Wikipedias.
-
-```js
-const page = new bot.page('Lorem ipsum');
-const contributorData = await page.queryAuthors();
-```
-
-Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/authorshipdata.html">AuthorshipData</a>>.

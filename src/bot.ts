@@ -89,7 +89,7 @@ import {
 export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
 // Export, if only for the sake of getting generated documentation
 export * from './api_response_types';
-export type { PageViewData, PageViewOptions, AuthorshipData } from './page';
+export type { PageViewData, PageViewOptions } from './page';
 export type { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
 
 export interface MwnOptions {
@@ -1885,19 +1885,6 @@ export class mwn {
 		).then(() => {
 			return response;
 		});
-	}
-
-	/**
-	 * Query the top contributors to the article using the WikiWho API.
-	 * This API has a throttling of 2000 requests a day.
-	 * Supported for EN, DE, ES, EU, TR Wikipedias only
-	 * @see https://api.wikiwho.net/
-	 * @deprecated Use queryAuthors on the page object directly instead
-	 */
-	async queryAuthors(
-		title: string
-	): Promise<{ totalBytes: number; users: { id: number; name: string; bytes: number; percent: number }[] }> {
-		return new this.page(title).queryAuthors();
 	}
 
 	/**
