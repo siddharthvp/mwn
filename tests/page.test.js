@@ -57,10 +57,9 @@ describe('Page', async function () {
 	var page2;
 
 	it('getRedirectTarget and isRedirect on redirect', function () {
-		// XXX: possibly transient testcase
-		page2 = new bot.page('API page move test');
+		page2 = new bot.page('Wikipedia:PERM');
 		return page2.getRedirectTarget((target) => {
-			expect(target).to.equal('API page move test (disambiguation)');
+			expect(target).to.equal('Wikipedia:Requests/Permissions');
 		});
 	});
 

@@ -20,7 +20,7 @@ describe('date', async function () {
 		expect(new bot.date('2018-09-12').isValid()).to.eq(true);
 		expect(new bot.date('Bazinga').isValid()).to.eq(false);
 		expect(new bot.date('2012-12-03').isBefore(new Date())).to.eq(true);
-		expect(new bot.date('2022-12-03').isAfter(new Date())).to.eq(true);
+		expect(new bot.date('2022-12-03').isAfter(new Date())).to.eq(false);
 	});
 
 	it('custom get methods', function () {
