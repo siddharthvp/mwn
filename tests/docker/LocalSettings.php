@@ -151,11 +151,3 @@ $wgShowSQLErrors = true;
 # Allow uploads from URL (mw:Manual:Configuring_file_uploads#Uploading_directly_from_a_URL_("Sideloading"))
 $wgAllowCopyUploads = true;
 $wgGroupPermissions['user']['upload_by_url'] = true;
-
-wfLoadExtension( 'OAuth' );
-$wgGroupPermissions['sysop']['mwoauthproposeconsumer'] = true;
-$wgGroupPermissions['sysop']['mwoauthupdateownconsumer'] = true;
-$wgGroupPermissions['sysop']['mwoauthmanageconsumer'] = true;
-$wgGroupPermissions['sysop']['mwoauthmanagemygrants'] = true;
-$wgGroupPermissions['sysop']['mwoauthviewprivate'] = true;
-
