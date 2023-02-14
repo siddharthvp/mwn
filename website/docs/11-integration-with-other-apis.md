@@ -15,25 +15,6 @@ await bot.oresQueryRevisions(
 );
 ```
 
-### EventStreams
-
-See <https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams>
-
-```js
-const stream = bot.stream(['recentchange']);
-stream.addListener(
-	// Consider event only if this function returns true
-	function eventFilter(data) {
-		return data.wiki === 'enwiki';
-	},
-	
-	// Run this function for every filtered event
-	async function worker(data) {
-		// do something with data
-	}
-);
-```
-
 ### PageViews
 
 See <https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews>
@@ -46,3 +27,7 @@ const pageViewData = await page.pageViews({
 ```
 
 The [PageViewOptions](https://mwn.toolforge.org/docs/api/interfaces/pageviewoptions.html) argument is optional. Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/pageviewdata.html">PageViewData</a>[]>.
+
+### EventStreams
+
+Methods for [EventStreams](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams) access have been removed in v2. Consider using the dedicated library <https://www.npmjs.com/package/wikimedia-streams> instead.

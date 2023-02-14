@@ -51,7 +51,6 @@ import MwnWikitextFactory, { MwnWikitext } from './wikitext';
 import MwnUserFactory, { MwnUser } from './user';
 import MwnCategoryFactory, { MwnCategory } from './category';
 import MwnFileFactory, { MwnFile } from './file';
-import MwnStreamFactory, { MwnStream } from './eventstream';
 import { RawRequestParams, Request, Response } from './core';
 import { log, updateLoggingConfig } from './log';
 import { MwnError, rejectWithError, rejectWithErrorCode } from './error';
@@ -86,7 +85,7 @@ import {
 	ApiUploadResponse,
 } from './api_response_types';
 
-export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, MwnStream, ApiPage, ApiRevision };
+export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, ApiPage, ApiRevision };
 // Export, if only for the sake of getting generated documentation
 export * from './api_response_types';
 export type { PageViewData, PageViewOptions } from './page';
@@ -322,12 +321,6 @@ export class mwn {
 	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
 	wikitext = MwnWikitextFactory(this);
-
-	/**
-	 * Stream class associated with the bot instance.
-	 * See {@link MwnStream} interface for methods on stream objects.
-	 */
-	stream = MwnStreamFactory(this);
 
 	/**
 	 * Date class associated with the bot instance.
