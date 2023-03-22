@@ -58,4 +58,17 @@ describe('supplementary functions', function () {
 		expect(views[0]).to.be.an('object').with.property('timestamp').that.equals('2021010100');
 		expect(views[1]).to.be.an('object').with.property('timestamp').that.equals('2021020100');
 	});
+
+	it('wikiwho', async function () {
+		this.timeout(10000);
+		await bot.getSiteInfo();
+		let page = new bot.page('Dairy in India');
+		let data = await page.queryAuthors();
+		expect(data).to.be.an('object').with.property('totalBytes').that.is.a('number');
+		expect(data).to.have.property('users').that.is.instanceOf(Array).of.length.greaterThan(1);
+		expect(data.users[0]).to.be.an('object').with.property('id').that.is.a('number');
+		expect(data.users[0]).to.have.property('name').that.is.a('string');
+		expect(data.users[0]).to.have.property('percent').that.is.a('number');
+		expect(data.users[0]).to.have.property('bytes').that.is.a('number');
+	});
 });

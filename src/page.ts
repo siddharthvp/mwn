@@ -148,7 +148,13 @@ export interface MwnPage extends MwnTitle {
 	 * @param options
 	 */
 	pageViews(options?: PageViewOptions): Promise<PageViewData[]>;
-
+	/**
+	 * Query the top contributors to the article using the WikiWho API.
+	 * This API has a throttling of 2000 requests a day.
+	 * Supported for EN, DE, ES, EU, TR Wikipedias only
+	 * @see https://wikiwho.wmflabs.org/
+	 */
+	queryAuthors(): Promise<AuthorshipData>;
 	edit(transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams): Promise<any>;
 	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>;
 	newSection(header: string, message: string, additionalParams?: ApiEditPageParams): Promise<any>;
@@ -549,6 +555,91 @@ export default function (bot: mwn): MwnPageStatic {
 				});
 		}
 
+		/** @inheritDoc */
+		async queryAuthors(): Promise<AuthorshipData> {
+			let langcodematch = bot.options.apiUrl.match(/([^/]*?)\.wikipedia\.org/);
+			if (!langcodematch || !langcodematch[1]) {
+				throw new Error('WikiWho API is not supported for bot API URL. Re-check.');
+			}
+
+			let json;
+			try {
+				json = await bot
+					.rawRequest({
+						url: `https://wikiwho.wmflabs.org/${
+							langcodematch[1]
+						}/api/v1.0.0-beta/latest_rev_content/${encodeURIComponent(this.toString())}/?editor=true`,
+						headers: {
+							'User-Agent': bot.options.userAgent,
+						},
+					})
+					.then((response) => response.data);
+			} catch (err) {
+				throw new Error(err && err.response && err.response.data && err.response.data.Error);
+			}
+
+			const tokens = Object.values(json.revisions[0])[0].tokens;
+
+			let data: AuthorshipData = {
+				totalBytes: 0,
+				users: [],
+			};
+			let userdata: {
+				[editor: string]: {
+					name?: string;
+					bytes: number;
+					percent?: number;
+				};
+			} = {};
+
+			for (let token of tokens) {
+				data.totalBytes += token.str.length;
+				let editor = token['editor'];
+				if (!userdata[editor]) {
+					userdata[editor] = { bytes: 0 };
+				}
+				userdata[editor].bytes += token.str.length;
+				if (editor.startsWith('0|')) {
+					// IP
+					userdata[editor].name = editor.slice(2);
+				}
+			}
+
+			Object.entries(userdata).map(([userid, { bytes }]) => {
+				userdata[userid].percent = bytes / data.totalBytes;
+				if (userdata[userid].percent < 0.02) {
+					delete userdata[userid];
+				}
+			});
+
+			await bot
+				.request({
+					action: 'query',
+					list: 'users',
+					ususerids: Object.keys(userdata).filter((us) => !us.startsWith('0|')), // don't lookup IPs
+				})
+				.then((json) => {
+					json.query.users.forEach((us: any) => {
+						userdata[us.userid].name = us.name;
+					});
+				});
+
+			data.users = Object.entries(userdata)
+				.map(([userid, { bytes, name, percent }]) => {
+					return {
+						id: Number(userid),
+						name: name,
+						bytes: bytes,
+						percent: percent,
+					};
+				})
+				.sort((a, b) => {
+					return a.bytes < b.bytes ? 1 : -1;
+				});
+
+			return data;
+		}
+
 		/**** Post operations *****/
 		// Defined in bot.js
 
@@ -599,4 +690,14 @@ export interface PageViewData {
 	access: string;
 	agent: string;
 	views: number;
+}
+
+export interface AuthorshipData {
+	totalBytes: number;
+	users: Array<{
+		id: number;
+		name: string;
+		bytes: number;
+		percent: number;
+	}>;
 }

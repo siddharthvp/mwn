@@ -2,7 +2,7 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 #### 2.0.0
 
-- mwn#queryAuthors() and `queryAuthors()` on page objects are removed. They relied on the WikiWho API which is now defunct.
+- mwn#queryAuthors() which had been deprecated has now been removed. Instead, please use `queryAuthors()` method on page objects.
 
 #### 0.11.0
 
