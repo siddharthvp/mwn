@@ -148,6 +148,7 @@ describe('methods which modify the wiki', function () {
 	});
 
 	describe('image uploads', function () {
+		this.timeout(20000);
 		it('successfully upload image from URL', function () {
 			return bot
 				.uploadFromUrl(
