@@ -1,13 +1,11 @@
 'use strict';
 
-const { mwn, bot, expect, assert, setup, teardown } = require('./test_wiki');
+const { mwn, expect, assert, populateTitleData } = require('./test_base');
+
+const bot = new mwn();
+populateTitleData(bot.title);
 
 describe('static utils', function () {
-	this.timeout(10000);
-
-	before('logs in and gets token & namespaceInfo', setup);
-	after('logs out', teardown);
-
 	it('link', function () {
 		expect(mwn.link('Main Page')).to.equal('[[Main Page]]');
 		expect(mwn.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
