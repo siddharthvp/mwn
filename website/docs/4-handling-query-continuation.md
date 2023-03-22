@@ -21,10 +21,10 @@ for await (let json of bot.continuedQueryGen({
 
 Specialised derivatives exist to fulfill common needs:
 
-- `new bot.page('Page name').historyGen()` - fetch page history
-- `new bot.page('Page name').logsGen()` - fetch page logs
-- `new bot.category('Page name').membersGen()` - fetch category members
-- `new bot.user('User name').contribsGen()` - fetch user contributions
-- `new bot.user('User name').logsGen()` - fetch user logs
+- `new bot.page('Page name').historyGen()` - [fetch page history](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html#historygen)
+- `new bot.page('Page name').logsGen()` - [fetch page logs](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html#logsgen)
+- `new bot.category('Page name').membersGen()` - [fetch category members](https://mwn.toolforge.org/docs/api/interfaces/mwncategory.html#membersgen)
+- `new bot.user('User name').contribsGen()` - [fetch user contributions](https://mwn.toolforge.org/docs/api/interfaces/mwnuser.html#contribsgen)
+- `new bot.user('User name').logsGen()` - [fetch user logs](https://mwn.toolforge.org/docs/api/interfaces/mwnuser.html#logsgen)
 
 Every method with a name that ends in `Gen` is an async generator.

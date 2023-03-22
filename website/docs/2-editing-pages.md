@@ -20,13 +20,20 @@ bot.edit('Page title', (rev) => {
 
 Some more functions associated with editing pages:
 
+Save a page with the given content without loading it first. Simpler version of `edit`. Does not offer any edit conflict detection.
+
 ```js
-// Save a page with the given content without loading it first. Simpler verion of `edit`. Does not offer any edit conflict detection.
 await bot.save('Page title', 'Page content', 'Edit summary');
+```
 
-// Create a new page.
+Create a new page:
+
+```js
 await bot.create('Page title', 'Page content', 'Edit summary');
+```
 
-// Post a new section to a talk page:
+Post a new section to a talk page:
+
+```js
 await bot.newSection('Page title', 'New section header', 'Section content', additionalOptions);
 ```
