@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, sinon, expect, setup, teardown } = require('./local_wiki');
+const { bot, sinon, expect, setup, teardown } = require('./base/local_wiki');
 const crypto = require('crypto');
 const logger = require('../build/log');
 const { MwnError } = require('../build/error');

@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, bot, expect, setup, teardown } = require('./local_wiki');
+const { mwn, bot, expect, setup, teardown } = require('./base/local_wiki');
 
 describe('bot emergency shutoff', async function () {
 	this.timeout(10000);

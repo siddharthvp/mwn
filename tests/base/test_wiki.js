@@ -1,6 +1,6 @@
 const { mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
 
-const loginCredentials = require('./mocking/loginCredentials.js');
+const loginCredentials = require('../mocking/loginCredentials.js');
 
 let bot = new mwn({
 	silent: true,

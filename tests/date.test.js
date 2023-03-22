@@ -1,4 +1,4 @@
-const { mwn, expect } = require('./test_base');
+const { mwn, expect } = require('./base/test_base');
 
 // Includes some tests copied from https://github.com/wikimedia-gadgets/twinkle/blob/master/tests/morebits.date.js
 

@@ -1,8 +1,9 @@
 'use strict';
 
-const { bot, assert, expect, setup, teardown } = require('./test_wiki');
+const { bot, assert, expect, setup, teardown } = require('./base/test_wiki');
 
 describe('File', async function () {
+	this.timeout(5000);
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
 

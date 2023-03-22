@@ -1,6 +1,6 @@
 /** Base libraries used in tests */
 
-const { mwn } = require('..');
+const { mwn } = require('../..');
 const log = mwn.log;
 
 const chai = require('chai');

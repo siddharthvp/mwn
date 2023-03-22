@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect, verifyTokenAndSiteInfo } = require('./test_base');
+const { mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
 
 const oauthCredentials = require('./mocking/loginCredentials.js').account1_oauth2;
 
@@ -11,6 +11,8 @@ let bot = new mwn({
 bot.initOAuth();
 
 describe('OAuth 2', async function () {
+	this.timeout(5000);
+
 	it('gets tokens (GET request)', function () {
 		return bot.getTokensAndSiteInfo().then(() => {
 			verifyTokenAndSiteInfo(bot);

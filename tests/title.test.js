@@ -3,7 +3,7 @@
  *
  */
 
-const { mwn, assert, populateTitleData } = require('./test_base');
+const { mwn, assert, populateTitleData } = require('./base/test_base');
 
 const bot = new mwn();
 const Title = bot.title;

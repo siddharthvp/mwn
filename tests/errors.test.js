@@ -1,6 +1,6 @@
 'use strict';
 
-const { sinon, bot, bot2, expect, setup, teardown } = require('./local_wiki');
+const { sinon, bot, bot2, expect, setup, teardown } = require('./base/local_wiki');
 const nock = require('nock');
 const { Request, Response } = require('../build/core');
 const utils = require('../build/utils');

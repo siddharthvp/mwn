@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect, assert, populateTitleData } = require('./test_base');
+const { mwn, expect, assert, populateTitleData } = require('./base/test_base');
 
 const bot = new mwn();
 populateTitleData(bot.title);

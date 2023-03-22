@@ -2,10 +2,12 @@ const { Request, Response } = require('../build/core');
 const logger = require('../build/log');
 const { MwnError } = require('../build/error');
 
-const { expect, mwn } = require('./test_base');
-const { bot, setup, teardown, sinon } = require('./local_wiki');
+const { expect, mwn } = require('./base/test_base');
+const { bot, setup, teardown, sinon } = require('./base/local_wiki');
 
 describe('core', function () {
+	this.timeout(5000);
+
 	describe('Request', function () {
 		const makeInstance = (params) => new Request(new mwn(), params, {});
 

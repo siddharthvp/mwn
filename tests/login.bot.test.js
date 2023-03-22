@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect, verifyTokenAndSiteInfo } = require('./test_base');
+const { mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
 
 const testwiki = require('./mocking/loginCredentials.js');
 

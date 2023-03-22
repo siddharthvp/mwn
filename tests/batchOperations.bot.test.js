@@ -1,4 +1,4 @@
-const { mwn, expect, log } = require('./test_base');
+const { mwn, expect, log } = require('./base/test_base');
 
 var debugMode = false;
 var debug = function (msg) {

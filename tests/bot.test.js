@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, bot, expect, assert, setup, teardown } = require('./test_wiki');
+const { mwn, bot, expect, assert, setup, teardown } = require('./base/test_wiki');
 const fs = require('fs');
 const { MwnError } = require('../build/error');
 

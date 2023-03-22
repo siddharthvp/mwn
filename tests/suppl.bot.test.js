@@ -1,4 +1,4 @@
-const { mwn, expect } = require('./test_base');
+const { mwn, expect } = require('./base/test_base');
 
 describe('supplementary functions', function () {
 	this.timeout(5000);
