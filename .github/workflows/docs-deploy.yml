@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install dependencies
         run: |
           npm ci
@@ -30,7 +30,7 @@ jobs:
           cd website/build
           zip -r docs.zip .
       - name: Copy docs to Toolforge
-        uses: garygrossgarten/github-action-scp@dba89d858413133b6e35da91a3c989cc8cde3ad4
+        uses: garygrossgarten/github-action-scp@8a27854bb4f124a497a67316e83783efda770119
         with:
           local: ${{github.workspace}}/website/build/docs.zip
           remote: /data/project/mwn/docs.zip
@@ -39,7 +39,7 @@ jobs:
           privateKey: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
           rmRemote: true
       - name: Unzip
-        uses: garygrossgarten/github-action-ssh@2b10f41b5a33808f6d24eafd253296766308b7c4
+        uses: garygrossgarten/github-action-ssh@915e492551885a89131e21d85f2e043c96abff80
         with:
           command: |
             cd /data/project/mwn/www/static
