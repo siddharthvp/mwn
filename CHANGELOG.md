@@ -2,6 +2,7 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 #### 2.0.0
 
+- set* methods on MwnDate objects (eg. `setUTCDate`) used to be chainable as they returned `this`. Because MwnDate extends the native Date, the change in return values was not possible to represent in types. This undocumented feature has now been removed for the sake of accurate types.
 - mwn#queryAuthors() which had been deprecated has now been removed. Instead, please use `queryAuthors()` method on page objects.
 
 #### 0.11.0
