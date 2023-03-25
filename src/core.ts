@@ -383,6 +383,7 @@ export class Response {
 	handleRequestFailure(error: any) {
 		if (
 			!error.disableRetry &&
+			!(error instanceof TypeError) &&
 			this.requestOptions.retryNumber < this.bot.options.maxRetries &&
 			// ENOTFOUND usually means bad apiUrl is provided, retrying is pointless and annoying
 			error.code !== 'ENOTFOUND' &&
