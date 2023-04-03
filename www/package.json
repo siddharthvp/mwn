@@ -3,9 +3,9 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"start": "/data/project/sdzerobot/bin/node server.js",
-		"restart": "webservice --backend kubernetes node10 restart",
-		"logs": "kubectl logs -f deploy/$(echo $USERNAME | cut -d . -f 2)"
+		"start": "node server.js",
+		"restart": "webservice --backend kubernetes node16 restart",
+		"logs": "kubectl logs -f deploy/mwn"
 	},
 	"dependencies": {
 		"debug": "~2.6.9",
