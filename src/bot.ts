@@ -908,7 +908,7 @@ export class mwn {
 		});
 	}
 
-	async *readGen(titles: string[], options?: ApiParams): AsyncGenerator<ApiPage> {
+	async *readGen(titles: string[], options?: ApiParams, batchSize?: number): AsyncGenerator<ApiPage> {
 		let massQueryResponses = this.massQueryGen(
 			{
 				action: 'query',
@@ -919,7 +919,8 @@ export class mwn {
 				redirects: true,
 				...options,
 			},
-			typeof titles[0] === 'number' ? 'pageids' : 'titles'
+			typeof titles[0] === 'number' ? 'pageids' : 'titles',
+			batchSize
 		);
 
 		for await (let response of massQueryResponses) {
