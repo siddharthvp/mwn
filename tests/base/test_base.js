@@ -25,9 +25,9 @@ chai.use(sinonChai);
 function verifyTokenAndSiteInfo(bot) {
 	expect(bot.csrfToken).to.be.a('string').of.length.greaterThan(5);
 	expect(bot.csrfToken.endsWith('+\\')).to.be.true;
-	expect(bot.title.nameIdMap).to.be.a('object');
-	expect(bot.title.legaltitlechars).to.be.a('string');
-	expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
+	expect(bot.Title.nameIdMap).to.be.a('object');
+	expect(bot.Title.legaltitlechars).to.be.a('string');
+	expect(bot.Title.nameIdMap).to.include.all.keys('project', 'user');
 }
 
 /** Populate title data without an API request **/

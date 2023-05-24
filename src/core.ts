@@ -6,7 +6,7 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
-import * as formData from 'form-data';
+import * as FormData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
 
 import type { ApiParams, mwn } from './bot';
@@ -110,7 +110,7 @@ export class Request {
 				...this.makeOAuthHeader({
 					url: requestOptions.url,
 					method: requestOptions.method,
-					data: requestOptions.data instanceof formData ? {} : this.apiParams,
+					data: requestOptions.data instanceof FormData ? {} : this.apiParams,
 				}),
 			};
 		} else {
@@ -173,7 +173,7 @@ export class Request {
 	async handlePostMultipartFormData() {
 		let params = this.apiParams,
 			requestOptions = this.requestParams;
-		let form = new formData();
+		let form = new FormData();
 		for (let [key, val] of Object.entries(params)) {
 			if (val instanceof Object && 'stream' in val) {
 				// TypeScript facepalm

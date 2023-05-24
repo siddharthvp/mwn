@@ -15,7 +15,7 @@ describe('wikitext', async function () {
 	after('logs out', teardown);
 
 	it('wikitext parse links', function () {
-		var wkt = new bot.wikitext(`
+		var wkt = new bot.Wikitext(`
 			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
 			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
 			An [[image:image|thumb]].
@@ -134,7 +134,7 @@ some text here for 3-2
 ==2-3===
 some text here for 2-3`;
 
-		expect(bot.wikitext.parseSections(text)).to.deep.equal([
+		expect(bot.Wikitext.parseSections(text)).to.deep.equal([
 			{
 				level: 1,
 				header: null,
@@ -164,7 +164,7 @@ some text here for 2-3`;
 	});
 
 	it('unbind and rebind', function () {
-		let u = new bot.wikitext('Hello world <!-- world --> world');
+		let u = new bot.Wikitext('Hello world <!-- world --> world');
 		u.unbind('<!--', '-->');
 		u.text = u.text.replace(/world/g, 'earth');
 		expect(u.rebind()).to.equal('Hello earth <!-- world --> earth');
@@ -172,7 +172,7 @@ some text here for 2-3`;
 		expect(u.getText()).to.equal('Hello earth <!-- world --> earth');
 
 		// with multiple unbinds:
-		u = new bot.wikitext('Hello <nowiki>world</nowiki> <!-- world --> world');
+		u = new bot.Wikitext('Hello <nowiki>world</nowiki> <!-- world --> world');
 		u.unbind('<!--', '-->');
 		u.unbind('<nowiki>', '</nowiki>');
 		u.text = u.text.replace(/world/g, 'earth');
@@ -182,7 +182,7 @@ some text here for 2-3`;
 	});
 
 	it('parses file with problematic unicode characters', function () {
-		var wkt = new bot.wikitext(`{{short description|Polish politician}}
+		var wkt = new bot.Wikitext(`{{short description|Polish politician}}
 		[[File:Michał Cieślak Sejm 2016.JPG|thumb|Michał Cieślak]]`);
 		wkt.parseLinks();
 		expect(wkt.files.length).to.equal(1);
@@ -190,7 +190,7 @@ some text here for 2-3`;
 
 	it('Single template, no params; removeEntity for templates', function () {
 		var wikitext = 'Lorem {{ipsum}} dorem';
-		var wkt = new bot.wikitext(wikitext);
+		var wkt = new bot.Wikitext(wikitext);
 		var parsed = wkt.parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
@@ -205,7 +205,7 @@ some text here for 2-3`;
 
 	it('parseTemplates with count', function () {
 		var wikitext = '{{a|zzz|{{er}}}}, {{b|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}';
-		var wkt = new bot.wikitext(wikitext);
+		var wkt = new bot.Wikitext(wikitext);
 
 		wkt.parseTemplates({ count: 1 });
 		assert.equal(wkt.templates.length, 1);
@@ -223,7 +223,7 @@ some text here for 2-3`;
 
 	it('parseTemplates with namePredicate', function () {
 		var wikitext = '{{a\n|zzz|{{er}}}}, {{lorem|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}';
-		var wkt = new bot.wikitext(wikitext);
+		var wkt = new bot.Wikitext(wikitext);
 
 		wkt.parseTemplates({
 			namePredicate: function (name) {
@@ -242,7 +242,7 @@ some text here for 2-3`;
 
 	it('parseTemplates with templatePredicate', function () {
 		var wikitext = '{{a|zzz|{{er}}}}, {{lorem|[[File:imag|x|thumb]]}}, {{c|www[[links]]}}';
-		var wkt = new bot.wikitext(wikitext);
+		var wkt = new bot.Wikitext(wikitext);
 
 		wkt.parseTemplates({
 			namePredicate: function (name) {
@@ -261,7 +261,7 @@ some text here for 2-3`;
 
 	it('Two templates, no params', function () {
 		var wikitext = 'Lorem {{ipsum}} dorem {{sum}}';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 2, 'Two template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'First: Correct name');
@@ -273,7 +273,7 @@ some text here for 2-3`;
 	});
 	it('Two nested templates, not recursive', function () {
 		var wikitext = 'Lorem {{ipsum|{{dorem}}}} sum';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'Correct name');
@@ -285,7 +285,7 @@ some text here for 2-3`;
 	});
 	it('Two nested templates, recursive', function () {
 		var wikitext = 'Lorem {{ipsum|{{dorem}}}} sum';
-		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
+		var parsed = new bot.Wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 2, 'Two template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'Correct name');
@@ -321,7 +321,7 @@ some text here for 2-3`;
 	{{DYK talk|31 January|2015|entry= ... that in 1998 '''[[Eleanor Robinson]]''' set a world record of 13 days, 1 hour, 54 minutes for a woman to run {{convert|1000|mi}}?}}
 
 	{{Did you know nominations/Eleanor Robinson}}`;
-		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
+		var parsed = new bot.Wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 8, 'Eight templates found');
 		assert.equal(parsed[0].name, 'WikiProjectBannerShell', 'First: Correct name');
@@ -395,7 +395,7 @@ some text here for 2-3`;
 
 	it('Unnamed parameter', function () {
 		var wikitext = 'Lorem {{ipsum|foo}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'Correct name');
@@ -408,7 +408,7 @@ some text here for 2-3`;
 
 	it('Unnamed parameters', function () {
 		var wikitext = 'Lorem {{ipsum|foo|bar}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'Correct name');
@@ -424,7 +424,7 @@ some text here for 2-3`;
 
 	it('Numbered parameters', function () {
 		var wikitext = 'Lorem {{ipsum|2=foo|3=bar}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'Correct name');
@@ -440,7 +440,7 @@ some text here for 2-3`;
 
 	it('Contains triple-brace parameter', function () {
 		var wikitext = 'Lorem {{ipsum|{{{1|}}}}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, 'Ipsum', 'Correct name');
@@ -453,7 +453,7 @@ some text here for 2-3`;
 
 	it('Four braces (template name is a template), non-recursive', function () {
 		var wikitext = 'Lorem {{{{ipsum|one}}|bar}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, '{{ipsum|one}}', 'Correct name');
@@ -466,7 +466,7 @@ some text here for 2-3`;
 
 	it('Four braces (template name is a template), recursive', function () {
 		var wikitext = 'Lorem {{{{ipsum|one}}|bar}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
+		var parsed = new bot.Wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 2, 'Two templates found');
 		assert.equal(parsed[0].name, '{{ipsum|one}}', 'First: Correct name');
@@ -485,7 +485,7 @@ some text here for 2-3`;
 
 	it('Five braces (template name is a triple-brace parameter), non-recursive', function () {
 		var wikitext = 'Lorem {{{{{ipsum|foo}}}|bar}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates();
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, '{{{ipsum|foo}}}', 'Correct name');
@@ -498,7 +498,7 @@ some text here for 2-3`;
 
 	it('Five braces (template name is a triple-brace parameter), recursive', function () {
 		var wikitext = 'Lorem {{{{{ipsum|foo}}}|bar}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
+		var parsed = new bot.Wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, '{{{ipsum|foo}}}', 'Correct name');
@@ -511,7 +511,7 @@ some text here for 2-3`;
 
 	it('Six braces (template name is a template, which itself has a template name that is a template), recursive', function () {
 		var wikitext = 'Lorem {{{{{{ipsum|foo}}|bar}}|baz}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
+		var parsed = new bot.Wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 3, 'Three templates found');
 		assert.equal(parsed[0].name, '{{{{ipsum|foo}}|bar}}', 'First: Correct name');
@@ -538,7 +538,7 @@ some text here for 2-3`;
 	// specific namespaces to check usage.
 	it.skip('Six braces (triple-brace parameter within triple-brace parameter), recursive', function () {
 		var wikitext = 'Lorem {{foo|{{{{{{ipsum|}}}|bar}}}|baz}} dorem';
-		var parsed = new bot.wikitext(wikitext).parseTemplates({ recursive: true });
+		var parsed = new bot.Wikitext(wikitext).parseTemplates({ recursive: true });
 
 		assert.equal(parsed.length, 1, 'One template found');
 		assert.equal(parsed[0].name, 'foo', 'Correct name');

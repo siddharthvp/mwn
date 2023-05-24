@@ -10,8 +10,6 @@
  * and keeping track of statistics
  */
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-var-requires */
 const chalk = require('chalk');
 const prettyjson = require('prettyjson');

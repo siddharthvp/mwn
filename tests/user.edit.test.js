@@ -6,7 +6,7 @@ describe('user class: write methods', async function () {
 	before('setup', setup);
 	after('teardown', teardown);
 
-	let u = new bot.user('Wikiuser2');
+	let u = new bot.User('Wikiuser2');
 
 	it('sends message', function () {
 		return u.sendMessage('Hi', 'Testing from mwn. ~~~~').then((data) => {

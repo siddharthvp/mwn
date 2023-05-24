@@ -6,7 +6,7 @@
 const { mwn, assert, populateTitleData } = require('./base/test_base');
 
 const bot = new mwn();
-const Title = bot.title;
+const Title = bot.Title;
 populateTitleData(Title);
 
 describe('title', function () {

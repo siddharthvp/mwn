@@ -5,7 +5,7 @@ Mwn can be used for common wikitext parsing needs, though there is no AST-based 
 Create object for further operations:
 
 ```js
-let wkt = new bot.wikitext('This is some wikitext with [[links]] and {{templates|with=params}}.');
+let wkt = new bot.Wikitext('This is some wikitext with [[links]] and {{templates|with=params}}.');
 ```
 
 Parse links:
@@ -28,16 +28,16 @@ wkt.parseTemplates() // -> [Template {wikitext: '{{templates|with=params}}', par
 
 `parseTemplates` can optionally take a [TemplateConfig](https://mwn.toolforge.org/docs/api/interfaces/templateconfig.html) object as argument.
 
-It can also be used without constructing a bot.wikitext object, as:
+It can also be used without constructing a bot.Wikitext object, as:
 
 ```js
-bot.wikitext.parseTemplates()
+bot.Wikitext.parseTemplates()
 ```
 
 Parse simple tables:
 
 ```js
-const parsedTable = bot.wikitext.parseTable(`
+const parsedTable = bot.Wikitext.parseTable(`
 {| class="wikitable sortable"
 |-
 ! Header1 !! Header2 !! Header3

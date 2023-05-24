@@ -18,7 +18,7 @@ export interface MwnTitleStatic {
 	};
 	legaltitlechars: string;
 	caseSensitiveNamespaces: Array<number>;
-	processNamespaceData(json: siteinfoqueryResponse): void;
+	processNamespaceData(json: SiteInfoQueryResponse): void;
 	checkData(): void;
 	newFromText(title: string, namespace?: number): MwnTitle | null;
 	makeTitle(namespace: number, title: string): MwnTitle | null;
@@ -113,7 +113,7 @@ export interface MwnTitle {
 	toText(): string;
 }
 
-export type siteinfoqueryResponse = {
+export type SiteInfoQueryResponse = {
 	query: {
 		general: {
 			legaltitlechars: string;
@@ -134,6 +134,9 @@ export type siteinfoqueryResponse = {
 	};
 };
 
+/** @deprecated Use {@link SiteInfoQueryResponse} instead **/
+export type siteinfoqueryResponse = SiteInfoQueryResponse;
+
 export default function () {
 	let NS_MAIN = 0;
 	let NS_TALK = 1;
@@ -149,7 +152,7 @@ export default function () {
 		static legaltitlechars: string;
 		static caseSensitiveNamespaces: Array<number>;
 
-		static processNamespaceData(json: siteinfoqueryResponse) {
+		static processNamespaceData(json: SiteInfoQueryResponse) {
 			let namespaceNorm = (ns: string) => (ns || '').toLowerCase().replace(/ /g, '_');
 
 			// Analog of mw.config.get('wgFormattedNamespaces')

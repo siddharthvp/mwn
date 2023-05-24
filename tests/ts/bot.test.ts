@@ -30,7 +30,7 @@ describe('typescript', async function () {
 	});
 
 	it('nested classes work too with typescript', function () {
-		let page = new bot.page('Main Page');
+		let page = new bot.Page('Main Page');
 		expect(page.getNamespaceId()).to.equal(0);
 
 		let date = new bot.date('20200101130042');

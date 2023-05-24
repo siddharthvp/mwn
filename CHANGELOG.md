@@ -2,7 +2,15 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 #### 2.0.0
 
-- set* methods on MwnDate objects (eg. `setUTCDate`) used to be chainable as they returned `this`. Because MwnDate extends the native Date, the change in return values was not possible to represent in types. This undocumented feature has now been removed for the sake of accurate types.
+- Class names now follow the standard PascalCase convention.
+  - bot.title -> bot.Title (where bot is an instance of Mwn)
+  - bot.page -> bot.Page
+  - bot.category -> bot.Category
+  - bot.file -> bot.File
+  - bot.user -> bot.User
+  - bot.wikitext -> bot.Wikitext
+  - bot.date -> bot.Date
+- set* methods on MwnDate objects (eg. `setUTCDate`) used to be chainable as they returned `this`. Because MwnDate extends the native Date, the change in return values was not possible to represent in TypeScript types ([Liskov substitution principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)). This undocumented feature has now been removed for the sake of accurate types.
 - mwn#queryAuthors() which had been deprecated has now been removed. Instead, please use `queryAuthors()` method on page objects.
 
 #### 0.11.0

@@ -5,15 +5,15 @@ Mwn provides a rich wrapper around the native [Date](https://developer.mozilla.o
 The constructor support the common MediaWiki datetime formats:
 
 ```js
-const date1 = new bot.date('13:45, 2 April 2020 (UTC)'); // This won't parse with JS native Date!
-const date2 = new bot.date('20210304134567'); // MW database timestamp format.
+const date1 = new bot.Date('13:45, 2 April 2020 (UTC)'); // This won't parse with JS native Date!
+const date2 = new bot.Date('20210304134567'); // MW database timestamp format.
 ```
 
 in addition to everything that native JS Date supports:
 
 ```js
-const date1 = new bot.date();
-const date2 = new bot.date('3 December 2020');
+const date1 = new bot.Date();
+const date2 = new bot.Date('3 December 2020');
 ```
 
 Note that it inherits the weirdities of JS Date - even "NY 12345" gets parsed as valid date, so per [MDN recommendation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date#timestamp_string) you should not parse dates as strings of unknown format.
@@ -41,11 +41,11 @@ date.format('D MMMM YYYY'); // -> "3 December 2020"
 ```
 
 :::info
-By default, month and day names are in English. However, you can customise the language used by overwriting `bot.date.localeData` object. The easiest way to do that is via `bot.date.populateLocaleData()`.
+By default, month and day names are in English. However, you can customise the language used by overwriting `bot.Date.localeData` object. The easiest way to do that is via `bot.Date.populateLocaleData()`.
 
 ```js
-await bot.date.populateLocaleData(); // use content language of the wiki
-await bot.date.populateLocaleData('fr'); // OR explicitly set the language like this 
+await bot.Date.populateLocaleData(); // use content language of the wiki
+await bot.Date.populateLocaleData('fr'); // OR explicitly set the language like this 
 ```
 
 The data is stored in the bot object. If you have multiple bots signed in to different wikis, you can use different languages for each.
@@ -69,5 +69,5 @@ Check if a date is before or after another date (which can be either an Mwn date
 
 ```js
 date.isBefore(new Date()); // boolean
-date.isAfter(new bot.date());
+date.isAfter(new bot.Date());
 ```

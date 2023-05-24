@@ -35,18 +35,18 @@ describe('mwn', async function () {
 
 	it('correctly gets site info', function () {
 		// unset them to check if they'll correctly reset
-		bot.title.nameIdMap = null;
-		bot.title.idNameMap = null;
-		bot.title.legaltitlechars = null;
+		bot.Title.nameIdMap = null;
+		bot.Title.idNameMap = null;
+		bot.Title.legaltitlechars = null;
 
 		expect(function () {
-			new bot.title('werwerw');
+			new bot.Title('werwerw');
 		}).to.throw('namespace data unavailable: run getSiteInfo() or login() first on the mwn object');
 
 		return bot.getSiteInfo().then(function () {
-			expect(bot.title.nameIdMap).to.be.a('object');
-			expect(bot.title.legaltitlechars).to.be.a('string');
-			expect(bot.title.nameIdMap).to.include.all.keys('project', 'user');
+			expect(bot.Title.nameIdMap).to.be.a('object');
+			expect(bot.Title.legaltitlechars).to.be.a('string');
+			expect(bot.Title.nameIdMap).to.include.all.keys('project', 'user');
 		});
 	});
 
@@ -163,7 +163,7 @@ describe('mwn', async function () {
 	});
 
 	it('title methods work', function () {
-		let title = new bot.title('prOJEcT:Xyz');
+		let title = new bot.Title('prOJEcT:Xyz');
 		expect(title.toText()).to.equal('Wikipedia:Xyz');
 	});
 
@@ -233,11 +233,23 @@ describe('mwn', async function () {
 
 	it('loads date locale data using API', async function () {
 		bot.options.defaultParams.assert = undefined; // avoid sign-in
+		await bot.Date.populateLocaleData('fr');
+		expect(bot.Date.localeData.months[0]).to.equal('janvier');
+		expect(bot.Date.localeData.monthsShort[0]).to.equal('janv.');
+		expect(bot.Date.localeData.days[0]).to.equal('dimanche');
+		expect(bot.Date.localeData.daysShort[0]).to.equal('dim.');
+	});
+
+	it('deprecated smallcase class names still work', async function () {
 		await bot.date.populateLocaleData('fr');
 		expect(bot.date.localeData.months[0]).to.equal('janvier');
-		expect(bot.date.localeData.monthsShort[0]).to.equal('janv.');
-		expect(bot.date.localeData.days[0]).to.equal('dimanche');
-		expect(bot.date.localeData.daysShort[0]).to.equal('dim.');
+
+		const title = bot.title.newFromText('caTeGoRy:living people');
+		expect(title.getNamespaceId()).to.equal(14);
+		expect(title.getPrefixedText()).to.equal('Category:Living people');
+
+		const user = new bot.user('SD0001');
+		expect(await user.contribs({ uclimit: 1 })).to.be.of.length(1);
 	});
 
 	//////////////////////////////////////////

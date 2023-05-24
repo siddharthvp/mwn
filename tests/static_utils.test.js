@@ -3,18 +3,18 @@
 const { mwn, expect, assert, populateTitleData } = require('./base/test_base');
 
 const bot = new mwn();
-populateTitleData(bot.title);
+populateTitleData(bot.Title);
 
 describe('static utils', function () {
 	it('link', function () {
 		expect(mwn.link('Main Page')).to.equal('[[Main Page]]');
 		expect(mwn.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
 
-		var title = new bot.title('main Page');
+		var title = new bot.Title('main Page');
 		expect(mwn.link(title)).to.equal('[[Main Page]]');
 		expect(mwn.link(title, 'homepage')).to.equal('[[Main Page|homepage]]');
 
-		var titleWithFragment = new bot.title('Main Page#Did You Know');
+		var titleWithFragment = new bot.Title('Main Page#Did You Know');
 		expect(mwn.link(titleWithFragment)).to.equal('[[Main Page#Did You Know]]');
 		expect(mwn.link(titleWithFragment, 'homepage')).to.equal('[[Main Page#Did You Know|homepage]]');
 	});
@@ -30,7 +30,7 @@ describe('static utils', function () {
 		).to.equal('{{cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 
 		expect(
-			mwn.template(new bot.title('template:cite#fragment'), {
+			mwn.template(new bot.Title('template:cite#fragment'), {
 				author: 'John Doe',
 				date: '14 January 2012',
 				url: 'https://example.com',
@@ -40,7 +40,7 @@ describe('static utils', function () {
 
 		// mainspace template
 		expect(
-			mwn.template(new bot.title('cite#fragment'), {
+			mwn.template(new bot.Title('cite#fragment'), {
 				author: 'John Doe',
 				date: '14 January 2012',
 				url: 'https://example.com',
@@ -65,7 +65,7 @@ describe('static utils', function () {
 		table.addRow(['Example', 'Example', 'Example']);
 		expect(table.getText()).to.equal(expected1);
 
-		expect(bot.wikitext.parseTable(expected1)).to.deep.equal([
+		expect(bot.Wikitext.parseTable(expected1)).to.deep.equal([
 			// Same header name, so object will have only one key
 			{ 'Header text': 'Example' },
 			{ 'Header text': 'Example' },
@@ -80,7 +80,7 @@ describe('static utils', function () {
 | Example21 || Example22 || Example23
 |}`;
 
-		expect(bot.wikitext.parseTable(expected2)).to.deep.equal([
+		expect(bot.Wikitext.parseTable(expected2)).to.deep.equal([
 			{
 				'Header1 text': 'Example11',
 				'Header2 text': 'Example12',

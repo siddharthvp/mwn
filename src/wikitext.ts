@@ -515,7 +515,7 @@ export class Unbinder {
 	/**
 	 * Temporarily hide a part of the string while processing the rest of it.
 	 *
-	 * eg.  let u = new bot.wikitext("Hello world <!-- world --> world");
+	 * eg.  let u = new bot.Wikitext("Hello world <!-- world --> world");
 	 *      u.unbind('<!--','-->');
 	 *      u.content = u.content.replace(/world/g, 'earth');
 	 *      u.rebind(); // gives "Hello earth <!-- world --> earth"
@@ -636,7 +636,7 @@ export default function (bot: mwn) {
 			displaytext = target[0] === ':' ? target.slice(1) : target;
 			noSortkey = true;
 		}
-		let title = bot.title.newFromText(target);
+		let title = bot.Title.newFromText(target);
 		if (!title) {
 			return;
 		}

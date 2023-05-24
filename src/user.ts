@@ -91,11 +91,11 @@ export default function (bot: mwn) {
 		get userpage(): MwnPage {
 			// User: namespace name will work across all MW sites
 			// as it is a canonical namespace name
-			return new bot.page('User:' + this.username);
+			return new bot.Page('User:' + this.username);
 		}
 
 		get talkpage(): MwnPage {
-			return new bot.page('User talk:' + this.username);
+			return new bot.Page('User talk:' + this.username);
 		}
 
 		// XXX: should these yield rather than return?

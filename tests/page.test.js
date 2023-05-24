@@ -10,7 +10,7 @@ describe('Page', async function () {
 	before('gets site info', function () {
 		return bot.getSiteInfo().then(() => {
 			// for further tests
-			page = new bot.page('Wp:Requests/Permissions');
+			page = new bot.Page('Wp:Requests/Permissions');
 		});
 	});
 
@@ -21,19 +21,19 @@ describe('Page', async function () {
 	});
 
 	it('constructor', function () {
-		var title = new bot.title('wp:Requests/Permissions');
-		expect(new bot.page(title)).to.be.instanceOf(bot.page);
+		var title = new bot.Title('wp:Requests/Permissions');
+		expect(new bot.Page(title)).to.be.instanceOf(bot.Page);
 
-		var page = new bot.page('Requests/Permissions', 4);
-		expect(page).to.be.instanceOf(bot.page);
+		var page = new bot.Page('Requests/Permissions', 4);
+		expect(page).to.be.instanceOf(bot.Page);
 		expect(page.title).to.equal(title.title);
 		expect(page.namespace).to.equal(title.namespace);
 	});
 
 	it('getTalkPage and getSubjectPage are overridden', function () {
 		var talkpage = page.getTalkPage();
-		expect(talkpage).to.be.instanceOf(bot.page);
-		expect(talkpage.getSubjectPage()).to.be.instanceOf(bot.page);
+		expect(talkpage).to.be.instanceOf(bot.Page);
+		expect(talkpage.getSubjectPage()).to.be.instanceOf(bot.Page);
 	});
 
 	it('categories', function () {
@@ -57,7 +57,7 @@ describe('Page', async function () {
 	var page2;
 
 	it('getRedirectTarget and isRedirect on redirect', function () {
-		page2 = new bot.page('Wikipedia:PERM');
+		page2 = new bot.Page('Wikipedia:PERM');
 		return page2.getRedirectTarget((target) => {
 			expect(target).to.equal('Wikipedia:Requests/Permissions');
 		});
@@ -77,11 +77,11 @@ describe('Page', async function () {
 
 	it('exists', async function () {
 		await expect(page.exists()).to.eventually.equal(true);
-		await expect(new bot.page('werfsd').exists()).to.eventually.equal(false);
+		await expect(new bot.Page('werfsd').exists()).to.eventually.equal(false);
 	});
 
 	it('getDeletingAdmin', function () {
-		new bot.page('File:Mwn-0.22011644726991153.png').getDeletingAdmin().then((admin) => {
+		new bot.Page('File:Mwn-0.22011644726991153.png').getDeletingAdmin().then((admin) => {
 			expect(admin).to.equal('SD0001');
 		});
 	});

@@ -165,15 +165,17 @@ export interface MwnPage extends MwnTitle {
 }
 
 export default function (bot: mwn): MwnPageStatic {
-	class Page extends bot.title implements MwnPage {
+	class Page extends bot.Title implements MwnPage {
 		data: any;
 
 		constructor(title: MwnTitle | string, namespace?: number) {
-			// bot property is set by mwn#page() method
-			if (title instanceof bot.title) {
+			// bot property is set by mwn#Page() method
+			if (typeof title === 'string') {
+				super(title, namespace);
+			} else if (title.title && title.namespace) {
 				super(title.title, title.namespace);
 			} else {
-				super(title, namespace);
+				throw new Error('unknown constructor type for mwn Page');
 			}
 			this.data = {};
 		}
@@ -344,7 +346,7 @@ export default function (bot: mwn): MwnPageStatic {
 				if (!target) {
 					return Promise.resolve(this.toText());
 				}
-				return Promise.resolve(new bot.title(target[1]).toText());
+				return Promise.resolve(new bot.Title(target[1]).toText());
 			}
 			return bot
 				.request({
@@ -526,26 +528,26 @@ export default function (bot: mwn): MwnPageStatic {
 			agent = agent || 'all-agents';
 			granularity = granularity || 'monthly';
 			if (granularity === 'daily') {
-				let date = new bot.date();
+				let date = new bot.Date();
 				date.setUTCDate(date.getUTCDate() - 1);
 				start = start || date;
-				end = end || new bot.date();
+				end = end || new bot.Date();
 			} else if (granularity === 'monthly') {
-				let date = new bot.date();
+				let date = new bot.Date();
 				date.setUTCDate(1);
 				date.setUTCMonth(date.getUTCMonth() - 1);
 				start = start || date;
 				end =
 					end ||
 					(function () {
-						let d = new bot.date();
+						let d = new bot.Date();
 						d.setUTCDate(1);
 						return d;
 					})();
 			}
 
-			let startString = new bot.date(start).format('YYYYMMDD'),
-				endString = new bot.date(end).format('YYYYMMDD');
+			let startString = new bot.Date(start).format('YYYYMMDD'),
+				endString = new bot.Date(end).format('YYYYMMDD');
 
 			return bot
 				.rawRequest({

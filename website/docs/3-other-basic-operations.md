@@ -64,7 +64,7 @@ await bot.download('File:File name.jpg', 'Downloaded file name.jpg'); // 2nd par
 Creating a page object opens up further possibilities:
 
 ```js
-let page = new bot.page('Main Page');
+let page = new bot.Page('Main Page');
 ```
 
 See [list of methods available on page object](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html).

@@ -45,7 +45,7 @@ import * as OAuth from 'oauth-1.0a';
 
 // Nested classes of mwn
 import MwnDateFactory, { MwnDate } from './date';
-import MwnTitleFactory, { MwnTitle, siteinfoqueryResponse } from './title';
+import MwnTitleFactory, { MwnTitle, SiteInfoQueryResponse } from './title';
 import MwnPageFactory, { MwnPage } from './page';
 import MwnWikitextFactory, { MwnWikitext } from './wikitext';
 import MwnUserFactory, { MwnUser } from './user';
@@ -287,47 +287,61 @@ export class mwn {
 
 	static util = util;
 
+	/** @deprecated Use {@link Title} instead */
+	title = MwnTitleFactory();
 	/**
 	 * Title class associated with the bot instance.
 	 * See {@link MwnTitle} interface for methods on title objects.
 	 */
-	title = MwnTitleFactory();
+	Title = MwnTitleFactory();
 
+	/** @deprecated Use {@link Page} instead */
+	page = MwnPageFactory(this);
 	/**
 	 * Page class associated with the bot instance.
 	 * See {@link MwnPage} interface for methods on page objects.
 	 */
-	page = MwnPageFactory(this);
+	Page = MwnPageFactory(this);
 
+	/** @deprecated Use {@link Category} instead */
+	category = MwnCategoryFactory(this);
 	/**
 	 * Category class associated with the bot instance.
 	 * See {@link MwnCategory} interface for methods on category objects.
 	 */
-	category = MwnCategoryFactory(this);
+	Category = MwnCategoryFactory(this);
 
+	/** @deprecated Use {@link File} instead */
+	file = MwnFileFactory(this);
 	/**
 	 * File class associated with the bot instance.
 	 * See {@link MwnFile} interface for methods on file objects.
 	 */
-	file = MwnFileFactory(this);
+	File = MwnFileFactory(this);
 
+	/** @deprecated Use {@link User} instead */
+	user = MwnUserFactory(this);
 	/**
 	 * User class associated with the bot instance.
 	 * See {@link MwnUser} interface for methods on user objects.
 	 */
-	user = MwnUserFactory(this);
+	User = MwnUserFactory(this);
 
+	/** @deprecated Use {@link Wikitext} instead */
+	wikitext = MwnWikitextFactory(this);
 	/**
 	 * Wikitext class associated with the bot instance.
 	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
-	wikitext = MwnWikitextFactory(this);
+	Wikitext = MwnWikitextFactory(this);
 
+	/** @deprecated Use {@link Date} instead */
+	date = MwnDateFactory(this);
 	/**
 	 * Date class associated with the bot instance.
 	 * See {@link MwnDate} interface for methods on date objects.
 	 */
-	date = MwnDateFactory(this);
+	Date = MwnDateFactory(this);
 
 	/**
 	 * Constructs a new bot instance
@@ -690,8 +704,9 @@ export class mwn {
 			action: 'query',
 			meta: 'siteinfo',
 			siprop: 'general|namespaces|namespacealiases',
-		}).then((result: siteinfoqueryResponse) => {
+		}).then((result: SiteInfoQueryResponse) => {
 			this.title.processNamespaceData(result);
+			this.Title.processNamespaceData(result);
 		});
 	}
 
@@ -739,8 +754,9 @@ export class mwn {
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
 			siprop: 'general|namespaces|namespacealiases',
 			uiprop: 'rights',
-		}).then((response: ApiResponse & siteinfoqueryResponse) => {
+		}).then((response: ApiResponse & SiteInfoQueryResponse) => {
 			this.title.processNamespaceData(response);
+			this.Title.processNamespaceData(response);
 			if (response.query.userinfo.rights.includes('apihighlimits')) {
 				this.hasApiHighLimit = true;
 			}
@@ -845,7 +861,7 @@ export class mwn {
 		Object.assign(this.options.shutoff, shutoffOptions);
 
 		this.shutoff.hook = setInterval(async () => {
-			let text = await new this.page(this.options.shutoff.page).text();
+			let text = await new this.Page(this.options.shutoff.page).text();
 			let cond = this.options.shutoff.condition;
 			if ((cond instanceof RegExp && !cond.test(text)) || (cond instanceof Function && !cond(text))) {
 				this.shutoff.state = true;
@@ -1311,7 +1327,7 @@ export class mwn {
 			iiprop: 'url',
 		}).then((data) => {
 			const url = data.query.pages[0].imageinfo[0].url;
-			const name = new this.title(data.query.pages[0].title).getMainText();
+			const name = new this.Title(data.query.pages[0].title).getMainText();
 			return this.downloadFromUrl(url, localname || name);
 		});
 	}
@@ -1396,7 +1412,7 @@ export class mwn {
 	 * @returns {Promise<string[]>} - array of page titles (upto 5000 or 500)
 	 */
 	async getPagesByPrefix(prefix: string, otherParams?: ApiQueryAllPagesParams): Promise<string[]> {
-		const title = this.title.newFromText(prefix);
+		const title = this.Title.newFromText(prefix);
 		if (!title) {
 			throw new Error('invalid prefix for getPagesByPrefix');
 		}
@@ -1419,7 +1435,7 @@ export class mwn {
 	 * @returns {Promise<string[]>}
 	 */
 	async getPagesInCategory(category: string, otherParams?: ApiQueryCategoryMembersParams): Promise<string[]> {
-		const title = this.title.newFromText(category, 14);
+		const title = this.Title.newFromText(category, 14);
 		return this.request({
 			action: 'query',
 			list: 'categorymembers',

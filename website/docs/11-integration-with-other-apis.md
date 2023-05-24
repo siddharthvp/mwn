@@ -20,7 +20,7 @@ await bot.oresQueryRevisions(
 See <https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews>
 
 ```js
-const page = new bot.page('Deaths in 2020');
+const page = new bot.Page('Deaths in 2020');
 const pageViewData = await page.pageViews({
 	// See https://mwn.toolforge.org/docs/api/interfaces/pageviewoptions.html for available options
 });

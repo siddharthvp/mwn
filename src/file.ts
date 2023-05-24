@@ -50,7 +50,7 @@ export interface MwnFile extends MwnPage {
 }
 
 export default function (bot: mwn) {
-	class File extends bot.page implements MwnFile {
+	class File extends bot.Page implements MwnFile {
 		/** @inheritDoc */
 		constructor(name: MwnTitle | string) {
 			super(name, 6);

@@ -11,14 +11,14 @@ describe('Category', async function () {
 	let category;
 
 	it('category constructor', function () {
-		let cat = new bot.category('Category:Xyz');
+		let cat = new bot.Category('Category:Xyz');
 		expect(cat.title === 'Xyz' && cat.namespace === 14).to.be.ok;
-		category = new bot.category('Category:User_en-2');
+		category = new bot.Category('Category:User_en-2');
 		let badCatConstruction = function () {
-			new bot.category('Template:Abc');
+			new bot.Category('Template:Abc');
 		};
 		expect(badCatConstruction).to.throw('not a category page');
-		var catWithoutNs = new bot.category('Fridawulfa');
+		var catWithoutNs = new bot.Category('Fridawulfa');
 		expect(catWithoutNs.namespace).to.equal(14);
 	});
 

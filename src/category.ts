@@ -47,7 +47,7 @@ export interface MwnCategory extends MwnPage {
 }
 
 export default function (bot: mwn) {
-	class Category extends bot.page implements MwnCategory {
+	class Category extends bot.Page implements MwnCategory {
 		/** @inheritDoc */
 		constructor(name: MwnTitle | string) {
 			super(name, 14);
