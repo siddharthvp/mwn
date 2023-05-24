@@ -2,7 +2,9 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 #### 2.0.0
 
-- Class names now follow the standard PascalCase convention.
+- Class names now follow the standard PascalCase convention. The older names are deprecated.
+  - mwn -> Mwn
+    - The library should now be imported as `import {Mwn} from 'mwn'` instead of `import {mwn} from 'mwn'`
   - bot.title -> bot.Title (where bot is an instance of Mwn)
   - bot.page -> bot.Page
   - bot.category -> bot.Category

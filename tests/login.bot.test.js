@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
+const { Mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
 
 const testwiki = require('./mocking/loginCredentials.js');
 
@@ -8,7 +8,7 @@ describe('login', async function () {
 	this.timeout(10000);
 
 	it('successfully logs in and gets token & siteinfo', async function () {
-		let client = new mwn();
+		let client = new Mwn();
 		return client.login(testwiki.account1).then(async () => {
 			expect(client.loggedIn).to.be.true;
 			verifyTokenAndSiteInfo(client);
@@ -17,9 +17,9 @@ describe('login', async function () {
 		});
 	});
 
-	let bot = new mwn();
+	let bot = new Mwn();
 	it('successfully logs in through init', async function () {
-		bot = await mwn.init(testwiki.account1);
+		bot = await Mwn.init(testwiki.account1);
 		expect(bot.loggedIn).to.be.true;
 		verifyTokenAndSiteInfo(bot);
 	});
@@ -31,7 +31,7 @@ describe('login', async function () {
 	});
 
 	it('raises correct error on trying to login while using OAuth', function (done) {
-		let client = new mwn({ ...testwiki.account1, ...testwiki.account1_oauth });
+		let client = new Mwn({ ...testwiki.account1, ...testwiki.account1_oauth });
 		client.initOAuth();
 		client.login().catch((err) => {
 			expect(err.info).to.eq(`Cannot use login/logout while using OAuth`);

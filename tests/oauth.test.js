@@ -1,10 +1,10 @@
 'use strict';
 
-const { mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
+const { Mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
 
 const oauthCredentials = require('./mocking/loginCredentials.js').account1_oauth;
 
-let bot = new mwn({
+let bot = new Mwn({
 	...oauthCredentials,
 });
 

@@ -140,7 +140,7 @@ export type ApiParams = {
 		  };
 };
 
-export class mwn {
+export class Mwn {
 	/**
 	 * Bot instance Login State
 	 * Is received from the MW Login API and contains token, userid, etc.
@@ -256,7 +256,7 @@ export class mwn {
 		{
 			responseType: 'json',
 		},
-		mwn.requestDefaults
+		Mwn.requestDefaults
 	);
 
 	/**
@@ -377,10 +377,10 @@ export class mwn {
 	 * Also fetches the site data needed for parsing and constructing title objects.
 	 * @param {Object} config - Bot configurations, including apiUrl, and either the
 	 * username and password or the OAuth credentials
-	 * @returns {Promise<mwn>} bot object
+	 * @returns {Promise<Mwn>} bot object
 	 */
-	static async init(config: MwnOptions): Promise<mwn> {
-		const bot = new mwn(config);
+	static async init(config: MwnOptions): Promise<Mwn> {
+		const bot = new Mwn(config);
 		if (bot.options.OAuth2AccessToken || bot._usingOAuth()) {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
@@ -499,7 +499,7 @@ export class mwn {
 		return axios(
 			mergeDeep1(
 				{},
-				mwn.requestDefaults,
+				Mwn.requestDefaults,
 				{
 					method: 'get',
 					headers: {
@@ -999,7 +999,7 @@ export class mwn {
 					return rejectWithErrorCode('invalidtitle');
 				}
 				if (page.missing) {
-					return Promise.reject(new mwn.Error.MissingPage());
+					return Promise.reject(new Mwn.Error.MissingPage());
 				}
 				revision = page.revisions[0];
 				try {
@@ -1905,3 +1905,6 @@ export class mwn {
 	 */
 	sleep = sleep;
 }
+
+/** @deprecated Use {@link Mwn} instead **/
+export class mwn extends Mwn {}

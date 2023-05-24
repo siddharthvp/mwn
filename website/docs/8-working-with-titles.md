@@ -1,6 +1,6 @@
 # Working with titles
 
-Titles can be represented as objects created using the class constructor on `mwn`, as: (`bot` is the mwn object)
+Titles can be represented as objects created using the class constructor on `Mwn`, as: (`bot` is the Mwn object)
 
 ```js
 let title = new bot.Title('Wikipedia:Articles for deletion');

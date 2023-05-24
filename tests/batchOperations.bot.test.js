@@ -1,4 +1,4 @@
-const { mwn, expect, log } = require('./base/test_base');
+const { Mwn, expect, log } = require('./base/test_base');
 
 var debugMode = false;
 var debug = function (msg) {
@@ -10,7 +10,7 @@ var debug = function (msg) {
 describe('batch operations', function () {
 	this.timeout(4000);
 
-	var bot = new mwn({
+	var bot = new Mwn({
 		silent: true,
 	});
 

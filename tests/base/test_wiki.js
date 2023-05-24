@@ -1,8 +1,8 @@
-const { mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
+const { Mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
 
 const loginCredentials = require('../mocking/loginCredentials.js');
 
-let bot = new mwn({
+let bot = new Mwn({
 	silent: true,
 	...loginCredentials.account1,
 	userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
@@ -23,4 +23,4 @@ async function setup() {
 async function teardown() {}
 
 // Export everything
-module.exports = { mwn, bot, log, expect, assert, sinon, setup, teardown };
+module.exports = { Mwn, bot, log, expect, assert, sinon, setup, teardown };

@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, bot, expect, assert, setup, teardown } = require('./base/test_wiki');
+const { Mwn, bot, expect, assert, setup, teardown } = require('./base/test_wiki');
 const fs = require('fs');
 const { MwnError } = require('../build/error');
 
@@ -87,7 +87,7 @@ describe('mwn', async function () {
 
 	it('correctly sets logging config', function () {
 		const { logConfig } = require('../build/log');
-		mwn.setLoggingConfig({
+		Mwn.setLoggingConfig({
 			printYaml: true,
 		});
 		expect(logConfig.printYaml).to.equal(true);
@@ -241,8 +241,8 @@ describe('mwn', async function () {
 	});
 
 	it('deprecated smallcase class names still work', async function () {
-		await bot.date.populateLocaleData('fr');
-		expect(bot.date.localeData.months[0]).to.equal('janvier');
+		await bot.Date.populateLocaleData('fr');
+		expect(bot.Date.localeData.months[0]).to.equal('janvier');
 
 		const title = bot.title.newFromText('caTeGoRy:living people');
 		expect(title.getNamespaceId()).to.equal(14);
@@ -264,7 +264,7 @@ describe('mwn', async function () {
 	});
 
 	it('cannot edit a page without providing API URL / Login', function () {
-		return new mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
+		return new Mwn().save('Main Page', '=Some more Wikitext=', 'Test Upload').catch((e) => {
 			expect(e).to.be.an.instanceof(MwnError);
 			expect(e.message).to.include('No URL');
 		});

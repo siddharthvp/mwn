@@ -1,8 +1,8 @@
-const { mwn, expect } = require('./base/test_base');
+const { Mwn, expect } = require('./base/test_base');
 
 // Includes some tests copied from https://github.com/wikimedia-gadgets/twinkle/blob/master/tests/morebits.date.js
 
-const bot = new mwn();
+const bot = new Mwn();
 describe('date', async function () {
 	it('date constructor', function () {
 		let mwTs = new bot.Date('20120304050607');

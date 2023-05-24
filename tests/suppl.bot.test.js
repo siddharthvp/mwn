@@ -1,9 +1,9 @@
-const { mwn, expect } = require('./base/test_base');
+const { Mwn, expect } = require('./base/test_base');
 
 describe('supplementary functions', function () {
 	this.timeout(5000);
 
-	const bot = new mwn({
+	const bot = new Mwn({
 		apiUrl: 'https://en.wikipedia.org/w/api.php',
 		userAgent: 'https://github.com/siddharthvp/mwn (CI testing)',
 	});

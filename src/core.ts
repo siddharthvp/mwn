@@ -9,7 +9,7 @@ import axiosCookieJarSupport from 'axios-cookiejar-support';
 import * as FormData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
 
-import type { ApiParams, mwn } from './bot';
+import type { ApiParams, Mwn } from './bot';
 import { log } from './log';
 import { MwnError, rejectWithError } from './error';
 import { merge, mergeDeep1, sleep } from './utils';
@@ -24,8 +24,8 @@ export interface RawRequestParams extends AxiosRequestConfig {
 export class Request {
 	apiParams: ApiParams;
 	requestParams: RawRequestParams;
-	bot: mwn;
-	constructor(bot: mwn, apiParams: ApiParams, requestParams: RawRequestParams) {
+	bot: Mwn;
+	constructor(bot: Mwn, apiParams: ApiParams, requestParams: RawRequestParams) {
 		this.bot = bot;
 		this.apiParams = apiParams;
 		this.requestParams = requestParams;
@@ -199,13 +199,13 @@ export class Request {
 }
 
 export class Response {
-	bot: mwn;
+	bot: Mwn;
 	params: ApiParams;
 	requestOptions: RawRequestParams;
 	rawResponse: AxiosResponse<ApiResponse>;
 	response: ApiResponse;
 
-	constructor(bot: mwn, params: ApiParams, requestOptions: RawRequestParams) {
+	constructor(bot: Mwn, params: ApiParams, requestOptions: RawRequestParams) {
 		this.bot = bot;
 		this.params = params;
 		this.requestOptions = requestOptions;

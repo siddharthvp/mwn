@@ -1,7 +1,7 @@
 /** Base libraries used in tests */
 
-const { mwn } = require('../..');
-const log = mwn.log;
+const { Mwn } = require('../..');
+const log = Mwn.log;
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -90,4 +90,4 @@ function populateTitleData(titleObj) {
 	});
 }
 
-module.exports = { mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo, populateTitleData };
+module.exports = { Mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo, populateTitleData };

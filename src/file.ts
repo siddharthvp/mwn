@@ -1,4 +1,4 @@
-import type { mwn, MwnPage, MwnTitle } from './bot';
+import type { Mwn, MwnPage, MwnTitle } from './bot';
 import { ApiQueryBacklinkspropParams } from './api_params';
 
 export interface MwnFileStatic {
@@ -49,7 +49,7 @@ export interface MwnFile extends MwnPage {
 	download(localname: string): void;
 }
 
-export default function (bot: mwn) {
+export default function (bot: Mwn) {
 	class File extends bot.Page implements MwnFile {
 		/** @inheritDoc */
 		constructor(name: MwnTitle | string) {

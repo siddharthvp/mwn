@@ -1,4 +1,4 @@
-const { mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
+const { Mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
 
 const baseConfig = {
 	silent: true,
@@ -10,11 +10,11 @@ const baseConfig = {
 	},
 };
 
-let bot = new mwn({
+let bot = new Mwn({
 	...baseConfig,
 	username: 'Wikiuser@bp',
 });
-let bot2 = new mwn({
+let bot2 = new Mwn({
 	...baseConfig,
 	username: 'Wikiuser2@bp',
 });
@@ -28,4 +28,4 @@ async function setup() {
 async function teardown() {}
 
 // Export everything
-module.exports = { mwn, bot, bot2, log, expect, assert, sinon, setup, teardown };
+module.exports = { Mwn, bot, bot2, log, expect, assert, sinon, setup, teardown };

@@ -7,15 +7,15 @@ Importing mwn:
 In JavaScript:
 
 ```js
-const { mwn } = require('mwn');
+const { Mwn } = require('mwn');
 ```
 
-Note: Prior to mwn v0.8.0, import was via `const mwn = require('mwn');`
+Note: Prior to mwn v2.0.0, import was via `const { mwn } = require('mwn')`. Prior to v0.8.0, it was via `const mwn = require('mwn');`
 
 In TypeScript:
 
 ```ts
-import { mwn } from 'mwn';
+import { Mwn } from 'mwn';
 ```
 
 If you're migrating from mwbot, note that:
@@ -32,7 +32,7 @@ Bot passwords, however, are a bit easier to set up. To generate one, go to the w
 #### Initializing bot object
 
 ```js
-const bot = await mwn.init({
+const bot = await Mwn.init({
 	apiUrl: 'https://en.wikipedia.org/w/api.php',
 
 	// Can be skipped if the bot doesn't need to sign in
@@ -66,7 +66,7 @@ This creates a bot instance, signs in and fetches tokens needed for editing. (If
 You can also create a bot instance synchronously (without using await):
 
 ```js
-const bot = new mwn({
+const bot = new Mwn({
 	...options
 });
 ```

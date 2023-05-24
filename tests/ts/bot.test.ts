@@ -1,4 +1,4 @@
-import { mwn } from '../..';
+import { Mwn } from '../..';
 import { expect } from 'chai';
 
 /**
@@ -10,19 +10,19 @@ const loginCredentials = require('../mocking/loginCredentials');
 
 describe('typescript', async function () {
 	this.timeout(5000);
-	let bot: mwn;
+	let bot: Mwn;
 
 	before(function () {
-		bot = new mwn({
+		bot = new Mwn({
 			silent: true,
 			...loginCredentials.account1_oauth,
-			userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
+			userAgent: 'Mwn (https://github.com/siddharthvp/mwn)',
 		});
 		return bot.getTokensAndSiteInfo();
 	});
 
 	it('works with typescript', function () {
-		expect(bot).to.be.instanceOf(mwn);
+		expect(bot).to.be.instanceOf(Mwn);
 		return bot.request({ action: 'query' }).then((data) => {
 			expect(data).to.have.key('batchcomplete');
 			expect(data.batchcomplete).to.equal(true);
@@ -33,7 +33,7 @@ describe('typescript', async function () {
 		let page = new bot.Page('Main Page');
 		expect(page.getNamespaceId()).to.equal(0);
 
-		let date = new bot.date('20200101130042');
+		let date = new bot.Date('20200101130042');
 		expect(date.format('YYYY-MM-DD')).to.equal('2020-01-01');
 		expect(date.getDate()).to.equal(1);
 	});

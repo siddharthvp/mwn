@@ -1,4 +1,4 @@
-const { mwn, bot, expect, setup, teardown } = require('./base/local_wiki');
+const { Mwn, bot, expect, setup, teardown } = require('./base/local_wiki');
 
 describe('user class: write methods', async function () {
 	this.timeout(5000);
@@ -16,7 +16,7 @@ describe('user class: write methods', async function () {
 
 	it('sends email', function () {
 		return expect(u.email('Subject', 'body'))
-			.to.be.eventually.rejectedWith(mwn.Error)
+			.to.be.eventually.rejectedWith(Mwn.Error)
 			.with.property('code')
 			.that.equals('noemail');
 	});

@@ -1,6 +1,6 @@
 'use strict';
 
-const { mwn, bot, expect, setup, teardown } = require('./base/local_wiki');
+const { Mwn, bot, expect, setup, teardown } = require('./base/local_wiki');
 
 describe('bot emergency shutoff', async function () {
 	this.timeout(10000);
@@ -58,7 +58,7 @@ describe('bot emergency shutoff', async function () {
 
 		// Fuck, this works!
 		await expect(bot.request({ action: 'query', titles: 'testtitle' }))
-			.to.be.eventually.rejectedWith(mwn.Error)
+			.to.be.eventually.rejectedWith(Mwn.Error)
 			.that.has.property('code')
 			.which.equals('bot-shutoff');
 	});

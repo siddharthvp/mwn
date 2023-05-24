@@ -2,14 +2,14 @@ const { Request, Response } = require('../build/core');
 const logger = require('../build/log');
 const { MwnError } = require('../build/error');
 
-const { expect, mwn } = require('./base/test_base');
+const { expect, Mwn } = require('./base/test_base');
 const { bot, setup, teardown, sinon } = require('./base/local_wiki');
 
 describe('core', function () {
 	this.timeout(5000);
 
 	describe('Request', function () {
-		const makeInstance = (params) => new Request(new mwn(), params, {});
+		const makeInstance = (params) => new Request(new Mwn(), params, {});
 
 		it('getMethod', () => {
 			expect(makeInstance({ action: 'query' }).getMethod()).to.equal('get');
@@ -36,7 +36,7 @@ describe('core', function () {
 		});
 
 		it("doesn't retry on ENOTFOUND rejection", async function () {
-			const bot2 = new mwn({ apiUrl: 'https://somewebsite2342978653424.org/w/api.php' });
+			const bot2 = new Mwn({ apiUrl: 'https://somewebsite2342978653424.org/w/api.php' });
 			sinon.spy(Response.prototype, 'handleRequestFailure');
 			await expect(bot2.getSiteInfo())
 				.to.be.eventually.rejectedWith(Error)

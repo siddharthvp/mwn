@@ -1,4 +1,4 @@
-import type { mwn } from './bot';
+import type { Mwn } from './bot';
 import { Unbinder } from './wikitext';
 
 /**
@@ -117,7 +117,7 @@ export interface MwnDateStatic {
 	populateLocaleData(lang?: string): Promise<void>;
 }
 
-export default function (bot: mwn) {
+export default function (bot: Mwn) {
 	class XDate extends Date implements MwnDate {
 		constructor(...args: ConstructorParameters<DateConstructor>);
 		constructor(timestamp: string);

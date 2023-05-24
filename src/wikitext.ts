@@ -13,7 +13,7 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type { mwn, MwnTitle } from './bot';
+import type { Mwn, MwnTitle } from './bot';
 import type { ApiParseParams } from './api_params';
 
 export interface MwnWikitextStatic {
@@ -562,7 +562,7 @@ export class Unbinder {
 	}
 }
 
-export default function (bot: mwn) {
+export default function (bot: Mwn) {
 	class Wikitext extends Unbinder implements MwnWikitext {
 		links: Array<PageLink>;
 		templates: Array<Template>;

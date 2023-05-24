@@ -4,7 +4,7 @@ const { sinon, bot, bot2, expect, setup, teardown } = require('./base/local_wiki
 const nock = require('nock');
 const { Request, Response } = require('../build/core');
 const utils = require('../build/utils');
-const { mwn } = require('../build/bot');
+const { Mwn } = require('../build/bot');
 const logger = require('../build/log');
 
 describe('testing for error recoveries', function () {
@@ -25,7 +25,7 @@ describe('testing for error recoveries', function () {
 
 	it('recovers from badtoken errors', async function () {
 		bot.csrfToken = 'invalid-value';
-		sinon.spy(mwn.prototype, 'getTokens');
+		sinon.spy(Mwn.prototype, 'getTokens');
 		sinon.spy(logger, 'log');
 		let edit = await bot.edit(testPage, function (rev) {
 			return {
@@ -33,7 +33,7 @@ describe('testing for error recoveries', function () {
 				summary: 'testing mwn',
 			};
 		});
-		expect(mwn.prototype.getTokens).to.have.been.calledOnce;
+		expect(Mwn.prototype.getTokens).to.have.been.calledOnce;
 		expect(logger.log).to.have.been.calledOnceWith(
 			'[W] Encountered badtoken error, fetching new token and retrying'
 		);
@@ -44,7 +44,7 @@ describe('testing for error recoveries', function () {
 	it('recovers from session loss failure', async function () {
 		bot2.setDefaultParams({ assert: 'user' });
 		await bot2.logout();
-		sinon.spy(mwn.prototype, 'login');
+		sinon.spy(Mwn.prototype, 'login');
 		sinon.spy(logger, 'log');
 		let edit = await bot2.edit(testPage, function (rev) {
 			return {
@@ -52,7 +52,7 @@ describe('testing for error recoveries', function () {
 				summary: 'Test edit after session loss',
 			};
 		});
-		expect(mwn.prototype.login).to.be.calledOnce;
+		expect(Mwn.prototype.login).to.be.calledOnce;
 		expect(logger.log).to.have.been.calledOnceWith('[W] Received assertuserfailed, attempting to log in and retry');
 		expect(edit.result).to.equal('Success');
 		sinon.restore();

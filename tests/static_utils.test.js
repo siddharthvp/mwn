@@ -1,27 +1,27 @@
 'use strict';
 
-const { mwn, expect, assert, populateTitleData } = require('./base/test_base');
+const { Mwn, expect, assert, populateTitleData } = require('./base/test_base');
 
-const bot = new mwn();
+const bot = new Mwn();
 populateTitleData(bot.Title);
 
 describe('static utils', function () {
 	it('link', function () {
-		expect(mwn.link('Main Page')).to.equal('[[Main Page]]');
-		expect(mwn.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
+		expect(Mwn.link('Main Page')).to.equal('[[Main Page]]');
+		expect(Mwn.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
 
 		var title = new bot.Title('main Page');
-		expect(mwn.link(title)).to.equal('[[Main Page]]');
-		expect(mwn.link(title, 'homepage')).to.equal('[[Main Page|homepage]]');
+		expect(Mwn.link(title)).to.equal('[[Main Page]]');
+		expect(Mwn.link(title, 'homepage')).to.equal('[[Main Page|homepage]]');
 
 		var titleWithFragment = new bot.Title('Main Page#Did You Know');
-		expect(mwn.link(titleWithFragment)).to.equal('[[Main Page#Did You Know]]');
-		expect(mwn.link(titleWithFragment, 'homepage')).to.equal('[[Main Page#Did You Know|homepage]]');
+		expect(Mwn.link(titleWithFragment)).to.equal('[[Main Page#Did You Know]]');
+		expect(Mwn.link(titleWithFragment, 'homepage')).to.equal('[[Main Page#Did You Know|homepage]]');
 	});
 
 	it('template', function () {
 		expect(
-			mwn.template('cite', {
+			Mwn.template('cite', {
 				author: 'John Doe',
 				date: '14 January 2012',
 				url: 'https://example.com',
@@ -30,7 +30,7 @@ describe('static utils', function () {
 		).to.equal('{{cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 
 		expect(
-			mwn.template(new bot.Title('template:cite#fragment'), {
+			Mwn.template(new bot.Title('template:cite#fragment'), {
 				author: 'John Doe',
 				date: '14 January 2012',
 				url: 'https://example.com',
@@ -40,7 +40,7 @@ describe('static utils', function () {
 
 		// mainspace template
 		expect(
-			mwn.template(new bot.Title('cite#fragment'), {
+			Mwn.template(new bot.Title('cite#fragment'), {
 				author: 'John Doe',
 				date: '14 January 2012',
 				url: 'https://example.com',
@@ -59,7 +59,7 @@ describe('static utils', function () {
 | Example || Example || Example
 |}`;
 
-		var table = new mwn.table({ multiline: false });
+		var table = new Mwn.table({ multiline: false });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', 'Example', 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
@@ -93,19 +93,19 @@ describe('static utils', function () {
 			},
 		]);
 
-		table = new mwn.table({ sortable: false, multiline: false });
+		table = new Mwn.table({ sortable: false, multiline: false });
 		table.addHeaders(['Header1 text', 'Header2 text', 'Header3 text']);
 		table.addRow(['Example11', 'Example12', 'Example13'], { style: 'background: green;' });
 		table.addRow(['Example21', 'Example22', 'Example23']);
 		expect(table.getText()).to.equal(expected2);
 
-		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
-		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
-		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
+		expect(new Mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
+		expect(new Mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
+		expect(new Mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
 			`{| style="text-align: center"\n|}`
 		);
 
-		table = new mwn.table();
+		table = new Mwn.table();
 		table.addHeaders([
 			{ label: 'Header1 text', class: 'foobar' },
 			{ style: 'width: 5em;', label: 'Header2 text' },
@@ -115,27 +115,27 @@ describe('static utils', function () {
 		table.addRow([{ label: 'Example21', class: 'sampleclass' }, 'Example22', 'Example23']);
 		expect(table.getText()).toMatchSnapshot();
 
-		expect(new mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
-		expect(new mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
-		expect(new mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
+		expect(new Mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
+		expect(new Mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
+		expect(new Mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
 			`{| style="text-align: center"\n|}`
 		);
 
-		table = new mwn.table({ multiline: false, classes: ['plainlinks'] });
+		table = new Mwn.table({ multiline: false, classes: ['plainlinks'] });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', 'Example', 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
 		expect(table.getText()).toMatchSnapshot();
 
 		// With multiline
-		table = new mwn.table({ classes: ['plainlinks'] });
+		table = new Mwn.table({ classes: ['plainlinks'] });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', { label: 'Example21', class: 'sampleclass' }, 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
 		expect(table.getText()).toMatchSnapshot();
 	});
 
-	describe('mwn.util', function () {
+	describe('Mwn.util', function () {
 		// Tests copied from the original mw.util,
 		// https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/tests/qunit/suites/resources/mediawiki/mediawiki.util.test.js
 
@@ -144,33 +144,33 @@ describe('static utils', function () {
 			specials = ['\\', '{', '}', '(', ')', '[', ']', '|', '.', '?', '*', '+', '-', '^', '$'];
 			normal = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz', '0123456789'].join('');
 			specials.forEach(function (str) {
-				assert.equal(str.match(new RegExp(mwn.util.escapeRegExp(str)))[0], str, 'Match ' + str);
+				assert.equal(str.match(new RegExp(Mwn.util.escapeRegExp(str)))[0], str, 'Match ' + str);
 			});
-			assert.strictEqual(mwn.util.escapeRegExp(normal), normal, 'Alphanumerals are left alone');
+			assert.strictEqual(Mwn.util.escapeRegExp(normal), normal, 'Alphanumerals are left alone');
 		});
 
 		// from https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/tests/qunit/suites/resources/mediawiki/mediawiki.html.test.js
 		it('escapeHtml', function () {
 			assert.throws(
 				function () {
-					mwn.util.escapeHtml();
+					Mwn.util.escapeHtml();
 				},
 				TypeError,
 				'throw a TypeError if argument is not a string'
 			);
 			assert.strictEqual(
-				mwn.util.escapeHtml('<mw awesome="awesome" value=\'test\' />'),
+				Mwn.util.escapeHtml('<mw awesome="awesome" value=\'test\' />'),
 				'&lt;mw awesome=&quot;awesome&quot; value=&#039;test&#039; /&gt;',
 				'Escape special characters to html entities'
 			);
 		});
 
 		it('rawurlencode', function () {
-			assert.strictEqual(mwn.util.rawurlencode('Test:A & B/Here'), 'Test%3AA%20%26%20B%2FHere');
+			assert.strictEqual(Mwn.util.rawurlencode('Test:A & B/Here'), 'Test%3AA%20%26%20B%2FHere');
 		});
 
 		it('wikiUrlencode', function () {
-			assert.strictEqual(mwn.util.wikiUrlencode('Test:A & B/Here'), 'Test:A_%26_B/Here');
+			assert.strictEqual(Mwn.util.wikiUrlencode('Test:A & B/Here'), 'Test:A_%26_B/Here');
 			Object.entries({
 				'+': '%2B',
 				'&': '%26',
@@ -183,7 +183,7 @@ describe('static utils', function () {
 				'<>': '%3C%3E',
 				"'": '%27',
 			}).forEach(function ([input, output]) {
-				assert.strictEqual(mwn.util.wikiUrlencode(input), output);
+				assert.strictEqual(Mwn.util.wikiUrlencode(input), output);
 			});
 		});
 
@@ -254,20 +254,20 @@ describe('static utils', function () {
 
 		it('isIPv6Address', function () {
 			IPV6_CASES.forEach(function (ipCase) {
-				assert.strictEqual(mwn.util.isIPv6Address(ipCase[1]), ipCase[0], ipCase[2]);
+				assert.strictEqual(Mwn.util.isIPv6Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});
 		});
 		it('isIPv4Address', function () {
 			IPV4_CASES.forEach(function (ipCase) {
-				assert.strictEqual(mwn.util.isIPv4Address(ipCase[1]), ipCase[0], ipCase[2]);
+				assert.strictEqual(Mwn.util.isIPv4Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});
 		});
 		it('isIPAddress', function () {
 			IPV4_CASES.forEach(function (ipCase) {
-				assert.strictEqual(mwn.util.isIPv4Address(ipCase[1]), ipCase[0], ipCase[2]);
+				assert.strictEqual(Mwn.util.isIPv4Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});
 			IPV6_CASES.forEach(function (ipCase) {
-				assert.strictEqual(mwn.util.isIPv6Address(ipCase[1]), ipCase[0], ipCase[2]);
+				assert.strictEqual(Mwn.util.isIPv6Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});
 		});
 	});

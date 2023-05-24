@@ -1,6 +1,6 @@
 import { MwnError } from './error';
 
-import type { mwn, MwnTitle } from './bot';
+import type { Mwn, MwnTitle } from './bot';
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -164,7 +164,7 @@ export interface MwnPage extends MwnTitle {
 	purge(options?: ApiPurgeParams): Promise<any>;
 }
 
-export default function (bot: mwn): MwnPageStatic {
+export default function (bot: Mwn): MwnPageStatic {
 	class Page extends bot.Title implements MwnPage {
 		data: any;
 

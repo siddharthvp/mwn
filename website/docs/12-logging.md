@@ -3,7 +3,7 @@
 Mwn provides a convenient coloured logging utility, based on [semlog](https://npmjs.com/package/semlog).
 
 ```js
-const log = mwn.log;
+const log = Mwn.log;
 
 log('[I] Informational message');
 log('[S] Success message');

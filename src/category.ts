@@ -1,4 +1,4 @@
-import type { mwn, MwnPage, MwnTitle } from './bot';
+import type { Mwn, MwnPage, MwnTitle } from './bot';
 import { ApiQueryCategoryMembersParams } from './api_params';
 
 type ApiPageInfo = {
@@ -46,7 +46,7 @@ export interface MwnCategory extends MwnPage {
 	files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
 }
 
-export default function (bot: mwn) {
+export default function (bot: Mwn) {
 	class Category extends bot.Page implements MwnCategory {
 		/** @inheritDoc */
 		constructor(name: MwnTitle | string) {

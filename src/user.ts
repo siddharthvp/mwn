@@ -1,4 +1,4 @@
-import type { mwn, MwnPage } from './bot';
+import type { Mwn, MwnPage } from './bot';
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
@@ -76,7 +76,7 @@ export interface MwnUser {
 	unblock(options: ApiUnblockParams): Promise<ApiUnblockResponse>;
 }
 
-export default function (bot: mwn) {
+export default function (bot: Mwn) {
 	class User implements MwnUser {
 		username: string;
 
