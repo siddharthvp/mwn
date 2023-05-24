@@ -9,6 +9,8 @@ tests/mocking/.auth.json
 
 # OS/IDEs
 .idea/*
+*.iml
+.vscode/
 
 # generated files
 build/*
