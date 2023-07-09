@@ -51,7 +51,7 @@ export function message(msg: item) {
 		try {
 			msg = '' + JSON.stringify(msg);
 		} catch (e) {
-			msg = '[E] [Logger] Could not stringify given parameter';
+			msg = `[E] [Logger] Could not stringify given parameter: ${e.message}`;
 		}
 	}
 
@@ -98,7 +98,14 @@ export function debug(obj: item) {
  */
 export function error(obj: Error) {
 	console.error(chalk.red('[E] ' + obj.message));
-	console.log(chalk.gray(JSON.stringify(obj, null, 4)));
+	let stringified;
+	try {
+		stringified = JSON.stringify(obj, null, 4);
+	} catch (e) {
+		// Circular object?
+		stringified = `Failed to stringify error: ${e.message}`;
+	}
+	console.log(chalk.gray(stringified));
 	if (obj.stack) {
 		console.log(chalk.gray(obj.stack));
 	}
