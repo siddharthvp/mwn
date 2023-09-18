@@ -14,6 +14,7 @@ Only breaking changes, deprecations and the like are documented in this change l
   - bot.date -> bot.Date
 - Class for querying Wikimedia EventStreams have been removed. Consider using the dedicated library [wikimedia-streams](https://www.npmjs.com/package/wikimedia-streams) instead.
 - set* methods on MwnDate objects (eg. `setUTCDate`) used to be chainable as they returned `this`. Because MwnDate extends the native Date, the change in return values was not possible to represent in TypeScript types ([Liskov substitution principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)). This undocumented feature has now been removed for the sake of accurate types.
+- `printYaml` logging config option used by is no longer supported in Mwn.setLoggingConfig() method.
 - mwn#queryAuthors() which had been deprecated has now been removed. Instead, please use `queryAuthors()` method on page objects.
 
 #### 0.11.0

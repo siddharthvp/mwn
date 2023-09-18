@@ -12,10 +12,8 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const chalk = require('chalk');
-const prettyjson = require('prettyjson');
 
 export const logConfig = {
-	printYaml: false,
 	printDebug: true,
 	printVerbose: true,
 };
@@ -75,21 +73,9 @@ export function message(msg: item) {
  * @param obj
  */
 export function debug(obj: item) {
-	if (logConfig.printYaml) {
-		// Print YAML
-		let options = {
-			keysColor: 'white',
-			dashColor: 'white',
-			stringColor: 'yellow',
-			numberColor: 'blue',
-		};
-
-		console.log(chalk.gray('---\n') + prettyjson.render(obj, options));
-	} else {
-		// Print indented JSON
-		let msg = JSON.stringify(obj, null, 4);
-		console.log(chalk.gray(msg));
-	}
+	// Print indented JSON
+	let msg = JSON.stringify(obj, null, 4);
+	console.log(chalk.gray(msg));
 }
 
 /**
