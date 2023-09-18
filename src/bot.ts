@@ -54,7 +54,7 @@ import MwnFileFactory, { MwnFile } from './file';
 import { RawRequestParams, Request, Response } from './core';
 import { log, updateLoggingConfig } from './log';
 import { MwnError, rejectWithError, rejectWithErrorCode } from './error';
-import { link, table, template, util } from './static_utils';
+import { link, Table, template, util } from './static_utils';
 import { arrayChunk, ispromise, makeTitle, makeTitles, merge, mergeDeep1, sleep } from './utils';
 
 import type {
@@ -283,7 +283,10 @@ export class Mwn {
 
 	static link = link;
 	static template = template;
-	static table = table;
+	static Table = Table;
+
+	/** @deprecated Use {@link Table} instead **/
+	static table = Table;
 
 	static util = util;
 

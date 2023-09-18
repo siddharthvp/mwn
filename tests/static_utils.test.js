@@ -59,7 +59,7 @@ describe('static utils', function () {
 | Example || Example || Example
 |}`;
 
-		var table = new Mwn.table({ multiline: false });
+		var table = new Mwn.Table({ multiline: false });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', 'Example', 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
@@ -93,19 +93,19 @@ describe('static utils', function () {
 			},
 		]);
 
-		table = new Mwn.table({ sortable: false, multiline: false });
+		table = new Mwn.Table({ sortable: false, multiline: false });
 		table.addHeaders(['Header1 text', 'Header2 text', 'Header3 text']);
 		table.addRow(['Example11', 'Example12', 'Example13'], { style: 'background: green;' });
 		table.addRow(['Example21', 'Example22', 'Example23']);
 		expect(table.getText()).to.equal(expected2);
 
-		expect(new Mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
-		expect(new Mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
-		expect(new Mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
+		expect(new Mwn.Table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
+		expect(new Mwn.Table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
+		expect(new Mwn.Table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
 			`{| style="text-align: center"\n|}`
 		);
 
-		table = new Mwn.table();
+		table = new Mwn.Table();
 		table.addHeaders([
 			{ label: 'Header1 text', class: 'foobar' },
 			{ style: 'width: 5em;', label: 'Header2 text' },
@@ -115,20 +115,20 @@ describe('static utils', function () {
 		table.addRow([{ label: 'Example21', class: 'sampleclass' }, 'Example22', 'Example23']);
 		expect(table.getText()).toMatchSnapshot();
 
-		expect(new Mwn.table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
-		expect(new Mwn.table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
-		expect(new Mwn.table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
+		expect(new Mwn.Table().getText()).to.equal(`{| class="wikitable sortable"\n|}`);
+		expect(new Mwn.Table({ plain: true }).getText()).to.equal(`{| class="sortable"\n|}`);
+		expect(new Mwn.Table({ sortable: false, plain: true, style: 'text-align: center' }).getText()).to.equal(
 			`{| style="text-align: center"\n|}`
 		);
 
-		table = new Mwn.table({ multiline: false, classes: ['plainlinks'] });
+		table = new Mwn.Table({ multiline: false, classes: ['plainlinks'] });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', 'Example', 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);
 		expect(table.getText()).toMatchSnapshot();
 
 		// With multiline
-		table = new Mwn.table({ classes: ['plainlinks'] });
+		table = new Mwn.Table({ classes: ['plainlinks'] });
 		table.addHeaders(['Header text', 'Header text', 'Header text']);
 		table.addRow(['Example', { label: 'Example21', class: 'sampleclass' }, 'Example']);
 		table.addRow(['Example', 'Example', 'Example']);

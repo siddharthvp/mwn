@@ -49,7 +49,7 @@ export function template(title: string | MwnTitle, parameters: { [parameter: str
 	);
 }
 
-export class table {
+export class Table {
 	text: string;
 	multiline: boolean;
 	numRows = 0;
@@ -148,6 +148,9 @@ export class table {
 		return this.text + `|}`; // add the table closing tag and return
 	}
 }
+
+/** @deprecated Use {@link Table} instead **/
+export class table extends Table {}
 
 /**
  * Encode the string like PHP's rawurlencode
