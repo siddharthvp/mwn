@@ -590,7 +590,7 @@ export class mwn {
 
 				// Step 3: fetch tokens for editing, and info about namespaces for MwnTitle
 				await this.getTokensAndSiteInfo().catch((err) => {
-					log(`[W] ${err}`);
+					log(`[W] Failed fetching tokens and siteinfo: ${err}`);
 				});
 
 				return data;

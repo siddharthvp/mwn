@@ -391,8 +391,7 @@ export class Response {
 				[408, 409, 425, 429, 500, 502, 503, 504].includes(error.response.status))
 		) {
 			// error might be transient, give it another go!
-			log(`[W] Encountered ${error}, retrying in ${this.bot.options.retryPause / 1000} seconds`);
-			console.log(error); // log the full error for upstream reporting if required
+			this.logError(error);
 			return sleep(this.bot.options.retryPause).then(() => {
 				return this.retry();
 			});
@@ -400,5 +399,22 @@ export class Response {
 
 		error.request = this.requestOptions;
 		return rejectWithError(error);
+	}
+
+	logError(err: any) {
+		log(`[W] Retrying in ${this.bot.options.retryPause / 1000} seconds: encountered ${err}`);
+		const errorData = {
+			request: {
+				method: err?.request?.method,
+				path: err?.request?.path,
+			},
+			response: {
+				status: err?.response?.status,
+				statusText: err?.response?.statusText,
+				headers: err?.response?.headers,
+				data: err?.response?.data,
+			},
+		};
+		console.log(errorData);
 	}
 }
