@@ -128,7 +128,7 @@ describe('testing for error recoveries', function () {
 		mockApi(1, maxlagErrorBody); // without Retry-After header
 		await bot.query({});
 		expect(retrySpy).to.have.been.called;
-		expect(sleepStub).to.have.been.calledOnceWith(5000);
+		expect(sleepStub).to.have.been.calledOnceWith(bot.options.retryPause);
 		sleepStub.restore();
 		retrySpy.restore();
 	});
@@ -144,7 +144,7 @@ describe('testing for error recoveries', function () {
 		sleepStub.resolves();
 		await bot.query({});
 		expect(retrySpy).to.have.been.called;
-		expect(sleepStub).to.have.been.calledWith(5000);
+		expect(sleepStub).to.have.been.calledWith(bot.options.retryPause);
 		sleepStub.restore();
 		retrySpy.restore();
 	});

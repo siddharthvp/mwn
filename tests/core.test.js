@@ -1,6 +1,7 @@
 const { Request, Response } = require('../build/core');
 const logger = require('../build/log');
 const { MwnError } = require('../build/error');
+const nock = require('nock');
 
 const { expect, Mwn } = require('./base/test_base');
 const { bot, setup, teardown, sinon } = require('./base/local_wiki');
@@ -50,6 +51,16 @@ describe('core', function () {
 	describe('Response', function () {
 		before('logs in and gets token & namespaceInfo', setup);
 		after('teardown', teardown);
+
+		it('logs on network errors and retries them', async function () {
+			nock('http://localhost:8080/api.php', { allowUnmocked: true }).get(/.*?/).times(1).reply(500, 'body', {});
+			sinon.spy(console, 'log');
+			await expect(bot.query({ action: 'query' })).to.be.eventually.deep.eq({ batchcomplete: true });
+			expect(console.log).to.have.been.calledTwice;
+			expect(console.log.firstCall.firstArg).to.include('Retrying in ');
+			expect(console.log.secondCall.firstArg).to.be.instanceOf(Object).that.has.keys('request', 'response');
+			sinon.restore();
+		});
 
 		// Errors
 

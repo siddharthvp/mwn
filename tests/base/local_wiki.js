@@ -8,6 +8,8 @@ const baseConfig = {
 	defaultParams: {
 		assert: 'user',
 	},
+	maxRetries: 1,
+	retryPause: 100,
 };
 
 let bot = new Mwn({
