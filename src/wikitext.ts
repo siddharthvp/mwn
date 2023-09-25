@@ -122,7 +122,7 @@ export interface CategoryLink extends Link {
 
 export interface Section {
 	level: number;
-	header: string;
+	header: string | null;
 	index: number;
 	content?: string;
 }
