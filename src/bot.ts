@@ -1872,6 +1872,7 @@ export class Mwn {
 	 * @param {string} endpointUrl
 	 * @param {string[]} models
 	 * @param {string[]|number[]|string|number} revisions  ID(s)
+	 * @deprecated as ORES has been deprecated in favours of Lift Wing.
 	 */
 	oresQueryRevisions(
 		endpointUrl: string,
@@ -1879,7 +1880,9 @@ export class Mwn {
 		revisions: string[] | number[] | string | number
 	): Promise<any> {
 		let response = {};
-		const chunks = arrayChunk(revisions instanceof Array ? revisions : [revisions], 50);
+		const revs = revisions instanceof Array ? revisions : [revisions];
+		const batchSize = Math.floor(20 / models.length);
+		const chunks = arrayChunk(revs, batchSize);
 		return this.seriesBatchOperation(
 			chunks,
 			(chunk) => {

@@ -14,8 +14,6 @@ Mwn works with both JavaScript and TypeScript. It is created with a design philo
 
 This library provides TypeScript type definitions for all its functions, as well as for MediaWiki API request objects (MW core + several extensions). API responses are also typed for the common operations.
 
-In addition to the MediaWiki Action API, methods are provided to talk to the Wikimedia Pageviews API, the ORES API, and WikiWho API.
-
 This library uses mocha and chai for tests, and has [extensive test coverage](https://coveralls.io/github/siddharthvp/mwn?branch=master). Testing is automated using a CI workflow on GitHub Actions.
 
 To install, run `npm install mwn`.

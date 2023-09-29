@@ -2,19 +2,6 @@
 
 Apart from the [MediaWiki API](https://www.mediawiki.org/wiki/API:Main_page), Mwn integrates with a few other APIs for Wikimedia wikis:
 
-### ORES
-
-See <https://ores.wikimedia.org/> for details.
-Get ORES scores for revisions:
-
-```js
-await bot.oresQueryRevisions(
-	'https://ores.wikimedia.org/',		// ORES endpoint URL
-	['articlequality', 'drafttopic'],	// ORES models       
-	['76923582', '2387429']				// Revision IDs
-);
-```
-
 ### PageViews
 
 See <https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews>
@@ -40,6 +27,21 @@ const contributorData = await page.queryAuthors();
 ```
 
 Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/authorshipdata.html">AuthorshipData</a>>.
+
+### ORES
+
+**Deprecated** as of v2.0.1 since ORES service has been deprecated in favour of [Lift Wing](https://wikitech.wikimedia.org/wiki/Machine_Learning/LiftWing).
+
+See <https://ores.wikimedia.org/> for details.
+Get ORES scores for revisions:
+
+```js
+await bot.oresQueryRevisions(
+	'https://ores.wikimedia.org/',		// ORES endpoint URL
+	['articlequality', 'drafttopic'],	// ORES models       
+	['76923582', '2387429']				// Revision IDs
+);
+```
 
 ### EventStreams
 
