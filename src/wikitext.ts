@@ -124,7 +124,7 @@ export interface Section {
 	level: number;
 	header: string | null;
 	index: number;
-	content?: string;
+	content: string;
 }
 
 /**
@@ -476,7 +476,7 @@ export function parseSections(text: string): Section[] {
 			level: 1,
 			header: null,
 			index: 0,
-		},
+		} as Section,
 	];
 	let match;
 	while ((match = rgx.exec(text))) {
@@ -485,7 +485,7 @@ export function parseSections(text: string): Section[] {
 			level: match[1].length,
 			header: match[2].trim(),
 			index: match.index,
-		});
+		} as Section);
 	}
 	let n = sections.length;
 	for (let i = 0; i < n - 1; i++) {
