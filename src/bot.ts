@@ -976,7 +976,10 @@ export class Mwn {
 	 */
 	async edit(
 		title: string | number,
-		transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams,
+		transform: (rev: {
+			content: string;
+			timestamp: string;
+		}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>,
 		editConfig?: editConfigType
 	): Promise<ApiEditResponse> {
 		editConfig = editConfig || this.options.editConfig;

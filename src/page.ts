@@ -155,7 +155,12 @@ export interface MwnPage extends MwnTitle {
 	 * @see https://wikiwho.wmflabs.org/
 	 */
 	queryAuthors(): Promise<AuthorshipData>;
-	edit(transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams): Promise<any>;
+	edit(
+		transform: (rev: {
+			content: string;
+			timestamp: string;
+		}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>
+	): Promise<any>;
 	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>;
 	newSection(header: string, message: string, additionalParams?: ApiEditPageParams): Promise<any>;
 	move(target: string, summary: string, options?: ApiMoveParams): Promise<any>;
@@ -651,7 +656,12 @@ export default function (bot: Mwn): MwnPageStatic {
 		/**** Post operations *****/
 		// Defined in bot.js
 
-		edit(transform: (rev: { content: string; timestamp: string }) => string | ApiEditPageParams) {
+		edit(
+			transform: (rev: {
+				content: string;
+				timestamp: string;
+			}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>
+		) {
 			return bot.edit(this.toString(), transform);
 		}
 
