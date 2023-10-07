@@ -119,6 +119,11 @@ export interface MwnOptions {
 	suppressInvalidDateWarning?: boolean;
 }
 
+export type EditTransform = (rev: {
+	content: string;
+	timestamp: string;
+}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>;
+
 type editConfigType = {
 	conflictRetries?: number;
 	suppressNochangeWarning?: boolean;
@@ -976,10 +981,7 @@ export class Mwn {
 	 */
 	async edit(
 		title: string | number,
-		transform: (rev: {
-			content: string;
-			timestamp: string;
-		}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>,
+		transform: EditTransform,
 		editConfig?: editConfigType
 	): Promise<ApiEditResponse> {
 		editConfig = editConfig || this.options.editConfig;

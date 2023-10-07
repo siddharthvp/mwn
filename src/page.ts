@@ -1,6 +1,6 @@
 import { MwnError } from './error';
 
-import type { Mwn, MwnTitle } from './bot';
+import type { Mwn, MwnTitle, EditTransform } from './bot';
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -155,12 +155,7 @@ export interface MwnPage extends MwnTitle {
 	 * @see https://wikiwho.wmflabs.org/
 	 */
 	queryAuthors(): Promise<AuthorshipData>;
-	edit(
-		transform: (rev: {
-			content: string;
-			timestamp: string;
-		}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>
-	): Promise<any>;
+	edit(transform: EditTransform): Promise<any>;
 	save(text: string, summary?: string, options?: ApiEditPageParams): Promise<any>;
 	newSection(header: string, message: string, additionalParams?: ApiEditPageParams): Promise<any>;
 	move(target: string, summary: string, options?: ApiMoveParams): Promise<any>;
@@ -656,12 +651,7 @@ export default function (bot: Mwn): MwnPageStatic {
 		/**** Post operations *****/
 		// Defined in bot.js
 
-		edit(
-			transform: (rev: {
-				content: string;
-				timestamp: string;
-			}) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>
-		) {
+		edit(transform: EditTransform) {
 			return bot.edit(this.toString(), transform);
 		}
 
