@@ -986,6 +986,7 @@ export class Mwn {
 	): Promise<ApiEditResponse> {
 		editConfig = editConfig || this.options.editConfig;
 
+		// TODO: use baserevid instead of basetimestamp for conflict handling
 		let basetimestamp: string, curtimestamp: string;
 
 		return this.request({
@@ -1334,6 +1335,7 @@ export class Mwn {
 			prop: 'imageinfo',
 			iiprop: 'url',
 		}).then((data) => {
+			// TODO: handle errors
 			const url = data.query.pages[0].imageinfo[0].url;
 			const name = new this.Title(data.query.pages[0].title).getMainText();
 			return this.downloadFromUrl(url, localname || name);

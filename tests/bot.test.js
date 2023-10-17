@@ -114,6 +114,12 @@ describe('mwn', async function () {
 			});
 	});
 
+	it('returns empty array when empty array is passed to read()', function () {
+		return bot.read([]).then((response) => {
+			expect(response).to.be.instanceOf(Array).of.length(0);
+		});
+	});
+
 	it('successfully reads multiple pages using pageid with read()', function () {
 		return bot
 			.read([11791 /* Main Page */, 25 /* MediaWiki:Sidebar */], {

@@ -4,7 +4,7 @@ import { ApiQueryBacklinkspropParams } from './api_params';
 export interface MwnFileStatic {
 	/**
 	 * @constructor
-	 * @param {string} name - name of the file
+	 * @param {string|MwnTitle} name - name of the file
 	 */
 	new (title: MwnTitle | string): MwnFile;
 }
