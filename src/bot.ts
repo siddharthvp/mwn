@@ -564,7 +564,7 @@ export class Mwn {
 			});
 		}
 
-		let loginString = this.options.username + '@' + this.options.apiUrl.split('/api.php').join('');
+		let loginString = this.options.username + '@' + this.options.apiUrl;
 
 		// Step 1: Fetch login token
 		const loginTokenResponse = await this.request({
