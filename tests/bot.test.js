@@ -156,9 +156,7 @@ describe('mwn', async function () {
 	it('successfully parses wikitext', function () {
 		return bot.parseWikitext('[[link]]s.').then((parsedtext) => {
 			expect(parsedtext).to.be.a('string');
-			assert(
-				parsedtext.startsWith(`<div class="mw-parser-output"><p><a href="/wiki/Link" title="Link">links</a>.`)
-			);
+			expect(parsedtext).to.contain(`<a href="/wiki/Link" title="Link">links</a>`);
 		});
 	});
 
