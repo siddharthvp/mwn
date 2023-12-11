@@ -1637,6 +1637,9 @@ export class Mwn {
 		concurrency = 5,
 		retries = 0
 	): Promise<{ failures: { [item: string]: Error } }> {
+		if (!list.length) {
+			return Promise.resolve({ failures: {} });
+		}
 		let counts = {
 			successes: 0,
 			failures: 0,

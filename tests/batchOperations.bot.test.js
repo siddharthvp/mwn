@@ -88,6 +88,14 @@ describe('batch operations', function () {
 			});
 	});
 
+	it('batch operation with 0 entries', function () {
+		return bot
+			.batchOperation([], () => Promise.resolve(), 10, 1)
+			.then((res) => {
+				expect(Object.keys(res.failures)).to.be.of.length(0);
+			});
+	});
+
 	it('series batch operation', function () {
 		return bot
 			.seriesBatchOperation(
@@ -161,6 +169,14 @@ describe('batch operations', function () {
 			)
 			.then((res) => {
 				expect(Object.keys(res.failures)).to.deep.equal(['a']);
+			});
+	});
+
+	it('series batch operation with 0 entries', function () {
+		return bot
+			.seriesBatchOperation([], () => Promise.resolve())
+			.then((res) => {
+				expect(Object.keys(res.failures)).to.be.of.length(0);
 			});
 	});
 });
