@@ -32,7 +32,7 @@ API documentation (automatically generated via [typedoc](https://npmjs.com/packa
 
 - **Token handling**: [Tokens](https://www.mediawiki.org/wiki/API:Tokens) are automatically fetched as part of `mwn.init()` or `bot.login()` or `bot.getTokensAndSiteInfo()`. Once retrieved, they are stored in the bot state and can be reused any number of times. If any API request fails due to an expired or missing token, the request is automatically retried after fetching a new token. `bot.getTokens()` can be used to refresh the token cache, though mwn manages this, so you'd never need to explicitly use that.
 
-- **Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for a duration specified by `maxlagPause` (default 5 seconds). A maximum of `maxRetries` will take place (default 3).
+- **Maxlag**: The default [maxlag parameter](https://www.mediawiki.org/wiki/Manual:Maxlag_parameter) used by mwn is 5 seconds. Requests failing due to maxlag will be automatically retried after pausing for the duration specified in the Retry-After header of the response (or a configurable `maxlagPause` – default 5 seconds, if there's no such header). A maximum of `maxRetries` will take place (default 3).
 
 - **Retries**: Mwn automatically retries failing requests `bot.options.maxRetries` times (default: 3). This is useful in case of connectivity resets and the like. As for errors raised by the API itself, note that MediaWiki generally handles these at the response level rather than the protocol level (they still emit a 200 OK response). Mwn will attempt retries for these errors based on the error code. For instance, if the error is `readonly` or `maxlag` , retry is done after a delay. If it's `assertuserfailed` or `assertbotfailed` (indicates a session loss), mwn will try to log in again and then retry. If it's `badtoken`, retry is done after fetching a fresh edit token.
 
@@ -48,10 +48,16 @@ API documentation (automatically generated via [typedoc](https://npmjs.com/packa
 
 - **[Batch operations](https://mwn.toolforge.org/docs/bulk-processing#batch-operations)**: Perform a large number of tasks (like page edits) with control over the concurrency (default 5). Failing actions can be set to automatically retry.
 
+### Compatibility
+
+Mwn is currently compatible with Node.js v10 and above. In the future, compatibility with EOL Node versions may be dropped.
+
+As for MediaWiki support, the CI pipelines only check for compatibility with the latest LTS version. But it should work fine with version 1.35 and above.
+
 ### Contributing
 
 Patches are very much welcome. See <https://mwn.toolforge.org/docs/developing> for instructions.
 
 ### Licensing
 
-Mwn is released under [GNU Lesser General Public License](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License) (LGPL) v3.0, since it borrows quite a bit of code from MediaWiki core (GPL v2). LGPL is a more permissive variant of GNU GPL. Unlike GPL, it enables this library to be used in software not released under GPL-compatible licenses, and even in proprietary software. However, any derivatives of this library should be released under an GPL-compatible license (like LGPL).
+Mwn is released under [GNU Lesser General Public License](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License) (LGPL) v3.0, since it borrows quite a bit of code from MediaWiki core (GPL v2). LGPL is a more permissive variant of GNU GPL. Unlike GPL, it enables this library to be used in software not released under GPL-compatible licenses, and even in proprietary software. However, any derivatives of this library should be released under an GPL-compatible license (like LGPL). That being said, this is not legal advice.
