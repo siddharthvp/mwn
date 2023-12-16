@@ -8,6 +8,8 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/ci-push.yml'
   schedule:
     - cron: '0 5 * * 1'
@@ -17,15 +19,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js 16.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 16
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build
           path: build
@@ -34,20 +36,6 @@ jobs:
         env:
           AUTH_JSON: ${{secrets.AUTH_JSON}}
 
-  code_ql:
-    runs-on: ubuntu-latest
-    name: CodeQL
-    needs: build
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: javascript
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -55,31 +43,34 @@ jobs:
         node-version: [10.x, 12.x, 16.x, 18.x]
     needs: build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Setup MediaWiki instance using Docker for integration tests
         run: npm run setuplocalwiki
       - run: npm ci
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
       - run: npm run test
         env:
           AUTH_JSON: ${{secrets.AUTH_JSON}}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: coverage
+          name: coverage_${{ matrix.node-version }}
           path: coverage
 
   coveralls:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage_18.x
+          path: coverage
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,7 +79,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage_18.x
+          path: coverage
       - name: Zip coverage report
         run: |
           mv coverage/lcov-report/* coverage
