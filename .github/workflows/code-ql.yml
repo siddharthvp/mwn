@@ -1,31 +1,48 @@
-name: CodeQL
+name: 'CodeQL'
 
 on:
   pull_request:
-    branches: [master]
+    branches: [master, develop]
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/code-ql.yml'
   push:
-    branches: [master]
+    branches: [master, develop]
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/code-ql.yml'
   schedule:
     - cron: '0 5 * * 1'
-  workflow_dispatch:
 
 jobs:
-  code_ql:
-    runs-on: ubuntu-latest
-    name: CodeQL
-    needs: build
+  analyze:
+    name: Analyze
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
-          languages: javascript
+          languages: 'javascript-typescript'
+          # If you wish to specify custom queries, you can do so here or in a config file.
+          # By default, queries listed here will override any specified in a config file.
+          # Prefix the list here with "+" to use these queries and those in the config file.
+
+          # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          # queries: security-extended,security-and-quality
+
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'
