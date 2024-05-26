@@ -12,7 +12,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/ci-push.yml'
   schedule:
-    - cron: '0 12 * * 0'
+    - cron: '30 12 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 16.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
       - run: npm ci
       - run: npm run lint
       - run: npm run build
@@ -88,21 +88,20 @@ jobs:
           mv coverage/lcov-report/* coverage
           zip -r coverage.zip coverage
       - name: Upload coverage reports to Toolforge
-        uses: garygrossgarten/github-action-scp@8a27854bb4f124a497a67316e83783efda770119
+        uses: appleboy/scp-action@9ba62064d28ce0897a970e72cdfe30b9fde2fe48
         with:
-          local: /home/runner/work/mwn/mwn/coverage.zip
-          remote: /data/project/mwn/coverage.zip
+          source: /home/runner/work/mwn/mwn/coverage.zip
+          target: /data/project/mwn
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
-          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
-          rmRemote: true
+          key: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
       - name: Coverage
-        uses: garygrossgarten/github-action-ssh@915e492551885a89131e21d85f2e043c96abff80
+        uses: appleboy/ssh-action@551964ebda1034f0b5449d74db25c42e371ca1f7
         with:
-          command: |
+          script: |
             cd /data/project/mwn
             rm -rf www/static/coverage
             unzip coverage.zip -d www/static
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
-          privateKey: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          key: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}

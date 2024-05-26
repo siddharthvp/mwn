@@ -30,18 +30,17 @@ jobs:
           cd website/build
           zip -r docs.zip .
       - name: Copy docs to Toolforge
-        uses: garygrossgarten/github-action-scp@8a27854bb4f124a497a67316e83783efda770119
+        uses: appleboy/scp-action@9ba62064d28ce0897a970e72cdfe30b9fde2fe48
         with:
-          local: ${{github.workspace}}/website/build/docs.zip
-          remote: /data/project/mwn/docs.zip
+          source: ${{github.workspace}}/website/build/docs.zip
+          target: /data/project/mwn
           host: login.toolforge.org
           username: ${{secrets.TOOLFORGE_USERNAME}}
-          privateKey: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
-          rmRemote: true
+          key: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
       - name: Unzip
-        uses: garygrossgarten/github-action-ssh@915e492551885a89131e21d85f2e043c96abff80
+        uses: appleboy/ssh-action@551964ebda1034f0b5449d74db25c42e371ca1f7
         with:
-          command: |
+          script: |
             cd /data/project/mwn/www/static
             shopt -s extglob
             rm -r -- !(coverage)
@@ -49,4 +48,4 @@ jobs:
             rm /data/project/mwn/docs.zip
           host: login.toolforge.org
           username: ${{secrets.TOOLFORGE_USERNAME}}
-          privateKey: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
+          key: ${{secrets.TOOLFORGE_PRIVATE_KEY}}
