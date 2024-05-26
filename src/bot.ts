@@ -72,7 +72,7 @@ import type {
 	ApiUndeleteParams,
 	ApiUploadParams,
 } from './api_params';
-import {
+import type {
 	ApiDeleteResponse,
 	ApiEditResponse,
 	ApiMoveResponse,
@@ -93,29 +93,55 @@ export type { PageViewData, PageViewOptions } from './page';
 export type { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
 
 export interface MwnOptions {
+	/** Suppress messages, except for error messages and warnings */
 	silent?: boolean;
+
+	/** Site API url, example https://en.wikipedia.org/w/api.php */
 	apiUrl?: string;
+
+	/** User agent string. Required for WMF wikis, see https://foundation.wikimedia.org/wiki/Policy:User-Agent_policy */
 	userAgent?: string;
+
+	/** Bot login username and password, setup using Special:BotPasswords */
 	username?: string;
 	password?: string;
+
+	/** OAuth 1.0a credentials */
 	OAuthCredentials?: {
 		consumerToken: string;
 		consumerSecret: string;
 		accessToken: string;
 		accessSecret: string;
 	};
+	/** OAuth 2 access token */
 	OAuth2AccessToken?: string;
+	/**
+	 * Max number of times to retry the same request on errors due to
+	 * maxlag, wiki being in readonly mode, and other transient errors
+	 */
 	maxRetries?: number;
+
+	/** Milliseconds to pause before retrying after a transient error */
 	retryPause?: number;
+
+	/** Bot emergency shutoff options */
 	shutoff?: {
+		/** Interval every which to check for shutoff, in milliseconds */
 		intervalDuration?: number;
+		/** Page to which to check for shutoff */
 		page?: string;
+		/** Condition satisfied by the page text for the bot to shut off */
 		condition?: RegExp | ((text: string) => boolean);
+		/** Function to run for the bot to shut off, eg. you can call process.exit(1) here, or shut down more gracefully */
 		onShutoff?: (text: string) => void;
 	};
+	/** Default parameters included in every API request */
 	defaultParams?: ApiParams;
+	/** Suppress logging of warnings received from the API */
 	suppressAPIWarnings?: boolean;
-	editConfig?: editConfigType;
+	/** Options for the edit() function */
+	editConfig?: EditConfig;
+	/** Suppress warning about construction of invalid bot.Date objects */
 	suppressInvalidDateWarning?: boolean;
 }
 
@@ -124,9 +150,12 @@ export type EditTransform = (rev: {
 	timestamp: string;
 }) => string | ApiEditPageParams | Promise<string | ApiEditPageParams>;
 
-type editConfigType = {
+export type EditConfig = {
+	/** Max number of retries on edit conflicts, default: 2 */
 	conflictRetries?: number;
+	/** Suppress warning on an edit resulting in no change to the page, default: false */
 	suppressNochangeWarning?: boolean;
+	/** Abort edit if exclusionRegex matches on the page content */
 	exclusionRegex?: RegExp;
 };
 
@@ -170,35 +199,23 @@ export class Mwn {
 	 * Should be immutable
 	 */
 	readonly defaultOptions: MwnOptions = {
-		// suppress messages, except for error messages and warnings
 		silent: false,
-
-		// site API url, example "https://en.wikipedia.org/w/api.php"
 		apiUrl: null,
-
-		// User agent string
 		userAgent: 'mwn',
-
-		// bot login username and password, setup using Special:BotPasswords
 		username: null,
 		password: null,
 
-		// OAuth credentials
 		OAuthCredentials: {
 			consumerToken: null,
 			consumerSecret: null,
 			accessToken: null,
 			accessSecret: null,
 		},
+		OAuth2AccessToken: null,
 
-		// max number of times to retry the same request on errors due to
-		// maxlag, wiki being in readonly mode, and other transient errors
 		maxRetries: 3,
-
-		// milliseconds to pause before retrying after a transient error
 		retryPause: 5000,
 
-		// Bot emergency shutoff options
 		shutoff: {
 			intervalDuration: 10000,
 			page: null,
@@ -206,25 +223,20 @@ export class Mwn {
 			onShutoff() {},
 		},
 
-		// default parameters included in every API request
 		defaultParams: {
 			format: 'json',
 			formatversion: '2',
 			maxlag: 5,
 		},
 
-		// suppress logging of warnings received from the API
 		suppressAPIWarnings: false,
 
-		// options for the edit() function
 		editConfig: {
-			// max number of retries on edit conflicts
 			conflictRetries: 2,
-			// suppress warning on an edit resulting in no change to the page
 			suppressNochangeWarning: false,
-			// abort edit if exclusionRegex matches on the page content
 			exclusionRegex: null,
 		},
+		suppressInvalidDateWarning: false,
 	};
 
 	/**
@@ -352,9 +364,8 @@ export class Mwn {
 	Date = MwnDateFactory(this);
 
 	/**
-	 * Constructs a new bot instance
-	 * It is advised to create one bot instance for every API to use
-	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations
+	 * Constructs a new bot instance. Recommended usage is one bot instance for every wiki and user.
+	 * A bot instance has its own state (e.g. tokens) that is necessary for some operations.
 	 *
 	 * @param [customOptions] - Custom options
 	 */
@@ -971,19 +982,9 @@ export class Mwn {
 	 * those.
 	 * @param {Object} [editConfig] - Overridden edit options. Available options:
 	 * conflictRetries, suppressNochangeWarning, exclusionRegex
-	 * @config conflictRetries - maximum number of times to retry edit after encountering edit
-	 * conflicts.
-	 * @config suppressNochangeWarning - don't show the warning when no change is actually
-	 * made to the page on an successful edit
-	 * @config exclusionRegex - don't edit if the page text matches this regex. Used for bot
-	 * per-page exclusion compliance.
 	 * @return {Promise<Object>} Edit API response
 	 */
-	async edit(
-		title: string | number,
-		transform: EditTransform,
-		editConfig?: editConfigType
-	): Promise<ApiEditResponse> {
+	async edit(title: string | number, transform: EditTransform, editConfig?: EditConfig): Promise<ApiEditResponse> {
 		editConfig = editConfig || this.options.editConfig;
 
 		// TODO: use baserevid instead of basetimestamp for conflict handling
@@ -1468,7 +1469,7 @@ export class Mwn {
 	 */
 	async search(
 		searchTerm: string,
-		limit = 50,
+		limit: number | 'max' = 50,
 		props?: ApiQuerySearchParams['srprop'],
 		otherParams?: ApiQuerySearchParams
 	): Promise<ApiSearchResult[]> {
