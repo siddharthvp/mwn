@@ -33,6 +33,7 @@ jobs:
         uses: appleboy/scp-action@9ba62064d28ce0897a970e72cdfe30b9fde2fe48
         with:
           source: ${{github.workspace}}/website/build/docs.zip
+          strip_components: 4
           target: /data/project/mwn
           host: login.toolforge.org
           username: ${{secrets.TOOLFORGE_USERNAME}}
