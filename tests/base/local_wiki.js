@@ -1,8 +1,10 @@
 const { Mwn, log, expect, assert, sinon, verifyTokenAndSiteInfo } = require('./test_base');
 
+const localApiUrl = 'http://localhost:8080/api.php';
+
 const baseConfig = {
 	silent: true,
-	apiUrl: 'http://localhost:8080/api.php',
+	apiUrl: localApiUrl,
 	password: '12345678901234567890123456789012',
 	userAgent: 'mwn (https://github.com/siddharthvp/mwn)',
 	defaultParams: {
@@ -30,4 +32,4 @@ async function setup() {
 async function teardown() {}
 
 // Export everything
-module.exports = { Mwn, bot, bot2, log, expect, assert, sinon, setup, teardown };
+module.exports = { Mwn, bot, bot2, localApiUrl, log, expect, assert, sinon, setup, teardown };

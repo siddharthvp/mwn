@@ -1,6 +1,6 @@
 'use strict';
 
-const { sinon, bot, bot2, expect, setup, teardown } = require('./base/local_wiki');
+const { sinon, bot, bot2, expect, setup, teardown, localApiUrl } = require('./base/local_wiki');
 const nock = require('nock');
 const { Request, Response } = require('../build/core');
 const utils = require('../build/utils');
@@ -151,5 +151,5 @@ describe('testing for error recoveries', function () {
 });
 
 function mockApi(times, body, headers) {
-	nock('http://localhost:8080/api.php', { allowUnmocked: true }).get(/.*?/).times(times).reply(200, body, headers);
+	nock(localApiUrl, { allowUnmocked: true }).get(/.*?/).times(times).reply(200, body, headers);
 }

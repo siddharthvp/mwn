@@ -4,7 +4,7 @@ const { MwnError } = require('../build/error');
 const nock = require('nock');
 
 const { expect, Mwn } = require('./base/test_base');
-const { bot, setup, teardown, sinon } = require('./base/local_wiki');
+const { bot, setup, teardown, sinon, localApiUrl } = require('./base/local_wiki');
 
 describe('core', function () {
 	this.timeout(5000);
@@ -50,7 +50,7 @@ describe('core', function () {
 		it('honours method passed in custom options', async function () {
 			sinon.spy(Request.prototype, 'handlePost');
 			sinon.spy(Request.prototype, 'handleGet');
-			let scope = nock('http://localhost:8080/api.php').post(/.*?/).times(1).reply(200, '{}');
+			let scope = nock(localApiUrl).post(/.*?/).times(1).reply(200, '{}');
 			await bot.request({ action: 'query' }, { method: 'post' });
 			expect(Request.prototype.handlePost).to.have.been.calledOnce;
 			expect(Request.prototype.handleGet).to.not.have.been.called;
@@ -65,7 +65,7 @@ describe('core', function () {
 		after('teardown', teardown);
 
 		it('logs on network errors and retries them', async function () {
-			nock('http://localhost:8080/api.php', { allowUnmocked: true }).get(/.*?/).times(1).reply(500, 'body', {});
+			nock(localApiUrl, { allowUnmocked: true }).get(/.*?/).times(1).reply(500, 'body', {});
 			sinon.spy(console, 'log');
 			await expect(bot.query({ action: 'query' })).to.be.eventually.deep.eq({ batchcomplete: true });
 			expect(console.log).to.have.been.calledTwice;
