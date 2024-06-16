@@ -38,7 +38,7 @@ export class Request {
 	}
 
 	getMethod() {
-		if (this.requestParams.method !== undefined) {
+		if (this.requestParams.method) {
 			return this.requestParams.method;
 		}
 		if (this.apiParams.action === 'query') {

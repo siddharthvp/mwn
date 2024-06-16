@@ -46,6 +46,18 @@ describe('core', function () {
 			expect(Response.prototype.handleRequestFailure).to.have.been.calledOnce;
 			sinon.restore();
 		});
+
+		it('honours method passed in custom options', async function () {
+			sinon.spy(Request.prototype, 'handlePost');
+			sinon.spy(Request.prototype, 'handleGet');
+			let scope = nock('http://localhost:8080/api.php').post(/.*?/).times(1).reply(200, '{}');
+			await bot.request({ action: 'query' }, { method: 'post' });
+			expect(Request.prototype.handlePost).to.have.been.calledOnce;
+			expect(Request.prototype.handleGet).to.not.have.been.called;
+			expect(scope.isDone()).to.be.true;
+			sinon.restore();
+			nock.cleanAll();
+		});
 	});
 
 	describe('Response', function () {
