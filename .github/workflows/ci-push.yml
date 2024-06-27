@@ -104,14 +104,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # all branches and tags
-      - run: |
+      - name: Mirror to Gitlab
+        run: |
           mkdir -p ~/.ssh
           echo -e "$KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
           git remote add gitlab "git@gitlab.wikimedia.org:sd/mwn.git"
-          git push gitlab master
+          git push gitlab master --force-with-lease
           git push gitlab --tags
           rm -rf ~/.ssh
         env:
-          KEY: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+          KEY: ${{ secrets.GITLAB_PRIVATE_KEY }}
