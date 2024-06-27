@@ -97,3 +97,21 @@ jobs:
           host: login.toolforge.org
           username: ${{ secrets.TOOLFORGE_USERNAME }}
           key: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
+
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # all branches and tags
+      - run: |
+          mkdir -p ~/.ssh
+          echo -e "$KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+          git remote add gitlab "git@gitlab.wikimedia.org:sd/mwn.git"
+          git push gitlab master
+          git push gitlab --tags
+          rm -rf ~/.ssh
+        env:
+          KEY: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
