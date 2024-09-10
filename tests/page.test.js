@@ -101,10 +101,24 @@ describe('Page', async function () {
 		});
 	});
 
+	it('backlinks for non-existing page', function () {
+		return new bot.Page('29wdijopsk239esijd123').backlinks().then((backlinks) => {
+			expect(backlinks).to.be.instanceOf(Array);
+			expect(backlinks.length).to.equal(0);
+		});
+	});
+
 	it('transclusions', function () {
 		return page.transclusions().then((transclusions) => {
 			expect(transclusions).to.be.instanceOf(Array);
 			expect(transclusions.length).to.be.gte(1);
+		});
+	});
+
+	it('transclusions for non-existing page', function () {
+		return new bot.Page('29wdijopsk239esijd123').transclusions().then((transclusions) => {
+			expect(transclusions).to.be.instanceOf(Array);
+			expect(transclusions.length).to.equal(0);
 		});
 	});
 

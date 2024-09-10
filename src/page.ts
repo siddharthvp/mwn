@@ -265,12 +265,8 @@ export default function (bot: Mwn): MwnPageStatic {
 					lhlimit: 'max',
 				})
 				.then((jsons) => {
-					let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
-					let page = pages[0];
-					if (page.missing) {
-						return Promise.reject(new MwnError.MissingPage());
-					}
-					return page.linkshere.map((pg: ApiPage) => pg.title);
+					let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), [] as ApiPage[]);
+					return (pages[0].linkshere || []).map((pg) => pg.title);
 				});
 		}
 
@@ -285,12 +281,8 @@ export default function (bot: Mwn): MwnPageStatic {
 					tilimit: 'max',
 				})
 				.then((jsons) => {
-					let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), []);
-					let page = pages[0];
-					if (page.missing) {
-						return Promise.reject(new MwnError.MissingPage());
-					}
-					return page.transcludedin.map((pg: ApiPage) => pg.title);
+					let pages = jsons.reduce((pages, json) => pages.concat(json.query.pages), [] as ApiPage[]);
+					return (pages[0].transcludedin || []).map((pg) => pg.title);
 				});
 		}
 
