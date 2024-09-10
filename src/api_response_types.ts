@@ -42,6 +42,49 @@ export type ApiQueryUsersResponse = ApiResponse;
 
 export type ApiQueryGlobalUserInfoResponse = ApiResponse;
 
+export interface ApiQueryResponse {
+	batchcomplete?: true;
+	continue?: {
+		continue: string;
+		[prop: string]: string;
+	};
+	query: {
+		pages?: Array<ApiPage>;
+		allpages?: ApiPageList;
+		backlinks?: ApiPageList;
+		allcategories?: Array<{ category: string }>;
+		allimages?: Array<{
+			name: string;
+			timestamp: string;
+			url: string;
+			descriptionurl: string;
+			descriptionshorturl: string;
+			ns: number;
+			title: string;
+		}>;
+
+		alllinks?: ApiLinkList;
+		alltransclusions?: ApiLinkList;
+		allfileusages?: ApiLinkList;
+		allredirects?: ApiLinkList;
+
+		categorymembers: any; // TODO
+
+		[prop: string]: any;
+	};
+}
+
+export type ApiLinkList = Array<{
+	ns?: number;
+	title?: string;
+	fromid?: number;
+}>;
+export type ApiPageList = Array<{
+	pageid: number;
+	ns: number;
+	title: string;
+}>;
+
 export interface ApiParseResponse {
 	title: string;
 	pageid: number;
@@ -141,14 +184,74 @@ export type LogEvent = {
 	comment: string;
 };
 
+export type RecentChange = {
+	type: string;
+	ns: number;
+	title: string;
+	pageid: number;
+	revid: number;
+	old_revid: number;
+	rcid: number;
+	timestamp: string;
+	user?: string;
+	userid?: number;
+	bot?: boolean;
+	new?: boolean;
+	minor?: boolean;
+	oldlen?: number;
+	newlen?: number;
+	comment?: string;
+	parsedcomment?: string;
+	redirect?: boolean;
+	tags?: string[];
+	sha1?: string;
+	oresscores?: Record<string, any>;
+};
+
 export interface ApiPage {
 	pageid: number;
 	ns: number;
 	title: string;
 	missing?: true;
 	invalid?: true;
-	revisions?: ApiRevision[];
+	revisions?: Array<ApiRevision>;
+	categories?: Array<LinkTarget>;
+	templates?: Array<LinkTarget>;
+	links?: Array<LinkTarget>;
+	images?: Array<LinkTarget>;
+	linkshere?: Array<ReverseLinkTarget>;
+	transcludedin?: Array<ReverseLinkTarget>;
+	fileusage?: Array<ReverseLinkTarget>;
+	extlinks?: Array<{ url: string }>;
+	iwlinks?: Array<{ prefix: string; title: string }>;
+	langlinks?: Array<{ lang: string; title: string }>;
+	langlinkscount?: number;
+
+	imagerepository?: string;
+	badfile?: boolean;
+	imageinfo?: Array<ImageInfo>;
+
+	categoryinfo?: {
+		size: number;
+		pages: number;
+		files: number;
+		subcats: number;
+		hidden: boolean;
+	};
+
+	[prop: string]: any;
 }
+
+export type LinkTarget = {
+	ns: number;
+	title: string;
+};
+export type ReverseLinkTarget = {
+	pageid: number;
+	ns: number;
+	title: string;
+	redirect: boolean;
+};
 
 // If rvslots is not used revisions slot info is part of revision object
 export interface ApiRevision extends ApiRevisionSlot {
@@ -177,3 +280,25 @@ export interface ApiRevisionSlot {
 	contentformat?: string;
 	content?: string;
 }
+
+export type ImageInfo = {
+	timestamp?: string;
+	userid?: number;
+	user?: string;
+	size?: number;
+	width?: number;
+	height?: number;
+	parsedcomment?: string;
+	comment?: string;
+	html?: string;
+	canonicaltitle?: string;
+	url?: string;
+	descriptionurl?: string;
+	descriptionshorturl?: string;
+	sha1?: string;
+	metadata?: Array<{ name: string; value: any }>;
+	extmetadata?: any;
+	mime?: string;
+	mediatype?: string;
+	bitdepth?: number;
+};
