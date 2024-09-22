@@ -1,6 +1,5 @@
 import { MwnError } from './error';
-
-import type { Mwn, MwnTitle, EditTransform } from './bot';
+import type { Mwn, MwnTitle, EditTransform, ApiQueryResponse } from './bot';
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
@@ -19,7 +18,6 @@ export interface MwnPageStatic {
 }
 
 export interface MwnPage extends MwnTitle {
-	data: any;
 	getTalkPage(): MwnPage;
 	getSubjectPage(): MwnPage;
 	/**
@@ -166,8 +164,6 @@ export interface MwnPage extends MwnTitle {
 
 export default function (bot: Mwn): MwnPageStatic {
 	class Page extends bot.Title implements MwnPage {
-		data: any;
-
 		constructor(title: MwnTitle | string, namespace?: number) {
 			// bot property is set by mwn#Page() method
 			if (typeof title === 'string') {
@@ -177,7 +173,6 @@ export default function (bot: Mwn): MwnPageStatic {
 			} else {
 				throw new Error('unknown constructor type for mwn Page');
 			}
-			this.data = {};
 		}
 
 		/**
@@ -311,8 +306,7 @@ export default function (bot: Mwn): MwnPageStatic {
 		/** @inheritDoc */
 		subpages(options?: ApiQueryAllPagesParams): Promise<string[]> {
 			return bot
-				.request({
-					action: 'query',
+				.query({
 					list: 'allpages',
 					apprefix: this.title + '/',
 					apnamespace: this.namespace,
@@ -320,7 +314,7 @@ export default function (bot: Mwn): MwnPageStatic {
 					...options,
 				})
 				.then((data) => {
-					return data.query.allpages.map((pg: ApiPage) => pg.title);
+					return data.query.allpages.map((pg) => pg.title);
 				});
 		}
 
@@ -333,33 +327,21 @@ export default function (bot: Mwn): MwnPageStatic {
 
 		/** @inheritDoc */
 		getRedirectTarget(): Promise<string> {
-			if (this.data.text) {
-				let target = /^\s*#redirect \[\[(.*?)\]\]/.exec(this.data.text);
-				if (!target) {
-					return Promise.resolve(this.toText());
-				}
-				return Promise.resolve(new bot.Title(target[1]).toText());
-			}
 			return bot
-				.request({
-					action: 'query',
+				.query({
 					titles: this.toString(),
-					redirects: '1',
+					redirects: true,
 				})
 				.then((data) => {
-					let page = data.query.pages[0];
-					if (page.missing) {
-						return Promise.reject(new MwnError.MissingPage());
-					}
-					return page.title;
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].title;
 				});
 		}
 
 		/** @inheritDoc */
 		getCreator(): Promise<string> {
 			return bot
-				.request({
-					action: 'query',
+				.query({
 					titles: this.toString(),
 					prop: 'revisions',
 					rvprop: 'user',
@@ -367,11 +349,8 @@ export default function (bot: Mwn): MwnPageStatic {
 					rvdir: 'newer',
 				})
 				.then((data) => {
-					let page = data.query.pages[0];
-					if (page.missing) {
-						return Promise.reject(new MwnError.MissingPage());
-					}
-					return page.revisions[0].user;
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].revisions[0].user;
 				});
 		}
 
@@ -396,19 +375,14 @@ export default function (bot: Mwn): MwnPageStatic {
 
 		/** @inheritDoc */
 		getDescription(customOptions: WikibaseClientApiDescriptionParams) {
-			// ApiParams
 			return bot
-				.request({
-					action: 'query',
+				.query({
 					prop: 'description',
 					titles: this.toString(),
 					...customOptions,
 				})
 				.then((data) => {
-					let page = data.query.pages[0];
-					if (page.missing) {
-						return Promise.reject(new MwnError.MissingPage());
-					}
+					this.throwIfPageMissing(data);
 					return data.query.pages[0].description;
 				});
 		}
@@ -420,8 +394,7 @@ export default function (bot: Mwn): MwnPageStatic {
 			customOptions?: ApiQueryRevisionsParams
 		): Promise<ApiRevision[]> {
 			return bot
-				.request({
-					action: 'query',
+				.query({
 					prop: 'revisions',
 					titles: this.toString(),
 					rvprop: props || 'ids|timestamp|flags|comment|user',
@@ -429,10 +402,7 @@ export default function (bot: Mwn): MwnPageStatic {
 					...customOptions,
 				})
 				.then((data) => {
-					let page = data.query.pages[0];
-					if (page.missing) {
-						return Promise.reject(new MwnError.MissingPage());
-					}
+					this.throwIfPageMissing(data);
 					return data.query.pages[0].revisions;
 				});
 		}
@@ -504,6 +474,12 @@ export default function (bot: Mwn): MwnPageStatic {
 				for (let event of json.query.logevents) {
 					yield event;
 				}
+			}
+		}
+
+		private throwIfPageMissing(data: ApiQueryResponse) {
+			if (data.query.pages[0].missing || data.query.pages[0].invalid) {
+				throw new MwnError.MissingPage();
 			}
 		}
 
