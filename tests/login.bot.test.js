@@ -1,6 +1,7 @@
 'use strict';
 
 const { Mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
+const { bot: localBot, sinon } = require('./base/local_wiki');
 
 const testwiki = require('./mocking/loginCredentials.js');
 
@@ -15,6 +16,20 @@ describe('login', async function () {
 			let userinfo = await client.userinfo();
 			expect(userinfo).to.not.have.property('anon');
 		});
+	});
+
+	it('avoids concurrent logins', async function () {
+		const spy = sinon.spy(localBot, 'loginInternal');
+		const [mainPage, serverTime] = await Promise.all([localBot.read('Main Page'), localBot.getServerTime()]);
+		expect(spy).to.have.been.calledOnce;
+		sinon.restore();
+		expect(serverTime).to.be.a('string');
+		expect(mainPage).to.be.a('object');
+
+		await localBot.logout();
+		expect(localBot.loggedIn).to.be.false;
+		await localBot.login();
+		expect(localBot.loggedIn).to.be.true;
 	});
 
 	let bot = new Mwn();

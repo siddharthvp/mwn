@@ -561,12 +561,30 @@ export class Mwn {
 
 	/************** CORE FUNCTIONS *******************/
 
+	private loginInProgress: Promise<ApiResponse> = null;
+
 	/**
 	 * Executes a Login
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 * @returns {Promise}
 	 */
 	async login(loginOptions?: { username?: string; password?: string; apiUrl?: string }): Promise<ApiResponse> {
+		// Avoid multiple logins taking place concurrently, for instance when session loss occurs
+		// in the middle of a batch operation.
+		if (!this.loginInProgress) {
+			this.loginInProgress = this.loginInternal(loginOptions);
+			this.loginInProgress.then(() => {
+				this.loginInProgress = null;
+			});
+		}
+		return this.loginInProgress;
+	}
+
+	private async loginInternal(loginOptions?: {
+		username?: string;
+		password?: string;
+		apiUrl?: string;
+	}): Promise<ApiResponse> {
 		this.options = merge(this.options, loginOptions);
 		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
 			return rejectWithError({
