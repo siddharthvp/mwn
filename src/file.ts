@@ -1,4 +1,4 @@
-import type { Mwn, MwnPage, MwnTitle } from './bot';
+import type { Mwn, MwnPage, MwnTitle, ReverseLinkTarget } from './bot';
 import { ApiQueryBacklinkspropParams } from './api_params';
 
 export interface MwnFileStatic {
@@ -74,12 +74,11 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		usages(options?: ApiQueryBacklinkspropParams): Promise<{ pageid: number; title: string; redirect: boolean }[]> {
+		usages(options?: ApiQueryBacklinkspropParams): Promise<ReverseLinkTarget[]> {
 			return bot
-				.request({
-					action: 'query',
-					prop: 'fileusage',
+				.query({
 					titles: this.toString(),
+					prop: 'fileusage',
 					fuprop: 'pageid|title|redirect',
 					...options,
 				})

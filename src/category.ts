@@ -61,8 +61,7 @@ export default function (bot: Mwn) {
 		/** @inheritDoc */
 		members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
 			return bot
-				.request({
-					action: 'query',
+				.query({
 					list: 'categorymembers',
 					cmtitle: 'Category:' + this.title,
 					cmlimit: 'max',
