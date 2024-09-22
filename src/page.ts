@@ -211,7 +211,6 @@ export default function (bot: Mwn): MwnPageStatic {
 					prop: 'wikitext',
 				})
 				.then((data) => {
-					this.data.text = data.parse.wikitext;
 					return data.parse.wikitext;
 				});
 		}

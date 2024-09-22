@@ -111,7 +111,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
           git remote add gitlab "git@gitlab.wikimedia.org:sd/mwn.git"
-          git push gitlab master --force-with-lease
+          git push gitlab master --force
           git push gitlab --tags
           rm -rf ~/.ssh
         env:
