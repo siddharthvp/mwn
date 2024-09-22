@@ -1,6 +1,6 @@
 'use strict';
 
-const { Mwn, expect, verifyTokenAndSiteInfo } = require('./base/test_base');
+const { Mwn, expect, sinon, verifyTokenAndSiteInfo } = require('./base/test_base');
 
 const testwiki = require('./mocking/loginCredentials.js');
 
@@ -15,6 +15,27 @@ describe('login', async function () {
 			let userinfo = await client.userinfo();
 			expect(userinfo).to.not.have.property('anon');
 		});
+	});
+
+	it('avoids concurrent logins', async function () {
+		let client = new Mwn();
+		client.setOptions({ ...testwiki.account1, defaultParams: { assert: 'user' } });
+		const login = sinon.spy(client, 'login');
+		const loginInternal = sinon.spy(client, 'loginInternal');
+
+		// Both calls will fail due to assert: user and will try to login at the same time
+		const [mainPage, serverTime] = await Promise.all([client.read('Main Page'), client.getServerTime()]);
+
+		expect(login).to.have.been.calledTwice;
+		expect(loginInternal).to.have.been.calledOnce;
+		sinon.restore();
+		expect(serverTime).to.be.a('string');
+		expect(mainPage).to.be.a('object');
+
+		await client.logout();
+		expect(client.loggedIn).to.be.false;
+		await client.login();
+		expect(client.loggedIn).to.be.true;
 	});
 
 	let bot = new Mwn();
