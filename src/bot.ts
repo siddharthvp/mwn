@@ -565,13 +565,38 @@ export class Mwn {
 
 	/************** CORE FUNCTIONS *******************/
 
+	private loginInProgress: [string, Promise<ApiResponse>] = null;
+
 	/**
 	 * Executes a Login
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 * @returns {Promise}
 	 */
 	async login(loginOptions?: { username?: string; password?: string; apiUrl?: string }): Promise<ApiResponse> {
-		this.options = merge(this.options, loginOptions);
+		Object.assign(this.options, loginOptions);
+
+		// Avoid multiple logins taking place concurrently, for instance when session loss occurs
+		// in the middle of a batch operation.
+		if (!this.loginInProgress) {
+			const loginPromise = this.loginInternal();
+			this.loginInProgress = [this.options.username, loginPromise];
+			loginPromise.finally(() => {
+				this.loginInProgress = null;
+			});
+
+			// Multiple logins with different usernames? Error out.
+		} else if (this.loginInProgress[0] !== this.options.username) {
+			return rejectWithError({
+				code: 'mwn_invalidlogin',
+				info: 'Detected concurrent login with a different username',
+			});
+		}
+
+		// Return the response of the previous login call
+		return this.loginInProgress[1];
+	}
+
+	private async loginInternal(): Promise<ApiResponse> {
 		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
 			return rejectWithError({
 				code: 'mwn_nologincredentials',
