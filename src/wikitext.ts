@@ -229,7 +229,7 @@ export class Parameter {
 // written by me. (cc-by-sa/GFDL)
 
 /** See {@link MwnWikitext.parseTemplates} */
-export function parseTemplates(wikitext: string, config: TemplateConfig): Template[] {
+export function parseTemplates(wikitext: string, config?: TemplateConfig): Template[] {
 	config = config || {
 		recursive: false,
 		namePredicate: null,
@@ -602,7 +602,7 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		parseTemplates(config: TemplateConfig): Template[] {
+		parseTemplates(config?: TemplateConfig): Template[] {
 			return (this.templates = parseTemplates(this.text, config));
 		}
 
