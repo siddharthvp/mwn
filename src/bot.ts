@@ -91,7 +91,7 @@ export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser,
 // Export, if only for the sake of getting generated documentation
 export * from './api_response_types';
 export type { PageViewData, PageViewOptions } from './page';
-export type { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
+export { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
 
 export interface MwnOptions {
 	/** Suppress messages, except for error messages and warnings */
