@@ -602,7 +602,7 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		parseTemplates(config: TemplateConfig): Template[] {
+		parseTemplates(config: TemplateConfig = {}): Template[] {
 			return (this.templates = parseTemplates(this.text, config));
 		}
 
