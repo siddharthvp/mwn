@@ -77,6 +77,7 @@ import type {
 	ApiEditResponse,
 	ApiMoveResponse,
 	ApiPage,
+	ApiQueryResponse,
 	ApiResponse,
 	ApiRevision,
 	ApiRollbackResponse,
@@ -555,8 +556,11 @@ export class Mwn {
 		);
 	}
 
-	async query(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<ApiResponse> {
-		return this.request(Object.assign({ action: 'query' }, params), customRequestOptions);
+	async query(params: ApiParams, customRequestOptions: RawRequestParams = {}): Promise<ApiQueryResponse> {
+		return this.request(
+			Object.assign({ action: 'query' }, params),
+			customRequestOptions
+		) as Promise<ApiQueryResponse>;
 	}
 
 	/************** CORE FUNCTIONS *******************/
