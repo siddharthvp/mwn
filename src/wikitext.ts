@@ -29,7 +29,7 @@ export interface MwnWikitextStatic {
 	 *  2. It doesn't use any templates to produce any table markup.
 	 *  3. Further restrictions may apply.
 	 *
-	 * Tables generated via mwn.table() class are intended to be parsable.
+	 * Tables generated via mwn.Table() class are intended to be parsable.
 	 *
 	 * This method throws when it finds an inconsistency (rather than silently
 	 * cause undesired behaviour).
@@ -138,7 +138,7 @@ export interface TemplateConfig {
 	 */
 	recursive?: boolean;
 	/**
-	 * Include template in result only if the its name matches this predicate.
+	 * Include template in result only if its name matches this predicate.
 	 * More efficient than templatePredicate as the template parameters
 	 * aren't parsed if name didn't match.
 	 */
