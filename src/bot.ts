@@ -890,7 +890,7 @@ export class Mwn {
 				this.shutoff.state = true;
 				this.disableEmergencyShutoff();
 				// user callback executed last, so that an error thrown by
-				// it doesn't prevent the the above from being run
+				// it doesn't prevent the above from being run
 				this.options.shutoff.onShutoff(text);
 			}
 		}, this.options.shutoff.intervalDuration);
@@ -1254,7 +1254,7 @@ export class Mwn {
 	}
 
 	/**
-	 * Upload an image from a the local disk to the wiki.
+	 * Upload an image from the local disk to the wiki.
 	 * If a file with the same name exists, it will be over-written.
 	 * @param {string} filepath
 	 * @param {string} title
