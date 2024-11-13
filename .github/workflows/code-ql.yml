@@ -2,7 +2,10 @@ name: 'CodeQL'
 
 on:
   pull_request:
-    branches: [master, develop]
+    branches:
+      - master
+      - develop
+      - dev/**
     paths:
       - 'src/**'
       - 'tests/**'
