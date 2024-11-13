@@ -4,7 +4,10 @@ name: Node.js CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - develop
+      - dev/**
     paths:
       - 'src/**'
       - 'tests/**'
@@ -40,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 16.x, 18.x]
+        node-version: [10.x, 16.x, 18.x, 22.x]
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +64,7 @@ jobs:
           path: coverage
 
   coveralls:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -76,6 +80,7 @@ jobs:
 
   # Upload coverage report to toolforge as well
   upload_coverage:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -99,6 +104,7 @@ jobs:
           key: ${{ secrets.TOOLFORGE_PRIVATE_KEY }}
 
   mirror:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
