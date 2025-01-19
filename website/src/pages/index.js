@@ -25,7 +25,7 @@ function HomepageHeader() {
 
 export default function Home() {
 	return (
-		<Layout title="Docs" description="Description will go into a meta tag in <head />">
+		<Layout title="Docs" description="JavaScript and TypeScript bot framework for Node.js">
 			<HomepageHeader />
 			<main>
 				<HomepageFeatures />
