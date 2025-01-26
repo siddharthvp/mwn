@@ -18,7 +18,7 @@ describe('user class: write methods', async function () {
 		return expect(u.email('Subject', 'body'))
 			.to.be.eventually.rejectedWith(Mwn.Error)
 			.with.property('code')
-			.that.equals('noemail');
+			.that.equals('noemailtext');
 	});
 
 	it('block', function () {
