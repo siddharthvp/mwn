@@ -40,14 +40,28 @@ import * as https from 'https';
 
 // NPM modules
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
-import { wrapper as wrapperCookieJar } from 'axios-cookiejar-support';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 
 // Prepare axios clients
 const defaultJar = new tough.CookieJar();
-const axiosWithJar = wrapperCookieJar(axios.create({ jar: defaultJar, withCredentials: true }));
+const axiosWithJar = axios.create();
 const axiosWithoutJar = axios.create();
+
+axiosWithJar.interceptors.request.use((config) => {
+	const cookieHeader = defaultJar.getCookieStringSync(config.url);
+	if (cookieHeader) {
+		config.headers.Cookie = cookieHeader;
+	}
+	return config;
+});
+axiosWithJar.interceptors.response.use((response) => {
+	const setCookieHeaders = response.headers['set-cookie'];
+	if (setCookieHeaders) {
+		setCookieHeaders.forEach((cookie) => defaultJar.setCookieSync(cookie, response.config.url));
+	}
+	return response;
+});
 
 // Nested classes of mwn
 import MwnDateFactory, { MwnDate } from './date';
@@ -535,14 +549,8 @@ export class Mwn {
 		);
 
 		// choose correct client (wrapped for jar support or plain)
-		const useCookies = Boolean(config.jar);
+		const useCookies = Boolean(config.withCredentials);
 		const client = useCookies ? axiosWithJar : axiosWithoutJar;
-
-		// If using cookies, remove custom agents to prevent conflicts with "axios-cookiejar-support"
-		if (useCookies) {
-			delete config.httpAgent;
-			delete config.httpsAgent;
-		}
 
 		return client(config);
 	}

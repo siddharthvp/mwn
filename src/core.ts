@@ -115,7 +115,6 @@ export class Request {
 			};
 		} else {
 			// BotPassword authentication
-			requestOptions.jar = this.bot.cookieJar;
 			requestOptions.withCredentials = true;
 		}
 	}
