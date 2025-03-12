@@ -39,9 +39,15 @@ import * as http from 'http';
 import * as https from 'https';
 
 // NPM modules
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
+import { wrapper as wrapperCookieJar } from 'axios-cookiejar-support';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
+
+// Prepare axios clients
+const defaultJar = new tough.CookieJar();
+const axiosWithJar = wrapperCookieJar(axios.create({ jar: defaultJar, withCredentials: true }));
+const axiosWithoutJar = axios.create();
 
 // Nested classes of mwn
 import MwnDateFactory, { MwnDate } from './date';
@@ -251,7 +257,7 @@ export class Mwn {
 	 * Cookie jar for the bot instance - holds session and login cookies
 	 * @type {tough.CookieJar}
 	 */
-	cookieJar: tough.CookieJar = new tough.CookieJar();
+	cookieJar: tough.CookieJar = defaultJar;
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
@@ -516,19 +522,29 @@ export class Mwn {
 				request: requestOptions,
 			});
 		}
-		return axios(
-			mergeDeep1(
-				{},
-				Mwn.requestDefaults,
-				{
-					method: 'get',
-					headers: {
-						'User-Agent': this.options.userAgent,
-					},
+		const config: AxiosRequestConfig = mergeDeep1(
+			{},
+			Mwn.requestDefaults,
+			{
+				method: 'get',
+				headers: {
+					'User-Agent': this.options.userAgent,
 				},
-				requestOptions
-			)
+			},
+			requestOptions
 		);
+
+		// choose correct client (wrapped for jar support or plain)
+		const useCookies = Boolean(config.jar);
+		const client = useCookies ? axiosWithJar : axiosWithoutJar;
+
+		// If using cookies, remove custom agents to prevent conflicts with "axios-cookiejar-support"
+		if (useCookies) {
+			delete config.httpAgent;
+			delete config.httpsAgent;
+		}
+
+		return client(config);
 	}
 
 	/**
