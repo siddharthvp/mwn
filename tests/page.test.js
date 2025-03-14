@@ -44,7 +44,7 @@ describe('Page', async function () {
 	});
 
 	it('categories', function () {
-		return page.categories().then((cats) => {
+		return new bot.Page('Main Page').categories().then((cats) => {
 			expect(cats).to.be.instanceOf(Array);
 			expect(cats.length).to.be.gte(1); // check it on testwiki, could change
 			expect(cats[0].category).to.be.a('string');
