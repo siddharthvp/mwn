@@ -52,7 +52,7 @@ await bot.parseTitle('Page name', additionalOptions);
 Upload a file from your system to the wiki:
 
 ```js
-await bot.upload('File title', '/path/to/file', 'comment', customParams);
+await bot.upload('/path/to/file', 'File title', 'comment', customParams);
 ```
 
 Download a file from the wiki:
