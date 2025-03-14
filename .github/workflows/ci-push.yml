@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [10.x, 16.x, 18.x, 22.x]
+        node-version: [16.x, 18.x, 22.x]
     needs: build
     steps:
       - uses: actions/checkout@v4
