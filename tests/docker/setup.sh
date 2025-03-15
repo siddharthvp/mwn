@@ -2,13 +2,8 @@
 php maintenance/run.php install Wikipedia Wikiuser --pass=wikipassword \
   --server=http://localhost:8080 \
 	--dbserver=database \
-	--dbtype=mysql \
-	--dbname=my_wiki \
-	--dbprefix="" \
-	--installdbuser=wikiuser \
-	--installdbpass=wikipassword \
-	--dbuser=wikiuser \
-	--dbpass=wikipassword \
+	--dbtype=sqlite \
+	--dbpath=/var/www/html/data \
 	--scriptpath="" \
 	--extensions=SpamBlacklist,TitleBlacklist
 

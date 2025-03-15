@@ -51,17 +51,50 @@ $wgEnotifWatchlist = false; # UPO
 $wgEmailAuthentication = true;
 
 ## Database settings
-$wgDBtype = "mysql";
-$wgDBserver = "database";
+$wgDBtype = "sqlite";
+$wgDBserver = "";
 $wgDBname = "my_wiki";
-$wgDBuser = "wikiuser";
-$wgDBpassword = "wikipassword";
+$wgDBuser = "";
+$wgDBpassword = "";
 
-# MySQL specific settings
-$wgDBprefix = "";
-
-# MySQL table options to use during installation or update
-$wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
+# SQLite-specific settings
+$wgSQLiteDataDir = "/var/www/html/data";
+$wgObjectCaches[CACHE_DB] = [
+        'class' => SqlBagOStuff::class,
+        'loggroup' => 'SQLBagOStuff',
+        'server' => [
+                'type' => 'sqlite',
+                'dbname' => 'wikicache',
+                'tablePrefix' => '',
+                'variables' => [ 'synchronous' => 'NORMAL' ],
+                'dbDirectory' => $wgSQLiteDataDir,
+                'trxMode' => 'IMMEDIATE',
+                'flags' => 0
+        ]
+];
+$wgLocalisationCacheConf['storeServer'] = [
+        'type' => 'sqlite',
+        'dbname' => "{$wgDBname}_l10n_cache",
+        'tablePrefix' => '',
+        'variables' => [ 'synchronous' => 'NORMAL' ],
+        'dbDirectory' => $wgSQLiteDataDir,
+        'trxMode' => 'IMMEDIATE',
+        'flags' => 0
+];
+$wgJobTypeConf['default'] = [
+        'class' => 'JobQueueDB',
+        'claimTTL' => 3600,
+        'server' => [
+                'type' => 'sqlite',
+                'dbname' => "{$wgDBname}_jobqueue",
+                'tablePrefix' => '',
+                'variables' => [ 'synchronous' => 'NORMAL' ],
+                'dbDirectory' => $wgSQLiteDataDir,
+                'trxMode' => 'IMMEDIATE',
+                'flags' => 0
+        ]
+];
+$wgResourceLoaderUseObjectCacheForDeps = true;
 
 # Shared database table
 # This has no effect unless $wgSharedDB is also set.

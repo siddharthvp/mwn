@@ -7,22 +7,9 @@ services:
     restart: always
     ports:
       - '8080:80'
-    links:
-      - database
     volumes:
       - /var/www/html/images
+      - /var/www/html/data
       - ./mediawiki-settings.php:/var/www/html/mediawiki-settings.php
       - ./main.sh:/var/www/html/main.sh
       - ./setup.sh:/var/www/html/setup.sh
-
-  database:
-    image: mariadb # https://registry.hub.docker.com/_/mariadb
-    restart: always
-    environment:
-      # @see https://phabricator.wikimedia.org/source/mediawiki/browse/master/includes/DefaultSettings.php
-      MYSQL_DATABASE: my_wiki
-      MYSQL_USER: wikiuser
-      MYSQL_PASSWORD: wikipassword
-      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-    ports:
-      - '3312:3306'
