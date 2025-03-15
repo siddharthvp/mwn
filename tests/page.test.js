@@ -47,8 +47,7 @@ describe('Page', async function () {
 		return new bot.Page('Main Page').categories().then((cats) => {
 			expect(cats).to.be.instanceOf(Array);
 			expect(cats.length).to.be.gte(1); // check it on testwiki, could change
-			expect(cats[0].category).to.be.a('string');
-			expect(cats[0].sortkey).to.be.a('string');
+			expect(cats[0]).to.be.a('string');
 		});
 	});
 
@@ -97,7 +96,7 @@ describe('Page', async function () {
 		return page.links().then((links) => {
 			expect(links).to.be.instanceOf(Array);
 			expect(links.length).to.be.gte(1);
-			expect(links[0].title).to.be.a('string');
+			expect(links[0]).to.be.a('string');
 		});
 	});
 
