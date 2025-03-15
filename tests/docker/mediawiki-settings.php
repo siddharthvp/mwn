@@ -51,14 +51,17 @@ $wgEnotifWatchlist = false; # UPO
 $wgEmailAuthentication = true;
 
 ## Database settings
-$wgDBtype = "sqlite";
-$wgDBserver = "";
+$wgDBtype = "mysql";
+$wgDBserver = "database";
 $wgDBname = "my_wiki";
-$wgDBuser = "";
-$wgDBpassword = "";
+$wgDBuser = "wikiuser";
+$wgDBpassword = "wikipassword";
 
-# SQLite-specific settings
-$wgSQLiteDataDir = "/var/www/html/data";
+# MySQL specific settings
+$wgDBprefix = "";
+
+# MySQL table options to use during installation or update
+$wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
 
 # Shared database table
 # This has no effect unless $wgSharedDB is also set.
