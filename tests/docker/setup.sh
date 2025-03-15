@@ -2,13 +2,8 @@
 php maintenance/run.php install Wikipedia Wikiuser --pass=wikipassword \
   --server=http://localhost:8080 \
 	--dbserver=database \
-	--dbtype=mysql \
-	--dbname=my_wiki \
-	--dbprefix="" \
-	--installdbuser=wikiuser \
-	--installdbpass=wikipassword \
-	--dbuser=wikiuser \
-	--dbpass=wikipassword \
+	--dbtype=sqlite \
+	--dbpath=/var/www/html/data \
 	--scriptpath="" \
 	--extensions=SpamBlacklist,TitleBlacklist
 
@@ -26,3 +21,4 @@ php maintenance/run.php createAndPromote Wikiuser2 wikipassword
 # Add bot password
 php maintenance/run.php createBotPassword --appid=bp --grants=basic,blockusers,createaccount,createeditmovepage,delete,editinterface,editmycssjs,editmyoptions,editmywatchlist,editpage,editprotected,editsiteconfig,highvolume,mergehistory,oversight,patrol,privateinfo,protect,rollback,sendemail,uploadeditmovefile,uploadfile,viewdeleted,viewmywatchlist,viewrestrictedlogs Wikiuser2 12345678901234567890123456789012
 
+chmod -R a+rw /var/www/html/data
