@@ -39,29 +39,9 @@ import * as http from 'http';
 import * as https from 'https';
 
 // NPM modules
-import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
+import axios, { AxiosResponse, AxiosRequestConfig, AxiosInstance } from 'axios';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
-
-// Prepare axios clients
-const defaultJar = new tough.CookieJar();
-const axiosWithJar = axios.create();
-const axiosWithoutJar = axios.create();
-
-axiosWithJar.interceptors.request.use((config) => {
-	const cookieHeader = defaultJar.getCookieStringSync(config.url);
-	if (cookieHeader) {
-		config.headers.Cookie = cookieHeader;
-	}
-	return config;
-});
-axiosWithJar.interceptors.response.use((response) => {
-	const setCookieHeaders = response.headers['set-cookie'];
-	if (setCookieHeaders) {
-		setCookieHeaders.forEach((cookie) => defaultJar.setCookieSync(cookie, response.config.url));
-	}
-	return response;
-});
 
 // Nested classes of mwn
 import MwnDateFactory, { MwnDate } from './date';
@@ -271,7 +251,9 @@ export class Mwn {
 	 * Cookie jar for the bot instance - holds session and login cookies
 	 * @type {tough.CookieJar}
 	 */
-	cookieJar: tough.CookieJar = defaultJar;
+	cookieJar: tough.CookieJar = null;
+	/** Axios instance with a cookie jar. */
+	axiosInstance: AxiosInstance = null;
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
@@ -421,6 +403,7 @@ export class Mwn {
 	 */
 	static async init(config: MwnOptions): Promise<Mwn> {
 		const bot = new Mwn(config);
+		bot.initRequests();
 		if (bot.options.OAuth2AccessToken || bot._usingOAuth()) {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
@@ -428,6 +411,34 @@ export class Mwn {
 			await bot.login();
 		}
 		return bot;
+	}
+
+	/**
+	 * Prepare a client for bot requests (Axios).
+	 */
+	initRequests() {
+		if (this.axiosInstance != null) {
+			return;
+		}
+		const cookieJar = new tough.CookieJar();
+		const axiosInstance = axios.create();
+		this.cookieJar = cookieJar;
+		this.axiosInstance = axiosInstance;
+
+		axiosInstance.interceptors.request.use((config) => {
+			const cookieHeader = cookieJar.getCookieStringSync(config.url);
+			if (cookieHeader) {
+				config.headers.Cookie = cookieHeader;
+			}
+			return config;
+		});
+		axiosInstance.interceptors.response.use((response) => {
+			const setCookieHeaders = response.headers['set-cookie'];
+			if (setCookieHeaders) {
+				setCookieHeaders.forEach((cookie) => cookieJar.setCookieSync(cookie, response.config.url));
+			}
+			return response;
+		});
 	}
 
 	/**
@@ -548,11 +559,10 @@ export class Mwn {
 			requestOptions
 		);
 
-		// choose correct client (wrapped for jar support or plain)
-		const useCookies = Boolean(config.withCredentials);
-		const client = useCookies ? axiosWithJar : axiosWithoutJar;
+		// make sure axiosInstance is ready
+		this.initRequests();
 
-		return client(config);
+		return this.axiosInstance(config);
 	}
 
 	/**
