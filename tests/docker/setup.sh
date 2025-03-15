@@ -1,4 +1,3 @@
-mv ./LocalSettings.php /tmp/LocalSettings.php
 
 php maintenance/run.php install Wikipedia Wikiuser --pass=wikipassword \
   --server=http://localhost:8080 \
@@ -13,7 +12,8 @@ php maintenance/run.php install Wikipedia Wikiuser --pass=wikipassword \
 	--scriptpath="" \
 	--extensions=SpamBlacklist,TitleBlacklist
 
-rm -rf ./LocalSettings.php && mv /tmp/LocalSettings.php ./LocalSettings.php
+# Overwrite the generated LocalSettings with ones stored in our repo
+cp ./mediawiki-settings.php ./LocalSettings.php
 
 php maintenance/run.php update --quick
 

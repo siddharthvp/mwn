@@ -2,7 +2,8 @@
 
 services:
   mediawiki:
-    build: .
+    image: mediawiki
+    working_dir: /var/www/html
     restart: always
     ports:
       - '8080:80'
@@ -10,6 +11,9 @@ services:
       - database
     volumes:
       - /var/www/html/images
+      - ./mediawiki-settings.php:/var/www/html/mediawiki-settings.php
+      - ./main.sh:/var/www/html/main.sh
+      - ./setup.sh:/var/www/html/setup.sh
 
   database:
     image: mariadb # https://registry.hub.docker.com/_/mariadb

@@ -1,4 +1,4 @@
-docker compose up --detach --build
+docker compose up --detach
 
 check_mysql_connection() {
   if mysql -h 127.0.0.1 -P 3312 -u wikiuser -pwikipassword my_wiki -e "SELECT 1;" > /dev/null 2>&1; then
