@@ -7,8 +7,6 @@ services:
     restart: always
     ports:
       - '8080:80'
-    links:
-      - database
     volumes:
       - /var/www/html/images
       - ./mediawiki-settings.php:/var/www/html/mediawiki-settings.php
