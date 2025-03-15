@@ -611,9 +611,12 @@ export class Mwn {
 			action: 'query',
 			meta: 'tokens',
 			type: 'login',
-			// unset the assert parameter (in case it's given by the user as a default
+			// Unset the assert parameter (in case it's given by the user as a default
 			// option), as it will invariably fail until login is performed.
 			assert: undefined,
+			// Also unset the maxlag parameter, not required for logins.
+			// This also avoids infinite recursion when assert and maxlag are both provided and replicas are lagged.
+			maxlag: undefined,
 		});
 		if (!loginTokenResponse?.query?.tokens?.logintoken) {
 			log('[E] [mwn] Login failed with invalid response: ' + loginString);
@@ -632,6 +635,7 @@ export class Mwn {
 			lgpassword: this.options.password,
 			lgtoken: loginTokenResponse.query.tokens.logintoken,
 			assert: undefined, // as above, assert won't work till the user is logged in
+			maxlag: undefined, // as above, to avoid infinite recursions in error handling
 		});
 
 		let reason;
@@ -802,6 +806,7 @@ export class Mwn {
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
 			siprop: 'general|namespaces|namespacealiases',
 			uiprop: 'rights',
+			maxlag: undefined,
 		}).then((response: ApiResponse & SiteInfoQueryResponse) => {
 			this.title.processNamespaceData(response);
 			this.Title.processNamespaceData(response);
