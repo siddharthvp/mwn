@@ -62,20 +62,33 @@ describe('logger', function () {
 	});
 
 	it('logs messages to files', async function () {
+		const logPath = __dirname + '/log.txt';
+
+		const fileStream = createWriteStream(logPath, { flags: 'a', encoding: 'utf-8' });
 		updateLoggingConfig({
-			stream: createWriteStream(__dirname + '/log.txt', { flags: 'a', encoding: 'utf-8' }),
+			stream: fileStream,
 		});
 
 		log('[i] Hello World');
-
-		const logContent = await readFile('log.txt', { encoding: 'utf-8' });
-		expect(logContent).to.contain('Hello World');
 
 		// Reset
 		updateLoggingConfig({
 			stream: process.stdout,
 		});
-		await rm(__dirname + '/log.txt');
+
+		return new Promise((resolve, reject) => {
+			// Wait for file contents to be flushed
+			process.nextTick(async function () {
+				try {
+					const logContent = await readFile(logPath, { encoding: 'utf-8' });
+					expect(logContent).to.contain('Hello World');
+					await rm(logPath);
+					resolve();
+				} catch (err) {
+					reject(err);
+				}
+			});
+		});
 	});
 
 	it('prints objects as colorized YAML', function () {
