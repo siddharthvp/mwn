@@ -92,6 +92,7 @@ export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser,
 export * from './api_response_types';
 export type { PageViewData, PageViewOptions } from './page';
 export { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
+export type { LogConfig } from './log';
 
 export interface MwnOptions {
 	/** Suppress messages, except for error messages and warnings */

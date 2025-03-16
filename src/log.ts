@@ -15,11 +15,13 @@ import * as stream from 'stream';
 /* eslint-disable @typescript-eslint/no-var-requires */
 const chalk = require('chalk');
 
-export const logConfig = {
-	printDebug: true,
-	printVerbose: true,
+export interface LogConfig {
+	/** Whether debug level log (starting with [D]) should be printed */
+	printDebug?: boolean;
+	/** Whether verbose logs (starting with [D]) should be printed */
+	printVerbose?: boolean;
 	/**
-	 * A writable stream. To log to a file, use
+	 * The writable stream for logs. Defaults to stdout. To log to a file, use
 	 * ```js
 	 * fs.createWriteStream(__dirname + '/mwn.log', {
 	 *     flags: 'a',
@@ -27,6 +29,12 @@ export const logConfig = {
 	 * })
 	 * ```
 	 */
+	stream?: stream.Writable;
+}
+
+const logConfig: LogConfig = {
+	printDebug: true,
+	printVerbose: true,
 	stream: process.stdout as stream.Writable,
 };
 
@@ -35,7 +43,7 @@ export const logConfig = {
  *
  * Note: To suppress API warnings, use `suppressAPIWarnings` flag in bot instance options instead.
  */
-export function updateLoggingConfig(options: Partial<typeof logConfig>): void {
+export function updateLoggingConfig(options: LogConfig): void {
 	Object.assign(logConfig, options);
 }
 
