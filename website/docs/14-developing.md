@@ -8,7 +8,7 @@ cd mwn
 npm install		# install dependencies
 ```
 
-Build: run `npm run build`. This generates the JS files in `build` from the TypeScript sources in `src`. The type errors raised can be ignored. You may want to configure your IDE to do this automatically on every code change.
+Build: run `npm run build`. This generates the JS files in `build` from the TypeScript sources in `src`. You may want to configure your IDE to do this automatically on every code change.
 
 ### Tests
 
@@ -36,8 +36,6 @@ For these, you need to spin up a local MediaWiki installation:
 - Run `npm run setuplocalwiki`
 
 If all goes well, you should now have a wiki up and running at [http://localhost:8080](http://localhost:8080). Sign in with username `Wikiuser` and password `wikipassword` (See [the setup.sh script](https://github.com/siddharthvp/mwn/blob/master/tests/docker/setup.sh) for other setup details.)
-
-**Troubleshooting**: If your local MW install fails with an error that a db table doesn't exist, try changing the sleep duration in <https://github.com/siddharthvp/mwn/blob/master/tests/docker/main.sh#L2> to a higher value. The MariaDB database doesn't start accepting connections until it has initialised (time needed for that could be more on certain systems).
 
 All tests except the ones that depend on testwiki will also be run automatically via GitHub Actions when you create a PR, so no worries if you're having trouble with local MW installation.
 
