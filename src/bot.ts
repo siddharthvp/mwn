@@ -1913,44 +1913,6 @@ export class Mwn {
 	}
 
 	/**
-	 * Gets ORES predictions from revision IDs
-	 * @param {string} endpointUrl
-	 * @param {string[]} models
-	 * @param {string[]|number[]|string|number} revisions  ID(s)
-	 * @deprecated as ORES has been deprecated in favours of Lift Wing.
-	 */
-	oresQueryRevisions(
-		endpointUrl: string,
-		models: string[],
-		revisions: string[] | number[] | string | number
-	): Promise<any> {
-		let response = {};
-		const revs = revisions instanceof Array ? revisions : [revisions];
-		const batchSize = Math.floor(20 / models.length);
-		const chunks = arrayChunk(revs, batchSize);
-		return this.seriesBatchOperation(
-			chunks,
-			(chunk) => {
-				return this.rawRequest({
-					method: 'get',
-					url: endpointUrl,
-					params: {
-						models: models.join('|'),
-						revids: chunk.join('|'),
-					},
-					responseType: 'json',
-				}).then((oresResponse) => {
-					Object.assign(response, Object.values<ApiResponseSubType>(oresResponse.data)[0].scores);
-				});
-			},
-			0,
-			2
-		).then(() => {
-			return response;
-		});
-	}
-
-	/**
 	 * Promisified version of setTimeout
 	 * @param {number} duration - of sleep in milliseconds
 	 */

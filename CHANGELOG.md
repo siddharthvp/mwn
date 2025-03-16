@@ -1,5 +1,9 @@
 Only breaking changes, deprecations and the like are documented in this change log.
 
+#### 3.0.0
+
+- oresQueryRevisions(), deprecated in 2.0.1, has been removed.
+
 #### 2.0.1
 
 - oresQueryRevisions() has been deprecated, since the [ORES service](https://ores.wikimedia.org/docs) is being deprecated in favour of [Lift Wing](https://wikitech.wikimedia.org/wiki/Machine_Learning/LiftWing).

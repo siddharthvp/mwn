@@ -30,18 +30,7 @@ Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/au
 
 ### ORES
 
-**Deprecated** as of v2.0.1 since ORES service has been deprecated in favour of [Lift Wing](https://wikitech.wikimedia.org/wiki/Machine_Learning/LiftWing).
-
-See <https://ores.wikimedia.org/> for details.
-Get ORES scores for revisions:
-
-```js
-await bot.oresQueryRevisions(
-	'https://ores.wikimedia.org/',		// ORES endpoint URL
-	['articlequality', 'drafttopic'],	// ORES models       
-	['76923582', '2387429']				// Revision IDs
-);
-```
+**Deprecated** as of v2.0.1 since ORES service has been deprecated in favour of [Lift Wing](https://wikitech.wikimedia.org/wiki/Machine_Learning/LiftWing). **Removed** in v3.0.0.
 
 ### EventStreams
 
