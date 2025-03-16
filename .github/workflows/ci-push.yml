@@ -8,6 +8,7 @@ on:
       - master
       - develop
       - dev/**
+      - release/**
     paths:
       - 'src/**'
       - 'tests/**'
