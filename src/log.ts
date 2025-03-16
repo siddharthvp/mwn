@@ -10,14 +10,31 @@
  * and keeping track of statistics
  */
 
+import * as util from 'util';
+import * as stream from 'stream';
 /* eslint-disable @typescript-eslint/no-var-requires */
 const chalk = require('chalk');
 
 export const logConfig = {
 	printDebug: true,
 	printVerbose: true,
+	/**
+	 * A writable stream. To log to a file, use
+	 * ```js
+	 * fs.createWriteStream(__dirname + '/mwn.log', {
+	 *     flags: 'a',
+	 *     encoding: 'utf8'
+	 * })
+	 * ```
+	 */
+	stream: process.stdout as stream.Writable,
 };
 
+/**
+ * Configure global logging options.
+ *
+ * Note: To suppress API warnings, use `suppressAPIWarnings` flag in bot instance options instead.
+ */
 export function updateLoggingConfig(options: Partial<typeof logConfig>): void {
 	Object.assign(logConfig, options);
 }
@@ -28,7 +45,7 @@ type item = any;
 /**
  * Custom Logging function
  *
- * Writes Logs to console, stringifies objects first
+ * Writes logs to console or file, stringifies objects first
  *
  * @param obj
  */
@@ -56,7 +73,7 @@ export function message(msg: item) {
 	msg = colorize(msg);
 
 	if (msg.trim && msg.trim().length > 0) {
-		msg = chalk.gray('[' + humanDate() + '] ') + msg;
+		msg = colorize('[' + humanDate() + '] ', 'gray') + msg;
 	}
 
 	if (!logConfig.printVerbose && msg.indexOf('[V]') >= 0) {
@@ -64,7 +81,7 @@ export function message(msg: item) {
 	} else if (!logConfig.printDebug && msg.indexOf('[D]') >= 0) {
 		// Supressing output of debug message
 	} else {
-		console.log(msg);
+		writeToLog(msg);
 	}
 }
 
@@ -75,7 +92,7 @@ export function message(msg: item) {
 export function debug(obj: item) {
 	// Print indented JSON
 	let msg = JSON.stringify(obj, null, 4);
-	console.log(chalk.gray(msg));
+	writeToLog(colorize(msg, 'gray'));
 }
 
 /**
@@ -83,7 +100,7 @@ export function debug(obj: item) {
  * @param obj
  */
 export function error(obj: Error) {
-	console.error(chalk.red('[E] ' + obj.message));
+	writeToLog(colorize('[E] ' + obj.message, 'red'));
 	let stringified;
 	try {
 		stringified = JSON.stringify(obj, null, 4);
@@ -91,9 +108,9 @@ export function error(obj: Error) {
 		// Circular object?
 		stringified = `Failed to stringify error: ${e.message}`;
 	}
-	console.log(chalk.gray(stringified));
+	writeToLog(colorize(stringified, 'gray'));
 	if (obj.stack) {
-		console.log(chalk.gray(obj.stack));
+		writeToLog(colorize(obj.stack, 'gray'));
 	}
 }
 
@@ -119,9 +136,16 @@ let colorMap = {
  * Colors the messages by searching for specific indicator strings
  *
  * @param {string} msg
+ * @param {string} colorName
  * @returns {string}
  */
-export function colorize(msg: item) {
+export function colorize(msg: item, colorName?: string) {
+	if (logConfig.stream !== process.stdout) {
+		return msg;
+	}
+	if (colorName) {
+		return chalk[colorName](msg);
+	}
 	for (let [code, color] of Object.entries(colorMap)) {
 		if (msg && msg.indexOf && msg.startsWith(code)) {
 			return chalk[color](msg);
@@ -129,6 +153,14 @@ export function colorize(msg: item) {
 	}
 
 	return msg;
+}
+
+function writeToLog(message: string) {
+	if (logConfig.stream === process.stdout) {
+		console.log(message);
+	} else {
+		logConfig.stream.write(util.format.apply(null, [message]) + '\n');
+	}
 }
 
 /**
