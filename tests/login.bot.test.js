@@ -38,6 +38,12 @@ describe('login', async function () {
 		expect(client.loggedIn).to.be.true;
 	});
 
+	it('logs in when db is lagged despite maxlag parameter', async function () {
+		let client = new Mwn({ ...testwiki.account1, retryPause: 100, defaultParams: { maxlag: -1 } });
+		await client.login();
+		expect(client.loggedIn).to.be.true;
+	});
+
 	let bot = new Mwn();
 	it('successfully logs in through init', async function () {
 		bot = await Mwn.init(testwiki.account1);
