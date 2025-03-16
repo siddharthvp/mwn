@@ -303,61 +303,43 @@ export class Mwn {
 	static template = template;
 	static Table = Table;
 
-	/** @deprecated Use {@link Table} instead **/
-	static table = Table;
-
 	static util = util;
-
-	/** @deprecated Use {@link Title} instead */
-	title = MwnTitleFactory();
 	/**
 	 * Title class associated with the bot instance.
 	 * See {@link MwnTitle} interface for methods on title objects.
 	 */
 	Title = MwnTitleFactory();
 
-	/** @deprecated Use {@link Page} instead */
-	page = MwnPageFactory(this);
 	/**
 	 * Page class associated with the bot instance.
 	 * See {@link MwnPage} interface for methods on page objects.
 	 */
 	Page = MwnPageFactory(this);
 
-	/** @deprecated Use {@link Category} instead */
-	category = MwnCategoryFactory(this);
 	/**
 	 * Category class associated with the bot instance.
 	 * See {@link MwnCategory} interface for methods on category objects.
 	 */
 	Category = MwnCategoryFactory(this);
 
-	/** @deprecated Use {@link File} instead */
-	file = MwnFileFactory(this);
 	/**
 	 * File class associated with the bot instance.
 	 * See {@link MwnFile} interface for methods on file objects.
 	 */
 	File = MwnFileFactory(this);
 
-	/** @deprecated Use {@link User} instead */
-	user = MwnUserFactory(this);
 	/**
 	 * User class associated with the bot instance.
 	 * See {@link MwnUser} interface for methods on user objects.
 	 */
 	User = MwnUserFactory(this);
 
-	/** @deprecated Use {@link Wikitext} instead */
-	wikitext = MwnWikitextFactory(this);
 	/**
 	 * Wikitext class associated with the bot instance.
 	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
 	Wikitext = MwnWikitextFactory(this);
 
-	/** @deprecated Use {@link Date} instead */
-	date = MwnDateFactory(this);
 	/**
 	 * Date class associated with the bot instance.
 	 * See {@link MwnDate} interface for methods on date objects.
@@ -757,7 +739,6 @@ export class Mwn {
 			meta: 'siteinfo',
 			siprop: 'general|namespaces|namespacealiases',
 		}).then((result: SiteInfoQueryResponse) => {
-			this.title.processNamespaceData(result);
 			this.Title.processNamespaceData(result);
 		});
 	}
@@ -808,7 +789,6 @@ export class Mwn {
 			uiprop: 'rights',
 			maxlag: undefined,
 		}).then((response: ApiResponse & SiteInfoQueryResponse) => {
-			this.title.processNamespaceData(response);
 			this.Title.processNamespaceData(response);
 			if (response.query.userinfo.rights.includes('apihighlimits')) {
 				this.hasApiHighLimit = true;
@@ -839,17 +819,6 @@ export class Mwn {
 			return response.paraminfo.modules[0].parameters.find((p: ApiResponseSubType) => p.name === 'token')
 				.tokentype;
 		});
-	}
-
-	/**
-	 * Login and fetch edit tokens. Deprecated in favour of login(), which
-	 * also fetches tokens from mwn v0.10
-	 * @deprecated
-	 * @param [loginOptions]
-	 * @returns {Promise<void>}
-	 */
-	async loginGetToken(loginOptions?: MwnOptions): Promise<void> {
-		return this.login(loginOptions).then();
 	}
 
 	/**
@@ -1918,6 +1887,3 @@ export class Mwn {
 	 */
 	sleep = sleep;
 }
-
-/** @deprecated Use {@link Mwn} instead **/
-export class mwn extends Mwn {}

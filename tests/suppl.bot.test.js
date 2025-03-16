@@ -28,7 +28,7 @@ describe('supplementary functions', function () {
 	it('wikiwho', async function () {
 		this.timeout(10000);
 		await bot.getSiteInfo();
-		let page = new bot.page('Dairy in India');
+		let page = new bot.Page('Dairy in India');
 		let data = await page.queryAuthors();
 		expect(data).to.be.an('object').with.property('totalBytes').that.is.a('number');
 		expect(data).to.have.property('users').that.is.instanceOf(Array).of.length.greaterThan(1);

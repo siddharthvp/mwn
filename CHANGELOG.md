@@ -2,7 +2,9 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 #### 3.0.0
 
+- Use of non-PascalCase class names, deprecated in 2.0.0 (see [below](#200)), is no longer supported.
 - oresQueryRevisions(), deprecated in 2.0.1, has been removed.
+- loginGetToken(), deprecated in 0.10.0, has been removed. Please use `login()` instead.
 
 #### 2.0.1
 
