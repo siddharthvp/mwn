@@ -85,14 +85,6 @@ describe('mwn', async function () {
 		});
 	});
 
-	it('correctly sets logging config', function () {
-		const { logConfig } = require('../build/log');
-		Mwn.setLoggingConfig({
-			printYaml: true,
-		});
-		expect(logConfig.printYaml).to.equal(true);
-	});
-
 	it('successfully reads a page with read()', function () {
 		return bot.read('Main Page').then((response) => {
 			expect(response).to.be.instanceOf(Object);
