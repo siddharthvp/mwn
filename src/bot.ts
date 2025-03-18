@@ -377,17 +377,19 @@ export class Mwn {
 		this.options = mergeDeep1(this.defaultOptions, customOptions);
 
 		// Wire up axios to use the cookie jar
-		this.axiosInstance.interceptors.request.use((config) => {
-			const cookieHeader = this.cookieJar.getCookieStringSync(config.url);
+		this.axiosInstance.interceptors.request.use(async (config) => {
+			const cookieHeader = await this.cookieJar.getCookieString(config.url);
 			if (cookieHeader) {
 				config.headers.Cookie = cookieHeader;
 			}
 			return config;
 		});
-		this.axiosInstance.interceptors.response.use((response) => {
+		this.axiosInstance.interceptors.response.use(async (response) => {
 			const setCookieHeaders = response.headers['set-cookie'];
 			if (setCookieHeaders) {
-				setCookieHeaders.forEach((cookie) => this.cookieJar.setCookieSync(cookie, response.config.url));
+				for (const cookie of setCookieHeaders) {
+					await this.cookieJar.setCookie(cookie, response.config.url);
+				}
 			}
 			return response;
 		});
