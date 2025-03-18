@@ -39,7 +39,7 @@ import * as http from 'http';
 import * as https from 'https';
 
 // NPM modules
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, AxiosRequestConfig, AxiosInstance } from 'axios';
 import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 
@@ -252,7 +252,9 @@ export class Mwn {
 	 * Cookie jar for the bot instance - holds session and login cookies
 	 * @type {tough.CookieJar}
 	 */
-	cookieJar: tough.CookieJar = new tough.CookieJar();
+	cookieJar: tough.CookieJar = null;
+	/** Axios instance with a cookie jar. */
+	axiosInstance: AxiosInstance = null;
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
@@ -384,6 +386,7 @@ export class Mwn {
 	 */
 	static async init(config: MwnOptions): Promise<Mwn> {
 		const bot = new Mwn(config);
+		bot.initRequests();
 		if (bot.options.OAuth2AccessToken || bot._usingOAuth()) {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
@@ -391,6 +394,34 @@ export class Mwn {
 			await bot.login();
 		}
 		return bot;
+	}
+
+	/**
+	 * Prepare a client for bot requests (Axios).
+	 */
+	initRequests() {
+		if (this.axiosInstance != null) {
+			return;
+		}
+		const cookieJar = new tough.CookieJar();
+		const axiosInstance = axios.create();
+		this.cookieJar = cookieJar;
+		this.axiosInstance = axiosInstance;
+
+		axiosInstance.interceptors.request.use((config) => {
+			const cookieHeader = cookieJar.getCookieStringSync(config.url);
+			if (cookieHeader) {
+				config.headers.Cookie = cookieHeader;
+			}
+			return config;
+		});
+		axiosInstance.interceptors.response.use((response) => {
+			const setCookieHeaders = response.headers['set-cookie'];
+			if (setCookieHeaders) {
+				setCookieHeaders.forEach((cookie) => cookieJar.setCookieSync(cookie, response.config.url));
+			}
+			return response;
+		});
 	}
 
 	/**
@@ -499,19 +530,22 @@ export class Mwn {
 				request: requestOptions,
 			});
 		}
-		return axios(
-			mergeDeep1(
-				{},
-				Mwn.requestDefaults,
-				{
-					method: 'get',
-					headers: {
-						'User-Agent': this.options.userAgent,
-					},
+		const config: AxiosRequestConfig = mergeDeep1(
+			{},
+			Mwn.requestDefaults,
+			{
+				method: 'get',
+				headers: {
+					'User-Agent': this.options.userAgent,
 				},
-				requestOptions
-			)
+			},
+			requestOptions
 		);
+
+		// make sure axiosInstance is ready
+		this.initRequests();
+
+		return this.axiosInstance(config);
 	}
 
 	/**

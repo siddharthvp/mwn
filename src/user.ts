@@ -2,7 +2,7 @@ import type { Mwn, MwnPage } from './bot';
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,
-	ApiQueryGlobalUserInfoParams,
+	CentralAuthApiQueryGlobalUserInfoParams,
 	ApiQueryLogEventsParams,
 	ApiQueryUserContribsParams,
 	ApiQueryUsersParams,
@@ -52,7 +52,7 @@ export interface MwnUser {
 	 * Get global user info for wikis with CentralAuth
 	 * @param {string|string[]} props
 	 */
-	globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse>;
+	globalinfo(props?: CentralAuthApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse>;
 	/**
 	 * Post a message on user's talk page
 	 * @param {string} header
@@ -172,7 +172,9 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		globalinfo(props?: ApiQueryGlobalUserInfoParams['guiprop']): Promise<ApiQueryGlobalUserInfoResponse> {
+		globalinfo(
+			props?: CentralAuthApiQueryGlobalUserInfoParams['guiprop']
+		): Promise<ApiQueryGlobalUserInfoResponse> {
 			return bot
 				.request({
 					action: 'query',
