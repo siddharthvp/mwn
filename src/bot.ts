@@ -359,9 +359,9 @@ export class Mwn {
 	constructor(customOptions?: MwnOptions | string) {
 		if (process.versions.node) {
 			let majorVersion = parseInt(process.versions.node);
-			if (majorVersion < 10) {
+			if (majorVersion < 14) {
 				log(
-					`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v10.x and above`
+					`[W] Detected node version v${process.versions.node}, but mwn is supported only on node v14.x and above`
 				);
 			}
 		}

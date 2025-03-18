@@ -50,7 +50,7 @@ API documentation (automatically generated via [typedoc](https://npmjs.com/packa
 
 ### Compatibility
 
-Mwn is currently compatible with Node.js v10 and above. In the future, compatibility with EOL Node versions may be dropped.
+Mwn v3 is compatible with Node.js v14 and above. In the future, compatibility with EOL Node versions may be dropped. Version 2 is compatible with Node.js v10.
 
 As for MediaWiki support, the CI pipelines only check for compatibility with the latest LTS version. But it should work fine with version 1.35 and above.
 
