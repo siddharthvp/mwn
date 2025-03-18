@@ -92,6 +92,7 @@ export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser,
 export * from './api_response_types';
 export type { PageViewData, PageViewOptions } from './page';
 export { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
+export type { LogConfig } from './log';
 
 export interface MwnOptions {
 	/** Suppress messages, except for error messages and warnings */
@@ -305,61 +306,43 @@ export class Mwn {
 	static template = template;
 	static Table = Table;
 
-	/** @deprecated Use {@link Table} instead **/
-	static table = Table;
-
 	static util = util;
-
-	/** @deprecated Use {@link Title} instead */
-	title = MwnTitleFactory();
 	/**
 	 * Title class associated with the bot instance.
 	 * See {@link MwnTitle} interface for methods on title objects.
 	 */
 	Title = MwnTitleFactory();
 
-	/** @deprecated Use {@link Page} instead */
-	page = MwnPageFactory(this);
 	/**
 	 * Page class associated with the bot instance.
 	 * See {@link MwnPage} interface for methods on page objects.
 	 */
 	Page = MwnPageFactory(this);
 
-	/** @deprecated Use {@link Category} instead */
-	category = MwnCategoryFactory(this);
 	/**
 	 * Category class associated with the bot instance.
 	 * See {@link MwnCategory} interface for methods on category objects.
 	 */
 	Category = MwnCategoryFactory(this);
 
-	/** @deprecated Use {@link File} instead */
-	file = MwnFileFactory(this);
 	/**
 	 * File class associated with the bot instance.
 	 * See {@link MwnFile} interface for methods on file objects.
 	 */
 	File = MwnFileFactory(this);
 
-	/** @deprecated Use {@link User} instead */
-	user = MwnUserFactory(this);
 	/**
 	 * User class associated with the bot instance.
 	 * See {@link MwnUser} interface for methods on user objects.
 	 */
 	User = MwnUserFactory(this);
 
-	/** @deprecated Use {@link Wikitext} instead */
-	wikitext = MwnWikitextFactory(this);
 	/**
 	 * Wikitext class associated with the bot instance.
 	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
 	Wikitext = MwnWikitextFactory(this);
 
-	/** @deprecated Use {@link Date} instead */
-	date = MwnDateFactory(this);
 	/**
 	 * Date class associated with the bot instance.
 	 * See {@link MwnDate} interface for methods on date objects.
@@ -599,13 +582,38 @@ export class Mwn {
 
 	/************** CORE FUNCTIONS *******************/
 
+	private loginInProgress: [string, Promise<ApiResponse>] = null;
+
 	/**
 	 * Executes a Login
 	 * @see https://www.mediawiki.org/wiki/API:Login
 	 * @returns {Promise}
 	 */
 	async login(loginOptions?: { username?: string; password?: string; apiUrl?: string }): Promise<ApiResponse> {
-		this.options = merge(this.options, loginOptions);
+		Object.assign(this.options, loginOptions);
+
+		// Avoid multiple logins taking place concurrently, for instance when session loss occurs
+		// in the middle of a batch operation.
+		if (!this.loginInProgress) {
+			const loginPromise = this.loginInternal();
+			this.loginInProgress = [this.options.username, loginPromise];
+			loginPromise.finally(() => {
+				this.loginInProgress = null;
+			});
+
+			// Multiple logins with different usernames? Error out.
+		} else if (this.loginInProgress[0] !== this.options.username) {
+			return rejectWithError({
+				code: 'mwn_invalidlogin',
+				info: 'Detected concurrent login with a different username',
+			});
+		}
+
+		// Return the response of the previous login call
+		return this.loginInProgress[1];
+	}
+
+	private async loginInternal(): Promise<ApiResponse> {
 		if (!this.options.username || !this.options.password || !this.options.apiUrl) {
 			return rejectWithError({
 				code: 'mwn_nologincredentials',
@@ -620,9 +628,12 @@ export class Mwn {
 			action: 'query',
 			meta: 'tokens',
 			type: 'login',
-			// unset the assert parameter (in case it's given by the user as a default
+			// Unset the assert parameter (in case it's given by the user as a default
 			// option), as it will invariably fail until login is performed.
 			assert: undefined,
+			// Also unset the maxlag parameter, not required for logins.
+			// This also avoids infinite recursion when assert and maxlag are both provided and replicas are lagged.
+			maxlag: undefined,
 		});
 		if (!loginTokenResponse?.query?.tokens?.logintoken) {
 			log('[E] [mwn] Login failed with invalid response: ' + loginString);
@@ -641,6 +652,7 @@ export class Mwn {
 			lgpassword: this.options.password,
 			lgtoken: loginTokenResponse.query.tokens.logintoken,
 			assert: undefined, // as above, assert won't work till the user is logged in
+			maxlag: undefined, // as above, to avoid infinite recursions in error handling
 		});
 
 		let reason;
@@ -762,7 +774,6 @@ export class Mwn {
 			meta: 'siteinfo',
 			siprop: 'general|namespaces|namespacealiases',
 		}).then((result: SiteInfoQueryResponse) => {
-			this.title.processNamespaceData(result);
 			this.Title.processNamespaceData(result);
 		});
 	}
@@ -811,8 +822,8 @@ export class Mwn {
 			type: 'csrf|createaccount|login|patrol|rollback|userrights|watch',
 			siprop: 'general|namespaces|namespacealiases',
 			uiprop: 'rights',
+			maxlag: undefined,
 		}).then((response: ApiResponse & SiteInfoQueryResponse) => {
-			this.title.processNamespaceData(response);
 			this.Title.processNamespaceData(response);
 			if (response.query.userinfo.rights.includes('apihighlimits')) {
 				this.hasApiHighLimit = true;
@@ -843,17 +854,6 @@ export class Mwn {
 			return response.paraminfo.modules[0].parameters.find((p: ApiResponseSubType) => p.name === 'token')
 				.tokentype;
 		});
-	}
-
-	/**
-	 * Login and fetch edit tokens. Deprecated in favour of login(), which
-	 * also fetches tokens from mwn v0.10
-	 * @deprecated
-	 * @param [loginOptions]
-	 * @returns {Promise<void>}
-	 */
-	async loginGetToken(loginOptions?: MwnOptions): Promise<void> {
-		return this.login(loginOptions).then();
 	}
 
 	/**
@@ -1917,49 +1917,8 @@ export class Mwn {
 	}
 
 	/**
-	 * Gets ORES predictions from revision IDs
-	 * @param {string} endpointUrl
-	 * @param {string[]} models
-	 * @param {string[]|number[]|string|number} revisions  ID(s)
-	 * @deprecated as ORES has been deprecated in favours of Lift Wing.
-	 */
-	oresQueryRevisions(
-		endpointUrl: string,
-		models: string[],
-		revisions: string[] | number[] | string | number
-	): Promise<any> {
-		let response = {};
-		const revs = revisions instanceof Array ? revisions : [revisions];
-		const batchSize = Math.floor(20 / models.length);
-		const chunks = arrayChunk(revs, batchSize);
-		return this.seriesBatchOperation(
-			chunks,
-			(chunk) => {
-				return this.rawRequest({
-					method: 'get',
-					url: endpointUrl,
-					params: {
-						models: models.join('|'),
-						revids: chunk.join('|'),
-					},
-					responseType: 'json',
-				}).then((oresResponse) => {
-					Object.assign(response, Object.values<ApiResponseSubType>(oresResponse.data)[0].scores);
-				});
-			},
-			0,
-			2
-		).then(() => {
-			return response;
-		});
-	}
-
-	/**
 	 * Promisified version of setTimeout
 	 * @param {number} duration - of sleep in milliseconds
 	 */
 	sleep = sleep;
 }
-
-/** @deprecated Use {@link Mwn} instead **/
-export class mwn extends Mwn {}

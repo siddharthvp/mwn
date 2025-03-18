@@ -11,7 +11,7 @@ import type {
 	ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams,
 } from './api_params';
-import { ApiPage, ApiParseResponse, ApiRevision, ApiResponseSubType, LogEvent } from './api_response_types';
+import { ApiPage, ApiRevision, ApiResponseSubType, LogEvent } from './api_response_types';
 
 export interface MwnPageStatic {
 	new (title: MwnTitle | string, namespace?: number): MwnPage;
@@ -30,22 +30,19 @@ export interface MwnPage extends MwnTitle {
 	text(): Promise<string>;
 	/**
 	 * Get page categories
-	 * @returns {Promise<Object[]>} Resolved with array of objects like
-	 * { sortkey: '...', category: '...', hidden: true }
+	 * @returns {Promise<String[]>} Resolved with array of page names
 	 */
-	categories(): Promise<ApiParseResponse['categories']>;
+	categories(): Promise<string[]>;
 	/**
 	 * Get templates transcluded on the page
-	 * @returns {Promise<Object[]>} Resolved with array of objects like
-	 * { ns: 10, title: 'Template:Cite web', exists: true }
+	 * @returns {Promise<String[]>} Resolved with array of page names
 	 */
-	templates(): Promise<ApiParseResponse['templates']>;
+	templates(): Promise<string[]>;
 	/**
 	 * Get links on the page
-	 * @returns {Promise<Object[]>} Resolved with array of objects like
-	 * { ns: 0, title: 'Main Page', exists: true }
+	 * @returns {Promise<String[]>} Resolved with array of page names
 	 */
-	links(): Promise<ApiParseResponse['links']>;
+	links(): Promise<string[]>;
 	/**
 	 * Get list of pages linking to this page
 	 * @returns {Promise<String[]>}
@@ -205,47 +202,58 @@ export default function (bot: Mwn): MwnPageStatic {
 		/** @inheritDoc */
 		text(): Promise<string> {
 			return bot
-				.request({
-					action: 'parse',
-					page: this.toString(),
-					prop: 'wikitext',
+				.query({
+					titles: this.toString(),
+					prop: 'revisions',
+					rvprop: 'content',
+					rvslots: 'main',
 				})
 				.then((data) => {
-					return data.parse.wikitext;
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].revisions[0].slots.main.content;
 				});
 		}
 
 		/** @inheritDoc */
-		categories(): Promise<ApiParseResponse['categories']> {
+		categories(): Promise<string[]> {
 			return bot
-				.request({
-					action: 'parse',
-					page: this.toString(),
+				.query({
+					titles: this.toString(),
 					prop: 'categories',
+					cllimit: 'max',
 				})
-				.then((data) => data.parse.categories);
+				.then((data) => {
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].categories.map((e) => e.title);
+				});
 		}
 
 		/** @inheritDoc */
-		templates(): Promise<ApiParseResponse['templates']> {
+		templates(): Promise<string[]> {
 			return bot
-				.request({
-					action: 'parse',
-					page: this.toString(),
+				.query({
+					titles: this.toString(),
 					prop: 'templates',
+					tllimit: 'max',
 				})
-				.then((data) => data.parse.templates);
+				.then((data) => {
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].templates.map((e) => e.title);
+				});
 		}
 
 		/** @inheritDoc */
-		links(): Promise<ApiParseResponse['links']> {
+		links(): Promise<string[]> {
 			return bot
-				.request({
-					action: 'parse',
-					page: this.toString(),
+				.query({
+					titles: this.toString(),
 					prop: 'links',
+					pllimit: 'max',
 				})
-				.then((data) => data.parse.links);
+				.then((data) => {
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].links.map((e) => e.title);
+				});
 		}
 
 		/** @inheritDoc */
@@ -283,23 +291,29 @@ export default function (bot: Mwn): MwnPageStatic {
 		/** @inheritDoc */
 		images(): Promise<string[]> {
 			return bot
-				.request({
-					action: 'parse',
-					page: this.toString(),
+				.query({
+					titles: this.toString(),
 					prop: 'images',
+					imlimit: 'max',
 				})
-				.then((data) => data.parse.images);
+				.then((data) => {
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].images.map((e) => e.title);
+				});
 		}
 
 		/** @inheritDoc */
 		externallinks(): Promise<string[]> {
 			return bot
-				.request({
-					action: 'parse',
-					page: this.toString(),
-					prop: 'externallinks',
+				.query({
+					titles: this.toString(),
+					prop: 'extlinks',
+					ellimit: 'max',
 				})
-				.then((data) => data.parse.externallinks);
+				.then((data) => {
+					this.throwIfPageMissing(data);
+					return data.query.pages[0].extlinks.map((e) => e.url);
+				});
 		}
 
 		/** @inheritDoc */

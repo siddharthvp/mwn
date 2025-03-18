@@ -3,6 +3,8 @@
 // TODO: use sinon to disable visible logging and check chalk function calls
 
 const { log, error, getDateArray, humanDate, pad, updateLoggingConfig } = require('../build/log');
+const { readFile, rm } = require('fs/promises');
+const { createWriteStream } = require('fs');
 const expect = require('chai').expect;
 
 describe('logger', function () {
@@ -57,6 +59,36 @@ describe('logger', function () {
 
 		console.log('-------------------------------------------------------------');
 		console.log('');
+	});
+
+	it('logs messages to files', async function () {
+		const logPath = __dirname + '/log.txt';
+
+		const fileStream = createWriteStream(logPath, { flags: 'a', encoding: 'utf-8' });
+		updateLoggingConfig({
+			stream: fileStream,
+		});
+
+		log('[i] Hello World');
+
+		// Reset
+		updateLoggingConfig({
+			stream: process.stdout,
+		});
+
+		return new Promise((resolve, reject) => {
+			// Wait for file contents to be flushed
+			process.nextTick(async function () {
+				try {
+					const logContent = await readFile(logPath, { encoding: 'utf-8' });
+					expect(logContent).to.contain('Hello World');
+					await rm(logPath);
+					resolve();
+				} catch (err) {
+					reject(err);
+				}
+			});
+		});
 	});
 
 	it('prints objects as colorized YAML', function () {

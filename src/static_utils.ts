@@ -149,9 +149,6 @@ export class Table {
 	}
 }
 
-/** @deprecated Use {@link Table} instead **/
-export class table extends Table {}
-
 /**
  * Encode the string like PHP's rawurlencode
  *

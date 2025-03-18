@@ -8,38 +8,6 @@ describe('supplementary functions', function () {
 		userAgent: 'https://github.com/siddharthvp/mwn (CI testing)',
 	});
 
-	it('ores (enwiki)', function () {
-		return bot
-			.oresQueryRevisions(
-				'https://ores.wikimedia.org/v3/scores/enwiki/',
-				['articlequality', 'drafttopic'],
-				'955155786'
-			)
-			.then((data) => {
-				expect(data).to.be.an('object');
-				expect(Object.keys(data)).to.be.of.length(1);
-				expect(data).to.include.all.keys('955155786');
-				expect(data['955155786']).to.include.all.keys('articlequality', 'drafttopic');
-				expect(Object.keys(data['955155786'])).to.be.of.length(2);
-			});
-	});
-
-	it('ores with multiple revisions (enwiki)', function () {
-		return bot
-			.oresQueryRevisions(
-				'https://ores.wikimedia.org/v3/scores/enwiki/',
-				['articlequality', 'drafttopic'],
-				['955155786', '955155756']
-			)
-			.then((data) => {
-				expect(data).to.be.an('object');
-				expect(Object.keys(data)).to.be.of.length(2);
-				expect(data).to.include.all.keys('955155786', '955155756');
-				expect(data['955155786']).to.include.all.keys('articlequality', 'drafttopic');
-				expect(Object.keys(data['955155786'])).to.be.of.length(2);
-			});
-	});
-
 	it('pageviews', async function () {
 		this.timeout(20000);
 		await bot.getSiteInfo();
@@ -60,7 +28,7 @@ describe('supplementary functions', function () {
 	it('wikiwho', async function () {
 		this.timeout(10000);
 		await bot.getSiteInfo();
-		let page = new bot.page('Dairy in India');
+		let page = new bot.Page('Dairy in India');
 		let data = await page.queryAuthors();
 		expect(data).to.be.an('object').with.property('totalBytes').that.is.a('number');
 		expect(data).to.have.property('users').that.is.instanceOf(Array).of.length.greaterThan(1);

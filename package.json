@@ -5,9 +5,8 @@
 	"main": "./build/bot.js",
 	"types": "./build/bot.d.ts",
 	"scripts": {
-		"bump": "node scripts/bump-version.js",
 		"format": "prettier --write .",
-		"build": "tsc || echo",
+		"build": "tsc",
 		"quickbuild": "babel src --extensions \".ts\" --out-dir build",
 		"lint": "eslint src tests && markdownlint-cli2",
 		"lint:fix": "eslint --fix src tests && markdownlint-cli2-fix",
@@ -19,12 +18,15 @@
 		"coveralls": "nyc report --reporter=text-lcov | coveralls",
 		"test:ts": "ts-mocha -p tsconfig.json tests/ts/*",
 		"docs": "cd website && npm start",
-		"docs:api": "node scripts/generate-docs.js"
+		"docs:api": "typedoc"
 	},
 	"engines": {
 		"node": ">=14"
 	},
-	"repository": "git+https://github.com/siddharthvp/mwn.git",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/siddharthvp/mwn"
+	},
 	"keywords": [
 		"mediawiki-client",
 		"mediawiki-bot",
@@ -36,7 +38,7 @@
 	"bugs": {
 		"url": "https://github.com/siddharthvp/mwn/issues"
 	},
-	"homepage": "https://github.com/siddharthvp/mwn#readme",
+	"homepage": "https://mwn.toolforge.org/",
 	"dependencies": {
 		"@types/node": "^14.18.63",
 		"@types/tough-cookie": "^4.0.5",

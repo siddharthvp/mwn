@@ -1,4 +1,5 @@
-version: '3' # MediaWiki with MariaDB, Access via "http://localhost:8080"
+## MediaWiki with MariaDB, Access via "http://localhost:8080"
+
 services:
   mediawiki:
     build: .
@@ -19,3 +20,5 @@ services:
       MYSQL_USER: wikiuser
       MYSQL_PASSWORD: wikipassword
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    ports:
+      - '3312:3306'

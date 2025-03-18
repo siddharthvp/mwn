@@ -134,9 +134,6 @@ export type SiteInfoQueryResponse = {
 	};
 };
 
-/** @deprecated Use {@link SiteInfoQueryResponse} instead **/
-export type siteinfoqueryResponse = SiteInfoQueryResponse;
-
 export default function () {
 	let NS_MAIN = 0;
 	let NS_TALK = 1;

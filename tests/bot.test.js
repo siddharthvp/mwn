@@ -85,14 +85,6 @@ describe('mwn', async function () {
 		});
 	});
 
-	it('correctly sets logging config', function () {
-		const { logConfig } = require('../build/log');
-		Mwn.setLoggingConfig({
-			printYaml: true,
-		});
-		expect(logConfig.printYaml).to.equal(true);
-	});
-
 	it('successfully reads a page with read()', function () {
 		return bot.read('Main Page').then((response) => {
 			expect(response).to.be.instanceOf(Object);
@@ -242,18 +234,6 @@ describe('mwn', async function () {
 		expect(bot.Date.localeData.monthsShort[0]).to.equal('janv.');
 		expect(bot.Date.localeData.days[0]).to.equal('dimanche');
 		expect(bot.Date.localeData.daysShort[0]).to.equal('dim.');
-	});
-
-	it('deprecated smallcase class names still work', async function () {
-		await bot.Date.populateLocaleData('fr');
-		expect(bot.Date.localeData.months[0]).to.equal('janvier');
-
-		const title = bot.title.newFromText('caTeGoRy:living people');
-		expect(title.getNamespaceId()).to.equal(14);
-		expect(title.getPrefixedText()).to.equal('Category:Living people');
-
-		const user = new bot.user('SD0001');
-		expect(await user.contribs({ uclimit: 1 })).to.be.of.length(1);
 	});
 
 	//////////////////////////////////////////
