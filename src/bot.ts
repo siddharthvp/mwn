@@ -252,9 +252,10 @@ export class Mwn {
 	 * Cookie jar for the bot instance - holds session and login cookies
 	 * @type {tough.CookieJar}
 	 */
-	cookieJar: tough.CookieJar = null;
-	/** Axios instance with a cookie jar. */
-	axiosInstance: AxiosInstance = null;
+	cookieJar: tough.CookieJar = new tough.CookieJar();
+
+	/** Axios instance for the bot instance. */
+	axiosInstance: AxiosInstance = axios.create();
 
 	static requestDefaults: RawRequestParams = {
 		headers: {
@@ -374,6 +375,22 @@ export class Mwn {
 			}
 		}
 		this.options = mergeDeep1(this.defaultOptions, customOptions);
+
+		// Wire up axios to use the cookie jar
+		this.axiosInstance.interceptors.request.use((config) => {
+			const cookieHeader = this.cookieJar.getCookieStringSync(config.url);
+			if (cookieHeader) {
+				config.headers.Cookie = cookieHeader;
+			}
+			return config;
+		});
+		this.axiosInstance.interceptors.response.use((response) => {
+			const setCookieHeaders = response.headers['set-cookie'];
+			if (setCookieHeaders) {
+				setCookieHeaders.forEach((cookie) => this.cookieJar.setCookieSync(cookie, response.config.url));
+			}
+			return response;
+		});
 	}
 
 	/**
@@ -386,7 +403,6 @@ export class Mwn {
 	 */
 	static async init(config: MwnOptions): Promise<Mwn> {
 		const bot = new Mwn(config);
-		bot.initRequests();
 		if (bot.options.OAuth2AccessToken || bot._usingOAuth()) {
 			bot.initOAuth();
 			await bot.getTokensAndSiteInfo();
@@ -394,34 +410,6 @@ export class Mwn {
 			await bot.login();
 		}
 		return bot;
-	}
-
-	/**
-	 * Prepare a client for bot requests (Axios).
-	 */
-	initRequests() {
-		if (this.axiosInstance != null) {
-			return;
-		}
-		const cookieJar = new tough.CookieJar();
-		const axiosInstance = axios.create();
-		this.cookieJar = cookieJar;
-		this.axiosInstance = axiosInstance;
-
-		axiosInstance.interceptors.request.use((config) => {
-			const cookieHeader = cookieJar.getCookieStringSync(config.url);
-			if (cookieHeader) {
-				config.headers.Cookie = cookieHeader;
-			}
-			return config;
-		});
-		axiosInstance.interceptors.response.use((response) => {
-			const setCookieHeaders = response.headers['set-cookie'];
-			if (setCookieHeaders) {
-				setCookieHeaders.forEach((cookie) => cookieJar.setCookieSync(cookie, response.config.url));
-			}
-			return response;
-		});
 	}
 
 	/**
@@ -541,9 +529,6 @@ export class Mwn {
 			},
 			requestOptions
 		);
-
-		// make sure axiosInstance is ready
-		this.initRequests();
 
 		return this.axiosInstance(config);
 	}
