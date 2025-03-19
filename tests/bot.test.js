@@ -64,6 +64,12 @@ describe('mwn', async function () {
 		});
 	});
 
+	it('does a query over POST', function () {
+		return bot.request({ action: 'query' }, { method: 'POST' }).then((result) => {
+			expect(result).to.deep.equal({ batchcomplete: true });
+		});
+	});
+
 	it('parses a JSON page', async function () {
 		let jsonpage = await bot.parseJsonPage('Test JSONL page');
 		expect(jsonpage).to.be.a('object');

@@ -146,6 +146,12 @@ export class Request {
 			params.token = token;
 		}
 
+		if (params.action === 'query' || params.action === 'parse') {
+			// Per https://www.mediawiki.org/wiki/API:Etiquette, enables requests
+			// to be processed by closer data centres that allow only readonly operations
+			this.requestParams.headers['Promise-Non-Write-API-Action'] = 'true';
+		}
+
 		if (this.useMultipartFormData()) {
 			await this.handlePostMultipartFormData();
 		} else {
