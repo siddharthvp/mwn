@@ -40,7 +40,7 @@
 	},
 	"homepage": "https://mwn.toolforge.org/",
 	"dependencies": {
-		"@types/node": "^16.18.126",
+		"@types/node": "^14.18.63",
 		"@types/tough-cookie": "^4.0.5",
 		"axios": "^1.8.3",
 		"chalk": "^1.1.3",
