@@ -67,7 +67,9 @@ jobs:
       - name: Setup MediaWiki instance using Docker for integration tests
         run: npm run setuplocalwiki
       - name: Save docker images
-        run: docker save -o /tmp/docker-cache.tar mediawiki:latest mariadb:latest
+        run: |
+          docker images
+          docker save -o /tmp/docker-cache.tar mediawiki:latest mariadb:latest
       - run: npm ci
       - uses: actions/download-artifact@v4
       - run: npm run test
