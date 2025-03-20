@@ -44,13 +44,13 @@ import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 
 // Nested classes of mwn
-import MwnDateFactory, { MwnDate } from './date';
-import MwnTitleFactory, { MwnTitle, SiteInfoQueryResponse } from './title';
-import MwnPageFactory, { MwnPage } from './page';
-import MwnWikitextFactory, { MwnWikitext } from './wikitext';
-import MwnUserFactory, { MwnUser } from './user';
-import MwnCategoryFactory, { MwnCategory } from './category';
-import MwnFileFactory, { MwnFile } from './file';
+import MwnDateFactory, { MwnDate, MwnDateStatic } from './date';
+import MwnTitleFactory, { MwnTitle, MwnTitleStatic, SiteInfoQueryResponse } from './title';
+import MwnPageFactory, { MwnPage, MwnPageStatic } from './page';
+import MwnWikitextFactory, { MwnWikitext, MwnWikitextStatic } from './wikitext';
+import MwnUserFactory, { MwnUser, MwnUserStatic } from './user';
+import MwnCategoryFactory, { MwnCategory, MwnCategoryStatic } from './category';
+import MwnFileFactory, { MwnFile, MwnFileStatic } from './file';
 import { RawRequestParams, Request, Response } from './core';
 import { log, updateLoggingConfig } from './log';
 import { MwnError, rejectWithError, rejectWithErrorCode } from './error';
@@ -312,43 +312,43 @@ export class Mwn {
 	 * Title class associated with the bot instance.
 	 * See {@link MwnTitle} interface for methods on title objects.
 	 */
-	Title = MwnTitleFactory();
+	Title: MwnTitleStatic = MwnTitleFactory();
 
 	/**
 	 * Page class associated with the bot instance.
 	 * See {@link MwnPage} interface for methods on page objects.
 	 */
-	Page = MwnPageFactory(this);
+	Page: MwnPageStatic = MwnPageFactory(this);
 
 	/**
 	 * Category class associated with the bot instance.
 	 * See {@link MwnCategory} interface for methods on category objects.
 	 */
-	Category = MwnCategoryFactory(this);
+	Category: MwnCategoryStatic = MwnCategoryFactory(this);
 
 	/**
 	 * File class associated with the bot instance.
 	 * See {@link MwnFile} interface for methods on file objects.
 	 */
-	File = MwnFileFactory(this);
+	File: MwnFileStatic = MwnFileFactory(this);
 
 	/**
 	 * User class associated with the bot instance.
 	 * See {@link MwnUser} interface for methods on user objects.
 	 */
-	User = MwnUserFactory(this);
+	User: MwnUserStatic = MwnUserFactory(this);
 
 	/**
 	 * Wikitext class associated with the bot instance.
 	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
-	Wikitext = MwnWikitextFactory(this);
+	Wikitext: MwnWikitextStatic = MwnWikitextFactory(this);
 
 	/**
 	 * Date class associated with the bot instance.
 	 * See {@link MwnDate} interface for methods on date objects.
 	 */
-	Date = MwnDateFactory(this);
+	Date: MwnDateStatic = MwnDateFactory(this);
 
 	/**
 	 * Constructs a new bot instance. Recommended usage is one bot instance for every wiki and user.
@@ -435,8 +435,8 @@ export class Mwn {
 	 * Sets and overwrites the raw request options, used by the axios library
 	 * See https://www.npmjs.com/package/axios
 	 */
-	setRequestOptions(customRequestOptions: RawRequestParams) {
-		return mergeDeep1(this.requestOptions, customRequestOptions);
+	setRequestOptions(customRequestOptions: RawRequestParams): void {
+		mergeDeep1(this.requestOptions, customRequestOptions);
 	}
 
 	/**
@@ -876,7 +876,10 @@ export class Mwn {
 	 * @param messages
 	 * @param options
 	 */
-	async getMessages(messages: string | string[], options: ApiQueryAllMessagesParams = {}) {
+	async getMessages(
+		messages: string | string[],
+		options: ApiQueryAllMessagesParams = {}
+	): Promise<Record<string, string>> {
 		return this.request({
 			action: 'query',
 			meta: 'allmessages',
@@ -1393,11 +1396,11 @@ export class Mwn {
 		});
 	}
 
-	async saveOption(option: string, value: string) {
+	async saveOption(option: string, value: string): Promise<ApiResponse> {
 		return this.saveOptions({ [option]: value });
 	}
 
-	async saveOptions(options: Record<string, string>) {
+	async saveOptions(options: Record<string, string>): Promise<ApiResponse> {
 		return this.request({
 			action: 'options',
 			change: Object.entries(options).map(([key, val]) => key + '=' + val),

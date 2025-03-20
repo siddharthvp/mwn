@@ -139,7 +139,7 @@ export class Table {
 		}
 	}
 
-	getNumRows() {
+	getNumRows(): number {
 		return this.numRows;
 	}
 
