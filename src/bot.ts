@@ -866,7 +866,7 @@ export class Mwn {
 		return this.read(title).then((data) => {
 			try {
 				return JSON.parse(data.revisions[0].content);
-			} catch (e) {
+			} catch {
 				return rejectWithErrorCode('invalidjson');
 			}
 		});
@@ -1043,7 +1043,7 @@ export class Mwn {
 				revision = page.revisions[0];
 				try {
 					revisionContent = revision.slots.main.content;
-				} catch (err) {
+				} catch {
 					return rejectWithErrorCode('unknown');
 				}
 				basetimestamp = revision.timestamp;
@@ -1826,7 +1826,8 @@ export class Mwn {
 				}
 				worklist = failures.map((f) => f.item);
 				failures = [];
-				(counts.successes = 0), (counts.failures = 0);
+				counts.successes = 0;
+				counts.failures = 0;
 			}
 			for (let idx = 0; idx < worklist.length; idx++) {
 				await worker(worklist[idx], idx).then(incrementSuccesses, function (err) {

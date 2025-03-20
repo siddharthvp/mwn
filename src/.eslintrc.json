@@ -1,20 +1,19 @@
 {
 	"env": {
-		"es2017": true,
+		"es2020": true,
 		"node": true
 	},
 	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
 	"ignorePatterns": ["*.js"],
 	"parser": "@typescript-eslint/parser",
 	"parserOptions": {
-		"ecmaVersion": 2018,
+		"ecmaVersion": 2020,
 		"sourceType": "module"
 	},
 	"plugins": ["@typescript-eslint"],
 	"rules": {
 		"prefer-const": "off",
 		"@typescript-eslint/ban-ts-comment": "off",
-		"@typescript-eslint/no-explicit-any": "off",
-		"@typescript-eslint/no-empty-function": "off"
+		"@typescript-eslint/no-explicit-any": "off"
 	}
 }

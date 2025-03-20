@@ -12,7 +12,7 @@
 
 import * as util from 'node:util';
 import * as stream from 'node:stream';
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const chalk = require('chalk');
 
 export interface LogConfig {
