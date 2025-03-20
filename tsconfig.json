@@ -2,15 +2,12 @@
 	"compilerOptions": {
 		"outDir": "./build",
 		"target": "es2020",
-		"lib": ["ES2020"],
 		"module": "CommonJS",
 		"declaration": true,
 		"noImplicitAny": true,
 		"newLine": "lf",
 		"sourceMap": true,
-		// Don't include global types other than from @types/node.
-		// This avoids type errors due to jQuery globals that rely on DOM.
-		"types": ["node"]
+		"skipLibCheck": true
 	},
 	"include": ["./src/**/*"],
 	"ts-node": {
