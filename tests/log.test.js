@@ -25,8 +25,6 @@ describe('logger', function () {
 		log('[TODO] todo log entry');
 		log('unknown todo log entry');
 
-		// console.dir(semlog.getLogHistory());
-
 		console.log('');
 		console.log('-------------------------------------------------------------');
 		console.log(' Testing Numbers and Datatypes');

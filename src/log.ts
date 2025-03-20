@@ -12,8 +12,7 @@
 
 import * as util from 'node:util';
 import * as stream from 'node:stream';
-/* eslint-disable @typescript-eslint/no-require-imports */
-const chalk = require('chalk');
+import * as chalk from 'chalk';
 
 export interface LogConfig {
 	/** Whether debug level log (starting with [D]) should be printed */
@@ -122,7 +121,7 @@ export function error(obj: Error) {
 	}
 }
 
-let colorMap = {
+const colorMap = {
 	'[E]': 'red', // ERROR
 	'[W]': 'yellow', // WARNING
 	'[?]': 'yellow', // MISSING
@@ -131,14 +130,14 @@ let colorMap = {
 	'[+]': 'green', // ADDED
 	'[-]': 'red', // REMOVED
 	'[C]': 'cyan', // CHANGED
-	'[U]': 'grey', // UNCHANGED
-	'[=]': 'grey', // EQUAL
-	'[/]': 'grey', // SKIPPED
+	'[U]': 'gray', // UNCHANGED
+	'[=]': 'gray', // EQUAL
+	'[/]': 'gray', // SKIPPED
 	'[V]': 'magenta', // VERBOSE
 	'[D]': 'magenta', // DEBUG
 	'[T]': 'magenta', // TO-DO
 	'[TODO]': 'magenta', // TO-DO
-};
+} as const;
 
 /**
  * Colors the messages by searching for specific indicator strings
@@ -147,7 +146,7 @@ let colorMap = {
  * @param {string} colorName
  * @returns {string}
  */
-export function colorize(msg: item, colorName?: string) {
+export function colorize(msg: item, colorName?: (typeof colorMap)[keyof typeof colorMap]) {
 	if (logConfig.stream !== process.stdout) {
 		return msg;
 	}
