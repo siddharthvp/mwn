@@ -35,8 +35,8 @@ describe('core', function () {
 			});
 			expect(req.hasLongFields).to.be.false;
 		});
-
 		it("doesn't retry on ENOTFOUND rejection", async function () {
+			this.timeout(20000); // CI sometimes takes forever to fail to resolve hostname
 			const bot2 = new Mwn({ apiUrl: 'https://somewebsite2342978653424.org/w/api.php' });
 			sinon.spy(Response.prototype, 'handleRequestFailure');
 			await expect(bot2.getSiteInfo())
