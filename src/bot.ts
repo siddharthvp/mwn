@@ -53,7 +53,7 @@ import MwnCategoryFactory, { MwnCategory, MwnCategoryStatic } from './category';
 import MwnFileFactory, { MwnFile, MwnFileStatic } from './file';
 import { RawRequestParams, Request, Response } from './core';
 import { log, updateLoggingConfig } from './log';
-import { MwnError, rejectWithError, rejectWithErrorCode } from './error';
+import { MwnError, MwnMissingPageError, rejectWithError, rejectWithErrorCode } from './error';
 import { link, Table, template, util } from './static_utils';
 import { arrayChunk, ispromise, makeTitle, makeTitles, merge, mergeDeep1, sleep } from './utils';
 
@@ -298,6 +298,7 @@ export class Mwn {
 	usingOAuth2: boolean;
 
 	static Error = MwnError;
+	static MissingPageError = MwnMissingPageError;
 
 	// Expose logger
 	static log = log;
@@ -1037,7 +1038,7 @@ export class Mwn {
 					return rejectWithErrorCode('invalidtitle');
 				}
 				if (page.missing) {
-					return Promise.reject(new Mwn.Error.MissingPage());
+					return Promise.reject(new MwnMissingPageError());
 				}
 				revision = page.revisions[0];
 				try {

@@ -1,4 +1,4 @@
-import { MwnError } from './error';
+import { MwnMissingPageError } from './error';
 import type { Mwn, MwnTitle, EditTransform, ApiQueryResponse } from './bot';
 import type {
 	ApiDeleteParams,
@@ -492,7 +492,7 @@ export default function (bot: Mwn): MwnPageStatic {
 
 		private throwIfPageMissing(data: ApiQueryResponse) {
 			if (data.query.pages[0].missing || data.query.pages[0].invalid) {
-				throw new MwnError.MissingPage();
+				throw new MwnMissingPageError();
 			}
 		}
 
