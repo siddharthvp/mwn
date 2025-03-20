@@ -52,8 +52,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Cache docker images
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-cache.tar
+          key: docker-${{ runner.os }}-${{ hashFiles('tests/docker/docker-compose.yml') }}
+          restore-keys: |
+            docker-${{ runner.os }}-
+      - name: Pul docker images
+        run: |
+          if [ -f /tmp/docker-cache.tar ]; then
+            docker load -i /tmp/docker-cache.tar
+          fi
       - name: Setup MediaWiki instance using Docker for integration tests
         run: npm run setuplocalwiki
+      - name: Save docker images
+        run: docker save -o /tmp/docker-cache.tar mediawiki mariadb
       - run: npm ci
       - uses: actions/download-artifact@v4
       - run: npm run test
