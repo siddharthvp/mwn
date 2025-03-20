@@ -44,13 +44,13 @@ import * as tough from 'tough-cookie';
 import * as OAuth from 'oauth-1.0a';
 
 // Nested classes of mwn
-import MwnDateFactory, { MwnDate, MwnDateStatic } from './date';
+import MwnDateFactory, { MwnDateStatic } from './date';
 import MwnTitleFactory, { MwnTitle, MwnTitleStatic, SiteInfoQueryResponse } from './title';
-import MwnPageFactory, { MwnPage, MwnPageStatic } from './page';
-import MwnWikitextFactory, { MwnWikitext, MwnWikitextStatic } from './wikitext';
-import MwnUserFactory, { MwnUser, MwnUserStatic } from './user';
-import MwnCategoryFactory, { MwnCategory, MwnCategoryStatic } from './category';
-import MwnFileFactory, { MwnFile, MwnFileStatic } from './file';
+import MwnPageFactory, { MwnPageStatic } from './page';
+import MwnWikitextFactory, { MwnWikitextStatic } from './wikitext';
+import MwnUserFactory, { MwnUserStatic } from './user';
+import MwnCategoryFactory, { MwnCategoryStatic } from './category';
+import MwnFileFactory, { MwnFileStatic } from './file';
 import { RawRequestParams, Request, Response } from './core';
 import { log, updateLoggingConfig } from './log';
 import { MwnError, MwnMissingPageError, rejectWithError, rejectWithErrorCode } from './error';
@@ -86,13 +86,6 @@ import type {
 	ApiUndeleteResponse,
 	ApiUploadResponse,
 } from './api_response_types';
-
-export { MwnDate, MwnTitle, MwnPage, MwnFile, MwnCategory, MwnWikitext, MwnUser, ApiPage, ApiRevision };
-// Export, if only for the sake of getting generated documentation
-export * from './api_response_types';
-export type { PageViewData, PageViewOptions } from './page';
-export { TemplateConfig, Template, MwnWikitextStatic } from './wikitext';
-export type { LogConfig } from './log';
 
 export interface MwnOptions {
 	/** Suppress messages, except for error messages and warnings */

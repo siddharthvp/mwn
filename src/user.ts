@@ -1,4 +1,5 @@
-import type { Mwn, MwnPage } from './bot';
+import type { Mwn } from './bot';
+import type { MwnPage } from './page';
 import type {
 	ApiBlockParams,
 	ApiEmailUserParams,

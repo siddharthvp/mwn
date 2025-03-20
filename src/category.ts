@@ -1,5 +1,7 @@
-import type { Mwn, MwnPage, MwnTitle } from './bot';
-import { ApiQueryCategoryMembersParams } from './api_params';
+import type { Mwn } from './bot';
+import type { MwnTitle } from './title';
+import type { MwnPage } from './page';
+import type { ApiQueryCategoryMembersParams } from './api_params';
 
 type ApiPageInfo = {
 	pageid: number;

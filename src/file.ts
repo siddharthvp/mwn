@@ -1,5 +1,8 @@
-import type { Mwn, MwnPage, MwnTitle, ReverseLinkTarget } from './bot';
+import type { Mwn } from './bot';
+import type { MwnTitle } from './title';
+import type { MwnPage } from './page';
 import { ApiQueryBacklinkspropParams } from './api_params';
+import { ReverseLinkTarget } from './api_response_types';
 
 export interface MwnFileStatic {
 	/**
@@ -31,9 +34,7 @@ export interface MwnFile extends MwnPage {
 	 * @returns {Promise<Object[]>} - resolved with array of { pageid: 32434,
 	 * ns: 0, title: 'Main Page', redirect: false } like objects.
 	 */
-	usages(
-		options?: ApiQueryBacklinkspropParams
-	): Promise<
+	usages(options?: ApiQueryBacklinkspropParams): Promise<
 		{
 			pageid: number;
 			title: string;

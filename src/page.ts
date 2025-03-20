@@ -1,5 +1,7 @@
 import { MwnMissingPageError } from './error';
-import type { Mwn, MwnTitle, EditTransform, ApiQueryResponse } from './bot';
+import type { MwnTitle } from './title';
+import type { Mwn, EditTransform } from './bot';
+import type { ApiQueryResponse } from './api_response_types';
 import type {
 	ApiDeleteParams,
 	ApiEditPageParams,
