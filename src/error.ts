@@ -33,16 +33,16 @@ export class MwnError extends Error {
 		Object.assign(this, config);
 		this.info = info; // not already present in case of html/wikitext/plaintext error formats
 	}
+}
 
-	static MissingPage = class MwnErrorMissingPage extends MwnError {
-		constructor(config: Partial<MwnErrorConfig> = {}) {
-			super({
-				code: 'missingtitle',
-				info: "The page you specified doesn't exist.",
-				...config,
-			});
-		}
-	};
+export class MwnMissingPageError extends MwnError {
+	constructor(config: Partial<MwnErrorConfig> = {}) {
+		super({
+			code: 'missingtitle',
+			info: "The page you specified doesn't exist.",
+			...config,
+		});
+	}
 }
 
 /**
