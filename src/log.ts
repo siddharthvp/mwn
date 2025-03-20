@@ -10,8 +10,8 @@
  * and keeping track of statistics
  */
 
-import * as util from 'util';
-import * as stream from 'stream';
+import * as util from 'node:util';
+import * as stream from 'node:stream';
 /* eslint-disable @typescript-eslint/no-var-requires */
 const chalk = require('chalk');
 

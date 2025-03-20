@@ -1,1 +1,1 @@
-export * from 'types-mediawiki/api_params';
+export * from 'types-mediawiki/api_params/index';
