@@ -2,7 +2,7 @@
  * Private utilities
  */
 
-import type { MwnTitle } from './bot';
+import type { MwnTitle } from './title';
 
 /** Check whether object looks like a promises-A+ promise, from https://www.npmjs.com/package/is-promise */
 export function ispromise(obj: any): boolean {

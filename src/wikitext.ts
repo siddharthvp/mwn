@@ -13,7 +13,8 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
-import type { Mwn, MwnTitle } from './bot';
+import type { Mwn } from './bot';
+import type { MwnTitle } from './title';
 import type { ApiParseParams } from './api_params';
 
 export interface MwnWikitextStatic {
@@ -38,9 +39,7 @@ export interface MwnWikitextStatic {
 	 * @returns {Object[]} - each object in the returned array represents a row,
 	 * with its keys being column names, and values the cell content
 	 */
-	parseTable(
-		text: string
-	): {
+	parseTable(text: string): {
 		[column: string]: string;
 	}[];
 

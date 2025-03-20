@@ -2,7 +2,7 @@
  * Static functions on mwn
  */
 
-import type { MwnTitle } from './bot';
+import type { MwnTitle } from './title';
 
 /**
  * Get wikitext for a new link
