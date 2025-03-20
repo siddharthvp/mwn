@@ -47,7 +47,7 @@
 		"form-data": "^4.0.2",
 		"oauth-1.0a": "^2.2.6",
 		"tough-cookie": "^4.1.4",
-		"types-mediawiki": "1.9.x"
+		"types-mediawiki": "^1.10.1"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.11",
