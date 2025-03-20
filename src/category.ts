@@ -1,7 +1,7 @@
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { MwnPage } from './page';
-import type { ApiQueryCategoryMembersParams } from './api_params';
+import type { ApiQueryCategoryMembersParams } from 'types-mediawiki-api';
 
 type ApiPageInfo = {
 	pageid: number;

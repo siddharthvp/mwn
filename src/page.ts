@@ -12,7 +12,7 @@ import type {
 	ApiQueryRevisionsParams,
 	ApiUndeleteParams,
 	WikibaseClientApiDescriptionParams,
-} from './api_params';
+} from 'types-mediawiki-api';
 import { ApiPage, ApiRevision, ApiResponseSubType, LogEvent } from './api_response_types';
 
 export interface MwnPageStatic {

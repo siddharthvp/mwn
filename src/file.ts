@@ -1,7 +1,7 @@
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { MwnPage } from './page';
-import { ApiQueryBacklinkspropParams } from './api_params';
+import { ApiQueryBacklinkspropParams } from 'types-mediawiki-api';
 import { ReverseLinkTarget } from './api_response_types';
 
 export interface MwnFileStatic {

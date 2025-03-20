@@ -71,7 +71,7 @@ import type {
 	ApiRollbackParams,
 	ApiUndeleteParams,
 	ApiUploadParams,
-} from './api_params';
+} from 'types-mediawiki-api';
 import type {
 	ApiDeleteResponse,
 	ApiEditResponse,

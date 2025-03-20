@@ -15,7 +15,7 @@
 
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
-import type { ApiParseParams } from './api_params';
+import type { ApiParseParams } from 'types-mediawiki-api';
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;

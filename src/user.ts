@@ -8,7 +8,7 @@ import type {
 	ApiQueryUserContribsParams,
 	ApiQueryUsersParams,
 	ApiUnblockParams,
-} from './api_params';
+} from 'types-mediawiki-api';
 import { rejectWithError } from './error';
 import {
 	ApiBlockResponse,
