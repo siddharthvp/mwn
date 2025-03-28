@@ -49,29 +49,29 @@ export function template(title: string | MwnTitle, parameters: { [parameter: str
 	);
 }
 
+/** Configuration for table wikitext generation */
+export interface TableConfig {
+	/** Whether to make the table plain without borders (default: false) */
+	plain?: boolean;
+	/** Whether to make the columns sortable (default: true) */
+	sortable?: boolean;
+	/** Style attribute for the table */
+	style?: string;
+	/**
+	 * Whether to put each cell of the table on a new line in wikitext.
+	 * This causes no visual changes. (Default: true)
+	 */
+	multiline?: boolean;
+	/** HTML classes for the table */
+	classes?: string[];
+}
+
 export class Table {
 	text: string;
 	multiline: boolean;
 	numRows = 0;
 
-	/**
-	 * @param {Object} [config={}]
-	 * @config {boolean} plain - plain table without borders (default: false)
-	 * @config {boolean} sortable - make columns sortable (default: true)
-	 * @config {string} style - style attribute
-	 * @config {boolean} multiline - put each cell of the table on a new line,
-	 * this causes no visual changes, but the wikitext representation is different.
-	 * This is more reliable. (default: true)
-	 */
-	constructor(
-		config: {
-			plain?: boolean;
-			sortable?: boolean;
-			style?: string;
-			multiline?: boolean;
-			classes?: string[];
-		} = {}
-	) {
+	constructor(config: TableConfig = {}) {
 		let classes = new Set(config.classes);
 		if (!config.plain) {
 			classes.add('wikitable');
