@@ -34,5 +34,10 @@ describe('File', async function () {
 		assert.strictEqual(file.getNameText(), 'Glarg foo glang', 'Underscores');
 	});
 
-	// TODO: usages
+	it('usages', async function () {
+		const file = new bot.File('File:Wikipedia-Test_Administrator.png');
+		const results = await file.usages();
+		expect(results).to.be.an('array').that.has.length.greaterThan(2);
+		expect(results.map((r) => r.title)).to.include.members(['Main Page', 'Wikipedia:Administrators']);
+	});
 });

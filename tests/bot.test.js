@@ -144,6 +144,18 @@ describe('mwn', async function () {
 		});
 	});
 
+	it('successfully reads apilimit+ pages with readGen', async function () {
+		let pageNames = Array.from({ length: 60 }, (_, i) => `page${i + 1}`);
+		let gen = bot.readGen(pageNames);
+		let pages = [];
+		for await (let page of gen) {
+			pages.push(page);
+		}
+		expect(pages).to.be.instanceOf(Array);
+		expect(pages.length).to.equal(60);
+		expect(pages[55].ns).to.equal(0);
+	});
+
 	it('successfully purges pages from page id', function () {
 		return bot.purge([11791]).then(function (response) {
 			expect(response).to.be.instanceOf(Array);
@@ -180,6 +192,13 @@ describe('mwn', async function () {
 		let pages = await bot.getPagesInCategory('Category:User_en-2');
 		expect(pages).to.be.instanceOf(Array);
 		expect(pages[0]).to.be.a('string');
+	});
+
+	it('successfully searches for pages', async function () {
+		let results = await bot.search('example', 5);
+		expect(results).to.be.instanceOf(Array);
+		expect(results.length).to.be.at.most(5);
+		expect(results[0]).to.include.all.keys('title', 'ns', 'pageid');
 	});
 
 	it('getMessages', async function () {

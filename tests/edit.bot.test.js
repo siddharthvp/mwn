@@ -1,6 +1,6 @@
 'use strict';
 
-const { bot, sinon, expect, setup, teardown } = require('./base/local_wiki');
+const { bot, bot2, sinon, expect, setup, teardown } = require('./base/local_wiki');
 const crypto = require('crypto');
 const logger = require('../build/log');
 const { MwnError } = require('../build/error');
@@ -129,6 +129,41 @@ describe('methods which modify the wiki', function () {
 			.to.be.eventually.rejectedWith(MwnError)
 			.that.has.property('code')
 			.which.equals('userexists');
+	});
+
+	it('successfully rollbacks an edit', async () => {
+		const pageName = 'Rollback-TestPage-' + crypto.randomBytes(10).toString('hex');
+		await bot.create(pageName, 'Original content', 'Create page for rollback test');
+
+		// Log in with another account and make an edit
+		await bot2.login();
+		await bot2.save(pageName, 'Edited content', 'Vandalizing page');
+
+		await bot.rollback(pageName, bot2.options.username.slice(0, bot2.options.username.indexOf('@')));
+		await bot2.logout();
+
+		// Confirm the page was restored to the original content
+		const pageContent = await bot.read(pageName);
+		expect(pageContent.revisions[0].content).to.equal('Original content');
+		bot.delete(pageName, 'Finished rollback test');
+	});
+
+	it('successfully undeletes a page', async () => {
+		const pageName = 'Undelete-TestPage-' + crypto.randomBytes(10).toString('hex');
+
+		// Create and delete a page
+		await bot.create(pageName, 'Some content for deletion', 'Create page for undelete test');
+		await bot.delete(pageName, 'Test delete for undelete');
+
+		// Undelete the page
+		const response = await bot.undelete(pageName, 'Test undelete using mwn');
+		expect(response).to.be.an('object');
+		expect(response).to.have.property('title').which.equals(pageName);
+
+		// Confirm the page content was restored
+		const restoredContent = await bot.read(pageName);
+		expect(restoredContent).to.have.property('revisions').that.is.an('array').with.length.greaterThan(0);
+		expect(restoredContent.revisions[0].content).to.equal('Some content for deletion');
 	});
 
 	it('changes user options', async () => {
