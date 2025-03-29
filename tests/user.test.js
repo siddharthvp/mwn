@@ -27,7 +27,7 @@ describe('User', async function () {
 		});
 	});
 
-	it('contribsGen and logsGen', async function () {
+	it('gets user contribs and logs using generators', async function () {
 		let u = new bot.User('SD0001');
 		let count = 0;
 		for await (let item of u.contribsGen()) {
@@ -42,7 +42,7 @@ describe('User', async function () {
 		}
 	});
 
-	it('userpage and talkpage', function () {
+	it('gets user page and talk page objects', function () {
 		let u = new bot.User('SD0001');
 		expect(u.userpage).to.be.instanceOf(bot.Page).that.has.property('title').which.equals('SD0001');
 		expect(u.userpage.namespace).to.equal(2);
@@ -50,7 +50,7 @@ describe('User', async function () {
 		expect(u.talkpage.namespace).to.equal(3);
 	});
 
-	it('info and globalinfo', async function () {
+	it('gets user info and globalinfo', async function () {
 		let u = new bot.User('SD0001');
 		let info = await u.info();
 		expect(info).to.include.keys('userid', 'editcount', 'groups', 'rights');

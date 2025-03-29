@@ -7,7 +7,7 @@ const testwiki = require('./mocking/loginCredentials.js');
 describe('login', async function () {
 	this.timeout(10000);
 
-	it('successfully logs in and gets token & siteinfo', async function () {
+	it('logs in and gets token & siteinfo', async function () {
 		let client = new Mwn();
 		return client.login(testwiki.account1).then(async () => {
 			expect(client.loggedIn).to.be.true;
@@ -45,7 +45,7 @@ describe('login', async function () {
 	});
 
 	let bot = new Mwn();
-	it('successfully logs in through init', async function () {
+	it('logs in through init()', async function () {
 		bot = await Mwn.init(testwiki.account1);
 		expect(bot.loggedIn).to.be.true;
 		verifyTokenAndSiteInfo(bot);
@@ -66,14 +66,14 @@ describe('login', async function () {
 		});
 	});
 
-	it('successfully logs out', async function () {
+	it('logs out', async function () {
 		await bot.logout();
 		expect(bot.loggedIn).to.be.false;
 		let userinfo = await bot.userinfo();
 		expect(userinfo.anon).to.be.true;
 	});
 
-	it('successfully logs in again (same bot instance) and even if assert: user is a default option', async function () {
+	it('logs in again (same bot instance) and even if assert: user is a default option', async function () {
 		bot.setDefaultParams({
 			assert: 'user',
 		});

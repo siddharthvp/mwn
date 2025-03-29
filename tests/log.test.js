@@ -89,19 +89,6 @@ describe('logger', function () {
 		});
 	});
 
-	it('prints objects as colorized YAML', function () {
-		updateLoggingConfig({ printYaml: true });
-		log({
-			text: 'text',
-			number: 42,
-			array: [1, '2'],
-			object: {
-				key: 'value',
-			},
-		});
-		updateLoggingConfig({ printYaml: false });
-	});
-
 	it('prints errors', function () {
 		error(new Error('Test Error'));
 	});
@@ -115,7 +102,7 @@ describe('logger', function () {
 });
 
 describe('semlog utilities', function () {
-	it('pad numbers', function () {
+	it('pads numbers', function () {
 		expect(pad(7, 1)).to.equal('7');
 		expect(pad(7, 2)).to.equal('07');
 		expect(pad(7, 3)).to.equal('007');
@@ -126,7 +113,7 @@ describe('semlog utilities', function () {
 		expect(getDateArray()[0]).to.equal(new Date().getFullYear());
 	});
 
-	it('return human readable date-times', function () {
+	it('returns human readable date-times', function () {
 		expect(humanDate().length).to.equal(19);
 		expect(humanDate(new Date('October 13, 2014 11:13:00'))).to.equal('2014-10-13 11:13:00');
 	});

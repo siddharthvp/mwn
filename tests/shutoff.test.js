@@ -13,7 +13,7 @@ describe('bot emergency shutoff', async function () {
 
 	const testPage = 'SD0001test';
 
-	it('set shutoff=true on non-matching regex', async function () {
+	it('sets shutoff=true on non-matching regex', async function () {
 		bot.enableEmergencyShutoff({
 			page: testPage,
 			intervalDuration: 1000,
@@ -25,7 +25,7 @@ describe('bot emergency shutoff', async function () {
 		bot.disableEmergencyShutoff();
 	});
 
-	it('set shutoff=true on condition function returns falsy value', async function () {
+	it('sets shutoff=true on condition function returns falsy value', async function () {
 		bot.shutoff.state = false; // restore to default state
 
 		bot.enableEmergencyShutoff({

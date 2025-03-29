@@ -12,14 +12,14 @@ describe('core', function () {
 	describe('Request', function () {
 		const makeInstance = (params) => new Request(new Mwn(), params, {});
 
-		it('getMethod', () => {
+		it('evaluates correct request method', () => {
 			expect(makeInstance({ action: 'query' }).getMethod()).to.equal('get');
 			expect(makeInstance({ action: 'parse', title: 'X' }).getMethod()).to.equal('get');
 			expect(makeInstance({ action: 'parse', text: 'X' }).getMethod()).to.equal('post');
 			expect(makeInstance({ action: 'edit' }).getMethod()).to.equal('post');
 		});
 
-		it('preprocessParams', () => {
+		it('preprocess request parameters', () => {
 			let req = makeInstance({
 				action: 'query',
 				param1: undefined,
@@ -76,7 +76,7 @@ describe('core', function () {
 
 		// Errors
 
-		it('default legacy error format (bc)', async () => {
+		it('handles errors in default (legacy) error format (bc)', async () => {
 			await expect(bot.request({ action: 'qwertyuiop' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
 				.then(function (error) {
@@ -86,7 +86,7 @@ describe('core', function () {
 				});
 		});
 
-		it('errorformat=html', async () => {
+		it('handles errors in errorformat=html', async () => {
 			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'html' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
 				.then(function (error) {
@@ -96,7 +96,7 @@ describe('core', function () {
 				});
 		});
 
-		it('errorformat=plaintext', async () => {
+		it('handles errors in errorformat=plaintext', async () => {
 			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'plaintext' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
 				.then(function (error) {
@@ -106,7 +106,7 @@ describe('core', function () {
 				});
 		});
 
-		it('errorformat=wikitext', async () => {
+		it('handles errors in errorformat=wikitext', async () => {
 			await expect(bot.request({ action: 'qwertyuiop', errorformat: 'wikitext' }))
 				.to.be.eventually.rejectedWith('badvalue: Unrecognized value for parameter "action": qwertyuiop.')
 				.then(function (error) {
@@ -125,7 +125,7 @@ describe('core', function () {
 			sinon.restore();
 		});
 
-		it('shows warnings (new errorformats)', async () => {
+		it('shows warnings in new errorformats', async () => {
 			sinon.spy(logger, 'log');
 			await bot.request({
 				errorformat: 'html',

@@ -15,7 +15,7 @@ describe('methods which modify the wiki', function () {
 
 	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
 
-	it('successfully creates a page with create()', function () {
+	it('creates a page with create()', function () {
 		const spy = sinon.spy(Request.prototype, 'useMultipartFormData');
 		return bot
 			.create(randPage, '=Some more Wikitext= \n[[Category:Test Page]]', 'Test creation using mwn')
@@ -26,7 +26,7 @@ describe('methods which modify the wiki', function () {
 			});
 	});
 
-	it('successfully makes large edits (multipart/form-data)', function () {
+	it('makes large edits (multipart/form-data)', function () {
 		const spy = sinon.spy(Request.prototype, 'useMultipartFormData');
 		var text = 'lorem ipsum '.repeat(1000);
 		return bot
@@ -55,7 +55,7 @@ describe('methods which modify the wiki', function () {
 			});
 	});
 
-	it('successfully edits a page with custom request()', function () {
+	it('edits a page with custom request()', function () {
 		return bot
 			.request({
 				action: 'edit',
@@ -69,7 +69,7 @@ describe('methods which modify the wiki', function () {
 			});
 	});
 
-	it('successfully edits a page with save()', function () {
+	it('edits a page with save()', function () {
 		return bot
 			.save(randPage, '=Some 234 more Wikitext=', 'Some summary')
 			.then(() => {
@@ -80,13 +80,13 @@ describe('methods which modify the wiki', function () {
 			});
 	});
 
-	it('successfully creates a new section with newSection()', function () {
+	it('creates a new section with newSection()', function () {
 		return bot.newSection(randPage, 'Test section', 'Test content').then((response) => {
 			expect(response.result).to.equal('Success');
 		});
 	});
 
-	it('successfully edits a page with edit()', function () {
+	it('edits a page with edit()', function () {
 		return bot
 			.edit(randPage, function (rev) {
 				expect(rev.content).to.be.a('string');
@@ -105,7 +105,7 @@ describe('methods which modify the wiki', function () {
 
 	var randPageMoved = randPage + '-moved';
 
-	it('successfully moves a page without leaving redirect', function () {
+	it('moves a page without leaving redirect', function () {
 		return bot.move(randPage, randPageMoved, 'Test move using mwn', { noredirect: 1 }).then((response) => {
 			expect(response).to.be.an('object');
 			expect(response).to.have.property('from').which.equals(randPage);
@@ -114,13 +114,13 @@ describe('methods which modify the wiki', function () {
 		});
 	});
 
-	it('successfully deletes a page with delete()', function () {
+	it('deletes a page with delete()', function () {
 		return bot.delete(randPageMoved, 'Test mwn').then((response) => {
 			expect(response.logid).to.be.a('number');
 		});
 	});
 
-	it('successfully creates an account', async () => {
+	it('creates an account', async () => {
 		const randAccountName = 'testAcct' + String(Math.random()).slice(3, 8);
 		await bot.createAccount(randAccountName, 'testPassword').then((data) => {
 			expect(data.status).to.equal('PASS');
@@ -131,7 +131,7 @@ describe('methods which modify the wiki', function () {
 			.which.equals('userexists');
 	});
 
-	it('successfully rollbacks an edit', async () => {
+	it('rollbacks an edit', async () => {
 		const pageName = 'Rollback-TestPage-' + crypto.randomBytes(10).toString('hex');
 		await bot.create(pageName, 'Original content', 'Create page for rollback test');
 
@@ -148,7 +148,7 @@ describe('methods which modify the wiki', function () {
 		bot.delete(pageName, 'Finished rollback test');
 	});
 
-	it('successfully undeletes a page', async () => {
+	it('undeletes a page', async () => {
 		const pageName = 'Undelete-TestPage-' + crypto.randomBytes(10).toString('hex');
 
 		// Create and delete a page
@@ -184,7 +184,7 @@ describe('methods which modify the wiki', function () {
 
 	describe('image uploads', function () {
 		this.timeout(20000);
-		it('successfully upload image from URL', function () {
+		it('uploads image from URL', function () {
 			return bot
 				.uploadFromUrl(
 					'https://upload.wikimedia.org/wikipedia/test/7/7f/Example_demo_image.png',
@@ -196,7 +196,7 @@ describe('methods which modify the wiki', function () {
 				});
 		});
 
-		it('successfully uploads files with upload()', function () {
+		it('uploads image from disk', function () {
 			return bot
 				.upload(__dirname + '/mocking/example1.png', 'Random-' + Math.random() + '.png')
 				.then((response) => {

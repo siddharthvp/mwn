@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`static utils table & wikitext.parseTable 1`] = `
+exports[`static utils creates tables and parses them 1`] = `
 "{| class=\\"wikitable sortable\\"
 |-
 ! scope=\\"col\\" class=\\"foobar\\" | Header1 text 
@@ -17,7 +17,7 @@ exports[`static utils table & wikitext.parseTable 1`] = `
 |}"
 `;
 
-exports[`static utils table & wikitext.parseTable 2`] = `
+exports[`static utils creates tables and parses them 2`] = `
 "{| class=\\"plainlinks wikitable sortable\\"
 |-
 ! Header text !! Header text !! Header text
@@ -28,7 +28,7 @@ exports[`static utils table & wikitext.parseTable 2`] = `
 |}"
 `;
 
-exports[`static utils table & wikitext.parseTable 3`] = `
+exports[`static utils creates tables and parses them 3`] = `
 "{| class=\\"plainlinks wikitable sortable\\"
 |-
 ! Header text 

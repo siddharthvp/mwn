@@ -7,7 +7,7 @@ describe('File', async function () {
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
 
-	it('file constructor', function () {
+	it('constructs file objects', function () {
 		let file = new bot.File('file:Xyz');
 		expect(file.title === 'Xyz' && file.namespace === 6).to.be.ok;
 		let badFileConstruction = function () {
@@ -18,7 +18,7 @@ describe('File', async function () {
 		expect(fileWithoutNs.namespace).to.equal(6);
 	});
 
-	it('getName and getNameText', function () {
+	it('gets file name', function () {
 		var file = new bot.File('File:Foo_bar.JPG');
 		assert.strictEqual(file.getName(), 'Foo_bar');
 		assert.strictEqual(file.getNameText(), 'Foo bar');
@@ -34,7 +34,7 @@ describe('File', async function () {
 		assert.strictEqual(file.getNameText(), 'Glarg foo glang', 'Underscores');
 	});
 
-	it('usages', async function () {
+	it('gets file usages', async function () {
 		const file = new bot.File('File:Wikipedia-Test_Administrator.png');
 		const results = await file.usages();
 		expect(results).to.be.an('array').that.has.length.greaterThan(2);

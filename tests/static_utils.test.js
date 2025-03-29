@@ -6,7 +6,7 @@ const bot = new Mwn();
 populateTitleData(bot.Title);
 
 describe('static utils', function () {
-	it('link', function () {
+	it('creates wikilinks', function () {
 		expect(Mwn.link('Main Page')).to.equal('[[Main Page]]');
 		expect(Mwn.link('Main Page', 'homepage')).to.equal('[[Main Page|homepage]]');
 
@@ -19,7 +19,7 @@ describe('static utils', function () {
 		expect(Mwn.link(titleWithFragment, 'homepage')).to.equal('[[Main Page#Did You Know|homepage]]');
 	});
 
-	it('template', function () {
+	it('creates template wikitext', function () {
 		expect(
 			Mwn.template('cite', {
 				author: 'John Doe',
@@ -49,7 +49,7 @@ describe('static utils', function () {
 		).to.equal('{{:Cite|1=web|author=John Doe|date=14 January 2012|url=https://example.com}}');
 	});
 
-	it('table & wikitext.parseTable', function () {
+	it('creates tables and parses them', function () {
 		var expected1 = `{| class="wikitable sortable"
 |-
 ! Header text !! Header text !! Header text
@@ -139,7 +139,7 @@ describe('static utils', function () {
 		// Tests copied from the original mw.util,
 		// https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/tests/qunit/suites/resources/mediawiki/mediawiki.util.test.js
 
-		it('escapeRegExp', function () {
+		it('escapes regexps', function () {
 			var specials, normal;
 			specials = ['\\', '{', '}', '(', ')', '[', ']', '|', '.', '?', '*', '+', '-', '^', '$'];
 			normal = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz', '0123456789'].join('');
@@ -150,7 +150,7 @@ describe('static utils', function () {
 		});
 
 		// from https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/tests/qunit/suites/resources/mediawiki/mediawiki.html.test.js
-		it('escapeHtml', function () {
+		it('escapes html', function () {
 			assert.throws(
 				function () {
 					Mwn.util.escapeHtml();
@@ -165,11 +165,11 @@ describe('static utils', function () {
 			);
 		});
 
-		it('rawurlencode', function () {
+		it('encodes URLs (raw)', function () {
 			assert.strictEqual(Mwn.util.rawurlencode('Test:A & B/Here'), 'Test%3AA%20%26%20B%2FHere');
 		});
 
-		it('wikiUrlencode', function () {
+		it('encodes URLs (wiki)', function () {
 			assert.strictEqual(Mwn.util.wikiUrlencode('Test:A & B/Here'), 'Test:A_%26_B/Here');
 			Object.entries({
 				'+': '%2B',
@@ -252,17 +252,17 @@ describe('static utils', function () {
 			})
 		);
 
-		it('isIPv6Address', function () {
+		it('checks if user is an IPv6', function () {
 			IPV6_CASES.forEach(function (ipCase) {
 				assert.strictEqual(Mwn.util.isIPv6Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});
 		});
-		it('isIPv4Address', function () {
+		it('checks if user is an IPv4', function () {
 			IPV4_CASES.forEach(function (ipCase) {
 				assert.strictEqual(Mwn.util.isIPv4Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});
 		});
-		it('isIPAddress', function () {
+		it('checks if user is an IP', function () {
 			IPV4_CASES.forEach(function (ipCase) {
 				assert.strictEqual(Mwn.util.isIPv4Address(ipCase[1]), ipCase[0], ipCase[2]);
 			});

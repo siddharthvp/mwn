@@ -4,7 +4,7 @@ const { Mwn, expect } = require('./base/test_base');
 
 const bot = new Mwn();
 describe('date', async function () {
-	it('date constructor', function () {
+	it('builds a date object', function () {
 		let mwTs = new bot.Date('20120304050607');
 		expect(mwTs.getTime()).to.equal(
 			// MW timestamps are UTC
@@ -17,14 +17,14 @@ describe('date', async function () {
 		expect(new bot.Date()).to.be.instanceOf(Date);
 	});
 
-	it('isBefore and isAfter', function () {
+	it('evaluates date isBefore() and isAfter()', function () {
 		expect(new bot.Date('2018-09-12').isValid()).to.eq(true);
 		expect(new bot.Date('Bazinga').isValid()).to.eq(false);
 		expect(new bot.Date('2012-12-03').isBefore(new Date())).to.eq(true);
 		expect(new bot.Date('2022-12-03').isAfter(new Date())).to.eq(false);
 	});
 
-	it('custom get methods', function () {
+	it('gets date parts', function () {
 		let date = new bot.Date('16:26, 7 November 2020 (UTC)');
 		expect(date.getUTCDayName()).to.eq('Saturday');
 		expect(date.getUTCDayNameAbbrev()).to.eq('Sat');
@@ -51,7 +51,7 @@ describe('date', async function () {
 		expect(date.getDate()).to.equal(new Date('2012-08-11').getDate());
 	});
 
-	it('calendar', function () {
+	it('shows relative dates', function () {
 		let date = new bot.Date('16:26, 7 November 2020 (UTC)');
 		let now = Date.now();
 		expect(date.calendar('utc')).to.eq('2020-11-07');

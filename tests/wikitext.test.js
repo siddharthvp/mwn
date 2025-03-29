@@ -14,7 +14,7 @@ describe('wikitext', async function () {
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
 
-	it('wikitext parse links', function () {
+	it('parses links', function () {
 		var wkt = new bot.Wikitext(`
 			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
 			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
@@ -163,7 +163,7 @@ some text here for 2-3`;
 		]);
 	});
 
-	it('unbind and rebind', function () {
+	it('unbinds and rebinds text', function () {
 		let u = new bot.Wikitext('Hello world <!-- world --> world');
 		u.unbind('<!--', '-->');
 		u.text = u.text.replace(/world/g, 'earth');

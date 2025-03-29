@@ -8,7 +8,7 @@ describe('supplementary functions', function () {
 		userAgent: 'https://github.com/siddharthvp/mwn (CI testing)',
 	});
 
-	it('pageviews', async function () {
+	it('gets page views (REST API)', async function () {
 		this.timeout(20000);
 		await bot.getSiteInfo();
 		let page = new bot.Page('Albert Einstein');
@@ -25,7 +25,7 @@ describe('supplementary functions', function () {
 		expect(views[0]).to.be.an('object').with.property('agent').that.equals('user');
 	});
 
-	it('wikiwho', async function () {
+	it('gets page authors using WikiWho', async function () {
 		this.timeout(10000);
 		await bot.getSiteInfo();
 		let page = new bot.Page('Dairy in India');

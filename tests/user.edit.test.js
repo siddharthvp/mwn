@@ -8,7 +8,7 @@ describe('user class: write methods', async function () {
 
 	let u = new bot.User('Wikiuser2');
 
-	it('sends message', function () {
+	it('sends talk page message', function () {
 		return u.sendMessage('Hi', 'Testing from mwn. ~~~~').then((data) => {
 			expect(data).to.be.an('object').which.has.property('result').that.equals('Success');
 		});
@@ -21,7 +21,7 @@ describe('user class: write methods', async function () {
 			.that.equals('noemailtext');
 	});
 
-	it('block', function () {
+	it('blocks user', function () {
 		return u.block().then((data) => {
 			expect(data)
 				.to.be.an('object')
@@ -30,7 +30,7 @@ describe('user class: write methods', async function () {
 		});
 	});
 
-	it('unblock', function () {
+	it('unblocks user', function () {
 		return u.unblock().then((data) => {
 			expect(data).to.be.an('object').that.includes.keys('user', 'id', 'userid', 'reason');
 			expect(data.user).to.equal('Wikiuser2');

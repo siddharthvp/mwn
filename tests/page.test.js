@@ -17,11 +17,11 @@ describe('Page', async function () {
 
 	after('logs out', teardown);
 
-	it('page inherits title', function () {
+	it('resolves title methods on page objects', function () {
 		expect(page.toText()).to.equal('Wikipedia:Requests/Permissions');
 	});
 
-	it('constructor', function () {
+	it('constructs a page object', function () {
 		var title = new bot.Title('wp:Requests/Permissions');
 		expect(new bot.Page(title)).to.be.instanceOf(bot.Page);
 
@@ -31,19 +31,19 @@ describe('Page', async function () {
 		expect(page.namespace).to.equal(title.namespace);
 	});
 
-	it('getTalkPage and getSubjectPage are overridden', function () {
+	it('overrides getTalkPage() and getSubjectPage()', function () {
 		var talkpage = page.getTalkPage();
 		expect(talkpage).to.be.instanceOf(bot.Page);
 		expect(talkpage.getSubjectPage()).to.be.instanceOf(bot.Page);
 	});
 
-	it('text', function () {
+	it('gets page text', function () {
 		return page.text().then((text) => {
 			expect(text).to.be.a('string');
 		});
 	});
 
-	it('categories', function () {
+	it('gets page categories', function () {
 		return new bot.Page('Main Page').categories().then((cats) => {
 			expect(cats).to.be.instanceOf(Array);
 			expect(cats.length).to.be.gte(1); // check it on testwiki, could change
@@ -51,7 +51,7 @@ describe('Page', async function () {
 		});
 	});
 
-	it('getRedirectTarget on non-redirect', function () {
+	it('evaluates redirect target on non-redirect', function () {
 		return page.getRedirectTarget().then((target) => {
 			expect(target).to.equal('Wikipedia:Requests/Permissions');
 			return page.isRedirect().then((bool) => {
@@ -62,37 +62,37 @@ describe('Page', async function () {
 
 	var page2;
 
-	it('getRedirectTarget and isRedirect on redirect', function () {
+	it('evaluates redirect target', function () {
 		page2 = new bot.Page('Wikipedia:PERM');
 		return page2.getRedirectTarget((target) => {
 			expect(target).to.equal('Wikipedia:Requests/Permissions');
 		});
 	});
 
-	it('isRedirect on redirect', function () {
+	it('checks if page is a redirect', function () {
 		return page2.isRedirect().then(function (bool) {
 			expect(bool).to.equal(true);
 		});
 	});
 
-	it('getCreator', function () {
+	it('gets page creator', function () {
 		return page.getCreator().then(function (creator) {
 			expect(creator).to.equal('Sir Lestaty de Lioncourt');
 		});
 	});
 
-	it('exists', async function () {
+	it('checks page existence', async function () {
 		await expect(page.exists()).to.eventually.equal(true);
 		await expect(new bot.Page('werfsd').exists()).to.eventually.equal(false);
 	});
 
-	it('getDeletingAdmin', function () {
+	it('gets deleting admin', function () {
 		new bot.Page('File:Mwn-0.22011644726991153.png').getDeletingAdmin().then((admin) => {
 			expect(admin).to.equal('SD0001');
 		});
 	});
 
-	it('links', function () {
+	it('gets page links', function () {
 		return page.links().then((links) => {
 			expect(links).to.be.instanceOf(Array);
 			expect(links.length).to.be.gte(1);
@@ -100,42 +100,42 @@ describe('Page', async function () {
 		});
 	});
 
-	it('links on non-existing page', async function () {
+	it('gets links on non-existing page', async function () {
 		await expect(new bot.Page('1239012390e32413').links())
 			.to.be.eventually.rejectedWith(MwnError)
 			.that.has.property('code')
 			.which.equals('missingtitle');
 	});
 
-	it('backlinks', function () {
+	it('gets page backlinks', function () {
 		return page.backlinks().then((backlinks) => {
 			expect(backlinks).to.be.instanceOf(Array);
 			expect(backlinks.length).to.be.gte(1);
 		});
 	});
 
-	it('backlinks for non-existing page', function () {
+	it('gets backlinks for non-existing page', function () {
 		return new bot.Page('29wdijopsk239esijd123').backlinks().then((backlinks) => {
 			expect(backlinks).to.be.instanceOf(Array);
 			expect(backlinks.length).to.equal(0);
 		});
 	});
 
-	it('transclusions', function () {
+	it('gets page transclusions', function () {
 		return page.transclusions().then((transclusions) => {
 			expect(transclusions).to.be.instanceOf(Array);
 			expect(transclusions.length).to.be.gte(1);
 		});
 	});
 
-	it('transclusions for non-existing page', function () {
+	it('gets transclusions for non-existing page', function () {
 		return new bot.Page('29wdijopsk239esijd123').transclusions().then((transclusions) => {
 			expect(transclusions).to.be.instanceOf(Array);
 			expect(transclusions.length).to.equal(0);
 		});
 	});
 
-	it('history', function () {
+	it('gets page history', function () {
 		return page.history().then((history) => {
 			expect(history).to.be.instanceOf(Array);
 			expect(history).to.be.of.length(50);
@@ -143,7 +143,7 @@ describe('Page', async function () {
 		});
 	});
 
-	it('historyGen', async function () {
+	it('gets page history using generator', async function () {
 		let count = 0;
 		for await (let edit of page.historyGen()) {
 			expect(edit).to.include.keys(['revid', 'parentid']);
@@ -151,20 +151,20 @@ describe('Page', async function () {
 		}
 	});
 
-	it('logs', function () {
+	it('gets page logs', function () {
 		return page.logs().then((logs) => {
 			expect(logs).to.be.instanceOf(Array);
 			expect(logs[0]).to.include.all.keys('title', 'type', 'action', 'timestamp', 'comment');
 		});
 	});
 
-	it('logsGen', async function () {
+	it('gets page logs using generator', async function () {
 		for await (let event of page.logsGen()) {
 			expect(event).to.include.keys(['title', 'type', 'action', 'timestamp']);
 		}
 	});
 
-	it('logs with type=delete', function () {
+	it('gets logs with type=delete', function () {
 		return page.logs(null, 2, 'delete').then((logs) => {
 			expect(logs).to.be.instanceOf(Array).of.length(2);
 			expect(logs[0]).to.include.all.keys('title', 'type', 'action', 'timestamp', 'comment');
@@ -173,7 +173,7 @@ describe('Page', async function () {
 		});
 	});
 
-	it('logs with type=delete/revision', function () {
+	it('gets logs with type=delete/revision', function () {
 		return page.logs(null, 2, 'delete/revision').then((logs) => {
 			expect(logs).to.be.instanceOf(Array).of.length(2);
 			expect(logs[0]).to.include.all.keys('title', 'type', 'action', 'timestamp', 'comment');

@@ -15,7 +15,7 @@ describe('mwn', async function () {
 	// SUCCESSFUL                           //
 	//////////////////////////////////////////
 
-	it('successfully executes a raw HTTP request', function () {
+	it('executes a raw HTTP request', function () {
 		return bot
 			.rawRequest({
 				method: 'get',
@@ -33,7 +33,7 @@ describe('mwn', async function () {
 			});
 	});
 
-	it('correctly gets site info', function () {
+	it('gets site info', function () {
 		// unset them to check if they'll correctly reset
 		bot.Title.nameIdMap = null;
 		bot.Title.idNameMap = null;
@@ -91,7 +91,7 @@ describe('mwn', async function () {
 		});
 	});
 
-	it('successfully reads a page with read()', function () {
+	it('reads a page with read()', function () {
 		return bot.read('Main Page').then((response) => {
 			expect(response).to.be.instanceOf(Object);
 			expect(response).to.include.all.keys('revisions', 'pageid', 'title');
@@ -99,7 +99,7 @@ describe('mwn', async function () {
 		});
 	});
 
-	it('successfully reads multiple pages with read()', function () {
+	it('reads multiple pages with read()', function () {
 		return bot
 			.read(['Main Page', 'MediaWiki:Sidebar'], {
 				rvprop: 'content|timestamp|user',
@@ -118,7 +118,7 @@ describe('mwn', async function () {
 		});
 	});
 
-	it('successfully reads multiple pages using pageid with read()', function () {
+	it('reads multiple pages using pageid with read()', function () {
 		return bot
 			.read([11791 /* Main Page */, 25 /* MediaWiki:Sidebar */], {
 				rvprop: 'content|timestamp|user',
@@ -132,7 +132,7 @@ describe('mwn', async function () {
 			});
 	});
 
-	it('successfully reads apilimit+ pages with read', function () {
+	it('reads apilimit+ pages with read', function () {
 		let arr = [];
 		for (let i = 1; i <= 60; i++) {
 			arr.push(`page${i}`);
@@ -144,7 +144,7 @@ describe('mwn', async function () {
 		});
 	});
 
-	it('successfully reads apilimit+ pages with readGen', async function () {
+	it('reads apilimit+ pages with readGen', async function () {
 		let pageNames = Array.from({ length: 60 }, (_, i) => `page${i + 1}`);
 		let gen = bot.readGen(pageNames);
 		let pages = [];
@@ -156,21 +156,21 @@ describe('mwn', async function () {
 		expect(pages[55].ns).to.equal(0);
 	});
 
-	it('successfully purges pages from page id', function () {
+	it('purges pages by page id', function () {
 		return bot.purge([11791]).then(function (response) {
 			expect(response).to.be.instanceOf(Array);
 			expect(response[0].purged).to.equal(true);
 		});
 	});
 
-	it('successfully parses wikitext', function () {
+	it('parses wikitext', function () {
 		return bot.parseWikitext('[[link]]s.').then((parsedtext) => {
 			expect(parsedtext).to.be.a('string');
 			expect(parsedtext).to.contain(`<a href="/wiki/Link" title="Link">links</a>`);
 		});
 	});
 
-	it('successfully parses a page', function () {
+	it('parses a page', function () {
 		return bot.parseTitle('MediaWiki:Sidebar').then((parsed) => {
 			expect(parsed).to.be.a('string');
 		});
@@ -181,27 +181,27 @@ describe('mwn', async function () {
 		expect(title.toText()).to.equal('Wikipedia:Xyz');
 	});
 
-	it('getPagesByPrefix', function () {
+	it('gets pages by prefix', function () {
 		return bot.getPagesByPrefix('SD0001test').then((pages) => {
 			expect(pages).to.be.instanceOf(Array);
 			expect(pages[0]).to.be.a('string');
 		});
 	});
 
-	it('getPagesInCategory', async function () {
+	it('gets pages in a category', async function () {
 		let pages = await bot.getPagesInCategory('Category:User_en-2');
 		expect(pages).to.be.instanceOf(Array);
 		expect(pages[0]).to.be.a('string');
 	});
 
-	it('successfully searches for pages', async function () {
+	it('searches for pages', async function () {
 		let results = await bot.search('example', 5);
 		expect(results).to.be.instanceOf(Array);
 		expect(results.length).to.be.at.most(5);
 		expect(results[0]).to.include.all.keys('title', 'ns', 'pageid');
 	});
 
-	it('getMessages', async function () {
+	it('retrieves messages', async function () {
 		let messages = await bot.getMessages(['and', 'word-separator']);
 		expect(messages).to.deep.equal({
 			'and': ' and',

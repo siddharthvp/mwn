@@ -10,7 +10,7 @@ describe('Category', async function () {
 
 	let category;
 
-	it('category constructor', function () {
+	it('builds a category object', function () {
 		let cat = new bot.Category('Category:Xyz');
 		expect(cat.title === 'Xyz' && cat.namespace === 14).to.be.ok;
 		category = new bot.Category('Category:User_en-2');
@@ -22,7 +22,7 @@ describe('Category', async function () {
 		expect(catWithoutNs.namespace).to.equal(14);
 	});
 
-	it('category members', function () {
+	it('retrieves category members', function () {
 		return category.members().then((pgs) => {
 			expect(pgs).to.be.instanceOf(Array);
 			expect(pgs).to.be.of.length.gte(3);
@@ -30,13 +30,13 @@ describe('Category', async function () {
 		});
 	});
 
-	it('category members gen', async function () {
+	it('retrieves category members using generator', async function () {
 		for await (let member of category.membersGen()) {
 			expect(member).to.have.keys(['pageid', 'title', 'ns']);
 		}
 	});
 
-	it('category pages', function () {
+	it('retrieves pages in the category', function () {
 		return category.pages().then((pgs) => {
 			expect(pgs).to.be.instanceOf(Array);
 			expect(pgs).to.be.of.length.gte(3);
