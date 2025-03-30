@@ -7,6 +7,7 @@ Only breaking changes, deprecations and the like are documented in this change l
 - Methods in Page class now use the API's action=query instead of action=parse. This improves performance as results are retrieved from the database instead of by invoking the parser. However, this causes some breaking changes:
   - bot.Page('...').categories() now returns a string array of category titles. `sortkey` and `hidden` attributes of categories are no longer available.
   - bot.Page('...').links() now returns a string array of linked page titles. `exists` attribute is no longer available.
+  - bot.Page('...').templates() now returns a string array of page titles. `ns` and `exists` attributes are no longer available.
   - All methods are now limited to 50 entries (or 500 entries for users with apihighlimits right). If you need more results, use bot.continuedQuery() or bot.continuedQueryGen() instead.
 - Use of non-PascalCase class names, deprecated in 2.0.0 (see below), are no longer supported. Please use the PascalCase variants instead.
 - Class `Mwn.Error.MissingPage` is now `Mwn.MissingPageError`. It is now also exported as `MwnMissingPageError`.
