@@ -4,6 +4,10 @@
 	"description": "JavaScript & TypeScript MediaWiki bot framework for Node.js",
 	"main": "./build/index.js",
 	"types": "./build/index.d.ts",
+	"files": [
+		"build/**/*.js",
+		"build/**/*.d.ts"
+	],
 	"scripts": {
 		"format": "prettier --write .",
 		"build": "tsc",
