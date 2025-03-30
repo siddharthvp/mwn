@@ -2,10 +2,16 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 #### 3.0.0
 
-- Support for Node.js version less than 14.x have been dropped.
-- Use of non-PascalCase class names, deprecated in 2.0.0 (see [below](#200)), is no longer supported.
-- oresQueryRevisions(), deprecated in 2.0.1, has been removed.
-- loginGetToken(), deprecated in 0.10.0, has been removed. Please use `login()` instead.
+- Support for Node.js version less than 14.x have been dropped. JS files shipped in the package now target ES2020.
+- Library now uses axios v1.8 instead of v0.25. Users of the `rawRequest()` that uses raw Axios params should consult the axios changelog.
+- Methods in Page class now use the API's action=query instead of action=parse. This improves performance as results are retrieved from the database instead of by invoking the parser. However, this causes some breaking changes:
+  - bot.Page('...').categories() now returns a string array of category titles. `sortkey` and `hidden` attributes of categories are no longer available.
+  - bot.Page('...').links() now returns a string array of linked page titles. `exists` attribute is no longer available.
+  - All methods are now limited to 50 entries (or 500 entries for users with apihighlimits right). If you need more results, use bot.continuedQuery() or bot.continuedQueryGen() instead.
+- Use of non-PascalCase class names, deprecated in 2.0.0 (see below), are no longer supported. Please use the PascalCase variants instead.
+- Class `Mwn.Error.MissingPage` is now `Mwn.MissingPageError`. It is now also exported as `MwnMissingPageError`.
+- `loginGetToken()`, deprecated in 0.10.0, has been removed. Please use `login()` instead.
+- `oresQueryRevisions()`, deprecated in 2.0.1, has been removed.
 
 #### 2.0.1
 
