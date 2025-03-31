@@ -20,7 +20,7 @@ Mwn provides a great number of convenience methods so that you can avoid writing
 
 #### Raw web requests
 
-Mwn also exposes the lower level [`rawRequest`](https://mwn.toolforge.org/docs/api/classes/mwn.html#rawrequest) method using which you can make requests to any web API. Its format is based on axios.
+Mwn also exposes the lower level [`rawRequest`](https://mwn.toolforge.org/docs/api/classes/Mwn.html#rawrequest) method using which you can make requests to any web API. Its format is based on axios.
 
 ```js
 let response = await bot.rawRequest({

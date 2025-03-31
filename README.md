@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/siddharthvp/mwn/badge.svg?branch=master)](https://coveralls.io/github/siddharthvp/mwn?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**Quick links: [Getting Started](https://mwn.toolforge.org/docs/getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [User Documentation](https://mwn.toolforge.org/) — [API Documentation](https://mwn.toolforge.org/docs/api/classes/mwn.html)**
+**Quick links: [Getting Started](https://mwn.toolforge.org/docs/getting-started) — [GitHub](https://github.com/siddharthvp/mwn) — [NPM](https://www.npmjs.com/package/mwn) — [User Documentation](https://mwn.toolforge.org/) — [API Documentation](https://mwn.toolforge.org/docs/api/classes/Mwn.html)**
 
 **Mwn** is a modern and comprehensive MediaWiki bot framework for Node.js, originally adapted from [mwbot](https://github.com/Fannon/mwbot).
 
