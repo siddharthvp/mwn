@@ -1,6 +1,6 @@
 {
 	"name": "mwn",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"description": "JavaScript & TypeScript MediaWiki bot framework for Node.js",
 	"main": "./build/index.js",
 	"types": "./build/index.d.ts",
