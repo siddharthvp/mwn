@@ -13,4 +13,4 @@ log('[E] Error message');
 
 Based on the character within `[]`, colouration happens automatically.
 
-To configure logging, use [Mwn.setLoggingConfig()](https://mwn.toolforge.org/docs/api/classes/mwn.html#setloggingconfig). Please note that logging configuration is global and shared across all Mwn instances.
+To configure logging, use [Mwn.setLoggingConfig()](https://mwn.toolforge.org/docs/api/classes/Mwn.html#setloggingconfig). Please note that logging configuration is global and shared across all Mwn instances.
