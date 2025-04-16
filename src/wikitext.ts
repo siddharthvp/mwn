@@ -156,7 +156,7 @@ export interface TemplateConfig {
 // by Evad37 (cc-by-sa-3.0/GFDL)
 // TODO: expand from evad37/xfdcloser
 /**
- * Represents the wikitext of template transclusion. Used by {@link parseTemplates}.
+ * Represents the wikitext of template transclusion. Used by {@link MwnWikitext.parseTemplates}.
  */
 export class Template {
 	/**

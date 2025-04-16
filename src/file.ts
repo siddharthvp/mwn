@@ -7,7 +7,7 @@ import { ReverseLinkTarget } from './api_response_types';
 export interface MwnFileStatic {
 	/**
 	 * @constructor
-	 * @param {string|MwnTitle} name - name of the file
+	 * @param {string|MwnTitle} title - name of the file, or a title object
 	 */
 	new (title: MwnTitle | string): MwnFile;
 }

@@ -109,8 +109,8 @@ export interface MwnDateStatic {
 	localeData: any;
 
 	/**
-	 * Customize language used for day and month names. This fetches the
-	 * the data from MediaWiki API. By default it is English.
+	 * Customize language used for day and month names. This fetches
+	 * the data from MediaWiki API. By default, it is English.
 	 * @param lang - Defaults to the content language of the wiki the bot
 	 * is logged into.
 	 */
@@ -337,9 +337,8 @@ export default function (bot: Mwn) {
 
 		/** @inheritDoc */
 		static async populateLocaleData(lang?: string) {
-			const monthsKeys = 'january|february|march|april|may_long|june|july|august|september|october|november|december'.split(
-				'|'
-			);
+			const monthsKeys =
+				'january|february|march|april|may_long|june|july|august|september|october|november|december'.split('|');
 			const monthsShortKeys = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec'.split('|');
 			const daysKeys = 'sunday|monday|tuesday|wednesday|thursday|friday|saturday'.split('|');
 			const daysShortKeys = 'sun|mon|tue|wed|thu|fri|sat'.split('|');

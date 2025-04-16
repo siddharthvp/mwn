@@ -925,7 +925,7 @@ export class Mwn {
 	/***************** HELPER FUNCTIONS ******************/
 
 	/**
-	 * Reads the content and and meta-data of one (or many) pages.
+	 * Reads the content and metadata of one (or many) pages.
 	 * Content from the "main" slot is copied over to every revision object
 	 * for easier referencing (`pg.revisions[0].content` can be used instead of
 	 * `pg.revisions[0].slots.main.content`).
