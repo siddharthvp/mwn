@@ -1,7 +1,7 @@
 export { Mwn, MwnOptions, ApiParams, EditTransform, EditConfig } from './bot';
 export { RawRequestParams } from './core';
 export { MwnTitle, MwnTitleStatic } from './title';
-export { MwnPage, MwnPageStatic, PageViewData, PageViewOptions } from './page';
+export { MwnPage, MwnPageStatic, AuthorshipData, PageViewData, PageViewOptions } from './page';
 export { MwnCategory, MwnCategoryStatic } from './category';
 export { MwnFile, MwnFileStatic } from './file';
 export { MwnUser, MwnUserStatic } from './user';

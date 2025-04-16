@@ -21,10 +21,10 @@ for await (let json of bot.continuedQueryGen({
 
 Specialised derivatives exist to fulfill common needs:
 
-- `new bot.Page('Page name').historyGen()` - [fetch page history](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html#historygen)
-- `new bot.Page('Page name').logsGen()` - [fetch page logs](https://mwn.toolforge.org/docs/api/interfaces/mwnpage.html#logsgen)
-- `new bot.Category('Page name').membersGen()` - [fetch category members](https://mwn.toolforge.org/docs/api/interfaces/mwncategory.html#membersgen)
-- `new bot.User('User name').contribsGen()` - [fetch user contributions](https://mwn.toolforge.org/docs/api/interfaces/mwnuser.html#contribsgen)
-- `new bot.User('User name').logsGen()` - [fetch user logs](https://mwn.toolforge.org/docs/api/interfaces/mwnuser.html#logsgen)
+- `new bot.Page('Page name').historyGen()` - [fetch page history](https://mwn.toolforge.org/docs/api/interfaces/MwnPage.html#historygen)
+- `new bot.Page('Page name').logsGen()` - [fetch page logs](https://mwn.toolforge.org/docs/api/interfaces/MwnPage.html#logsgen)
+- `new bot.Category('Page name').membersGen()` - [fetch category members](https://mwn.toolforge.org/docs/api/interfaces/MwnCategory.html#membersgen)
+- `new bot.User('User name').contribsGen()` - [fetch user contributions](https://mwn.toolforge.org/docs/api/interfaces/MwnUser.html#contribsgen)
+- `new bot.User('User name').logsGen()` - [fetch user logs](https://mwn.toolforge.org/docs/api/interfaces/MwnUser.html#logsgen)
 
 Every method with a name that ends in `Gen` is an async generator.

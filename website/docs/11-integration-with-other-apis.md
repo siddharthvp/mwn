@@ -9,11 +9,11 @@ See <https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews>
 ```js
 const page = new bot.Page('Deaths in 2020');
 const pageViewData = await page.pageViews({
-	// See https://mwn.toolforge.org/docs/api/interfaces/pageviewoptions.html for available options
+	// See https://mwn.toolforge.org/docs/api/interfaces/PageViewOptions.html for available options
 });
 ```
 
-The [PageViewOptions](https://mwn.toolforge.org/docs/api/interfaces/pageviewoptions.html) argument is optional. Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/pageviewdata.html">PageViewData</a>[]>.
+The [PageViewOptions](https://mwn.toolforge.org/docs/api/interfaces/PageViewOptions.html) argument is optional. Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/PageViewData.html">PageViewData</a>[]>.
 
 ### WikiWho
 
@@ -26,7 +26,7 @@ const page = new bot.page('Lorem ipsum');
 const contributorData = await page.queryAuthors();
 ```
 
-Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/authorshipdata.html">AuthorshipData</a>>.
+Return type is Promise<<a href="https://mwn.toolforge.org/docs/api/interfaces/AuthorshipData.html">AuthorshipData</a>>.
 
 ### ORES
 

@@ -26,7 +26,7 @@ Parse templates:
 wkt.parseTemplates() // -> [Template {wikitext: '{{templates|with=params}}', parameters: [ Parameter {name: 'with', value: 'params', wikitext: '|with=params'}] ], name: 'Templates' }]
 ```
 
-`parseTemplates` can optionally take a [TemplateConfig](https://mwn.toolforge.org/docs/api/interfaces/templateconfig.html) object as argument.
+`parseTemplates` can optionally take a [TemplateConfig](https://mwn.toolforge.org/docs/api/interfaces/TemplateConfig.html) object as argument.
 
 It can also be used without constructing a bot.Wikitext object, as:
 

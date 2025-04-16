@@ -34,7 +34,7 @@ date.getDayName();
 date.getUTCDayName(); 
 ```
 
-**Format dates to text**: (See <https://mwn.toolforge.org/docs/api/interfaces/mwndate.html#format> for the full formatting syntax)
+**Format dates to text**: (See <https://mwn.toolforge.org/docs/api/interfaces/MwnDate.html#format> for the full formatting syntax)
 
 ```js
 date.format('D MMMM YYYY'); // -> "3 December 2020"

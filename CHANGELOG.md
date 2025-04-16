@@ -49,8 +49,8 @@ Only breaking changes, deprecations and the like are documented in this change l
 
 BREAKING CHANGES:
 
-- [mwn#rawRequest](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html#rawrequest) now returns the `AxiosResponse` object directly, rather than the `data` part of `AxiosResponse`.
-- In cases of error, the shape of the error thrown by [mwn#request](https://tools-static.wmflabs.org/mwn/docs/classes/_bot_.mwn.html#request) is different.
+- [mwn#rawRequest](https://mwn.toolforge.org/docs/api/classes/Mwn.html#rawrequest) now returns the `AxiosResponse` object directly, rather than the `data` part of `AxiosResponse`.
+- In cases of error, the shape of the error thrown by [mwn#request](https://mwn.toolforge.org/docs/api/classes/Mwn.html#request) is different.
   - Earlier: `error.response` was the API response data along with response and request objects, the former making it a cyclic object.
   - Now: `error.response` is an object with fields {data, headers, status, statusText}
 
