@@ -196,7 +196,7 @@ export class Mwn {
 	readonly defaultOptions: MwnOptions = {
 		silent: false,
 		apiUrl: null,
-		userAgent: 'mwn',
+		userAgent: 'Anonymous client, mwn (https://www.npmjs.com/package/mwn)',
 		username: null,
 		password: null,
 
