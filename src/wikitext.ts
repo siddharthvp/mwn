@@ -13,9 +13,11 @@
  * static methods for creating wikitext, see static_utils.js.
  */
 
+import { log } from './log';
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { ApiParseParams } from 'types-mediawiki-api';
+import type { Token } from 'wikiparser-node';
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;
@@ -45,6 +47,9 @@ export interface MwnWikitextStatic {
 
 	/** Static version of {@link MwnWikitext.parseSections} */
 	parseSections(text: string): Section[];
+
+	/** Static version of {@link_MwnWikitext.parseAST} */
+	parseAST(text: string): Promise<Token>;
 }
 export interface MwnWikitext extends Unbinder {
 	links: Array<PageLink>;
@@ -52,6 +57,7 @@ export interface MwnWikitext extends Unbinder {
 	files: Array<FileLink>;
 	categories: Array<CategoryLink>;
 	sections: Array<Section>;
+	AST: Token;
 	/** Parse links, file usages and categories from the wikitext */
 	parseLinks(): void;
 	/**
@@ -93,6 +99,11 @@ export interface MwnWikitext extends Unbinder {
 	 * The top is represented as level 1, with header `null`.
 	 */
 	parseSections(): Section[];
+	/**
+	 * Parse AST from wikitext
+	 * @returns {Promise<Token>} a promise that resolves to the root token of an AST.
+	 */
+	parseAST(): Promise<Token>;
 	/**
 	 * Parse the text using the API.
 	 * @see https://www.mediawiki.org/wiki/API:Parsing_wikitext
@@ -568,6 +579,7 @@ export default function (bot: Mwn) {
 		files: Array<FileLink>;
 		categories: Array<CategoryLink>;
 		sections: Section[];
+		AST: Token;
 
 		constructor(wikitext: string) {
 			if (typeof wikitext !== 'string') {
@@ -620,9 +632,35 @@ export default function (bot: Mwn) {
 			return (this.sections = parseSections(this.text));
 		}
 
+		/** @inheritDoc */
+		async parseAST(): Promise<Token> {
+			return (this.AST = await Wikitext.parseAST(this.text));
+		}
+
 		static parseTemplates = parseTemplates;
 		static parseTable = parseTable;
 		static parseSections = parseSections;
+		static parseAST = async (text: string): Promise<Token> => {
+			const Parser = (await import('wikiparser-node')).default;
+			const { apiUrl } = bot.options;
+			let site = 'mwn';
+			let scriptPath: string;
+			try {
+				[site, scriptPath] = Parser.getWMFSite(apiUrl);
+				scriptPath += '/w/';
+			} catch {
+				if (/\/api\.php$/i.test(apiUrl)) {
+					scriptPath = apiUrl.slice(0, -7);
+				} else {
+					log('API URL does not end with "/api.php". Use default parser config.');
+					Parser.config = 'default';
+				}
+			}
+			if (scriptPath) {
+				Parser.config = await Parser.fetchConfig(site, scriptPath);
+			}
+			return Parser.parse(text);
+		};
 	}
 
 	/**** Private members *****/

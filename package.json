@@ -54,6 +54,9 @@
 		"tough-cookie": "^4.1.4",
 		"types-mediawiki-api": "^2.0.0"
 	},
+	"optionalDependencies": {
+		"wikiparser-node": "^1.21.3"
+	},
 	"devDependencies": {
 		"@types/chai": "^4.3.11",
 		"@types/chai-as-promised": "^7.1.8",
