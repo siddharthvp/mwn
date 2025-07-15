@@ -322,7 +322,7 @@ some text here for 2-3`;
 		});
 		assert.equal(wkt.templates.length, 1);
 		assert.equal(
-			templates.filter(token => {
+			templates.filter((token) => {
 				return token.name.length === token.name.indexOf(':') + 2 && token.getAllArgs().length === 1;
 			}).length,
 			1
@@ -790,6 +790,240 @@ some text here for 2-3`;
 		assert.equal(templates[2].getAllArgs()[0].value, 'foo', 'Third: Correct parameter value in token');
 		assert.equal(String(templates[2].getAllArgs()[0]), 'foo', 'Third: Correct parameter wikitext in token');
 		assert.equal(String(templates[2]), '{{ipsum|foo}}', 'Third: Correct token wikitext');
+	});
+
+	it('Comment in template name (#71)', async function () {
+		var wikitext = `{{Infobox writer <!-- for more information see [[:Template:Infobox writer/doc]] -->
+| name        = Greg Egan
+}}`;
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
+		/** @type {import('wikiparser-node').TranscludeToken[]} */
+		var templates = (await new bot.Wikitext(wikitext).parseAST()).querySelectorAll('template');
+
+		assert.equal(parsed.length, 1, 'One template found');
+		assert.equal(
+			parsed[0].name,
+			'Infobox writer <!-- for more information see [[:Template:Infobox writer/doc]] -->',
+			'Incorrect name'
+		);
+		assert.equal(parsed[0].parameters.length, 1, 'One parameter');
+		assert.equal(parsed[0].parameters[0].name, 'name', 'Correct parameter name');
+		assert.equal(parsed[0].parameters[0].value, 'Greg Egan', 'Correct parameter value');
+		assert.equal(parsed[0].parameters[0].wikitext, '| name        = Greg Egan\n', 'Correct parameter wikitext');
+		assert.equal(
+			parsed[0].wikitext,
+			`{{Infobox writer <!-- for more information see [[:Template:Infobox writer/doc]] -->
+| name        = Greg Egan
+}}`,
+			'Correct wikitext'
+		);
+
+		assert.equal(templates.length, 1, 'One template token found');
+		assert.equal(templates[0].name, 'Template:Infobox_writer', 'Correct token name');
+		assert.equal(templates[0].getAllArgs().length, 1, 'One parameter in token');
+		assert.equal(templates[0].getAllArgs()[0].name, 'name', 'Correct parameter name in token');
+		assert.equal(templates[0].getAllArgs()[0].value, 'Greg Egan', 'Correct parameter value in token');
+		assert.equal(
+			String(templates[0].getAllArgs()[0]),
+			' name        = Greg Egan\n',
+			'Correct parameter wikitext in token'
+		);
+		assert.equal(
+			String(templates[0]),
+			`{{Infobox writer <!-- for more information see [[:Template:Infobox writer/doc]] -->
+| name        = Greg Egan
+}}`,
+			'Correct token wikitext'
+		);
+	});
+
+	it('Comment in parameter name (#71)', async function () {
+		var wikitext = `{{Infobox writer
+| <!-- website = {{URL|benbova.net}} - not working -->
+}}`;
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
+		/** @type {import('wikiparser-node').TranscludeToken[]} */
+		var templates = (await new bot.Wikitext(wikitext).parseAST()).querySelectorAll('template');
+
+		assert.equal(parsed.length, 1, 'One template found');
+		assert.equal(parsed[0].name, 'Infobox writer', 'Correct name');
+		assert.equal(parsed[0].parameters.length, 1, 'One parameter');
+		assert.equal(parsed[0].parameters[0].name, '<!-- website', 'Incorrect parameter name');
+		assert.equal(
+			parsed[0].parameters[0].value,
+			'{{URL|benbova.net}} - not working -->',
+			'Incorrect parameter value'
+		);
+		assert.equal(
+			parsed[0].parameters[0].wikitext,
+			'| <!-- website = {{URL|benbova.net}} - not working -->\n',
+			'Correct parameter wikitext'
+		);
+		assert.equal(
+			parsed[0].wikitext,
+			`{{Infobox writer
+| <!-- website = {{URL|benbova.net}} - not working -->
+}}`,
+			'Correct wikitext'
+		);
+
+		assert.equal(templates.length, 1, 'One template token found');
+		assert.equal(templates[0].name, 'Template:Infobox_writer', 'Correct token name');
+		assert.equal(templates[0].getAllArgs().length, 1, 'One parameter in token');
+		assert.equal(templates[0].getAllArgs()[0].name, '1', 'Correct parameter name in token');
+		assert.equal(templates[0].getAllArgs()[0].value, ' \n', 'Correct parameter value in token');
+		assert.equal(
+			String(templates[0].getAllArgs()[0]),
+			' <!-- website = {{URL|benbova.net}} - not working -->\n',
+			'Correct parameter wikitext in token'
+		);
+		assert.equal(
+			String(templates[0]),
+			`{{Infobox writer
+| <!-- website = {{URL|benbova.net}} - not working -->
+}}`,
+			'Correct token wikitext'
+		);
+	});
+
+	it('Image in parameter value (#85)', async function () {
+		var wikitext = `{{Template
+|Param=
+[[Datei:img.png|thumb|Some [[aricle|title]]|right|200px]]
+Remaining Text
+}}`;
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
+		/** @type {import('wikiparser-node').TranscludeToken[]} */
+		var templates = (await new bot.Wikitext(wikitext).parseAST()).querySelectorAll('template');
+
+		assert.equal(parsed.length, 1, 'One template found');
+		assert.equal(parsed[0].name, 'Template', 'Correct name');
+		assert.equal(parsed[0].parameters.length, 3, 'Incorrect number of parameters');
+		assert.equal(parsed[0].parameters[0].name, 'Param', 'Correct parameter name');
+		assert.equal(
+			parsed[0].parameters[0].value,
+			'[[Datei:img.png|thumb|Some [[aricle|title]]',
+			'Incorrect parameter value'
+		);
+		assert.equal(
+			parsed[0].parameters[0].wikitext,
+			`|Param=
+[[Datei:img.png|thumb|Some [[aricle|title]]`,
+			'Incorrect parameter wikitext'
+		);
+		assert.equal(
+			parsed[0].wikitext,
+			`{{Template
+|Param=
+[[Datei:img.png|thumb|Some [[aricle|title]]|right|200px]]
+Remaining Text
+}}`,
+			'Correct wikitext'
+		);
+
+		assert.equal(templates.length, 1, 'One template token found');
+		assert.equal(templates[0].name, 'Template:Template', 'Correct token name');
+		assert.equal(templates[0].getAllArgs().length, 1, 'One parameter in token');
+		assert.equal(templates[0].getAllArgs()[0].name, 'Param', 'Correct parameter name in token');
+		assert.equal(
+			templates[0].getAllArgs()[0].value,
+			`[[Datei:img.png|thumb|Some [[aricle|title]]|right|200px]]
+Remaining Text`,
+			'Correct parameter value in token'
+		);
+		assert.equal(
+			String(templates[0].getAllArgs()[0]),
+			`Param=
+[[Datei:img.png|thumb|Some [[aricle|title]]|right|200px]]
+Remaining Text
+`,
+			'Correct parameter wikitext in token'
+		);
+		assert.equal(
+			String(templates[0]),
+			`{{Template
+|Param=
+[[Datei:img.png|thumb|Some [[aricle|title]]|right|200px]]
+Remaining Text
+}}`,
+			'Correct token wikitext'
+		);
+	});
+
+	it('Gallery in parameter value (#87)', async function () {
+		var wikitext = `{{Card
+|image1=
+<gallery>
+Squirrel.png | Act I
+Gbc squirrel.png | Act II
+</gallery>
+}}`;
+		var parsed = new bot.Wikitext(wikitext).parseTemplates();
+		/** @type {import('wikiparser-node').TranscludeToken[]} */
+		var templates = (await new bot.Wikitext(wikitext).parseAST()).querySelectorAll('template');
+
+		assert.equal(parsed.length, 1, 'One template found');
+		assert.equal(parsed[0].name, 'Card', 'Correct name');
+		assert.equal(parsed[0].parameters.length, 3, 'Incorrect number of parameters');
+		assert.equal(parsed[0].parameters[0].name, 'image1', 'Correct parameter name');
+		assert.equal(
+			parsed[0].parameters[0].value,
+			`<gallery>
+Squirrel.png`,
+			'Incorrect parameter value'
+		);
+		assert.equal(
+			parsed[0].parameters[0].wikitext,
+			`|image1=
+<gallery>
+Squirrel.png `,
+			'Incorrect parameter wikitext'
+		);
+		assert.equal(
+			parsed[0].wikitext,
+			`{{Card
+|image1=
+<gallery>
+Squirrel.png | Act I
+Gbc squirrel.png | Act II
+</gallery>
+}}`,
+			'Correct wikitext'
+		);
+
+		assert.equal(templates.length, 1, 'One template token found');
+		assert.equal(templates[0].name, 'Template:Card', 'Correct token name');
+		assert.equal(templates[0].getAllArgs().length, 1, 'One parameter in token');
+		assert.equal(templates[0].getAllArgs()[0].name, 'image1', 'Correct parameter name in token');
+		assert.equal(
+			templates[0].getAllArgs()[0].value,
+			`<gallery>
+Squirrel.png |Act I
+Gbc squirrel.png |Act II
+</gallery>`,
+			'Correct parameter value in token'
+		);
+		assert.equal(
+			String(templates[0].getAllArgs()[0]),
+			`image1=
+<gallery>
+Squirrel.png | Act I
+Gbc squirrel.png | Act II
+</gallery>
+`,
+			'Correct parameter wikitext in token'
+		);
+		assert.equal(
+			String(templates[0]),
+			`{{Card
+|image1=
+<gallery>
+Squirrel.png | Act I
+Gbc squirrel.png | Act II
+</gallery>
+}}`,
+			'Correct token wikitext'
+		);
 	});
 
 	// Six braces doesn't occur very frequently - search for `insource:/\{{6}/` in
