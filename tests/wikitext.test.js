@@ -6,7 +6,8 @@
 
 'use strict';
 
-const { bot, assert, expect, setup, teardown } = require('./base/test_wiki');
+const assert = require('assert/strict');
+const { bot, expect, setup, teardown } = require('./base/test_wiki');
 
 describe('wikitext', async function () {
 	this.timeout(10000);

@@ -697,7 +697,7 @@ export default function (bot: Mwn) {
 				const template = new Template(String(token));
 				template.setName(name);
 				for (const param of token.getAllArgs()) {
-					template.addParam(param.name, param.value, String(param));
+					template.addParam(param.anon ? Number(param.name) : param.name, param.value, String(param));
 				}
 				if (config.templatePredicate && !config.templatePredicate(template)) {
 					continue;
