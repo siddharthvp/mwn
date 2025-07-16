@@ -50,6 +50,26 @@ export interface MwnWikitextStatic {
 		[column: string]: string;
 	}[];
 
+	/**
+	 * Simple table parser from AST.
+	 * Parses tables provided:
+	 *  1. The table header doesn't have any merged or joined cells.
+	 *  2. It doesn't use any templates to produce any table markup.
+	 *  3. Further restrictions may apply.
+	 *
+	 * This method throws when it finds an inconsistency (rather than silently
+	 * cause undesired behaviour).
+	 *
+	 * @param {string} text
+	 * @returns {Promise<Object[]>} - each object in the returned array represents a row,
+	 * with its keys being column names, and values the cell content
+	 */
+	parseTableFromAST(text: string): Promise<
+		{
+			[column: string]: string;
+		}[]
+	>;
+
 	/** Static version of {@link MwnWikitext.parseSections} */
 	parseSections(text: string): Section[];
 
@@ -94,7 +114,7 @@ export interface MwnWikitext extends Unbinder {
 	 * Parses templates from AST.
 	 * Returns an array of Template objects
 	 * @param {TemplateConfig} config
-	 * @returns {Template[]}
+	 * @returns {Promise<Template[]>}
 	 */
 	parseTemplatesFromAST(config: TemplateConfig): Promise<Template[]>;
 	/**
@@ -755,13 +775,40 @@ export default function (bot: Mwn) {
 		}
 
 		static parseTemplates = parseTemplates;
-		static parseTemplatesFromAST = async (text: string, config?: TemplateConfig): Promise<Template[]> =>
-			new Wikitext(text).parseTemplatesFromAST(config);
+		static async parseTemplatesFromAST(text: string, config?: TemplateConfig): Promise<Template[]> {
+			return new this(text).parseTemplatesFromAST(config);
+		}
 		static parseTable = parseTable;
+		static async parseTableFromAST(text: string): Promise<
+			{
+				[column: string]: string | undefined;
+			}[]
+		> {
+			const table = (await this.parseAST(text)).querySelector<Parser.TableToken>('table');
+			if (!table) {
+				throw new Error('No table found');
+			}
+			const headers = table.getNthRow(0).querySelectorAll<Parser.TdToken>('td');
+			if (headers.some((header) => header.colspan > 1 || header.rowspan > 1)) {
+				throw new Error('Table headers cannot have merged or joined cells');
+			}
+			const rows = [],
+				cols = headers.map(({ innerText }) => innerText);
+			for (let i = 1; i < table.getRowCount(); i++) {
+				const row: Record<string, string | null> = {};
+				rows.push(row);
+				for (let j = 0; j < headers.length; j++) {
+					const cell = table.getNthCell({ x: j, y: i });
+					row[cols[j]!] = cell?.innerText;
+				}
+			}
+			return rows;
+		}
 		static parseSections = parseSections;
-		static parseSectionsFromAST = async (text: string): Promise<Section[]> =>
-			new Wikitext(text).parseSectionsFromAST();
-		static parseAST = async (text: string): Promise<Token> => {
+		static async parseSectionsFromAST(text: string): Promise<Section[]> {
+			return new this(text).parseSectionsFromAST();
+		}
+		static async parseAST(text: string): Promise<Token> {
 			const Parser = (await import('wikiparser-node')).default;
 			const { apiUrl } = bot.options;
 			let site = 'mwn';
@@ -781,7 +828,7 @@ export default function (bot: Mwn) {
 				Parser.config = await Parser.fetchConfig(site, scriptPath);
 			}
 			return Parser.parse(text);
-		};
+		}
 	}
 
 	/**** Private members *****/
