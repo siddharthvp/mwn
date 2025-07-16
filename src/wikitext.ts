@@ -27,6 +27,9 @@ export interface MwnWikitextStatic {
 	/** Static version of {@link MwnWikitext.parseTemplates} */
 	parseTemplates(wikitext: string, config: TemplateConfig): Template[];
 
+	/** Static version of {@link MwnWikitext.parseTemplatesFromAST} */
+	parseTemplatesFromAST(wikitext: string, config: TemplateConfig): Promise<Template[]>;
+
 	/**
 	 * Simple table parser.
 	 * Parses tables provided:
@@ -49,6 +52,9 @@ export interface MwnWikitextStatic {
 
 	/** Static version of {@link MwnWikitext.parseSections} */
 	parseSections(text: string): Section[];
+
+	/** Static version of {@link MwnWikitext.parseSectionsFromAST} */
+	parseSectionsFromAST(text: string): Promise<Section[]>;
 
 	/** Static version of {@link MwnWikitext.parseAST} */
 	parseAST(text: string): Promise<Token>;
@@ -84,6 +90,13 @@ export interface MwnWikitext extends Unbinder {
 	 * @returns {Template[]}
 	 */
 	parseTemplates(config: TemplateConfig): Template[];
+	/**
+	 * Parses templates from AST.
+	 * Returns an array of Template objects
+	 * @param {TemplateConfig} config
+	 * @returns {Template[]}
+	 */
+	parseTemplatesFromAST(config: TemplateConfig): Promise<Template[]>;
 	/**
 	 * Remove a template, link, file or category from the text
 	 * CAUTION: If an entity with the very same wikitext exists earlier in the text,
@@ -657,6 +670,44 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
+		async parseTemplatesFromAST(config?: TemplateConfig): Promise<Template[]> {
+			config = config || {
+				recursive: false,
+				namePredicate: null,
+				templatePredicate: null,
+				count: null,
+			};
+			this.templates = [];
+
+			if (!this.AST) {
+				await this.parseAST();
+			}
+
+			for (const token of this.AST.querySelectorAll<Parser.TranscludeToken>('template')) {
+				if (this.templates.length === config.count) {
+					break;
+				} else if (!config.recursive && token.closest('template')) {
+					continue;
+				}
+				// @ts-expect-error private method
+				const name: string = token.getAttribute('title').main;
+				if (config.namePredicate && !config.namePredicate(name)) {
+					continue;
+				}
+				const template = new Template(String(token));
+				template.setName(name);
+				for (const param of token.getAllArgs()) {
+					template.addParam(param.name, param.value, String(param));
+				}
+				if (config.templatePredicate && !config.templatePredicate(template)) {
+					continue;
+				}
+				this.templates.push(template);
+			}
+			return this.templates;
+		}
+
+		/** @inheritDoc */
 		removeEntity(entity: Link | Template) {
 			this.text = this.text.replace(entity.wikitext, '');
 		}
@@ -704,8 +755,12 @@ export default function (bot: Mwn) {
 		}
 
 		static parseTemplates = parseTemplates;
+		static parseTemplatesFromAST = async (text: string, config?: TemplateConfig): Promise<Template[]> =>
+			new Wikitext(text).parseTemplatesFromAST(config);
 		static parseTable = parseTable;
 		static parseSections = parseSections;
+		static parseSectionsFromAST = async (text: string): Promise<Section[]> =>
+			new Wikitext(text).parseSectionsFromAST();
 		static parseAST = async (text: string): Promise<Token> => {
 			const Parser = (await import('wikiparser-node')).default;
 			const { apiUrl } = bot.options;
