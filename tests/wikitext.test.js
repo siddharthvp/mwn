@@ -14,7 +14,7 @@ describe('wikitext', async function () {
 	before('logs in and gets token & namespaceInfo', setup);
 	after('logs out', teardown);
 
-	it('parses links', async function () {
+	it('parses links', function () {
 		var wkt = new bot.Wikitext(`
 			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
 			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
@@ -22,7 +22,6 @@ describe('wikitext', async function () {
 			A [[File:Image with wikilink in captions.jpg|thumb|A [[link]].]]
 		`);
 		wkt.parseLinks();
-		await wkt.parseAST();
 
 		var result = {
 			links: [
@@ -86,15 +85,8 @@ describe('wikitext', async function () {
 			],
 		};
 
-		/** @type {import('wikiparser-node').LinkToken[]} */
-		const linkTokens = wkt.AST.querySelectorAll('link');
-		/** @type {import('wikiparser-node').FileToken[]} */
-		const fileTokens = wkt.AST.querySelectorAll('file');
-		/** @type {import('wikiparser-node').CategoryToken[]} */
-		const categoryTokens = wkt.AST.querySelectorAll('category');
 		expect(wkt.links).to.be.instanceOf(Array);
 		expect(wkt.links.length).to.equal(8);
-		expect(linkTokens.length).to.equal(8);
 
 		wkt.links.forEach((link, idx) => {
 			expect(link.target.toText()).to.equal(result.links[idx].target);
@@ -102,21 +94,11 @@ describe('wikitext', async function () {
 			expect(link.wikitext).to.equal(result.links[idx].wikitext);
 			// expect(link.dsr).to.deep.equal(result.links[idx].dsr);
 		});
-		linkTokens.forEach((token, idx) => {
-			expect(token.link.prefix + token.link.main).to.equal(result.links[idx].target);
-			expect(token.innerText).to.equal(result.links[idx].displaytext);
-			expect(String(token)).to.equal(result.links[idx].wikitext);
-		});
 		wkt.files.forEach((link, idx) => {
 			expect(link.target.toText()).to.equal(result.files[idx].target);
 			expect(link.props).to.equal(result.files[idx].props);
 			expect(link.wikitext).to.equal(result.files[idx].wikitext);
 			// expect(link.dsr).to.deep.equal(result.files[idx].dsr);
-		});
-		fileTokens.forEach((token, idx) => {
-			expect(token.link.prefix + token.link.main).to.equal(result.files[idx].target);
-			expect(token.getAllArgs().map(String).join('|')).to.equal(result.files[idx].props);
-			expect(String(token)).to.equal(result.files[idx].wikitext);
 		});
 		wkt.categories.forEach((link, idx) => {
 			expect(link.target.toText()).to.equal(result.categories[idx].target);
@@ -124,29 +106,124 @@ describe('wikitext', async function () {
 			expect(link.wikitext).to.equal(result.categories[idx].wikitext);
 			// expect(link.dsr).to.deep.equal(result.categories[idx].dsr);
 		});
-		categoryTokens.forEach((token, idx) => {
-			expect(token.link.prefix + token.link.main).to.equal(result.categories[idx].target);
-			expect(token.sortkey || '').to.equal(result.categories[idx].sortkey);
-			expect(String(token)).to.equal(result.categories[idx].wikitext);
+
+		var earlierText = wkt.getText().replace(result.links[0].wikitext, '');
+		wkt.removeEntity(result.links[0]);
+		expect(earlierText).to.equal(wkt.getText());
+
+		earlierText = wkt.getText().replace(result.files[0].wikitext, '');
+		wkt.removeEntity(result.files[0]);
+		expect(earlierText).to.equal(wkt.getText());
+
+		earlierText = wkt.getText().replace(result.categories[0].wikitext, '');
+		wkt.removeEntity(result.categories[0]);
+		expect(earlierText).to.equal(wkt.getText());
+	});
+
+	it('parses links from AST', async function () {
+		var wkt = new bot.Wikitext(`
+			A [[plain link]]. A [[piped|link]]. An [[invalid[|link]]. A file: [[File:Beans.jpg|thumb|200px]]. A category: [[category:X1|*]]. [[Category:Category without sortkey]].
+			[[:Category:Link category]]. [[:File:linked file|disptext]]. [[:Category:Link category|disptext]]. [[:File:File link without disp text]]. A [[:User:Userpage link with colon]].
+			An [[image:image|thumb]].
+			A [[File:Image with wikilink in captions.jpg|thumb|A [[link]].]]
+		`);
+		await wkt.parseLinksFromAST();
+
+		var result = {
+			links: [
+				{ target: 'Plain link', displaytext: 'plain link', wikitext: '[[plain link]]', dsr: [6, 19] },
+				{ target: 'Piped', displaytext: 'link', wikitext: '[[piped|link]]', dsr: [24, 37] },
+				{
+					target: 'Category:Link category',
+					displaytext: 'Category:Link category',
+					wikitext: '[[:Category:Link category]]',
+					dsr: [175, 201],
+				},
+				{
+					target: 'File:Linked file',
+					displaytext: 'disptext',
+					wikitext: '[[:File:linked file|disptext]]',
+					dsr: [204, 233],
+				},
+				{
+					target: 'Category:Link category',
+					displaytext: 'disptext',
+					wikitext: '[[:Category:Link category|disptext]]',
+					dsr: [236, 271],
+				},
+				{
+					target: 'File:File link without disp text',
+					displaytext: 'File:File link without disp text',
+					wikitext: '[[:File:File link without disp text]]',
+					dsr: [274, 310],
+				},
+				{
+					target: 'User:Userpage link with colon',
+					displaytext: 'User:Userpage link with colon',
+					wikitext: '[[:User:Userpage link with colon]]',
+					dsr: [315, 348],
+				},
+				{ target: 'Link', displaytext: 'link', wikitext: '[[link]]', dsr: [436, 443] },
+			],
+			files: [
+				{
+					target: 'File:Beans.jpg',
+					props: 'thumb|200px',
+					wikitext: '[[File:Beans.jpg|thumb|200px]]',
+					dsr: [70, 99],
+				},
+				{ target: 'File:Image', props: 'thumb', wikitext: '[[image:image|thumb]]', dsr: [357, 377] },
+				{
+					target: 'File:Image with wikilink in captions.jpg',
+					props: 'thumb|A [[link]].',
+					wikitext: '[[File:Image with wikilink in captions.jpg|thumb|A [[link]].]]',
+					dsr: [385, 446],
+				},
+			],
+			categories: [
+				{ target: 'Category:X1', sortkey: '*', wikitext: '[[category:X1|*]]', dsr: [114, 130] },
+				{
+					target: 'Category:Category without sortkey',
+					sortkey: '',
+					wikitext: '[[Category:Category without sortkey]]',
+					dsr: [133, 169],
+				},
+			],
+		};
+
+		expect(wkt.links).to.be.instanceOf(Array);
+		expect(wkt.links.length).to.equal(8);
+
+		wkt.links.forEach((link, idx) => {
+			expect(link.target.toText()).to.equal(result.links[idx].target);
+			expect(link.displaytext).to.equal(result.links[idx].displaytext);
+			expect(link.wikitext).to.equal(result.links[idx].wikitext);
+			// expect(link.dsr).to.deep.equal(result.links[idx].dsr);
+		});
+		wkt.files.forEach((link, idx) => {
+			expect(link.target.toText()).to.equal(result.files[idx].target);
+			expect(link.props).to.equal(result.files[idx].props);
+			expect(link.wikitext).to.equal(result.files[idx].wikitext);
+			// expect(link.dsr).to.deep.equal(result.files[idx].dsr);
+		});
+		wkt.categories.forEach((link, idx) => {
+			expect(link.target.toText()).to.equal(result.categories[idx].target);
+			expect(link.sortkey).to.equal(result.categories[idx].sortkey);
+			expect(link.wikitext).to.equal(result.categories[idx].wikitext);
+			// expect(link.dsr).to.deep.equal(result.categories[idx].dsr);
 		});
 
 		var earlierText = wkt.getText().replace(result.links[0].wikitext, '');
 		wkt.removeEntity(result.links[0]);
 		expect(earlierText).to.equal(wkt.getText());
-		linkTokens[0].remove();
-		expect(String(wkt.AST)).to.equal(earlierText);
 
 		earlierText = wkt.getText().replace(result.files[0].wikitext, '');
 		wkt.removeEntity(result.files[0]);
 		expect(earlierText).to.equal(wkt.getText());
-		fileTokens[0].remove();
-		expect(String(wkt.AST)).to.equal(earlierText);
 
 		earlierText = wkt.getText().replace(result.categories[0].wikitext, '');
 		wkt.removeEntity(result.categories[0]);
 		expect(earlierText).to.equal(wkt.getText());
-		categoryTokens[0].remove();
-		expect(String(wkt.AST)).to.equal(earlierText);
 	});
 
 	it('parses sections', async function () {

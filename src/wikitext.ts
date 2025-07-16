@@ -17,7 +17,7 @@ import { log } from './log';
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { ApiParseParams } from 'types-mediawiki-api';
-import type { Token as WikiToken } from 'wikiparser-node';
+import type { Token as WikiToken, LinkToken, FileToken, CategoryToken } from 'wikiparser-node';
 
 export interface Token extends WikiToken {}; // eslint-disable-line @typescript-eslint/no-empty-object-type
 
@@ -62,6 +62,8 @@ export interface MwnWikitext extends Unbinder {
 	AST: Token;
 	/** Parse links, file usages and categories from the wikitext */
 	parseLinks(): void;
+	/** Parse links, file usages and categories from the AST */
+	parseLinksFromAST(): Promise<void>;
 	/**
 	 * Parses templates from wikitext.
 	 * Returns an array of Template objects
@@ -612,6 +614,33 @@ export default function (bot: Mwn) {
 					i++; // necessary to handle cases like [[File:ImageName|thumb|A [[hill]]]]
 				}
 			}
+		}
+
+		/** @inheritDoc */
+		async parseLinksFromAST(): Promise<void> {
+			this.links = [];
+			this.files = [];
+			this.categories = [];
+
+			if (!this.AST) {
+				await this.parseAST();
+			}
+
+			this.links = this.AST.querySelectorAll<LinkToken>('link').map(token => ({
+				wikitext: String(token),
+				target: bot.Title.newFromText(token.name),
+				displaytext: token.innerText,
+			}));
+			this.files = this.AST.querySelectorAll<FileToken>('file').map(token => ({
+				wikitext: String(token),
+				target: bot.Title.newFromText(token.name),
+				props: token.getAllArgs().map(String).join('|'),
+			}));
+			this.categories = this.AST.querySelectorAll<CategoryToken>('category').map(token => ({
+				wikitext: String(token),
+				target: bot.Title.newFromText(token.name),
+				sortkey: token.sortkey || '',
+			}));
 		}
 
 		/** @inheritDoc */
