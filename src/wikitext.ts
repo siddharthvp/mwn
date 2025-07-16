@@ -17,7 +17,9 @@ import { log } from './log';
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { ApiParseParams } from 'types-mediawiki-api';
-import type { Token } from 'wikiparser-node';
+import type { Token as WikiToken } from 'wikiparser-node';
+
+export interface Token extends WikiToken {}; // eslint-disable-line @typescript-eslint/no-empty-object-type
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;
@@ -48,7 +50,7 @@ export interface MwnWikitextStatic {
 	/** Static version of {@link MwnWikitext.parseSections} */
 	parseSections(text: string): Section[];
 
-	/** Static version of {@link_MwnWikitext.parseAST} */
+	/** Static version of {@link MwnWikitext.parseAST} */
 	parseAST(text: string): Promise<Token>;
 }
 export interface MwnWikitext extends Unbinder {
