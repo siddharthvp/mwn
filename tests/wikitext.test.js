@@ -226,7 +226,7 @@ describe('wikitext', async function () {
 		expect(earlierText).to.equal(wkt.getText());
 	});
 
-	it('parses sections', async function () {
+	it('parses sections', function () {
 		var text = `This is a comment. [[User:SD0001|SD0001]] ([[User talk:SD0001|talk]]) 03:51, 31 August 2020 (UTC)
 
 tryign ==is this asection header?== Let's see.
@@ -267,18 +267,49 @@ some text here for 2-3`;
 				content: '==2-3===\nsome text here for 2-3',
 			},
 		]);
+	});
 
-		const ast = await bot.Wikitext.parseAST(text);
-		/** @type {import('wikiparser-node').HeadingToken[]} */
-		const headers = ast.querySelectorAll('heading');
-		expect(headers.map(({ level }) => level)).to.deep.equal([2, 2, 2]);
-		expect(headers.map(({ innerText }) => innerText)).to.deep.equal(['this is one', '=3-2', '2-3=']);
-		expect(headers.map((token) => token.getAbsoluteIndex())).to.deep.equal([147, 189, 221]);
-		expect(ast.sections().map(String)).to.deep.equal([
-			"This is a comment. [[User:SD0001|SD0001]] ([[User talk:SD0001|talk]]) 03:51, 31 August 2020 (UTC)\n\ntryign ==is this asection header?== Let's see.\n\n",
-			'== this is one ==\n\n ==how about htis?==\n\t\n',
-			'===3-2==\nsome text here for 3-2\n',
-			'==2-3===\nsome text here for 2-3',
+	it('parses sections from AST', async function () {
+		var text = `This is a comment. [[User:SD0001|SD0001]] ([[User talk:SD0001|talk]]) 03:51, 31 August 2020 (UTC)
+
+tryign ==is this asection header?== Let's see.
+
+== this is one ==
+
+ ==how about htis?==
+	
+===3-2==
+some text here for 3-2
+==2-3===
+some text here for 2-3`;
+
+		var wkt = new bot.Wikitext(text);
+		expect(await wkt.parseSectionsFromAST()).to.deep.equal([
+			{
+				level: 1,
+				header: null,
+				index: 0,
+				content:
+					"This is a comment. [[User:SD0001|SD0001]] ([[User talk:SD0001|talk]]) 03:51, 31 August 2020 (UTC)\n\ntryign ==is this asection header?== Let's see.\n\n",
+			},
+			{
+				level: 2,
+				header: 'this is one',
+				index: 147,
+				content: '== this is one ==\n\n ==how about htis?==\n\t\n',
+			},
+			{
+				level: 2,
+				header: '=3-2',
+				index: 189,
+				content: '===3-2==\nsome text here for 3-2\n',
+			},
+			{
+				level: 2,
+				header: '2-3=',
+				index: 221,
+				content: '==2-3===\nsome text here for 2-3',
+			},
 		]);
 	});
 

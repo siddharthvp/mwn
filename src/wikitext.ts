@@ -17,9 +17,9 @@ import { log } from './log';
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { ApiParseParams } from 'types-mediawiki-api';
-import type { Token as WikiToken, LinkToken, FileToken, CategoryToken } from 'wikiparser-node';
+import type * as Parser from 'wikiparser-node';
 
-export interface Token extends WikiToken {}; // eslint-disable-line @typescript-eslint/no-empty-object-type
+export interface Token extends Parser.Token {} // eslint-disable-line @typescript-eslint/no-empty-object-type
 
 export interface MwnWikitextStatic {
 	new (text: string): MwnWikitext;
@@ -103,6 +103,14 @@ export interface MwnWikitext extends Unbinder {
 	 * The top is represented as level 1, with header `null`.
 	 */
 	parseSections(): Section[];
+	/**
+	 * Parse sections from AST
+	 * @returns {Promise<Section[]>} array of
+	 * section objects. Each section object has the level, header, index (of beginning) and content.
+	 * Content *includes* the equal signs and the header.
+	 * The top is represented as level 1, with header `null`.
+	 */
+	parseSectionsFromAST(): Promise<Section[]>;
 	/**
 	 * Parse AST from wikitext
 	 * @returns {Promise<Token>} a promise that resolves to the root token of an AST.
@@ -626,17 +634,17 @@ export default function (bot: Mwn) {
 				await this.parseAST();
 			}
 
-			this.links = this.AST.querySelectorAll<LinkToken>('link').map(token => ({
+			this.links = this.AST.querySelectorAll<Parser.LinkToken>('link').map((token) => ({
 				wikitext: String(token),
 				target: bot.Title.newFromText(token.name),
 				displaytext: token.innerText,
 			}));
-			this.files = this.AST.querySelectorAll<FileToken>('file').map(token => ({
+			this.files = this.AST.querySelectorAll<Parser.FileToken>('file').map((token) => ({
 				wikitext: String(token),
 				target: bot.Title.newFromText(token.name),
 				props: token.getAllArgs().map(String).join('|'),
 			}));
-			this.categories = this.AST.querySelectorAll<CategoryToken>('category').map(token => ({
+			this.categories = this.AST.querySelectorAll<Parser.CategoryToken>('category').map((token) => ({
 				wikitext: String(token),
 				target: bot.Title.newFromText(token.name),
 				sortkey: token.sortkey || '',
@@ -661,6 +669,33 @@ export default function (bot: Mwn) {
 		/** @inheritDoc */
 		parseSections(): Section[] {
 			return (this.sections = parseSections(this.text));
+		}
+
+		/** @inheritDoc */
+		async parseSectionsFromAST(): Promise<Section[]> {
+			this.sections = [];
+
+			if (!this.AST) {
+				await this.parseAST();
+			}
+
+			return this.AST.sections().map((section) => {
+				const heading = section.startContainer.childNodes[section.startOffset];
+				if (heading.type === 'heading') {
+					return {
+						level: (heading as Parser.HeadingToken).level,
+						header: (heading as Parser.HeadingToken).innerText,
+						index: section.startIndex,
+						content: String(section),
+					};
+				}
+				return {
+					level: 1,
+					header: null,
+					index: 0,
+					content: String(section),
+				};
+			});
 		}
 
 		/** @inheritDoc */
