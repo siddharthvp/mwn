@@ -52,10 +52,8 @@
 		"form-data": "^4.0.2",
 		"oauth-1.0a": "^2.2.6",
 		"tough-cookie": "^4.1.4",
-		"types-mediawiki-api": "^2.0.0"
-	},
-	"optionalDependencies": {
-		"wikiparser-node": "^1.21.3"
+		"types-mediawiki-api": "^2.0.0",
+		"wikiparser-node": "^1.22.0"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.11",

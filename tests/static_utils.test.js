@@ -145,7 +145,7 @@ describe('static utils', function () {
 | Example || Example || Example
 |}`;
 
-		expect(await bot.Wikitext.parseTableFromAST(expected1)).to.deep.equal([
+		expect(await bot.WikitextAST.parseTable(expected1)).to.deep.equal([
 			// Same header name, so object will have only one key
 			{ 'Header text': 'Example' },
 			{ 'Header text': 'Example' },
@@ -160,7 +160,7 @@ describe('static utils', function () {
 | Example21 || Example22 || Example23
 |}`;
 
-		expect(await bot.Wikitext.parseTableFromAST(expected2)).to.deep.equal([
+		expect(await bot.WikitextAST.parseTable(expected2)).to.deep.equal([
 			{
 				'Header1 text': 'Example11',
 				'Header2 text': 'Example12',
