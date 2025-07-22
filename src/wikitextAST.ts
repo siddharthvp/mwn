@@ -53,7 +53,7 @@ export interface MwnWikitextAST extends Unbinder {
 	files: Array<FileLink>;
 	categories: Array<CategoryLink>;
 	sections: Array<Section>;
-	AST: Token;
+	AST: Promise<Token>;
 	/** Parse links, file usages and categories from the AST */
 	parseLinks(): Promise<void>;
 	/**
@@ -93,7 +93,7 @@ export default function (bot: Mwn) {
 		files: Array<FileLink>;
 		categories: Array<CategoryLink>;
 		sections: Section[];
-		AST: Token;
+		AST: Promise<Token>;
 
 		constructor(wikitext: string) {
 			if (typeof wikitext !== 'string') {
@@ -109,24 +109,27 @@ export default function (bot: Mwn) {
 			this.categories = [];
 
 			if (!this.AST) {
-				await this.parseAST();
+				this.parseAST();
 			}
 
-			this.links = this.AST.querySelectorAll<Parser.LinkToken>('link').map((token) => ({
-				wikitext: String(token),
-				target: bot.Title.newFromText(token.name),
-				displaytext: token.innerText,
-			}));
-			this.files = this.AST.querySelectorAll<Parser.FileToken>('file').map((token) => ({
-				wikitext: String(token),
-				target: bot.Title.newFromText(token.name),
-				props: token.getAllArgs().map(String).join('|'),
-			}));
-			this.categories = this.AST.querySelectorAll<Parser.CategoryToken>('category').map((token) => ({
-				wikitext: String(token),
-				target: bot.Title.newFromText(token.name),
-				sortkey: token.sortkey || '',
-			}));
+			this.links = (await this.AST).querySelectorAll<Parser.LinkToken>('link')
+				.map((token) => ({
+					wikitext: String(token),
+					target: bot.Title.newFromText(token.name),
+					displaytext: token.innerText,
+				}));
+			this.files = (await this.AST).querySelectorAll<Parser.FileToken>('file')
+				.map((token) => ({
+					wikitext: String(token),
+					target: bot.Title.newFromText(token.name),
+					props: token.getAllArgs().map(String).join('|'),
+				}));
+			this.categories = (await this.AST).querySelectorAll<Parser.CategoryToken>('category')
+				.map((token) => ({
+					wikitext: String(token),
+					target: bot.Title.newFromText(token.name),
+					sortkey: token.sortkey || '',
+				}));
 		}
 
 		/** @inheritDoc */
@@ -140,10 +143,10 @@ export default function (bot: Mwn) {
 			this.templates = [];
 
 			if (!this.AST) {
-				await this.parseAST();
+				this.parseAST();
 			}
 
-			for (const token of this.AST.querySelectorAll<Parser.TranscludeToken>('template')) {
+			for (const token of (await this.AST).querySelectorAll<Parser.TranscludeToken>('template')) {
 				if (this.templates.length === config.count) {
 					break;
 				} else if (!config.recursive && token.closest('template')) {
@@ -177,10 +180,10 @@ export default function (bot: Mwn) {
 			this.sections = [];
 
 			if (!this.AST) {
-				await this.parseAST();
+				this.parseAST();
 			}
 
-			return this.AST.sections().map((section) => {
+			return (await this.AST).sections().map((section) => {
 				const heading = section.startContainer.childNodes[section.startOffset];
 				if (heading.type === 'heading') {
 					return {
@@ -201,7 +204,7 @@ export default function (bot: Mwn) {
 
 		/** @inheritDoc */
 		async parseAST(): Promise<Token> {
-			return (this.AST = await WikitextAST.parseAST(this.text));
+			return (this.AST = WikitextAST.parseAST(this.text));
 		}
 
 		static async parseTemplates(text: string, config?: TemplateConfig): Promise<Template[]> {
