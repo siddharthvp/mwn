@@ -1,7 +1,7 @@
 docker compose up --detach --build
 
 check_mysql_connection() {
-  if mysql -h 127.0.0.1 -P 3312 -u wikiuser -pwikipassword my_wiki -e "SELECT 1;" > /dev/null 2>&1; then
+  if mysql -h 127.0.0.1 -P 3312 -u wikiuser -pwikipassword my_wiki -e "CREATE TABLE check_ready AS SELECT 1;" > /dev/null 2>&1; then
     return 0 # Connection successful
   else
     return 1 # Connection failed
