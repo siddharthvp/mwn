@@ -135,6 +135,45 @@ describe('static utils', function () {
 		expect(table.getText()).toMatchSnapshot();
 	});
 
+	it('parses tables from AST', async function () {
+		var expected1 = `{| class="wikitable sortable"
+|-
+! Header text !! Header text !! Header text
+|-
+| Example || Example || Example
+|-
+| Example || Example || Example
+|}`;
+
+		expect(await bot.WikitextAST.parseTable(expected1)).to.deep.equal([
+			// Same header name, so object will have only one key
+			{ 'Header text': 'Example' },
+			{ 'Header text': 'Example' },
+		]);
+
+		var expected2 = `{| class="wikitable"
+|-
+! Header1 text !! Header2 text !! Header3 text
+|- style="background: green;"
+| Example11 || Example12 || Example13
+|-
+| Example21 || Example22 || Example23
+|}`;
+
+		expect(await bot.WikitextAST.parseTable(expected2)).to.deep.equal([
+			{
+				'Header1 text': 'Example11',
+				'Header2 text': 'Example12',
+				'Header3 text': 'Example13',
+			},
+			{
+				'Header1 text': 'Example21',
+				'Header2 text': 'Example22',
+				'Header3 text': 'Example23',
+			},
+		]);
+	});
+
 	describe('Mwn.util', function () {
 		// Tests copied from the original mw.util,
 		// https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core/+/master/tests/qunit/suites/resources/mediawiki/mediawiki.util.test.js
