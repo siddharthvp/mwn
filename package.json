@@ -33,10 +33,11 @@
 		"url": "https://github.com/siddharthvp/mwn"
 	},
 	"keywords": [
+		"nodejs",
+		"mediawiki",
+		"bot",
 		"mediawiki-client",
-		"mediawiki-bot",
-		"nodejs-bot",
-		"mediawiki-api-wrapper"
+		"mediawiki-api"
 	],
 	"author": "Siddharth VP",
 	"license": "LGPL-3.0-or-later",
