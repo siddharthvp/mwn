@@ -1374,17 +1374,18 @@ export class Mwn {
 	/**
 	 * Download an image from a URL.
 	 * @param {string} url
-	 * @param {string} [localname] - local path (with file name) to download to,
+	 * @param {string} [localName] - local path (with file name) to download to,
 	 * defaults to current directory with same file name as that of the web image.
 	 * @returns {Promise<void>}
 	 */
-	async downloadFromUrl(url: string, localname: string): Promise<void> {
+	async downloadFromUrl(url: string, localName?: string): Promise<void> {
 		return this.rawRequest({
 			method: 'get',
 			url: url,
 			responseType: 'stream',
 		}).then((response) => {
-			const writeStream = (response.data as stream).pipe(fs.createWriteStream(localname || path.basename(url)));
+			const fileName = localName || path.basename(new URL(url).pathname);
+			const writeStream = (response.data as stream).pipe(fs.createWriteStream(fileName));
 			return new Promise((resolve, reject) => {
 				writeStream.on('finish', () => {
 					resolve();
