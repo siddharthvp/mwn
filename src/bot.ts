@@ -1358,9 +1358,15 @@ export class Mwn {
 			prop: 'imageinfo',
 			iiprop: 'url',
 		}).then((data) => {
-			// TODO: handle errors
-			const url = data.query.pages[0].imageinfo[0].url;
-			const name = new this.Title(data.query.pages[0].title).getMainText();
+			const page = data.query.pages[0];
+			if (page.invalid) {
+				return rejectWithErrorCode('invalidtitle');
+			}
+			if (page.missing) {
+				return Promise.reject(new MwnMissingPageError());
+			}
+			const url = page.imageinfo[0].url;
+			const name = new this.Title(page.title).getMainText();
 			return this.downloadFromUrl(url, localname || name);
 		});
 	}
