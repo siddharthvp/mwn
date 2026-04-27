@@ -2,6 +2,7 @@
 	"name": "mwn",
 	"version": "3.0.2",
 	"description": "JavaScript & TypeScript MediaWiki bot framework for Node.js",
+	"type": "commonjs",
 	"main": "./build/index.js",
 	"types": "./build/index.d.ts",
 	"files": [
@@ -21,6 +22,7 @@
 		"test": "nyc --reporter=lcov --reporter=text mocha tests/",
 		"coveralls": "nyc report --reporter=text-lcov | coveralls",
 		"test:ts": "ts-mocha -p tsconfig.json tests/ts/*",
+		"test:deno": "deno run -A node_modules/.bin/mocha tests",
 		"docs": "cd website && npm start",
 		"docs:api": "typedoc"
 	},
