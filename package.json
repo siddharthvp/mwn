@@ -11,7 +11,6 @@
 	"scripts": {
 		"format": "prettier --write .",
 		"build": "tsc",
-		"quickbuild": "babel src --extensions \".ts\" --out-dir build",
 		"lint": "eslint src tests && markdownlint-cli2",
 		"lint:fix": "eslint --fix src tests && markdownlint-cli2-fix",
 		"lint:links": "markdown-link-check README.md CHANGELOG.md website/docs/*.md",
