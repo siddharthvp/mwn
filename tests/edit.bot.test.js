@@ -10,8 +10,8 @@ describe('methods which modify the wiki', function () {
 	this.timeout(10000);
 
 	before('logs in and gets token & namespaceInfo', setup);
-
 	after('logs out', teardown);
+	afterEach(() => sinon.restore());
 
 	var randPage = 'SD0001test-' + crypto.randomBytes(20).toString('hex');
 
@@ -22,7 +22,6 @@ describe('methods which modify the wiki', function () {
 			.then((response) => {
 				expect(response.result).to.equal('Success');
 				expect(spy).to.have.always.returned(false);
-				sinon.restore();
 			});
 	});
 
@@ -39,7 +38,6 @@ describe('methods which modify the wiki', function () {
 			.then((response) => {
 				expect(response.result).to.equal('Success');
 				expect(spy).to.have.returned(true);
-				sinon.restore();
 			});
 	});
 
@@ -51,7 +49,6 @@ describe('methods which modify the wiki', function () {
 			})
 			.then(() => {
 				expect(logger.log).to.have.been.calledOnce;
-				sinon.restore();
 			});
 	});
 

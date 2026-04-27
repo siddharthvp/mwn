@@ -23,6 +23,8 @@ describe('testing for error recoveries', function () {
 
 	after('logs out', teardown);
 
+	afterEach(() => sinon.restore());
+
 	it('recovers from badtoken errors', async function () {
 		bot.csrfToken = 'invalid-value';
 		sinon.spy(Mwn.prototype, 'getTokens');
@@ -38,7 +40,6 @@ describe('testing for error recoveries', function () {
 			'[W] Encountered badtoken error, fetching new token and retrying'
 		);
 		expect(edit.result).to.equal('Success');
-		sinon.restore();
 	});
 
 	it('recovers from session loss failure', async function () {
@@ -55,7 +56,6 @@ describe('testing for error recoveries', function () {
 		expect(Mwn.prototype.login).to.be.calledOnce;
 		expect(logger.log).to.have.been.calledOnceWith('[W] Received assertuserfailed, attempting to log in and retry');
 		expect(edit.result).to.equal('Success');
-		sinon.restore();
 	});
 
 	it('makes large edits (multipart/form-data) after session loss', async function () {
@@ -129,8 +129,6 @@ describe('testing for error recoveries', function () {
 		await bot.query({});
 		expect(retrySpy).to.have.been.called;
 		expect(sleepStub).to.have.been.calledOnceWith(bot.options.retryPause);
-		sleepStub.restore();
-		retrySpy.restore();
 	});
 
 	it('retries on readonly errors', async () => {
@@ -145,8 +143,6 @@ describe('testing for error recoveries', function () {
 		await bot.query({});
 		expect(retrySpy).to.have.been.called;
 		expect(sleepStub).to.have.been.calledWith(bot.options.retryPause);
-		sleepStub.restore();
-		retrySpy.restore();
 	});
 });
 

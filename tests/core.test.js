@@ -9,6 +9,8 @@ const { bot, setup, teardown, sinon, localApiUrl } = require('./base/local_wiki'
 describe('core', function () {
 	this.timeout(5000);
 
+	afterEach(() => sinon.restore());
+
 	describe('Request', function () {
 		const makeInstance = (params) => new Request(new Mwn(), params, {});
 
@@ -44,7 +46,6 @@ describe('core', function () {
 				.that.has.property('code')
 				.which.equals('ENOTFOUND');
 			expect(Response.prototype.handleRequestFailure).to.have.been.calledOnce;
-			sinon.restore();
 		});
 
 		it('honours method passed in custom options', async function () {
@@ -55,7 +56,6 @@ describe('core', function () {
 			expect(Request.prototype.handlePost).to.have.been.calledOnce;
 			expect(Request.prototype.handleGet).to.not.have.been.called;
 			expect(scope.isDone()).to.be.true;
-			sinon.restore();
 			nock.cleanAll();
 		});
 	});
@@ -71,7 +71,6 @@ describe('core', function () {
 			expect(console.log).to.have.been.calledTwice;
 			expect(console.log.firstCall.firstArg).to.include('Retrying in ');
 			expect(console.log.secondCall.firstArg).to.be.instanceOf(Object).that.has.keys('request', 'response');
-			sinon.restore();
 		});
 
 		// Errors
@@ -122,7 +121,6 @@ describe('core', function () {
 			sinon.spy(logger, 'log');
 			await bot.request({ action: 'query', titles: 'Main Page', prop: 'revisions', rvprop: 'content' });
 			expect(logger.log).to.have.been.calledTwice;
-			sinon.restore();
 		});
 
 		it('shows warnings in new errorformats', async () => {
@@ -158,7 +156,6 @@ describe('core', function () {
 			});
 			expect(logger.log).to.have.been.calledThrice;
 			expect(logger.log.thirdCall.firstArg).to.include('[W] Warning received from API: query+revisions: Because');
-			sinon.restore();
 		});
 	});
 });
