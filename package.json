@@ -13,7 +13,7 @@
 		"build": "tsc",
 		"lint": "eslint src tests && markdownlint-cli2",
 		"lint:fix": "eslint --fix src tests && markdownlint-cli2-fix",
-		"lint:links": "markdown-link-check README.md CHANGELOG.md website/docs/*.md",
+		"lint:links": "markdown-link-check --progress --quiet README.md CHANGELOG.md website/docs/*.md",
 		"test:testwiki": "cd tests && mocha bot.test.js category.test.js file.test.js login.bot.test.js oauth.test.js page.test.js suppl.bot.test.js user.test.js wikitext.test.js",
 		"setuplocalwiki": "cd tests/docker && bash main.sh",
 		"test:localwiki": "cd tests && mocha edit.bot.test.js user.edit.test.js errors.test.js shutoff.test.js core.test.js",
