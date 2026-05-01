@@ -319,7 +319,7 @@ export class Response {
 					case 'assertbotfailed':
 					case 'assertuserfailed':
 						// this shouldn't have happened if we're using OAuth
-						if (this.bot.usingOAuth) {
+						if (this.bot.usingOAuth || this.bot.usingOAuth2) {
 							return this.dieWithError(error);
 						}
 

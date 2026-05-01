@@ -66,6 +66,12 @@ describe('login', async function () {
 		});
 	});
 
+	it('raises correct error on trying to logout while using OAuth 2', async function () {
+		let client = new Mwn(testwiki.account1_oauth2);
+		client.initOAuth();
+		await expect(client.logout()).to.be.eventually.rejectedWith("Can't use logout() while using OAuth");
+	});
+
 	it('logs out', async function () {
 		await bot.logout();
 		expect(bot.loggedIn).to.be.false;
