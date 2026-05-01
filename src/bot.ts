@@ -682,7 +682,7 @@ export class Mwn {
 	 * @returns {Promise<void>}
 	 */
 	async logout(): Promise<void> {
-		if (this.usingOAuth) {
+		if (this.usingOAuth || this.usingOAuth2) {
 			throw new Error("Can't use logout() while using OAuth");
 		}
 		return this.request({

@@ -58,6 +58,37 @@ describe('core', function () {
 			expect(scope.isDone()).to.be.true;
 			nock.cleanAll();
 		});
+
+		it('does not try to log in after assertion failure while using OAuth 2', async () => {
+			const client = new Mwn({
+				apiUrl: localApiUrl,
+				OAuth2AccessToken: 'test-oauth-2-token',
+				defaultParams: {
+					assert: 'user',
+				},
+				maxRetries: 1,
+			});
+			client.initOAuth();
+			const login = sinon.spy(client, 'login');
+			const scope = nock(localApiUrl)
+				.get(/.*?/)
+				.once()
+				.reply(200, {
+					error: {
+						code: 'assertuserfailed',
+						info: 'Assertion that the user is logged in failed',
+					},
+				});
+
+			await expect(client.request({ action: 'query', meta: 'siteinfo' }))
+				.to.be.eventually.rejectedWith('assertuserfailed')
+				.then((error) => {
+					expect(error).to.be.an.instanceOf(MwnError);
+					expect(error).to.have.property('code', 'assertuserfailed');
+				});
+			expect(login).to.not.have.been.called;
+			expect(scope.isDone()).to.be.true;
+		});
 	});
 
 	describe('Response', function () {
