@@ -578,7 +578,7 @@ export class Mwn {
 		if (!this.loginInProgress) {
 			const loginPromise = this.loginInternal();
 			this.loginInProgress = [this.options.username, loginPromise];
-			loginPromise.finally(() => {
+			return loginPromise.finally(() => {
 				this.loginInProgress = null;
 			});
 

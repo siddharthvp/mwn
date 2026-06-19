@@ -93,6 +93,33 @@ describe('core', function () {
 		});
 	});
 
+	it('does not leak unhandled promise rejection on login failure', async () => {
+		const client = new Mwn({
+			apiUrl: localApiUrl,
+			username: 'username',
+			password: 'password',
+			defaultParams: {
+				assert: 'user',
+			},
+			maxRetries: 1,
+		});
+		const scope = nock(localApiUrl).get(/.*?/).once().reply(200, '<html><body>502 Bad Gateway</body></html>');
+
+		let unhandledRejection;
+		const unhandledRejectionHandler = (reason) => {
+			unhandledRejection = reason;
+		};
+		process.once('unhandledRejection', unhandledRejectionHandler);
+		try {
+			await expect(client.login()).to.be.eventually.rejectedWith('invalidjson');
+			await new Promise((resolve) => setImmediate(resolve));
+			expect(unhandledRejection).to.be.undefined;
+		} finally {
+			process.removeListener('unhandledRejection', unhandledRejectionHandler);
+		}
+		expect(scope.isDone()).to.be.true;
+	});
+
 	describe('Response', function () {
 		before('logs in and gets token & namespaceInfo', setup);
 		after('teardown', teardown);
