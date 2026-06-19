@@ -9,7 +9,10 @@ const { bot, setup, teardown, sinon, localApiUrl } = require('./base/local_wiki'
 describe('core', function () {
 	this.timeout(5000);
 
-	afterEach(() => sinon.restore());
+	afterEach(() => {
+		sinon.restore();
+		nock.cleanAll();
+	});
 
 	describe('Request', function () {
 		const makeInstance = (params) => new Request(new Mwn(), params, {});
@@ -56,7 +59,6 @@ describe('core', function () {
 			expect(Request.prototype.handlePost).to.have.been.calledOnce;
 			expect(Request.prototype.handleGet).to.not.have.been.called;
 			expect(scope.isDone()).to.be.true;
-			nock.cleanAll();
 		});
 
 		it('does not try to log in after assertion failure while using OAuth 2', async () => {
@@ -150,43 +152,42 @@ describe('core', function () {
 
 		it('shows warnings', async () => {
 			sinon.spy(logger, 'log');
-			await bot.request({ action: 'query', titles: 'Main Page', prop: 'revisions', rvprop: 'content' });
-			expect(logger.log).to.have.been.calledTwice;
+			await bot.request({ action: 'parse', text: 'Main Page', prop: 'text|modules' });
+			expect(logger.log).to.have.been.calledOnce;
 		});
 
 		it('shows warnings in new errorformats', async () => {
 			sinon.spy(logger, 'log');
 			await bot.request({
 				errorformat: 'html',
-				action: 'query',
-				titles: 'Main Page',
-				prop: 'revisions',
-				rvprop: 'content',
+				action: 'parse',
+				text: 'Main Page',
+				prop: 'text|modules',
 			});
-			expect(logger.log).to.have.been.calledOnce;
-			expect(logger.log.firstCall.firstArg).to.include('[W] Warning received from API: query+revisions: Because');
+			expect(logger.log).to.have.been.calledTwice;
+			expect(logger.log.firstCall.firstArg).to.include('[W] Warning received from API: parse: ');
+			expect(logger.log.secondCall.firstArg).to.include('[W] Warning received from API: parse: ');
+			sinon.resetHistory();
 
 			await bot.request({
 				errorformat: 'wikitext',
-				action: 'query',
-				titles: 'Main Page',
-				prop: 'revisions',
-				rvprop: 'content',
+				action: 'parse',
+				text: 'Main Page',
+				prop: 'text|modules',
 			});
 			expect(logger.log).to.have.been.calledTwice;
-			expect(logger.log.secondCall.firstArg).to.include(
-				'[W] Warning received from API: query+revisions: Because'
-			);
+			expect(logger.log.firstCall.firstArg).to.include('[W] Warning received from API: parse: ');
+			expect(logger.log.secondCall.firstArg).to.include('[W] Warning received from API: parse: ');
+			sinon.resetHistory();
 
 			await bot.request({
 				errorformat: 'plaintext',
-				action: 'query',
-				titles: 'Main Page',
-				prop: 'revisions',
-				rvprop: 'content',
+				action: 'parse',
+				text: 'Main Page',
+				prop: 'text|modules',
 			});
-			expect(logger.log).to.have.been.calledThrice;
-			expect(logger.log.thirdCall.firstArg).to.include('[W] Warning received from API: query+revisions: Because');
+			expect(logger.log.firstCall.firstArg).to.include('[W] Warning received from API: parse: ');
+			expect(logger.log.secondCall.firstArg).to.include('[W] Warning received from API: parse: ');
 		});
 	});
 });
