@@ -304,7 +304,11 @@ export default function () {
 		 * @return {Title|null} A valid Title object or null if the title is invalid
 		 */
 		static makeTitle(namespace: number, title: string): Title | null {
-			return Title.newFromText(getNamespacePrefix(namespace) + title);
+			if (!isKnownNamespace(namespace)) {
+				return null;
+			} else {
+				return Title.newFromText(getNamespacePrefix(namespace) + title);
+			}
 		}
 
 		/**
@@ -479,6 +483,10 @@ export default function () {
 
 	let getNamespacePrefix = function (namespace: number) {
 		return namespace === NS_MAIN ? '' : Title.idNameMap[namespace].replace(/ /g, '_') + ':';
+	};
+
+	let isKnownNamespace = function (namespace: number) {
+		return namespace === NS_MAIN || Object.hasOwnProperty.call(Title.idNameMap[namespace], namespace);
 	};
 
 	let getNsIdByName = function (ns: string): false | number {
