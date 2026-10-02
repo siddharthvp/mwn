@@ -486,7 +486,7 @@ export default function () {
 	};
 
 	let isKnownNamespace = function (namespace: number) {
-		return namespace === NS_MAIN || Object.hasOwnProperty.call(Title.idNameMap[namespace], namespace);
+		return namespace === NS_MAIN || Object.hasOwnProperty.call(Title.idNameMap, namespace);
 	};
 
 	let getNsIdByName = function (ns: string): false | number {

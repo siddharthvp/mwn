@@ -126,6 +126,7 @@ describe('title', function () {
 			[NS_TALK, 'Help:Foo', null],
 			[NS_TEMPLATE, '<', null],
 			[NS_MAIN, 'Help:Foo', 'Help:Foo'],
+			[23123, 'Non-existing namespace', null],
 		];
 
 		for (i = 0; i < cases.length; i++) {
