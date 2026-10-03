@@ -17,6 +17,7 @@ export {
 	PageLink,
 	Section,
 } from './wikitext';
+export { MwnWikitextAST, MwnWikitextASTStatic } from './wikitextAST';
 export { MwnDate, MwnDateStatic } from './date';
 export { MwnError, MwnMissingPageError, MwnErrorConfig } from './error';
 export { LogConfig } from './log';

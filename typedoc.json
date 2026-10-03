@@ -1,5 +1,10 @@
 {
 	"tsconfig": "./tsconfig.json",
 	"entryPoints": ["./src/index.ts"],
-	"out": "./docs"
+	"out": "./docs",
+	"externalSymbolLinkMappings": {
+		"mwn": {
+			"Token": "https://github.com/bhsd-harry/wikiparser-node/wiki/Token-%28EN%29"
+		}
+	}
 }

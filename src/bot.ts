@@ -48,6 +48,7 @@ import MwnDateFactory, { MwnDateStatic } from './date';
 import MwnTitleFactory, { MwnTitle, MwnTitleStatic, SiteInfoQueryResponse } from './title';
 import MwnPageFactory, { MwnPageStatic } from './page';
 import MwnWikitextFactory, { MwnWikitextStatic } from './wikitext';
+import MwnWikitextASTFactory, { MwnWikitextASTStatic } from './wikitextAST';
 import MwnUserFactory, { MwnUserStatic } from './user';
 import MwnCategoryFactory, { MwnCategoryStatic } from './category';
 import MwnFileFactory, { MwnFileStatic } from './file';
@@ -337,6 +338,12 @@ export class Mwn {
 	 * See {@link MwnWikitext} interface for methods on wikitext objects.
 	 */
 	Wikitext: MwnWikitextStatic = MwnWikitextFactory(this);
+
+	/**
+	 * WikitextAST class associated with the bot instance.
+	 * See {@link MwnWikitextAST} interface for methods on wikitext objects.
+	 */
+	WikitextAST: MwnWikitextASTStatic = MwnWikitextASTFactory(this);
 
 	/**
 	 * Date class associated with the bot instance.
