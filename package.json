@@ -1,6 +1,6 @@
 {
 	"name": "mwn",
-	"version": "3.0.3",
+	"version": "3.0.4",
 	"description": "JavaScript & TypeScript MediaWiki bot framework for Node.js",
 	"main": "./build/index.js",
 	"types": "./build/index.d.ts",
@@ -47,12 +47,12 @@
 	"dependencies": {
 		"@types/node": "^14.18.63",
 		"@types/tough-cookie": "^4.0.5",
-		"axios": "^1.8.3",
+		"axios": "^1.20.0",
 		"chalk": "^4.1.2",
-		"form-data": "^4.0.2",
+		"form-data": "^4.0.6",
 		"oauth-1.0a": "^2.2.6",
 		"tough-cookie": "^4.1.4",
-		"types-mediawiki-api": "^2.0.0"
+		"types-mediawiki-api": "^2.1.0"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.11",
