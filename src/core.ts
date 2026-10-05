@@ -113,10 +113,8 @@ export class Request {
 					data: requestOptions.data instanceof FormData ? {} : this.apiParams,
 				}),
 			};
-		} else {
-			// BotPassword authentication
-			requestOptions.withCredentials = true;
 		}
+		// BotPasswords works via cookies, which are always sent (see Mwn constructor).
 	}
 
 	/**
