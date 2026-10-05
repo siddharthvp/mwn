@@ -171,27 +171,25 @@ export type ApiParams = {
 
 export class Mwn {
 	/**
-	 * Bot instance Login State
-	 * Is received from the MW Login API and contains token, userid, etc.
+	 * Bot instance login state.
+	 * Received from the MW Login API and contains token, userid, etc.
 	 */
-	state: any = {};
+	state: Record<string, string> = {};
 
 	/**
-	 * Bot instance is logged in or not
+	 * Whether the bot instance is logged in or not.
 	 */
-	loggedIn = false;
+	loggedIn: boolean = false;
 
 	/**
 	 * Bot instance's edit token. Initially set as an invalid token string
 	 * so that the badtoken handling logic is invoked if the token is
 	 * not set before a query is sent.
-	 * @type {string}
 	 */
-	csrfToken = '%notoken%';
+	csrfToken: string = '%notoken%';
 
 	/**
-	 * Default options.
-	 * Should be immutable
+	 * Default options. This is immutable.
 	 */
 	readonly defaultOptions: MwnOptions = {
 		silent: false,
@@ -237,13 +235,11 @@ export class Mwn {
 	/**
 	 * Actual, current options of the bot instance
 	 * Mix of the default options, the custom options and later changes
-	 * @type {Object}
 	 */
 	options: MwnOptions;
 
 	/**
 	 * Cookie jar for the bot instance - holds session and login cookies
-	 * @type {tough.CookieJar}
 	 */
 	cookieJar: tough.CookieJar = new tough.CookieJar();
 
@@ -265,7 +261,6 @@ export class Mwn {
 	/**
 	 * Request options for the axios library.
 	 * Change the defaults using setRequestOptions()
-	 * @type {Object}
 	 */
 	requestOptions: RawRequestParams = mergeDeep1(
 		{
@@ -276,7 +271,6 @@ export class Mwn {
 
 	/**
 	 * Emergency shutoff config
-	 * @type {{hook: NodeJS.Timeout, state: boolean}}
 	 */
 	shutoff: { state: boolean; hook: NodeJS.Timeout } = {
 		state: false,
