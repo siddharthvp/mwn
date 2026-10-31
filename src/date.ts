@@ -27,7 +27,7 @@ export interface MwnDate extends Date {
 	 * @throws {Error} if invalid or unsupported unit is given
 	 * @returns {MwnDate}
 	 */
-	add(number: number, unit: timeUnit): MwnDate;
+	add(number: number, unit: TimeUnit): MwnDate;
 
 	/**
 	 * Subtracts a given number of minutes, hours, days, months or years to the date.
@@ -37,7 +37,7 @@ export interface MwnDate extends Date {
 	 * @throws {Error} if invalid or unsupported unit is given
 	 * @returns {MwnDate}
 	 */
-	subtract(number: number, unit: timeUnit): MwnDate;
+	subtract(number: number, unit: TimeUnit): MwnDate;
 
 	/**
 	 * Formats the date into a string per the given format string.
@@ -200,7 +200,7 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		add(number: number, unit: timeUnit): XDate {
+		add(number: number, unit: TimeUnit): XDate {
 			// @ts-ignore
 			let unitNorm = unitMap[unit] || unitMap[unit + 's']; // so that both singular and  plural forms work
 			if (unitNorm) {
@@ -212,7 +212,7 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		subtract(number: number, unit: timeUnit): XDate {
+		subtract(number: number, unit: TimeUnit): XDate {
 			return this.add(-number, unit);
 		}
 
@@ -387,4 +387,16 @@ const unitMap = {
 };
 
 // plural or singular keys of unitMap
-export type timeUnit = keyof typeof unitMap | 'second' | 'minute' | 'hour' | 'day' | 'month' | 'year';
+export type TimeUnit =
+	| 'seconds'
+	| 'minutes'
+	| 'hours'
+	| 'days'
+	| 'months'
+	| 'years'
+	| 'second'
+	| 'minute'
+	| 'hour'
+	| 'day'
+	| 'month'
+	| 'year';

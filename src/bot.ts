@@ -1537,7 +1537,6 @@ export class Mwn {
 
 	/**
 	 * Generator to iterate through API response continuations.
-	 * @generator
 	 * @param {Object} query
 	 * @param {number} [limit=Infinity]
 	 * @yields {Object} a single page of the response

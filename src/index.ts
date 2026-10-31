@@ -1,6 +1,6 @@
 export { Mwn, MwnOptions, ApiParams, EditTransform, EditConfig } from './bot';
 export { RawRequestParams } from './core';
-export { MwnTitle, MwnTitleStatic } from './title';
+export { MwnTitle, MwnTitleStatic, SiteInfoQueryResponse } from './title';
 export { MwnPage, MwnPageStatic, AuthorshipData, PageViewData, PageViewOptions } from './page';
 export { MwnCategory, MwnCategoryStatic } from './category';
 export { MwnFile, MwnFileStatic } from './file';
@@ -17,8 +17,8 @@ export {
 	PageLink,
 	Section,
 } from './wikitext';
-export { MwnDate, MwnDateStatic } from './date';
+export { MwnDate, MwnDateStatic, type TimeUnit } from './date';
 export { MwnError, MwnMissingPageError, MwnErrorConfig } from './error';
 export { LogConfig } from './log';
-export { TableConfig } from './static_utils';
+export { TableConfig, Table } from './static_utils';
 export * from './api_response_types';

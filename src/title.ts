@@ -102,13 +102,11 @@ export interface MwnTitle {
 	 */
 	getDotExtension(): string;
 	/**
-	 * @alias #getPrefixedDb
-	 * @method
+	 * Alias of {@link getPrefixedDb}
 	 */
 	toString(): string;
 	/**
-	 * @alias #getPrefixedText
-	 * @method
+	 * Alias of {@link getPrefixedText}
 	 */
 	toText(): string;
 }

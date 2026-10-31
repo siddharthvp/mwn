@@ -1,13 +1,8 @@
+import type { ApiPageList, ApiPageInfo } from './api_response_types.js';
 import type { Mwn } from './bot';
 import type { MwnTitle } from './title';
 import type { MwnPage } from './page';
 import type { ApiQueryCategoryMembersParams } from 'types-mediawiki-api';
-
-type ApiPageInfo = {
-	pageid: number;
-	ns: number;
-	title: string;
-};
 
 export interface MwnCategoryStatic {
 	/**
@@ -23,7 +18,7 @@ export interface MwnCategory extends MwnPage {
 	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 	 * { pageid: 324234, ns: 0, title: 'Main Page' }
 	 */
-	members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
+	members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList>;
 	membersGen(options?: ApiQueryCategoryMembersParams): AsyncGenerator<ApiPageInfo>;
 	/**
 	 * Get all pages in the category - does not include subcategories or files
@@ -31,21 +26,21 @@ export interface MwnCategory extends MwnPage {
 	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 	 * { pageid: 324234, ns: 0, title: 'Main Page' }
 	 */
-	pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
+	pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList>;
 	/**
 	 * Get all subcategories of the category
 	 * @param {Object} options - additional API parameters
 	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 	 * { pageid: 324234, ns: 14, title: 'Category:Living people' }
 	 */
-	subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
+	subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList>;
 	/**
 	 * Get all files in the category
 	 * @param {Object} options - additional API parameters
 	 * @returns {Promise<Object[]>} - Resolved with array of objects of form
 	 * { pageid: 324234, ns: 6, title: 'File:Image.jpg' }
 	 */
-	files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]>;
+	files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList>;
 }
 
 export default function (bot: Mwn) {
@@ -61,7 +56,7 @@ export default function (bot: Mwn) {
 		// TODO: Add recursive modes
 
 		/** @inheritDoc */
-		members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
+		members(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList> {
 			return bot
 				.query({
 					list: 'categorymembers',
@@ -88,17 +83,17 @@ export default function (bot: Mwn) {
 		}
 
 		/** @inheritDoc */
-		pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
+		pages(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList> {
 			return this.members({ cmtype: ['page'], ...options });
 		}
 
 		/** @inheritDoc */
-		subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
+		subcats(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList> {
 			return this.members({ cmtype: ['subcat'], ...options });
 		}
 
 		/** @inheritDoc */
-		files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageInfo[]> {
+		files(options?: ApiQueryCategoryMembersParams): Promise<ApiPageList> {
 			return this.members({ cmtype: ['file'], ...options });
 		}
 	}

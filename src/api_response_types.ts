@@ -79,11 +79,13 @@ export type ApiLinkList = Array<{
 	title?: string;
 	fromid?: number;
 }>;
-export type ApiPageList = Array<{
+
+export type ApiPageInfo = {
 	pageid: number;
 	ns: number;
 	title: string;
-}>;
+};
+export type ApiPageList = Array<ApiPageInfo>;
 
 export interface ApiParseResponse {
 	title: string;
