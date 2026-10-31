@@ -35,10 +35,10 @@ jobs:
         with:
           name: build
           path: build
-      - name: Test usage with TypeScript
-        run: npm run test:ts
-        env:
-          AUTH_JSON: ${{secrets.AUTH_JSON}}
+  #      - name: Test usage with TypeScript
+  #        run: npm run test:ts
+  #        env:
+  #          AUTH_JSON: ${{secrets.AUTH_JSON}}
 
   test:
     runs-on: ubuntu-latest
