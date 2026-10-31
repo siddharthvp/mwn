@@ -5,8 +5,8 @@
  */
 
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import * as FormData from 'form-data';
-import * as OAuth from 'oauth-1.0a';
+import FormData from 'form-data';
+import OAuth from 'oauth-1.0a';
 
 import type { ApiParams, Mwn } from './bot';
 import { log } from './log';

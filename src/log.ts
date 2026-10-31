@@ -10,9 +10,9 @@
  * and keeping track of statistics
  */
 
-import * as util from 'node:util';
-import * as stream from 'node:stream';
-import * as chalk from 'chalk';
+import util from 'node:util';
+import stream from 'node:stream';
+import chalk from 'chalk';
 
 export interface LogConfig {
 	/** Whether debug level log (starting with [D]) should be printed */

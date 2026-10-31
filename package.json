@@ -60,14 +60,14 @@
 		"@types/mocha": "^9.1.1",
 		"@types/sinon": "^17.0.2",
 		"@types/sinon-chai": "^3.2.12",
-		"@typescript-eslint/eslint-plugin": "^8.27.0",
-		"@typescript-eslint/parser": "^8.27.0",
+		"@typescript-eslint/eslint-plugin": "^8.72.1",
+		"@typescript-eslint/parser": "^8.72.1",
 		"chai": "^4.3.10",
 		"chai-as-promised": "^7.1.2",
 		"coveralls": "^3.1.0",
 		"eslint": "^8.57.1",
-		"eslint-config-prettier": "^8.3.0",
-		"eslint-plugin-chai-expect": "^3.1.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-chai-expect": "^4.1.1",
 		"husky": "^4.3.8",
 		"lint-staged": "^11.0.0",
 		"markdown-link-check": "^3.13.7",
@@ -80,8 +80,8 @@
 		"sinon": "^14.0.2",
 		"sinon-chai": "^3.7.0",
 		"ts-mocha": "^10.1.0",
-		"typedoc": "^0.28.0",
-		"typescript": "^5.8.2"
+		"typedoc": "^0.28.20",
+		"typescript": "^6.0.3"
 	},
 	"husky": {
 		"hooks": {

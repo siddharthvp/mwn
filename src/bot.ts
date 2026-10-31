@@ -31,17 +31,17 @@
  */
 
 // Node internal modules
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as crypto from 'node:crypto';
-import * as stream from 'node:stream';
-import * as http from 'node:http';
-import * as https from 'node:https';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import stream from 'node:stream';
+import http from 'node:http';
+import https from 'node:https';
 
 // NPM modules
 import axios, { AxiosResponse, AxiosRequestConfig, AxiosInstance } from 'axios';
-import * as tough from 'tough-cookie';
-import * as OAuth from 'oauth-1.0a';
+import tough from 'tough-cookie';
+import OAuth from 'oauth-1.0a';
 
 // Nested classes of mwn
 import MwnDateFactory, { MwnDateStatic } from './date';

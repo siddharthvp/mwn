@@ -1,8 +1,10 @@
 {
 	"compilerOptions": {
+		"rootDir": "./",
 		"outDir": "./build",
 		"target": "es2020",
 		"module": "CommonJS",
+		"strict": false,
 		"declaration": true,
 		"noImplicitAny": true,
 		"newLine": "lf",
